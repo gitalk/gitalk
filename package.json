@@ -1,0 +1,41 @@
+{
+  "name": "gitalk",
+  "version": "1.0.0-beta",
+  "description": "Gitalk ",
+  "main": "index.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --progress --no-info --config webpack.config.js",
+    "build": "cross-env NODE_ENV=production webpack --progress --profile --config webpack.config.js",
+    "lint": "eslint src"
+  },
+  "author": "Liucw",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "7.1.1",
+    "babel": "6.23.0",
+    "babel-core": "6.25.0",
+    "babel-eslint": "7.2.3",
+    "babel-loader": "7.1.0",
+    "babel-preset-es2015": "6.24.1",
+    "babel-preset-react": "6.24.1",
+    "babel-preset-stage-2": "6.24.1",
+    "babel-register": "6.24.1",
+    "babel-runtime": "6.23.0",
+    "cross-env": "5.0.1",
+    "css-loader": "0.28.4",
+    "eslint": "4.1.1",
+    "eslint-config-o2team": "0.1.6",
+    "eslint-plugin-react": "7.1.0",
+    "file-loader": "0.11.2",
+    "postcss-loader": "2.0.6",
+    "style-loader": "0.18.2",
+    "webpack": "3.0.0",
+    "webpack-dev-server": "2.5.0"
+  },
+  "dependencies": {
+    "axios": "0.16.2",
+    "date-fns": "1.28.5",
+    "preact": "8.1.0",
+    "preact-compat": "3.16.0"
+  }
+}

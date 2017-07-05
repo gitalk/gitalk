@@ -1,0 +1,209 @@
+/* common */
+.gt-spinner {
+  position: relative;
+}
+.gt-spinner::before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  margin-left: -6px;
+  border-radius: 50%;
+  border: 2px solid #C9C9C9;
+  border-top-color: #434343;
+  animation: spinner .6s linear infinite;
+}
+
+.gt-avatar {
+  display: inline-block;
+  width: 48px;
+  height: 48px;
+}
+.gt-avatar img {
+  width: 100%;
+  height: auto;
+}
+
+.gt-btn {
+  padding: 0 10px;
+  display: inline-block;
+  height: 28px;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 28px;
+  cursor: pointer;
+  color: #434343;
+  border: 1px solid #C9C9C9;
+  border-radius: 2px;
+  background: #f8f8f8;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+}
+.gt-btn-text {
+  font-weight: 500;
+  font-size: 12px;
+}
+.gt-btn-loading {
+  margin-left: 4px;
+  display: inline-block;
+  width: 12px;
+  height: 28px;
+  vertical-align: top;
+}
+.gt-btn.disable {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.gt-btn-login {
+  margin-right: 12px;
+}
+.gt-btn-public {
+  margin-right: 12px;
+  color: white;
+  background-color: #6190e8;
+  border: none;
+}
+.gt-btn-public .gt-btn-loading::before{
+  border: 2px solid white;
+  border-top-color: #6190e8;
+}
+
+/* container */
+.gt-container {
+}
+
+/* error */
+.gt-error {
+  text-align: center;
+  margin: 10px;
+  color: red;
+}
+
+/* initing */
+.gt-initing {
+  text-align: center;
+}
+.gt-inting-spinner {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+}
+.gt-inting-spinner::before {
+  width: 36px;
+  height: 36px;
+  margin-top: -18px;
+  margin-left: -18px;
+}
+.gt-inting-text {
+  margin: .5em auto;
+}
+
+/* no int */
+.gt-no-init {
+  text-align: center;
+}
+
+/* header */
+.gt-header {
+  position: relative;
+}
+.gt-header-github {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  background-image: url('../assert/github.svg');
+  background-size: 42px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.gt-header .gt-header-avatar {
+  position: absolute;
+}
+.gt-header .gt-header-comment {
+  margin-left: 48px;
+  padding-left: 12px;
+}
+.gt-header .gt-header-textarea {
+  padding: 1em;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 120px;
+  max-height: 420px;
+  border-radius: 2px;
+  border: 1px solid #C9C9C9;
+  font-size: 14px;
+  word-wrap: break-word;
+  resize: vertical;
+}
+.gt-header .gt-header-controls {
+  margin: 10px 0;
+  text-align: right;
+}
+
+/* comments */
+.gt-comments {
+  padding-top: 20px;
+}
+.gt-comment {
+  position: relative;
+  margin: 0 0 30px;
+}
+.gt-comment .gt-comment-avatar {
+  position: absolute;
+}
+.gt-comment .gt-comment-content {
+  margin-left: 48px;
+  padding-left: 12px;
+}
+.gt-comment .gt-comment-header {
+  margin-bottom: 4px;
+}
+.gt-comment .gt-comment-username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #434343;
+  text-decoration: none;
+}
+.gt-comment .gt-comment-username:hover {
+  text-decoration: underline;
+}
+.gt-comment .gt-comment-date {
+  margin-left: .5em;
+  font-size: 12px;
+  color: #454545;
+}
+.gt-comment .gt-comment-edit {
+  float: right;
+  width: 22px;
+  height: 22px;
+  background-image: url('../assert/edit.svg');
+  background-size: 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.gt-comment .gt-comment-body {
+  font-size: 16px;
+  color: #444444;
+}
+.gt-comments-controls {
+  text-align: center;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* footer */
+.gt-footer {
+  margin-top: 20px;
+  text-align: right;
+}
+.gt-footer .gt-footer-link {
+  color: inherit;
+}
