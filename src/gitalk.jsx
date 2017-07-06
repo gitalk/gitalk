@@ -2,7 +2,15 @@ import React, { Component } from 'react'
 import axios from 'axios'
 import i18n from './i18n'
 import './style/index.css'
-import { queryParse, queryStringify, axiosJSON, axiosGithub } from './util'
+import {
+  queryParse,
+  queryStringify,
+  axiosJSON,
+  axiosGithub,
+  getMetaContent,
+  formatErrorMsg
+} from './util'
+
 import Avatar from './component/avatar'
 import Button from './component/button'
 import Comment from './component/comment'
@@ -34,7 +42,10 @@ class GitalkComponent extends Component {
       perPage: 30,
       url: location.href,
       title: document.title,
-      body: '',
+      body: `${location.href} \n\n ${
+        getMetaContent('description') ||
+        getMetaContent('description', 'og:description') || ''
+      }`,
       id: location.href,
       labels: ['Gitalk'],
       proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
@@ -77,14 +88,14 @@ class GitalkComponent extends Component {
           console.log('res.data err:', res.data)
           this.setState({
             isOccurError: true,
-            errorMsg: this.formatErrorMsg(new Error('no access token'))
+            errorMsg: formatErrorMsg(new Error('no access token'))
           })
         }
       }).catch(err => {
         console.log('err: ', err)
         this.setState({
           isOccurError: true,
-          errorMsg: this.formatErrorMsg(err)
+          errorMsg: formatErrorMsg(err)
         })
       })
     } else {
@@ -95,7 +106,7 @@ class GitalkComponent extends Component {
           this.setState({
             isIniting: false,
             isOccurError: true,
-            errorMsg: this.formatErrorMsg(err)
+            errorMsg: formatErrorMsg(err)
           })
         })
     }
@@ -120,17 +131,6 @@ class GitalkComponent extends Component {
       scope: 'public_repo'
     }
     return `${githubOauthUrl}?${queryStringify(query)}`
-  }
-
-  formatErrorMsg (err) {
-    let msg = 'Error: '
-    if (err.response && err.response.data && err.response.data.message) {
-      msg += `${err.response.data.message}. `
-      err.response.data.errors && (msg += err.response.data.errors.map(e => e.message).join(', '))
-    } else {
-      msg += err.message
-    }
-    return msg
   }
 
   getInit () {
@@ -258,7 +258,7 @@ class GitalkComponent extends Component {
       this.setState({
         isIssueCreating: false,
         isOccurError: true,
-        errorMsg: this.formatErrorMsg(err)
+        errorMsg: formatErrorMsg(err)
       })
     })
   }
@@ -277,7 +277,7 @@ class GitalkComponent extends Component {
         this.setState({
           isCreating: false,
           isOccurError: true,
-          errorMsg: this.formatErrorMsg(err)
+          errorMsg: formatErrorMsg(err)
         })
       })
   }

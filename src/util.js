@@ -33,3 +33,19 @@ export const axiosGithub = axios.create({
     'Accept': 'application/json'
   }
 })
+
+export const getMetaContent = (name, content = 'content') => {
+  const el = document.querySelector(`meta[name='${name}']`)
+  return el && el.getAttribute(content)
+}
+
+export const formatErrorMsg = err => {
+  let msg = 'Error: '
+  if (err.response && err.response.data && err.response.data.message) {
+    msg += `${err.response.data.message}. `
+    err.response.data.errors && (msg += err.response.data.errors.map(e => e.message).join(', '))
+  } else {
+    msg += err.message
+  }
+  return msg
+}
