@@ -1,0 +1,12 @@
+{
+  "init": "Init ...",
+  "no-found-related": "Not found related %{link} submit comment",
+  "please-contact": "Please contact %{user} init create",
+  "init-issue": "Init Issue",
+  "leave-a-comment": "Leave a comment",
+  "comment": "Comment",
+  "login-with-github": "Login with Github",
+  "first-comment-person": "To do the first person to leave a comment!",
+  "load-more": "Load more",
+  "footer": "Power by %{link}"
+}

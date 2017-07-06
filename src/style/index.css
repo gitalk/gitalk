@@ -148,6 +148,14 @@
 .gt-comments {
   padding-top: 20px;
 }
+.gt-comments-null {
+  text-align: center;
+}
+.gt-comments-controls {
+  text-align: center;
+}
+
+/* comment */
 .gt-comment {
   position: relative;
   margin: 0 0 30px;
@@ -189,15 +197,6 @@
   font-size: 16px;
   color: #444444;
 }
-.gt-comments-controls {
-  text-align: center;
-}
-
-@keyframes spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
 
 /* footer */
 .gt-footer {
@@ -206,4 +205,11 @@
 }
 .gt-footer .gt-footer-link {
   color: inherit;
+}
+
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }

@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import axios from 'axios'
+import i18n from './i18n'
 import './style/index.css'
-import './style/loader.css'
 import { queryParse, queryStringify, axiosJSON, axiosGithub } from './util'
 import Avatar from './component/avatar'
 import Button from './component/button'
@@ -31,12 +31,14 @@ class GitalkComponent extends Component {
   constructor (props) {
     super(props)
     this.options = Object.assign({}, {
-      perPage: 2,
+      perPage: 30,
       url: location.href,
       title: document.title,
+      body: '',
       id: location.href,
       labels: ['Gitalk'],
-      proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token'
+      proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
+      language: navigator.language || navigator.userLanguage,
     }, props.options)
 
     try {
@@ -97,6 +99,8 @@ class GitalkComponent extends Component {
           })
         })
     }
+
+    this.i18n = i18n(this.options.language)
   }
 
   get accessToken () {
@@ -122,8 +126,7 @@ class GitalkComponent extends Component {
     let msg = 'Error: '
     if (err.response && err.response.data && err.response.data.message) {
       msg += `${err.response.data.message}. `
-      msg += err.response.data.errors.map(e => e.message).join(', ')
-      msg += '.'
+      err.response.data.errors && (msg += err.response.data.errors.map(e => e.message).join(', '))
     } else {
       msg += err.message
     }
@@ -179,11 +182,11 @@ class GitalkComponent extends Component {
     })
   }
   createIssue () {
-    const { owner, repo, url, title, id, labels } = this.options
+    const { owner, repo, title, body, id, labels } = this.options
     return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
       title,
       labels: labels.concat(id),
-      body: `文章链接：${url}`
+      body
     }, {
       headers: {
         Authorization: `token ${this.accessToken}`
@@ -289,7 +292,7 @@ class GitalkComponent extends Component {
   initing () {
     return <div className="gt-initing">
       <span className="gt-inting-spinner gt-spinner" />
-      <p className="gt-inting-text">初始化 ...</p>
+      <p className="gt-inting-text">{this.i18n.t('init')}</p>
     </div>
   }
   noInit () {
@@ -297,10 +300,14 @@ class GitalkComponent extends Component {
     const { owner, repo, admin } = this.options
     return (
       <div className="gt-no-init" key="no-init">
-        <p>未找到相关的 <a href={`https://github.com/${owner}/${repo}/issues`}>Issues</a> 无法进行评论</p>
-        <p>请联系 {[].concat(admin).map(u => `@${u} `)}初始化创建</p>
+        <p dangerouslySetInnerHTML={{
+          __html: this.i18n.t('no-found-related', {
+            link: `<a href="https://github.com/${owner}/${repo}/issues">Issues</a>`
+          })
+        }}/>
+        <p>{this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
         {(user && ~[].concat(admin).indexOf(user.login)) && <p>
-          <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text="初始化 Issue" />
+          <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
         </p>}
       </div>
     )
@@ -319,12 +326,12 @@ class GitalkComponent extends Component {
             className="gt-header-textarea"
             value={comment}
             onChange={this.handleCommentChange}
-            placeholder="说点什么"
+            placeholder={this.i18n.t('leave-a-comment')}
           />
           <div className="gt-header-controls">
             {user ?
-              <Button className="gt-btn-public" onClick={this.handleCommentCreate} text="发布" isLoading={isCreating} /> :
-              <Button className="gt-btn-login" onClick={this.handleLogin} text="使用 Github 登录" />
+              <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} /> :
+              <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />
             }
           </div>
         </div>
@@ -333,23 +340,26 @@ class GitalkComponent extends Component {
   }
   comments () {
     const { user, comments, localComments, isLoadOver, isLoadMore } = this.state
+    const { language } = this.options
     return (
       <div className="gt-comments" key="comments">
         {comments.concat(localComments).map(c => (
-          <Comment comment={c} key={c.id} user={user} />
+          <Comment comment={c} key={c.id} user={user} language={language}/>
         ))}
-        {!comments.concat(localComments).length && <p>来做第一个留言的人吧！</p>}
+        {!comments.concat(localComments).length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
         {!isLoadOver && <div className="gt-comments-controls">
-          <Button onClick={this.handleCommentLoad} isLoading={isLoadMore} text="加载更多" />
+          <Button onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />
         </div>}
       </div>
     )
   }
   footer () {
     return (
-      <div className="gt-footer" key="footer">
-        由 <a className="gt-footer-link" href="https://github.com/gitalk/gitalk">Gitalk</a> 驱动
-      </div>
+      <div className="gt-footer" key="footer" dangerouslySetInnerHTML={{
+        __html: this.i18n.t('footer', {
+          link: '<a class="gt-footer-link" href="https://github.com/gitalk/gitalk">Gitalk</a>'
+        })
+      }}/>
     )
   }
 

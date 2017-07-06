@@ -10,7 +10,7 @@ class Gitalk {
       // clientSecret: '',
       // owner: '',
       // repo: '',
-      // admin: []
+      // admin: [],
     }, options)
   }
 

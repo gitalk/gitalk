@@ -35,6 +35,7 @@
   "dependencies": {
     "axios": "0.16.2",
     "date-fns": "1.28.5",
+    "node-polyglot": "2.2.2",
     "preact": "8.1.0",
     "preact-compat": "3.16.0"
   }

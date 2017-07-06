@@ -1,0 +1,12 @@
+{
+  "init": "初始化 ...",
+  "no-found-related": "未找到相关的 %{link} 进行评论",
+  "please-contact": "请联系 %{user} 初始化创建",
+  "init-issue": "初始化 Issue",
+  "leave-a-comment": "说点什么",
+  "comment": "评论",
+  "login-with-github": "使用 Github 登录",
+  "first-comment-person": "来做第一个留言的人吧！",
+  "load-more": "加载更多",
+  "footer": "由 %{link} 驱动"
+}
