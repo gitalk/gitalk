@@ -1,9 +1,23 @@
 const path = require('path')
 const webpack = require('webpack')
 const autoprefixer = require('autoprefixer')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 const ENV = process.env.NODE_ENV || 'development'
 const isDev = ENV !== 'production'
+
+const cssLoader = [{
+  loader: 'css-loader'
+}, {
+  loader: 'postcss-loader',
+  options: {
+    plugins: [
+      autoprefixer({
+        browsers: ['last 2 versions']
+      })
+    ]
+  }
+}]
 
 module.exports = {
   context: path.resolve(__dirname, 'src'),
@@ -34,31 +48,23 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        exclude: /node_modules/,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader'
-          },
-          {
-            loader: 'postcss-loader',
-            options: {
-              plugins: [
-                autoprefixer({ browsers: [ 'last 2 versions' ] })
-              ]
-            }
-          }
-        ]
+        use: isDev ? ['style-loader'].concat(cssLoader) : ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: cssLoader
+        })
       },
       {
         test: /\.(svg|woff2?|ttf|eot|jpe?g|png|gif)(\?.*)?$/i,
-        use: 'file-loader'
+        use: [{
+          loader: 'url-loader',
+          options: {
+            limit: 1024 * 10
+          }
+        }]
       }
     ]
   },
-  plugins: [
-    new webpack.NoEmitOnErrorsPlugin()
-  ],
+  plugins: isDev ? [new webpack.NoEmitOnErrorsPlugin()] : [new ExtractTextPlugin('gitalk.css')],
 
   devtool: isDev ? 'cheap-module-source-map' : 'source-map',
 
