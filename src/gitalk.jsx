@@ -204,6 +204,9 @@ class GitalkComponent extends Component {
         if (!issue) return
 
         return axiosGithub.get(issue.comments_url, {
+          headers: {
+            Accept: 'application/vnd.github.html+json'
+          },
           params: {
             client_id: clientID,
             client_secret: clientSecret,
@@ -357,7 +360,7 @@ class GitalkComponent extends Component {
     return (
       <div className="gt-footer" key="footer" dangerouslySetInnerHTML={{
         __html: this.i18n.t('footer', {
-          link: '<a class="gt-footer-link" href="https://github.com/gitalk/gitalk">Gitalk</a>'
+          link: '<a class="gt-footer-link" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
         })
       }}/>
     )
