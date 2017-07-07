@@ -57,7 +57,8 @@ class GitalkComponent extends Component {
         appearAnimation: 'accordionVertical',
         enterAnimation: 'accordionVertical',
         leaveAnimation: 'accordionVertical',
-      }
+      },
+      isManualCreateIssue: false,
     }, props.options)
 
     try {
@@ -165,22 +166,24 @@ class GitalkComponent extends Component {
       return Promise.resolve(issue)
     }
 
-    const { owner, repo, id, labels, clientID, clientSecret, admin } = this.options
+    const { owner, repo, id, labels, clientID, clientSecret } = this.options
 
-    const requests = [].concat(admin).map(name => axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+    return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
       params: {
         client_id: clientID,
         client_secret: clientSecret,
-        creator: name,
         labels: labels.concat(id).join(',')
       }
-    }))
-
-    return axios.all(requests).then(responses => {
-      const res = responses.filter(res => res.data && res.data.length)[0] || {}
+    }).then(res => {
+      const { admin, isManualCreateIssue } = this.options
+      const { user } = this.state
       let isNoInit = false
       let issue = null
       if (!(res && res.data && res.data.length)) {
+        if (!isManualCreateIssue && user && ~admin.indexOf(user.login)) {
+          return this.createIssue()
+        }
+
         isNoInit = true
       } else {
         issue = res.data[0]
