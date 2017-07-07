@@ -245,6 +245,7 @@ class GitalkComponent extends Component {
         body: comment
       }, {
         headers: {
+          Accept: 'application/vnd.github.html+json',
           Authorization: `token ${this.accessToken}`
         }
       }))
@@ -355,9 +356,9 @@ class GitalkComponent extends Component {
     return (
       <div className="gt-comments" key="comments">
         <FlipMove {...flipMoveOptions}>
-        {comments.concat(localComments).map(c => (
-          <Comment comment={c} key={c.id} user={user} language={language}/>
-        ))}
+          {comments.concat(localComments).map(c => (
+            <Comment comment={c} key={c.id} user={user} language={language}/>
+          ))}
         </FlipMove>
         {!comments.concat(localComments).length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
         {!isLoadOver && <div className="gt-comments-controls">
