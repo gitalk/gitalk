@@ -38,6 +38,7 @@
     "webpack-dev-server": "2.5.1"
   },
   "dependencies": {
+    "autosize": "3.0.21",
     "axios": "0.16.2",
     "date-fns": "1.28.5",
     "github-markdown-css": "2.8.0",

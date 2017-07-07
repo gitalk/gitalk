@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import axios from 'axios'
 import FlipMove from 'react-flip-move'
+import autosize from 'autosize'
 
 import i18n from './i18n'
 import './style/index.css'
@@ -121,6 +121,9 @@ class GitalkComponent extends Component {
     }
 
     this.i18n = i18n(this.options.language)
+  }
+  componentDidUpdate () {
+    this.commentEL && autosize(this.commentEL)
   }
 
   get accessToken () {
