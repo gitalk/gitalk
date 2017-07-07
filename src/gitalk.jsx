@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import axios from 'axios'
+import FlipMove from 'react-flip-move'
+
 import i18n from './i18n'
 import './style/index.css'
 import {
@@ -10,11 +12,11 @@ import {
   getMetaContent,
   formatErrorMsg
 } from './util'
-
 import Avatar from './component/avatar'
 import Button from './component/button'
 import Comment from './component/comment'
 import { GT_ACCESS_TOKEN, GT_USER_INFO } from './const'
+
 
 class GitalkComponent extends Component {
   state = {
@@ -50,6 +52,12 @@ class GitalkComponent extends Component {
       labels: ['Gitalk'],
       proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
       language: navigator.language || navigator.userLanguage,
+      flipMoveOptions: {
+        staggerDelayBy: 150,
+        appearAnimation: 'accordionVertical',
+        enterAnimation: 'accordionVertical',
+        leaveAnimation: 'accordionVertical',
+      }
     }, props.options)
 
     try {
@@ -343,12 +351,14 @@ class GitalkComponent extends Component {
   }
   comments () {
     const { user, comments, localComments, isLoadOver, isLoadMore } = this.state
-    const { language } = this.options
+    const { language, flipMoveOptions } = this.options
     return (
       <div className="gt-comments" key="comments">
+        <FlipMove {...flipMoveOptions}>
         {comments.concat(localComments).map(c => (
           <Comment comment={c} key={c.id} user={user} language={language}/>
         ))}
+        </FlipMove>
         {!comments.concat(localComments).length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
         {!isLoadOver && <div className="gt-comments-controls">
           <Button onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />

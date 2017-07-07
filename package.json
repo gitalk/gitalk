@@ -43,6 +43,7 @@
     "github-markdown-css": "2.8.0",
     "node-polyglot": "2.2.2",
     "preact": "8.1.0",
-    "preact-compat": "3.16.0"
+    "preact-compat": "3.16.0",
+    "react-flip-move": "2.9.14"
   }
 }
