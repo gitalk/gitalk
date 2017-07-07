@@ -1,17 +1,23 @@
 {
   "name": "gitalk",
   "version": "1.0.0-beta",
-  "description": "Gitalk ",
-  "main": "index.js",
+  "description": "A comment plugin base on Github issues",
+  "keywords": [
+    "comment",
+    "plugin",
+    "lib",
+    "Github"
+  ],
+  "main": "dist/gitalk.js",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --progress --no-info --config webpack.config.js",
-    "build": "cross-env NODE_ENV=production webpack --progress --profile --config webpack.config.js",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --no-info --progress",
+    "build": "rimraf ./dist && cross-env NODE_ENV=production webpack --hide-modules && cross-env NODE_ENV=production webpack --config webpack.config.min.js",
     "lint": "eslint src"
   },
   "author": "Liucw",
   "license": "MIT",
   "devDependencies": {
-    "autoprefixer": "7.1.1",
+    "autoprefixer": "7.1.2",
     "babel-core": "6.25.0",
     "babel-eslint": "7.2.3",
     "babel-loader": "7.1.1",
@@ -23,11 +29,13 @@
     "eslint": "4.1.1",
     "eslint-config-o2team": "0.1.6",
     "eslint-plugin-react": "7.1.0",
-    "file-loader": "0.11.2",
+    "extract-text-webpack-plugin": "2.1.2",
     "postcss-loader": "2.0.6",
+    "rimraf": "2.6.1",
     "style-loader": "0.18.2",
-    "webpack": "3.0.0",
-    "webpack-dev-server": "2.5.0"
+    "url-loader": "0.5.9",
+    "webpack": "3.1.0",
+    "webpack-dev-server": "2.5.1"
   },
   "dependencies": {
     "axios": "0.16.2",
