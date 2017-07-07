@@ -8,3 +8,4 @@ node_modules
 package-lock.json
 
 dev/config.js
+yarn.lock
