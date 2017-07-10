@@ -15,14 +15,18 @@ window.GT_i18n_distanceInWordsLocaleMap = {
 
 export default class Comment extends Component {
   render () {
-    const { comment, user, language } = this.props
+    const { comment, user, language, i18n, admin = [] } = this.props
     const enableEdit = user && comment.user.login === user.login
+    const isAdmin = ~admin.indexOf(comment.user.login)
     return (
-      <div className="gt-comment">
+      <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
         <Avatar className="gt-comment-avatar" src={comment.user && comment.user.avatar_url} />
         <div className="gt-comment-content">
           <div className="gt-comment-header">
             <a className="gt-comment-username" href={comment.user && comment.user.html_url}>{comment.user && comment.user.login}</a>
+            <span className="gt-comment-at">
+              {i18n.t('commented')}
+            </span>
             <span className="gt-comment-date">
               {distanceInWordsToNow(comment.created_at, {
                 addSuffix: true,
@@ -31,8 +35,7 @@ export default class Comment extends Component {
                 }
               })}
             </span>
-
-            {enableEdit && <a href={comment.html_url} className="gt-comment-edit" />}
+            {enableEdit && <a href={comment.html_url} className="gt-comment-edit" target="_blank" />}
           </div>
           <div className="gt-comment-body markdown-body" dangerouslySetInnerHTML={{
             __html: comment.body_html

@@ -10,19 +10,18 @@
   left: 50%;
   width: 12px;
   height: 12px;
-  margin-top: -6px;
+  margin-top: -3px;
   margin-left: -6px;
   border-radius: 50%;
-  border: 2px solid #C9C9C9;
-  border-top-color: #434343;
+  border: 2px solid white;
+  border-top-color: #6190E8;
   animation: spinner .6s linear infinite;
 }
 
 .gt-avatar {
-  margin: 6px 0;
   display: inline-block;
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
 }
 .gt-avatar img {
   width: 100%;
@@ -31,18 +30,21 @@
 }
 
 .gt-btn {
-  padding: 0 10px;
+  padding: 0 20px;
   display: inline-block;
-  height: 28px;
+  height: 34px;
+  line-height: 34px;
   text-decoration: none;
   white-space: nowrap;
-  line-height: 28px;
   cursor: pointer;
-  color: #434343;
-  border: 1px solid #C9C9C9;
-  border-radius: 2px;
-  background: #f8f8f8;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+  border: none;
+  border-radius: 5px;
+  background-color: #6190E8;
+  color: white;
+  outline: none;
+}
+.gt-btn:hover {
+  background-color: #8EAFEE;
 }
 .gt-btn-text {
   font-weight: 500;
@@ -64,14 +66,10 @@
 }
 .gt-btn-public {
   margin-right: 12px;
-  color: white;
-  background-color: #6190e8;
-  border: none;
 }
-.gt-btn-public .gt-btn-loading::before{
-  border: 2px solid white;
-  border-top-color: #6190e8;
+.gt-btn-loadmore {
 }
+
 
 /* container */
 .gt-container {
@@ -108,6 +106,30 @@
   text-align: center;
 }
 
+/* meta */
+.gt-meta {
+  margin: 20px 0;
+  padding: 16px 0;
+  position: relative;
+  border-bottom: 1px solid #E9E9E9;
+}
+.gt-meta .gt-counts {
+  margin: 0;
+}
+.gt-meta .gt-counts-link {
+  color: #6190E8;
+  border-bottom: 1px dashed #6190E8;
+  text-decoration: none;
+}
+.gt-meta .gt-power {
+  position: absolute;
+  right: 0;
+}
+.gt-meta .gt-project-link {
+  color: #6190E8;
+  text-decoration: none;
+}
+
 /* header */
 .gt-header {
   position: relative;
@@ -125,25 +147,47 @@
   position: absolute;
 }
 .gt-header .gt-header-comment {
-  margin-left: 44px;
-  padding-left: 16px;
+  margin-left: 70px;
 }
 .gt-header .gt-header-textarea {
   padding: 1em;
   display: block;
   box-sizing: border-box;
   width: 100%;
-  min-height: 120px;
-  max-height: 420px;
-  border-radius: 2px;
-  border: 1px solid #C9C9C9;
+  min-height: 82px;
+  max-height: 240px;
+  border-radius: 5px;
+  border: 1px solid rgba(0,0,0,0.1);
   font-size: 14px;
   word-wrap: break-word;
   resize: vertical;
+  background-color: #f6f6f6;
 }
 .gt-header .gt-header-controls {
-  margin: 20px 0;
+  position: relative;
+  margin: 12px 0 0;
   text-align: right;
+}
+.gt-header .gt-header-controls-tip {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-size: 14px;
+  color: #6190E8;
+  text-decoration: none;
+}
+.gt-header .gt-header-controls-tip::before {
+  content: " ";
+  display: inline-block;
+  position: relative;
+  top: 3px;
+  right: 3px;
+  width: 16px;
+  height: 16px;
+  background-image: url('../assert/tip.svg');
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 /* comments */
@@ -167,8 +211,9 @@
   position: absolute;
 }
 .gt-comment .gt-comment-content {
-  margin-left: 44px;
-  padding-left: 16px;
+  margin-left: 70px;
+  padding: 12px 16px;
+  background-color: #F9F9F9;
 }
 .gt-comment .gt-comment-header {
   margin-bottom: 8px;
@@ -176,15 +221,20 @@
 .gt-comment .gt-comment-username {
   font-size: 14px;
   font-weight: 500;
-  color: #586069;
+  color: #6190E8;
   text-decoration: none;
 }
 .gt-comment .gt-comment-username:hover {
   text-decoration: underline;
 }
+.gt-comment .gt-comment-at {
+  margin-left: .5em;
+  font-size: 14px;
+  color: #a1a1a1;
+}
 .gt-comment .gt-comment-date {
   margin-left: .5em;
-  font-size: 12px;
+  font-size: 14px;
   color: #a1a1a1;
 }
 .gt-comment .gt-comment-edit {
@@ -200,16 +250,12 @@
   font-size: 16px;
   color: #24292e;
 }
-
-/* footer */
-.gt-footer {
-  margin-top: 20px;
-  text-align: right;
+.gt-comment .gt-comment-body a {
+  color: #6190E8;
 }
-.gt-footer .gt-footer-link {
-  color: inherit;
+.gt-comment.gt-comment-admin .gt-comment-content {
+  background-color: #FFFAF3;
 }
-
 
 @keyframes spinner {
   to {

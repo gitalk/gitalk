@@ -1,12 +1,15 @@
 {
-  "init": "Init ...",
+  "init": "Running Gitalk ...",
   "no-found-related": "Not found related %{link} submit comment",
   "please-contact": "Please contact %{user} init create",
   "init-issue": "Init Issue",
   "leave-a-comment": "Leave a comment",
   "comment": "Comment",
+  "support-markdown": "Styling with Markdown is supported Comment",
   "login-with-github": "Login with Github",
   "first-comment-person": "Be the first person to leave a comment!",
+  "commented": "commented",
   "load-more": "Load more",
-  "footer": "Power by %{link}"
+  "power": "Power by %{link}",
+  "counts": "%{counts} comment |||| %{counts} comments"
 }

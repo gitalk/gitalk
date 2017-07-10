@@ -347,6 +347,9 @@ class GitalkComponent extends Component {
             placeholder={this.i18n.t('leave-a-comment')}
           />
           <div className="gt-header-controls">
+            <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
+              {this.i18n.t('support-markdown')}
+            </a>
             {user ?
               <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} /> :
               <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />
@@ -358,28 +361,37 @@ class GitalkComponent extends Component {
   }
   comments () {
     const { user, comments, localComments, isLoadOver, isLoadMore } = this.state
-    const { language, flipMoveOptions } = this.options
+    const { language, flipMoveOptions, admin } = this.options
     return (
       <div className="gt-comments" key="comments">
         <FlipMove {...flipMoveOptions}>
           {comments.concat(localComments).map(c => (
-            <Comment comment={c} key={c.id} user={user} language={language}/>
+            <Comment comment={c} key={c.id} user={user} language={language} i18n={this.i18n} admin={admin} />
           ))}
         </FlipMove>
         {!comments.concat(localComments).length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
         {!isLoadOver && <div className="gt-comments-controls">
-          <Button onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />
+          <Button className="gt-btn-loadmore" onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />
         </div>}
       </div>
     )
   }
-  footer () {
+  meta () {
+    const { issue } = this.state
     return (
-      <div className="gt-footer" key="footer" dangerouslySetInnerHTML={{
-        __html: this.i18n.t('footer', {
-          link: '<a class="gt-footer-link" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
-        })
-      }}/>
+      <div className="gt-meta" key="meta" >
+        <span className="gt-counts" dangerouslySetInnerHTML={{
+          __html: this.i18n.t('counts', {
+            counts: `<a class="gt-counts-link" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
+            smart_count: issue.comments
+          })
+        }}/>
+        <span className="gt-power" dangerouslySetInnerHTML={{
+          __html: this.i18n.t('power', {
+            link: '<a class="gt-project-link" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
+          })
+        }}/>
+      </div>
     )
   }
 
@@ -387,6 +399,12 @@ class GitalkComponent extends Component {
     const { isIniting, isNoInit, isOccurError, errorMsg } = this.state
     return (
       <div className="gt-container">
+        {!isIniting && (
+          isNoInit ? [
+          ] : [
+            this.meta()
+          ])
+        }
         {isOccurError && <div className="gt-error">
           {errorMsg}
         </div>}
@@ -396,8 +414,7 @@ class GitalkComponent extends Component {
             this.noInit()
           ] : [
             this.header(),
-            this.comments(),
-            this.footer()
+            this.comments()
           ])
         }
       </div>
