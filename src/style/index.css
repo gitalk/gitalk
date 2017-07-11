@@ -138,7 +138,7 @@
   position: absolute;
   width: 48px;
   height: 48px;
-  background-image: url('../assert/github.svg');
+  background-image: url('../assets/icon/github.svg');
   background-size: 42px;
   background-repeat: no-repeat;
   background-position: center;
@@ -184,7 +184,7 @@
   right: 3px;
   width: 16px;
   height: 16px;
-  background-image: url('../assert/tip.svg');
+  background-image: url('../assets/icon/tip.svg');
   background-size: 16px;
   background-repeat: no-repeat;
   background-position: center;
@@ -241,7 +241,7 @@
   float: right;
   width: 22px;
   height: 22px;
-  background-image: url('../assert/edit.svg');
+  background-image: url('../assets/icon/edit.svg');
   background-size: 14px;
   background-repeat: no-repeat;
   background-position: center;
