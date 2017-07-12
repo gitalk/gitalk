@@ -12,7 +12,9 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --no-info --progress",
     "build": "rimraf ./dist && cross-env NODE_ENV=production webpack --hide-modules && cross-env NODE_ENV=production webpack --config webpack.config.min.js",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "coverage": "jest --coverage",
+    "test": "jest"
   },
   "author": "Liucw",
   "license": "MIT",
@@ -20,18 +22,26 @@
     "autoprefixer": "7.1.2",
     "babel-core": "6.25.0",
     "babel-eslint": "7.2.3",
+    "babel-jest": "20.0.3",
     "babel-loader": "7.1.1",
     "babel-preset-es2015": "6.24.1",
     "babel-preset-react": "6.24.1",
     "babel-preset-stage-2": "6.24.1",
     "cross-env": "5.0.1",
     "css-loader": "0.28.4",
+    "enzyme": "2.9.1",
     "eslint": "4.1.1",
     "eslint-config-o2team": "0.1.6",
     "eslint-plugin-react": "7.1.0",
     "extract-text-webpack-plugin": "2.1.2",
+    "jest": "20.0.4",
+    "moxios": "0.4.0",
     "postcss-loader": "2.0.6",
+    "react": "15.6.1",
+    "react-dom": "15.6.1",
+    "react-test-renderer": "15.6.1",
     "rimraf": "2.6.1",
+    "sinon": "2.3.7",
     "style-loader": "0.18.2",
     "url-loader": "0.5.9",
     "webpack": "3.1.0",
@@ -46,5 +56,20 @@
     "preact": "8.1.0",
     "preact-compat": "3.16.0",
     "react-flip-move": "2.9.14"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "moduleNameMapper": {
+      "\\.(css|less|scss)$": "<rootDir>/__mocks__/style.js"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "coveragePathIgnorePatterns": [
+      "src/gitalk.jsx"
+    ]
   }
 }

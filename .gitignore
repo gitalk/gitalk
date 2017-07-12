@@ -9,3 +9,5 @@ package-lock.json
 
 dev/config.js
 yarn.lock
+
+coverage

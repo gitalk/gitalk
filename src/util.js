@@ -8,6 +8,7 @@ export const queryParse = (search = window.location.search) => {
     .split('&')
     .forEach(queryStr => {
       const [key, value] = queryStr.split('=')
+      /* istanbul ignore else */
       if (key) query[decodeURIComponent(key)] = decodeURIComponent(value)
     })
 
@@ -17,7 +18,7 @@ export const queryParse = (search = window.location.search) => {
 export const queryStringify = query => {
   const queryString = Object.keys(query)
     .map(key => `${key}=${encodeURIComponent(query[key] || '')}`)
-    .join('&') || ''
+    .join('&')
   return queryString
 }
 
@@ -36,6 +37,7 @@ export const axiosGithub = axios.create({
 
 export const getMetaContent = (name, content = 'content') => {
   const el = document.querySelector(`meta[name='${name}']`)
+  /* istanbul ignore next */
   return el && el.getAttribute(content)
 }
 
