@@ -15,7 +15,7 @@ window.GT_i18n_distanceInWordsLocaleMap = {
 
 export default class Comment extends Component {
   render () {
-    const { comment, user, language, i18n, admin = [] } = this.props
+    const { comment, user, language, commentedText = '', admin = [] } = this.props
     const enableEdit = user && comment.user.login === user.login
     const isAdmin = ~admin.indexOf(comment.user.login)
     return (
@@ -24,8 +24,8 @@ export default class Comment extends Component {
         <div className="gt-comment-content">
           <div className="gt-comment-header">
             <a className="gt-comment-username" href={comment.user && comment.user.html_url}>{comment.user && comment.user.login}</a>
-            <span className="gt-comment-at">
-              {i18n.t('commented')}
+            <span className="gt-comment-text">
+              {commentedText}
             </span>
             <span className="gt-comment-date">
               {distanceInWordsToNow(comment.created_at, {

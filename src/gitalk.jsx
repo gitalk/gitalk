@@ -366,7 +366,14 @@ class GitalkComponent extends Component {
       <div className="gt-comments" key="comments">
         <FlipMove {...flipMoveOptions}>
           {comments.concat(localComments).map(c => (
-            <Comment comment={c} key={c.id} user={user} language={language} i18n={this.i18n} admin={admin} />
+            <Comment
+              comment={c}
+              key={c.id}
+              user={user}
+              language={language}
+              commentedText={this.i18n.t('commented')}
+              admin={admin}
+            />
           ))}
         </FlipMove>
         {!comments.concat(localComments).length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}

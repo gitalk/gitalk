@@ -227,7 +227,7 @@
 .gt-comment .gt-comment-username:hover {
   text-decoration: underline;
 }
-.gt-comment .gt-comment-at {
+.gt-comment .gt-comment-text {
   margin-left: .5em;
   font-size: 14px;
   color: #a1a1a1;
