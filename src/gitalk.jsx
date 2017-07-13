@@ -91,6 +91,11 @@ class GitalkComponent extends Component {
             .then(() => this.setState({ isIniting: false }))
             .catch(err => {
               console.log('err:', err)
+              this.setState({
+                isIniting: false,
+                isOccurError: true,
+                errorMsg: formatErrorMsg(err)
+              })
             })
         } else {
           // no access_token
