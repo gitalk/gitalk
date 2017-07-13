@@ -4,6 +4,7 @@
   "please-contact": "Please contact %{user} init create",
   "init-issue": "Init Issue",
   "leave-a-comment": "Leave a comment",
+  "logout": "Logout",
   "comment": "Comment",
   "support-markdown": "Markdown is supported",
   "login-with-github": "Login with Github",
