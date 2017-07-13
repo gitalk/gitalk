@@ -51,3 +51,14 @@ export const formatErrorMsg = err => {
   }
   return msg
 }
+
+export const hasClassInParent = (element, ...className) => {
+  let yes = false
+  if (typeof element.className === 'undefined') return false
+  const classes = element.className.split(' ')
+  className.forEach((c, i) => {
+    yes = yes || (classes.indexOf(c) >= 0)
+  })
+  if (yes) return yes
+  return element.parentNode && hasClassInParent(element.parentNode, className)
+}

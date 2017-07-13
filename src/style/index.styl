@@ -61,7 +61,6 @@ $gt-size-btn-height := em(34px)
     vertical-align: middle
     position: relative
     font-style: normal
-    color: $gt-color-main
     text-align: left
     text-indent: -9999px
     direction: ltr
@@ -81,10 +80,10 @@ $gt-size-btn-height := em(34px)
         position: absolute
         bottom: 0
         margin: auto 0
-        right: em(1px)
+        right: em(2px)
         box-shadow: inset 0 0 0 em(32px)
         transform-origin: right
-        top: em(1px)
+        top: em(2px)
         transform: rotate(45deg)
       &:after
         top:0
@@ -221,14 +220,23 @@ $gt-size-btn-height := em(34px)
   .gt-counts
     margin: 0 em(10px) 0 0
 
-  .gt-power
+  .gt-user
     float: right
-    margin: 0 em(10px) 0 0
-    color: $gt-color-sub
+    margin: 0
     font-size: 92%
-  
-  .gt-actions
-    float: right
+    &-pic
+      width: 16px
+      height: 16px
+      vertical-align: top
+      margin-right: em(8px)
+    &-inner
+      display: inline-block
+      cursor: pointer
+    .gt-icon
+      margin: em(1px) em(2px) 0 em(8px)
+    .is--poping
+      .gt-icon
+        color: $gt-color-main
   
   .gt-version
     color: $gt-color-sub
@@ -256,6 +264,7 @@ $gt-size-btn-height := em(34px)
       margin: em(8px) 0
       padding: 0 em(18px)
       position: relative
+      text-decoration: none
       &.is--active
         &:before
           content: ''

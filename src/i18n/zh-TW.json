@@ -4,7 +4,6 @@
   "please-contact": "請聯系 %{user} 初始化創建",
   "init-issue": "初始化 Issue",
   "leave-a-comment": "說點什麽",
-  "logout": "註銷",
   "comment": "評論",
   "support-markdown": "支持 Markdown 語法",
   "login-with-github": "使用 Github 登錄",
@@ -15,5 +14,6 @@
   "counts": "%{counts} 條評論",
   "sort-asc": "從舊到新排序",
   "sort-desc": "從新到舊排序",
-  "logout": "註銷"
+  "logout": "註銷",
+  "anonymous": "未登錄用戶"
 }

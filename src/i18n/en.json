@@ -4,7 +4,6 @@
   "please-contact": "Please contact %{user} init create",
   "init-issue": "Init Issue",
   "leave-a-comment": "Leave a comment",
-  "logout": "Logout",
   "comment": "Comment",
   "support-markdown": "Markdown is supported",
   "login-with-github": "Login with Github",
@@ -15,5 +14,6 @@
   "counts": "%{counts} comment |||| %{counts} comments",
   "sort-asc": "Sort by Oldest",
   "sort-desc": "Sort by Latest",
-  "logout": "Logout"
+  "logout": "Logout",
+  "anonymous": "Anonymous"
 }

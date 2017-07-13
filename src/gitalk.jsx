@@ -10,14 +10,14 @@ import {
   axiosJSON,
   axiosGithub,
   getMetaContent,
-  formatErrorMsg
+  formatErrorMsg,
+  hasClassInParent
 } from './util'
 import Avatar from './component/avatar'
 import Button from './component/button'
 import Action from './component/action'
 import Comment from './component/comment'
-import { GT_ACCESS_TOKEN } from './const'
-
+import { GT_ACCESS_TOKEN, GT_VERSION } from './const'
 
 class GitalkComponent extends Component {
   state = {
@@ -37,7 +37,8 @@ class GitalkComponent extends Component {
     isIssueCreating: false,
 
     isOccurError: false,
-    errorMsg: ''
+    errorMsg: '',
+    isPopupVisible: false
   }
   constructor (props) {
     super(props)
@@ -261,6 +262,24 @@ class GitalkComponent extends Component {
     localStorage.removeItem(GT_ACCESS_TOKEN)
   }
 
+  handlePopup = e => {
+    e.preventDefault()
+    e.stopPropagation()
+    const isVisible = !this.state.isPopupVisible
+    const hideHanlder = e1 => {
+      if (hasClassInParent(e1.target, 'gt-user', 'gt-popup')) {
+        return
+      }
+      document.removeEventListener('click', hideHanlder)
+      this.setState({ isPopupVisible: false })
+    }
+    this.setState({ isPopupVisible: isVisible })
+    if (isVisible) {
+      document.addEventListener('click', hideHanlder)
+    } else {
+      document.removeEventListener('click', hideHanlder)
+    }
+  }
 
   handleLogin = () => {
     location.href = this.loginLink
@@ -354,7 +373,6 @@ class GitalkComponent extends Component {
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
               {this.i18n.t('support-markdown')}
             </a>
-            {user && <Button className="gt-btn-logout" onClick={this.handleLogout} text={this.i18n.t('logout')} />}
             {user && <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} />}
             {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
@@ -387,35 +405,43 @@ class GitalkComponent extends Component {
     )
   }
   meta () {
-    const { user, issue } = this.state
+    const { user, issue, isPopupVisible } = this.state
+
     return (
       <div className="gt-meta" key="meta" >
-        <span className="gt-actions" dangerouslySetInnerHTML={{
-          __html: '<i class="gt-icon gt-icon-caretDown"></i>'
-        }}/>
         <span className="gt-counts" dangerouslySetInnerHTML={{
           __html: this.i18n.t('counts', {
             counts: `<a class="gt-link gt-link-counts" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
             smart_count: issue.comments
           })
         }}/>
-        <div className="gt-popup">
-          <Action className="gt-action-sortasc is--active" text={this.i18n.t('sort-asc')}/>
-          <Action className="gt-action-sortdesc" text={this.i18n.t('sort-desc')}/>
-          {user ?
-            <Action className="gt-action-logout" text={this.i18n.t('logout')}/> :
-            <a href={this.loginLink} className="gt-avatar-github" />
-          }
-          <div class="gt-copyright">
-            <a class="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>
-            <span class="gt-version">v1.0.0</span>
+        {isPopupVisible &&
+          <div className="gt-popup">
+            <Action className="gt-action-sortasc is--active" text={this.i18n.t('sort-asc')}/>
+            <Action className="gt-action-sortdesc" text={this.i18n.t('sort-desc')}/>
+            {user ?
+              <Action className="gt-action-logout" onClick={this.handleLogout} text={this.i18n.t('logout')}/> :
+              <a href={this.loginLink} className="gt-action gt-action-login">{this.i18n.t('login-with-github')}</a>
+            }
+            <div className="gt-copyright">
+              <a className="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>
+              <span className="gt-version">{GT_VERSION}</span>
+            </div>
           </div>
+        }
+        <div className="gt-user">
+          {user ?
+            <div className={isPopupVisible ? 'gt-user-inner is--poping' : 'gt-user-inner'} onClick={this.handlePopup}>
+              <img className="gt-user-pic" src={user.avatar_url} alt={user.login}/>
+              <span className="gt-user-name">{user.login}</span>
+              <i className="gt-icon gt-icon-caretDown"/>
+            </div> :
+            <div className={isPopupVisible ? 'gt-user-inner is--poping' : 'gt-user-inner'} onClick={this.handlePopup}>
+              <span className="gt-user-name">{this.i18n.t('anonymous')}</span>
+              <i className="gt-icon gt-icon-caretDown"/>
+            </div>
+          }
         </div>
-        <span className="gt-power" dangerouslySetInnerHTML={{
-          __html: this.i18n.t('power', {
-            link: '<a class="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
-          })
-        }}/>
       </div>
     )
   }
