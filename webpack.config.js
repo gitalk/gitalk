@@ -20,7 +20,10 @@ const cssLoader = [{
 }]
 
 const stylLoader = {
-  loader: 'stylus-loader'
+  loader: 'stylus-loader',
+  options: {
+    sourceMap: false
+  }
 }
 
 module.exports = {

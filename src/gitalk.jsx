@@ -309,7 +309,7 @@ class GitalkComponent extends Component {
 
   initing () {
     return <div className="gt-initing">
-      <span className="gt-initing-spinner gt-spinner" />
+      <i className="gt-loader"/>
       <p className="gt-initing-text">{this.i18n.t('init')}</p>
     </div>
   }
@@ -336,7 +336,7 @@ class GitalkComponent extends Component {
       <div className="gt-header" key="header">
         {user ?
           <Avatar className="gt-header-avatar" src={user.avatar_url} /> :
-          <a href={this.loginLink} className="gt-header-github" />
+          <a href={this.loginLink} className="gt-avatar-github" />
         }
         <div className="gt-header-comment">
           <textarea
@@ -389,13 +389,13 @@ class GitalkComponent extends Component {
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
           __html: this.i18n.t('counts', {
-            counts: `<a class="gt-link gt-counts-link" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
+            counts: `<a class="gt-link gt-link-counts" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
             smart_count: issue.comments
           })
         }}/>
         <span className="gt-power" dangerouslySetInnerHTML={{
           __html: this.i18n.t('power', {
-            link: '<a class="gt-link gt-project-link" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
+            link: '<a class="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
           })
         }}/>
       </div>

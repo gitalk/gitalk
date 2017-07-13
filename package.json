@@ -64,7 +64,7 @@
       "^.+\\.jsx?$": "babel-jest"
     },
     "moduleNameMapper": {
-      "\\.(css|less|scss)$": "<rootDir>/__mocks__/style.js"
+      "\\.(css|less|scss|styl)$": "<rootDir>/__mocks__/style.js"
     },
     "moduleFileExtensions": [
       "js",

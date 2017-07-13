@@ -1,273 +1,275 @@
-/* common */
-.gt-spinner {
-  position: relative;
-}
-.gt-spinner::before {
-  content: '';
-  box-sizing: border-box;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 12px;
-  height: 12px;
-  margin-top: -3px;
-  margin-left: -6px;
-  border-radius: 50%;
-  border: 2px solid white;
-  border-top-color: #6190E8;
-  animation: spinner .6s linear infinite;
-}
+/* variables */
+$gt-color-main := #6190e8
+$gt-color-sub := #a1a1a1
+$gt-color-loader := #999999
+$gt-color-error := #ff3860
+$gt-color-hr :=  #E9E9E9
+$gt-color-input-border := rgba(0,0,0,0.1)
+$gt-color-input-bg := #f6f6f6
+$gt-color-comment-bg := #f9f9f9
+$gt-color-comment-adminbg := #FFFAF3
+$gt-color-comment-txt := #333333
+$gt-color-btn := #ffffff
+$gt-size-base := 16px // default font-size
+$gt-size-border-radius := 5px
+/* functions */
+em($px, $base-size = $gt-size-base)
+  u = unit($px)
+  if (u is 'px')
+    unit($px / $base-size, 'em')
+  else
+    unit($px, u)
 
-.gt-avatar {
-  display: inline-block;
-  width: 50px;
-  height: 50px;
-}
-.gt-avatar img {
-  width: 100%;
-  height: auto;
-  border-radius: 3px;
-}
+/* variables - calculated */
+$gt-size-loader-dot := em(6px)
+$gt-size-loader := em(28px)
+$gt-size-avatar := em(50px)
+$gt-size-btn-height := em(34px)
 
-.gt-btn {
-  padding: 0 20px;
-  display: inline-block;
-  height: 34px;
-  line-height: 34px;
-  text-decoration: none;
-  white-space: nowrap;
-  cursor: pointer;
-  border: none;
-  border-radius: 5px;
-  background-color: #6190E8;
-  color: white;
-  outline: none;
-}
-.gt-btn:hover {
-  background-color: #8EAFEE;
-}
-.gt-btn-text {
-  font-weight: 500;
-  font-size: 12px;
-}
-.gt-btn-loading {
-  margin-left: 4px;
-  display: inline-block;
-  width: 12px;
-  height: 28px;
-  vertical-align: top;
-}
-.gt-btn.disable {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-.gt-btn-login {
-  margin-right: 0;
-}
-.gt-btn-public {
-  margin-right: 12px;
-}
-.gt-btn-loadmore {
-}
+/* styles */
+// Put everything under container to avoid style conflicts 
+.gt-container
+  font-size: $gt-size-base
+  // common
+  a
+    color: $gt-color-main
+    &:hover
+      color: lighten($gt-color-main, 20%)
+      border-color: lighten($gt-color-main, 20%)
+  /* loader */
+  .gt-spinner
+    position: relative
+    &::before
+      content: ''
+      box-sizing: border-box
+      position: absolute
+      top: 50%
+      left: 50%
+      width: em(12px)
+      height: em(12px)
+      margin-top: em(-3px)
+      margin-left: em(-6px)
+      border-radius: 50%
+      border: 1px solid $gt-color-btn
+      border-top-color: $gt-color-main
+      animation: gt-kf-rotate .6s linear infinite
 
+  .gt-loader
+    position: relative
+    border: 1px solid $gt-color-loader
+    animation: ease gt-kf-rotate 1.5s infinite
+    display: inline-block
+    font-style: normal
+    width: $gt-size-loader
+    height: $gt-size-loader
+    //font-size: $gt-size-loader
+    line-height: $gt-size-loader
+    border-radius: 50%
+    &:before
+      content: ''
+      position: absolute
+      display: block
+      top: 0
+      left: 50%
+      margin-top: -($gt-size-loader-dot / 2)
+      margin-left: -($gt-size-loader-dot / 2)
+      width: $gt-size-loader-dot
+      height: $gt-size-loader-dot
+      background-color: $gt-color-loader
+      border-radius: 50%
+  // avatar
+  .gt-avatar
+    display: inline-block
+    width: $gt-size-avatar 
+    height: $gt-size-avatar 
+    img 
+      width: 100%
+      height: auto
+      border-radius: 3px
+    &-github
+      position: absolute
+      width: $gt-size-avatar - em(2px)
+      height: $gt-size-avatar - em(2px)
+      background-image: url('../assets/icon/github.svg')
+      background-size: $gt-size-avatar - em(4px)
+      background-repeat: no-repeat
+      background-position: center
+  // button
+  .gt-btn
+    padding: 0 em(15px)
+    display: inline-block
+    height: $gt-size-btn-height
+    line-height: $gt-size-btn-height
+    text-decoration: none
+    white-space: nowrap
+    cursor: pointer
+    border: none
+    border-radius: $gt-size-border-radius
+    background-color: $gt-color-main
+    color: $gt-color-btn
+    outline: none
+    font-size: em(12px)
+    &:hover 
+      background-color: lighten($gt-color-main, 20%)
+      color: $gt-color-btn
+    &-text 
+      font-weight: 400
+    &-loading
+      margin-left: em(4px)
+      display: inline-block
+      width: em(12px)
+      height: em(28px)
+      vertical-align: top
+    &.is--disable
+      cursor: not-allowed
+      opacity: 0.5
+    &-login
+      margin-right: 0
+    &-public
+      margin-right: em(12px)
+    &-loadmore
+      // loadmore 
 
-/* container */
-.gt-container {
-}
+  /* error */
+  .gt-error
+    text-align: center
+    margin: em(10px)
+    color: $gt-color-error
 
-/* error */
-.gt-error {
-  text-align: center;
-  margin: 10px;
-  color: red;
-}
+  /* initing */
+  .gt-initing
+    text-align: center
+    &-text
+      margin: em(10px) auto
+      font-size: 92%
 
-/* initing */
-.gt-initing {
-  text-align: center;
-}
-.gt-initing-spinner {
-  display: inline-block;
-  width: 36px;
-  height: 36px;
-}
-.gt-initing-spinner::before {
-  width: 36px;
-  height: 36px;
-  margin-top: -18px;
-  margin-left: -18px;
-}
-.gt-initing-text {
-  margin: .5em auto;
-}
+  /* no int */
+  .gt-no-init
+    text-align: center
 
-/* no int */
-.gt-no-init {
-  text-align: center;
-}
+  /* link */
+  .gt-link
+    border-bottom: 1px dotted $gt-color-main
+    &-counts, &-project
+      text-decoration: none
 
-/* link */
-.gt-link {
-  border-bottom: 1px dashed #6190E8;
-}
-.gt-link:hover {
+  /* meta */
+  .gt-meta
+    margin: em(20px) 0
+    padding: em(16px) 0
+    position: relative
+    border-bottom: 1px solid $gt-color-hr
+    font-size: em(16px)
 
-}
+  .gt-counts
+    margin: 0
 
-/* meta */
-.gt-meta {
-  margin: 20px 0;
-  padding: 16px 0;
-  position: relative;
-  border-bottom: 1px solid #E9E9E9;
-}
-.gt-meta .gt-counts {
-  margin: 0;
-}
-.gt-meta .gt-counts-link {
-  color: #6190E8;
-  text-decoration: none;
-}
-.gt-meta .gt-power {
-  position: absolute;
-  right: 0;
-  color: #999999;
-  font-size: 92%;
-}
-.gt-meta .gt-project-link {
-  color: #6190E8;
-  text-decoration: none;
-}
+  .gt-power
+    position: absolute
+    right: 0
+    color: $gt-color-sub
+    font-size: 92%
 
-/* header */
-.gt-header {
-  position: relative;
-}
-.gt-header-github {
-  position: absolute;
-  width: 48px;
-  height: 48px;
-  background-image: url('../assets/icon/github.svg');
-  background-size: 42px;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.gt-header .gt-header-avatar {
-  position: absolute;
-}
-.gt-header .gt-header-comment {
-  margin-left: 70px;
-}
-.gt-header .gt-header-textarea {
-  padding: 1em;
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 82px;
-  max-height: 240px;
-  border-radius: 5px;
-  border: 1px solid rgba(0,0,0,0.1);
-  font-size: 14px;
-  word-wrap: break-word;
-  resize: vertical;
-  background-color: #f6f6f6;
-}
-.gt-header .gt-header-controls {
-  position: relative;
-  margin: 12px 0 0;
-  text-align: right;
-}
-.gt-header .gt-header-controls-tip {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  font-size: 14px;
-  color: #6190E8;
-  text-decoration: none;
-}
-.gt-header .gt-header-controls-tip::before {
-  content: " ";
-  display: inline-block;
-  position: relative;
-  top: 3px;
-  right: 3px;
-  width: 16px;
-  height: 16px;
-  background-image: url('../assets/icon/tip.svg');
-  background-size: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-}
+  /* header */
+  .gt-header
+    position: relative
+    &-comment
+      margin-left: em(70px)
+    &-textarea
+      padding: em(12px)
+      display: block
+      box-sizing: border-box
+      width: 100%
+      min-height: em(82px)
+      max-height: em(240px)
+      border-radius: $gt-size-border-radius
+      border: 1px solid $gt-color-input-border
+      font-size: em(14px)
+      word-wrap: break-word
+      resize: vertical
+      background-color: $gt-color-input-bg
+      outline: none
+      transition: all 0.25s ease
+      &:hover
+        background-color: lighten($gt-color-input-bg, 20%)
+        box-shadow: 0 em(10px) em(60px) 0 $gt-color-input-bg
+    &-controls
+      position: relative
+      margin: em(12px) 0 0
+      text-align: right
+      &-tip
+        position: absolute
+        left: 0
+        bottom: 0
+        font-size: em(14px)
+        color: $gt-color-main
+        text-decoration: none
+        &::before
+          content: " "
+          display: inline-block
+          position: relative
+          top: em(3px)
+          right: em(3px)
+          width: em(16px)
+          height: em(16px)
+          background-image: url('../assets/icon/tip.svg')
+          background-size: em(16px)
+          background-repeat: no-repeat
+          background-position: center
 
-/* comments */
-.gt-comments {
-  padding-top: 20px;
-}
-.gt-comments-null {
-  text-align: center;
-}
-.gt-comments-controls {
-  margin: 20px 0;
-  text-align: center;
-}
+  /* comments */
+  .gt-comments
+    padding-top: em(20px)
+    &-null
+      text-align: center
+    &-controls
+      margin: em(20px) 0
+      text-align: center
 
-/* comment */
-.gt-comment {
-  position: relative;
-  padding: 16px 0;
-}
-.gt-comment .gt-comment-avatar {
-  position: absolute;
-}
-.gt-comment .gt-comment-content {
-  margin-left: 70px;
-  padding: 12px 16px;
-  background-color: #F9F9F9;
-}
-.gt-comment .gt-comment-header {
-  margin-bottom: 8px;
-}
-.gt-comment .gt-comment-username {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6190E8;
-  text-decoration: none;
-}
-.gt-comment .gt-comment-username:hover {
-  text-decoration: underline;
-}
-.gt-comment .gt-comment-text {
-  margin-left: .5em;
-  font-size: 14px;
-  color: #a1a1a1;
-}
-.gt-comment .gt-comment-date {
-  margin-left: .5em;
-  font-size: 14px;
-  color: #a1a1a1;
-}
-.gt-comment .gt-comment-edit {
-  float: right;
-  width: 22px;
-  height: 22px;
-  background-image: url('../assets/icon/edit.svg');
-  background-size: 14px;
-  background-repeat: no-repeat;
-  background-position: center;
-}
-.gt-comment-body {
-  font-size: 16px;
-  color: #24292e;
-}
-.gt-comment-body a {
-  color: #6190E8;
-}
-.gt-comment-admin .gt-comment-content {
-  background-color: #FFFAF3;
-}
+  /* comment */
+  .gt-comment
+    position: relative
+    padding: em(10px) 0
+    &-avatar
+      position: absolute
+    &-content
+      margin-left: em(70px)
+      padding: em(12px) em(16px)
+      background-color: $gt-color-comment-bg
+      transition: all ease 0.25s
+      &:hover
+        box-shadow: 0 em(10px) em(60px) 0 darken($gt-color-comment-bg, 2%)
+    &-header
+      margin-bottom: em(8px)
+      font-size: em(14px)
+    &-username
+      font-weight: 500
+      color: $gt-color-main
+      text-decoration: none
+      &:hover
+        text-decoration: underline
+    &-text
+      margin-left: em(8px)
+      color: $gt-color-sub
+    &-date
+      margin-left: em(8px)
+      color: $gt-color-sub
+    &-edit
+      float: right
+      width: em(22px)
+      height: em(22px)
+      background-image: url('../assets/icon/edit.svg')
+      background-size: em(14px)
+      background-repeat: no-repeat
+      background-position: center
+    &-body
+      color: $gt-color-comment-txt !important
+    &-admin
+      .gt-comment-content
+        background-color: $gt-color-comment-adminbg
 
-@keyframes spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes gt-kf-rotate
+  0%
+    transform: rotate(0)
+  100%
+    transform: rotate(360deg)
