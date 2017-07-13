@@ -26,6 +26,12 @@ const stylLoader = {
   }
 }
 
+const plugins = [
+  new webpack.DefinePlugin({
+    VERSION: JSON.stringify(require('./package.json').version)
+  })
+]
+
 module.exports = {
   context: path.resolve(__dirname, 'src'),
   entry: './index.js',
@@ -78,7 +84,7 @@ module.exports = {
       }
     ]
   },
-  plugins: isDev ? [new webpack.NoEmitOnErrorsPlugin()] : [new ExtractTextPlugin('gitalk.css')],
+  plugins: isDev ? [...plugins, new webpack.NoEmitOnErrorsPlugin()] : [...plugins, new ExtractTextPlugin('gitalk.css')],
 
   devtool: isDev ? 'cheap-module-source-map' : 'source-map',
 
