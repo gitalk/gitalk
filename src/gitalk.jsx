@@ -16,7 +16,7 @@ import Avatar from './component/avatar'
 import Button from './component/button'
 import Action from './component/action'
 import Comment from './component/comment'
-import { GT_ACCESS_TOKEN, GT_USER_INFO } from './const'
+import { GT_ACCESS_TOKEN } from './const'
 
 
 class GitalkComponent extends Component {
@@ -62,13 +62,7 @@ class GitalkComponent extends Component {
       isManualCreateIssue: false,
     }, props.options)
 
-    try {
-      this.state.user = JSON.parse(localStorage.getItem(GT_USER_INFO))
-    } catch (err) {
-      localStorage.removeItem(GT_USER_INFO)
-    }
 
-    // 处理 github 授权登录返回的 code
     const query = queryParse()
     if (query.code) {
       const code = query.code
@@ -92,6 +86,11 @@ class GitalkComponent extends Component {
             .then(() => this.setState({ isIniting: false }))
             .catch(err => {
               console.log('err:', err)
+              this.setState({
+                isIniting: false,
+                isOccurError: true,
+                errorMsg: formatErrorMsg(err)
+              })
             })
         } else {
           // no access_token
@@ -156,11 +155,8 @@ class GitalkComponent extends Component {
       }
     }).then(res => {
       this.setState({ user: res.data })
-      localStorage.setItem(GT_USER_INFO, JSON.stringify(res.data))
     }).catch(err => {
-      this.setState({ user: null })
-      localStorage.removeItem(GT_USER_INFO)
-      localStorage.removeItem(GT_ACCESS_TOKEN)
+      this.logout()
     })
   }
   getIssue () {
@@ -260,6 +256,10 @@ class GitalkComponent extends Component {
         this.setState({ comment: '', localComments: localComments.concat(res.data) })
       })
   }
+  logout () {
+    this.setState({ user: null })
+    localStorage.removeItem(GT_ACCESS_TOKEN)
+  }
 
 
   handleLogin = () => {
@@ -306,7 +306,10 @@ class GitalkComponent extends Component {
     this.getComments().then(() => this.setState({ isLoadMore: false }))
   }
   handleCommentChange = e => this.setState({ comment: e.target.value })
-
+  handleLogout = () => {
+    this.logout()
+    location.reload()
+  }
 
   initing () {
     return <div className="gt-initing">
@@ -351,10 +354,9 @@ class GitalkComponent extends Component {
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
               {this.i18n.t('support-markdown')}
             </a>
-            {user ?
-              <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} /> :
-              <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />
-            }
+            {user && <Button className="gt-btn-logout" onClick={this.handleLogout} text={this.i18n.t('logout')} />}
+            {user && <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} />}
+            {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
         </div>
       </div>

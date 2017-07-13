@@ -2,7 +2,6 @@
  * config.js:
  *
  * window.CONFIG = {
- *   parent: 'root',
  *   clientID: '',
  *   clientSecret: '',
  *   owner: '',
@@ -12,4 +11,4 @@
  */
 const gitalk = new Gitalk(window.CONFIG)
 
-gitalk.render()
+gitalk.render('gitalk-container')

@@ -4,21 +4,23 @@ import GitalkComponent from './gitalk'
 
 class Gitalk {
   constructor (options = {}) {
-    this.options = Object.assign({
-      // parent: '',
-      // clientID: '',
-      // clientSecret: '',
-      // owner: '',
-      // repo: '',
-      // admin: [],
-    }, options)
+    this.options = options
   }
 
-  render () {
-    return render(
-      <GitalkComponent options={this.options}/>,
-      document.getElementById(this.options.parent)
-    )
+  render (container) {
+    let node = null
+    container = container || this.options.container
+
+    if (!container) throw new Error(`container is required: ${container}`)
+
+    if (!(container instanceof HTMLElement)) {
+      node = document.getElementById(container)
+      if (!node) throw new Error(`container not found, document.getElementById: ${container}`)
+    } else {
+      node = container
+    }
+
+    return render(<GitalkComponent options={this.options}/>, node)
   }
 }
 
