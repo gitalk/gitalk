@@ -14,6 +14,7 @@ import {
 } from './util'
 import Avatar from './component/avatar'
 import Button from './component/button'
+import Action from './component/action'
 import Comment from './component/comment'
 import { GT_ACCESS_TOKEN, GT_USER_INFO } from './const'
 
@@ -384,15 +385,30 @@ class GitalkComponent extends Component {
     )
   }
   meta () {
-    const { issue } = this.state
+    const { user, issue } = this.state
     return (
       <div className="gt-meta" key="meta" >
+        <span className="gt-actions" dangerouslySetInnerHTML={{
+          __html: '<i class="gt-icon gt-icon-caretDown"></i>'
+        }}/>
         <span className="gt-counts" dangerouslySetInnerHTML={{
           __html: this.i18n.t('counts', {
             counts: `<a class="gt-link gt-link-counts" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
             smart_count: issue.comments
           })
         }}/>
+        <div className="gt-popup">
+          <Action className="gt-action-sortasc is--active" text={this.i18n.t('sort-asc')}/>
+          <Action className="gt-action-sortdesc" text={this.i18n.t('sort-desc')}/>
+          {user ?
+            <Action className="gt-action-logout" text={this.i18n.t('logout')}/> :
+            <a href={this.loginLink} className="gt-avatar-github" />
+          }
+          <div class="gt-copyright">
+            <a class="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>
+            <span class="gt-version">v1.0.0</span>
+          </div>
+        </div>
         <span className="gt-power" dangerouslySetInnerHTML={{
           __html: this.i18n.t('power', {
             link: '<a class="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'

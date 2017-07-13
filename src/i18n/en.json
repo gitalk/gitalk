@@ -10,6 +10,9 @@
   "first-comment-person": "Be the first person to leave a comment!",
   "commented": "commented",
   "load-more": "Load more",
-  "power": "Power by %{link}",
-  "counts": "%{counts} comment |||| %{counts} comments"
+  "power": "%{link} v1.0.0",
+  "counts": "%{counts} comment |||| %{counts} comments",
+  "sort-asc": "Sort by Oldest",
+  "sort-desc": "Sort by Latest",
+  "logout": "Logout"
 }

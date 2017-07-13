@@ -11,5 +11,8 @@
   "commented": "發表於",
   "load-more": "加載更多",
   "power": "由 %{link} 驅動",
-  "counts": "%{counts} 條評論"
+  "counts": "%{counts} 條評論",
+  "sort-asc": "從舊到新排序",
+  "sort-desc": "從新到舊排序",
+  "logout": "註銷"
 }
