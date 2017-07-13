@@ -19,6 +19,10 @@ const cssLoader = [{
   }
 }]
 
+const stylLoader = {
+  loader: 'stylus-loader'
+}
+
 module.exports = {
   context: path.resolve(__dirname, 'src'),
   entry: './index.js',
@@ -51,6 +55,13 @@ module.exports = {
         use: isDev ? ['style-loader'].concat(cssLoader) : ExtractTextPlugin.extract({
           fallback: 'style-loader',
           use: cssLoader
+        })
+      },
+      {
+        test: /\.styl$/,
+        use: isDev ? ['style-loader'].concat(cssLoader, stylLoader) : ExtractTextPlugin.extract({
+          fallback: 'style-loader',
+          use: cssLoader.concat(stylLoader)
         })
       },
       {

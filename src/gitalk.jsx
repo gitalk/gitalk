@@ -3,7 +3,7 @@ import FlipMove from 'react-flip-move'
 import autosize from 'autosize'
 
 import i18n from './i18n'
-import './style/index.css'
+import './style/index.styl'
 import {
   queryParse,
   queryStringify,
@@ -309,8 +309,8 @@ class GitalkComponent extends Component {
 
   initing () {
     return <div className="gt-initing">
-      <span className="gt-inting-spinner gt-spinner" />
-      <p className="gt-inting-text">{this.i18n.t('init')}</p>
+      <span className="gt-initing-spinner gt-spinner" />
+      <p className="gt-initing-text">{this.i18n.t('init')}</p>
     </div>
   }
   noInit () {
@@ -389,13 +389,13 @@ class GitalkComponent extends Component {
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
           __html: this.i18n.t('counts', {
-            counts: `<a class="gt-counts-link" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
+            counts: `<a class="gt-link gt-counts-link" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
             smart_count: issue.comments
           })
         }}/>
         <span className="gt-power" dangerouslySetInnerHTML={{
           __html: this.i18n.t('power', {
-            link: '<a class="gt-project-link" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
+            link: '<a class="gt-link gt-project-link" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>'
           })
         }}/>
       </div>

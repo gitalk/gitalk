@@ -62,7 +62,7 @@
   opacity: 0.5;
 }
 .gt-btn-login {
-  margin-right: 12px;
+  margin-right: 0;
 }
 .gt-btn-public {
   margin-right: 12px;
@@ -86,24 +86,32 @@
 .gt-initing {
   text-align: center;
 }
-.gt-inting-spinner {
+.gt-initing-spinner {
   display: inline-block;
   width: 36px;
   height: 36px;
 }
-.gt-inting-spinner::before {
+.gt-initing-spinner::before {
   width: 36px;
   height: 36px;
   margin-top: -18px;
   margin-left: -18px;
 }
-.gt-inting-text {
+.gt-initing-text {
   margin: .5em auto;
 }
 
 /* no int */
 .gt-no-init {
   text-align: center;
+}
+
+/* link */
+.gt-link {
+  border-bottom: 1px dashed #6190E8;
+}
+.gt-link:hover {
+
 }
 
 /* meta */
@@ -118,12 +126,13 @@
 }
 .gt-meta .gt-counts-link {
   color: #6190E8;
-  border-bottom: 1px dashed #6190E8;
   text-decoration: none;
 }
 .gt-meta .gt-power {
   position: absolute;
   right: 0;
+  color: #999999;
+  font-size: 92%;
 }
 .gt-meta .gt-project-link {
   color: #6190E8;
@@ -246,14 +255,14 @@
   background-repeat: no-repeat;
   background-position: center;
 }
-.gt-comment .gt-comment-body {
+.gt-comment-body {
   font-size: 16px;
   color: #24292e;
 }
-.gt-comment .gt-comment-body a {
+.gt-comment-body a {
   color: #6190E8;
 }
-.gt-comment.gt-comment-admin .gt-comment-content {
+.gt-comment-admin .gt-comment-content {
   background-color: #FFFAF3;
 }
 
