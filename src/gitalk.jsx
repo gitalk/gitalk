@@ -36,10 +36,11 @@ class GitalkComponent extends Component {
     isLoadMore: false,
     isLoadOver: false,
     isIssueCreating: false,
+    isPopupVisible: false,
+    isFocusComment: false,
 
     isOccurError: false,
     errorMsg: '',
-    isPopupVisible: false
   }
   constructor (props) {
     super(props)
@@ -331,6 +332,8 @@ class GitalkComponent extends Component {
     this.logout()
     location.reload()
   }
+  handleCommentFocus = () => this.setState({ isFocusComment: true })
+  handleCommentBlur = () => this.setState({ isFocusComment: false })
 
   initing () {
     return <div className="gt-initing">
@@ -356,7 +359,7 @@ class GitalkComponent extends Component {
     )
   }
   header () {
-    const { user, comment, isCreating } = this.state
+    const { user, comment, isCreating, isFocusComment } = this.state
     return (
       <div className="gt-header" key="header">
         {user ?
@@ -365,12 +368,15 @@ class GitalkComponent extends Component {
             <Svg className="gt-ico-github" name="github"/>
           </a>
         }
+        <div className={`gt-header-mask ${isFocusComment && 'gt-header-mask-show'}`} />
         <div className="gt-header-comment">
           <textarea
             ref={t => { this.commentEL = t }}
             className="gt-header-textarea"
             value={comment}
             onChange={this.handleCommentChange}
+            onFocus={this.handleCommentFocus}
+            onBlur={this.handleCommentBlur}
             placeholder={this.i18n.t('leave-a-comment')}
           />
           <div className="gt-header-controls">

@@ -15,6 +15,7 @@ $gt-color-popbg := #ffffff
 $gt-size-base := 16px // default font-size
 $gt-size-border-radius := 5px
 $gt-breakpoint-mobile := 479px
+$gt-mask-z-index := 9999
 
 /* functions & mixins */
 clearfix() {
@@ -274,7 +275,22 @@ $gt-size-avatar-mobi := em(32px)
   .gt-header
     position: relative
     display: flex
+    &-mask
+      position: fixed
+      bottom: 100%
+      left: 0
+      right: 0
+      top: 0
+      background: #000
+      opacity: 0
+      transition: opacity .3s, bottom 0s .3s
+      z-index: $gt-mask-z-index
+    &-mask-show
+      bottom: 0%
+      opacity: .6
+      transition: opacity .3s
     &-comment
+      z-index: $gt-mask-z-index + 1
       flex: 1
       margin-left: em(20px)
       +mobile()
@@ -295,8 +311,8 @@ $gt-size-avatar-mobi := em(32px)
       outline: none
       transition: all 0.25s ease
       &:hover
-        background-color: lighten($gt-color-input-bg, 20%)
-        box-shadow: 0 em(10px) em(60px) 0 $gt-color-input-bg
+        background-color: lighten($gt-color-input-bg, 50%)
+        // box-shadow: 0 em(10px) em(60px) 0 $gt-color-input-bg
     &-controls
       position: relative
       margin: em(12px) 0 0
