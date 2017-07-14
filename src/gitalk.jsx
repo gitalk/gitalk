@@ -17,6 +17,7 @@ import Avatar from './component/avatar'
 import Button from './component/button'
 import Action from './component/action'
 import Comment from './component/comment'
+import Svg from './component/svg'
 import { GT_ACCESS_TOKEN, GT_VERSION } from './const'
 
 class GitalkComponent extends Component {
@@ -359,7 +360,9 @@ class GitalkComponent extends Component {
       <div className="gt-header" key="header">
         {user ?
           <Avatar className="gt-header-avatar" src={user.avatar_url} /> :
-          <a href={this.loginLink} className="gt-avatar-github" />
+          <a href={this.loginLink} className="gt-avatar-github">
+            <Svg className="gt-ico-github" name="github"/>
+          </a>
         }
         <div className="gt-header-comment">
           <textarea
@@ -371,7 +374,7 @@ class GitalkComponent extends Component {
           />
           <div className="gt-header-controls">
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
-              {this.i18n.t('support-markdown')}
+              <Svg className="gt-ico-tip" name="tip" text={this.i18n.t('support-markdown')}/>
             </a>
             {user && <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} />}
             {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
@@ -434,11 +437,11 @@ class GitalkComponent extends Component {
             <div className={isPopupVisible ? 'gt-user-inner is--poping' : 'gt-user-inner'} onClick={this.handlePopup}>
               <img className="gt-user-pic" src={user.avatar_url} alt={user.login}/>
               <span className="gt-user-name">{user.login}</span>
-              <i className="gt-icon gt-icon-caretDown"/>
+              <Svg className="gt-ico-arrdown" name="arrow_down"/>
             </div> :
             <div className={isPopupVisible ? 'gt-user-inner is--poping' : 'gt-user-inner'} onClick={this.handlePopup}>
               <span className="gt-user-name">{this.i18n.t('anonymous')}</span>
-              <i className="gt-icon gt-icon-caretDown"/>
+              <Svg className="gt-ico-arrdown" name="arrow_down"/>
             </div>
           }
         </div>

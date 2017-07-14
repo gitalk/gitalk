@@ -37,6 +37,7 @@
     "jest": "20.0.4",
     "moxios": "0.4.0",
     "postcss-loader": "2.0.6",
+    "raw-loader": "^0.5.1",
     "react": "15.6.1",
     "react-dom": "15.6.1",
     "react-test-renderer": "15.6.1",
