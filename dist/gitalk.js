@@ -3869,7 +3869,8 @@ var GitalkComponent = function (_Component) {
           'p',
           null,
           _react2.default.createElement(_button2.default, { onClick: this.handleIssueCreate, isLoading: isIssueCreating, text: this.i18n.t('init-issue') })
-        )
+        ),
+        !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: this.i18n.t('login-with-github') })
       );
     }
   }, {
@@ -8555,7 +8556,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.0.0-beta"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.0.1-beta"; // eslint-disable-line
 
 /***/ })
 /******/ ]);
