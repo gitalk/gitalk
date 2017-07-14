@@ -355,6 +355,7 @@ class GitalkComponent extends Component {
         {(user && ~[].concat(admin).indexOf(user.login)) && <p>
           <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
         </p>}
+        {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
       </div>
     )
   }
