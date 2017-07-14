@@ -37,7 +37,7 @@ class GitalkComponent extends Component {
     isLoadOver: false,
     isIssueCreating: false,
     isPopupVisible: false,
-    isFocusComment: false,
+    isShowMask: false,
 
     isOccurError: false,
     errorMsg: '',
@@ -332,8 +332,8 @@ class GitalkComponent extends Component {
     this.logout()
     location.reload()
   }
-  handleCommentFocus = () => this.setState({ isFocusComment: true })
-  handleCommentBlur = () => this.setState({ isFocusComment: false })
+  handleCommentFocus = () => this.setState({ isShowMask: true })
+  handleCommentBlur = () => this.setState({ isShowMask: false })
 
   initing () {
     return <div className="gt-initing">
@@ -359,16 +359,16 @@ class GitalkComponent extends Component {
     )
   }
   header () {
-    const { user, comment, isCreating, isFocusComment } = this.state
+    const { user, comment, isCreating, isShowMask } = this.state
     return (
-      <div className="gt-header" key="header">
+      <div className={`gt-header ${isShowMask ? 'gt-header-mask-show' : ''}`} key="header">
         {user ?
           <Avatar className="gt-header-avatar" src={user.avatar_url} /> :
           <a href={this.loginLink} className="gt-avatar-github">
             <Svg className="gt-ico-github" name="github"/>
           </a>
         }
-        <div className={`gt-header-mask ${isFocusComment && 'gt-header-mask-show'}`} />
+        <div className="gt-header-mask" />
         <div className="gt-header-comment">
           <textarea
             ref={t => { this.commentEL = t }}

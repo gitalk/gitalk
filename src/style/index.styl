@@ -285,12 +285,7 @@ $gt-size-avatar-mobi := em(32px)
       opacity: 0
       transition: opacity .3s, bottom 0s .3s
       z-index: $gt-mask-z-index
-    &-mask-show
-      bottom: 0%
-      opacity: .6
-      transition: opacity .3s
     &-comment
-      z-index: $gt-mask-z-index + 1
       flex: 1
       margin-left: em(20px)
       +mobile()
@@ -329,6 +324,13 @@ $gt-size-avatar-mobi := em(32px)
         +mobile()
           float: none
           width: 100%
+  .gt-header-mask-show
+    .gt-header-mask
+      bottom: 0%
+      opacity: .6
+      transition: opacity .3s
+    .gt-header-comment
+      z-index: $gt-mask-z-index + 1
 
   /* comments */
   .gt-comments
