@@ -61,7 +61,7 @@ class GitalkComponent extends Component {
         enterAnimation: 'accordionVertical',
         leaveAnimation: 'accordionVertical',
       },
-      isManualCreateIssue: false,
+      createIssueManually: false
     }, props.options)
 
 
@@ -177,12 +177,12 @@ class GitalkComponent extends Component {
         labels: labels.concat(id).join(',')
       }
     }).then(res => {
-      const { admin, isManualCreateIssue } = this.options
+      const { admin, createIssueManually } = this.options
       const { user } = this.state
       let isNoInit = false
       let issue = null
       if (!(res && res.data && res.data.length)) {
-        if (!isManualCreateIssue && user && ~admin.indexOf(user.login)) {
+        if (!createIssueManually && user && ~admin.indexOf(user.login)) {
           return this.createIssue()
         }
 

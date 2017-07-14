@@ -1,7 +1,7 @@
 /**
  * config.js:
  *
- * window.CONFIG = {
+ * window.GT_CONFIG = {
  *   clientID: '',
  *   clientSecret: '',
  *   owner: '',
@@ -9,6 +9,6 @@
  *   admin: []
  * }
  */
-const gitalk = new Gitalk(window.CONFIG)
+const gitalk = new Gitalk(window.GT_CONFIG)
 
 gitalk.render('gitalk-container')
