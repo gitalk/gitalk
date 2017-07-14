@@ -11,6 +11,7 @@ const cssLoader = [{
 }, {
   loader: 'postcss-loader',
   options: {
+    sourceMap: true,
     plugins: [
       autoprefixer({
         browsers: ['last 2 versions']
@@ -20,10 +21,7 @@ const cssLoader = [{
 }]
 
 const stylLoader = {
-  loader: 'stylus-loader',
-  options: {
-    sourceMap: false
-  }
+  loader: 'stylus-loader'
 }
 
 const plugins = [
