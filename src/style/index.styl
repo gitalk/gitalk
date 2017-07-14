@@ -43,7 +43,7 @@ $gt-size-avatar := em(50px)
 $gt-size-avatar-mobi := em(32px)
 
 /* styles */
-// Put everything under container to avoid style conflicts 
+// Put everything under container to avoid style conflicts
 .gt-container
   box-sizing: border-box
   *
@@ -86,8 +86,7 @@ $gt-size-avatar-mobi := em(32px)
       content: ''
       box-sizing: border-box
       position: absolute
-      top: 50%
-      left: 50%
+      top: 3px
       width: em(12px)
       height: em(12px)
       margin-top: em(-3px)
@@ -128,7 +127,7 @@ $gt-size-avatar-mobi := em(32px)
     +mobile()
       width: $gt-size-avatar-mobi
       height: $gt-size-avatar-mobi
-    img 
+    img
       width: 100%
       height: auto
       border-radius: 3px
@@ -152,16 +151,17 @@ $gt-size-avatar-mobi := em(32px)
     color: $gt-color-btn
     outline: none
     font-size: em(12px)
-    &:hover 
+    &:hover
       background-color: lighten($gt-color-main, 20%)
       color: $gt-color-btn
-    &-text 
+    &-text
       font-weight: 400
     &-loading
-      margin-left: em(4px)
+      position: relative
+      margin-left: em(8px)
       display: inline-block
       width: em(12px)
-      height: em(28px)
+      height: em(16px)
       vertical-align: top
     &.is--disable
       cursor: not-allowed
@@ -171,7 +171,7 @@ $gt-size-avatar-mobi := em(32px)
     &-public
       // margin-right: em(12px)
     &-loadmore
-      // loadmore 
+      // loadmore
 
   /* error */
   .gt-error
@@ -181,6 +181,7 @@ $gt-size-avatar-mobi := em(32px)
 
   /* initing */
   .gt-initing
+    padding: em(20px) 0
     text-align: center
     &-text
       margin: em(10px) auto
@@ -230,7 +231,7 @@ $gt-size-avatar-mobi := em(32px)
       .gt-ico
         svg
           fill: $gt-color-main
-  
+
   .gt-version
     color: $gt-color-sub
     margin-left: em(6px)

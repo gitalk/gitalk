@@ -73,7 +73,6 @@ module.exports = {
       },
       {
         test: /\.(svg|woff2?|ttf|eot|jpe?g|png|gif)(\?.*)?$/i,
-        exclude: [path.resolve(__dirname, 'src/assets/icon')],
         use: [{
           loader: 'url-loader',
           options: {

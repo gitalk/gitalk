@@ -44,24 +44,22 @@ class GitalkComponent extends Component {
   constructor (props) {
     super(props)
     this.options = Object.assign({}, {
-      perPage: 30,
-      url: location.href,
-      title: document.title,
-      body: `${location.href} \n\n ${
-        getMetaContent('description') ||
-        getMetaContent('description', 'og:description') || ''
-      }`,
       id: location.href,
       labels: ['Gitalk'],
-      proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
+      title: document.title,
+      body: '', // location.href + header.meta[description]
       language: navigator.language || navigator.userLanguage,
+      perPage: 10,
+      createIssueManually: false,
+      proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
       flipMoveOptions: {
         staggerDelayBy: 150,
         appearAnimation: 'accordionVertical',
         enterAnimation: 'accordionVertical',
         leaveAnimation: 'accordionVertical',
       },
-      createIssueManually: false
+
+      url: location.href,
     }, props.options)
 
 
@@ -195,11 +193,14 @@ class GitalkComponent extends Component {
     })
   }
   createIssue () {
-    const { owner, repo, title, body, id, labels } = this.options
+    const { owner, repo, title, body, id, labels, url } = this.options
     return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
       title,
       labels: labels.concat(id),
-      body
+      body: body || `${url} \n\n ${
+        getMetaContent('description') ||
+        getMetaContent('description', 'og:description') || ''
+      }`
     }, {
       headers: {
         Authorization: `token ${this.accessToken}`
@@ -435,7 +436,6 @@ class GitalkComponent extends Component {
         <div className="gt-user">
           {user ?
             <div className={isPopupVisible ? 'gt-user-inner is--poping' : 'gt-user-inner'} onClick={this.handlePopup}>
-              <img className="gt-user-pic" src={user.avatar_url} alt={user.login}/>
               <span className="gt-user-name">{user.login}</span>
               <Svg className="gt-ico-arrdown" name="arrow_down"/>
             </div> :
@@ -453,6 +453,7 @@ class GitalkComponent extends Component {
     const { isIniting, isNoInit, isOccurError, errorMsg } = this.state
     return (
       <div className="gt-container">
+        {isIniting && this.initing()}
         {!isIniting && (
           isNoInit ? [
           ] : [
@@ -462,7 +463,6 @@ class GitalkComponent extends Component {
         {isOccurError && <div className="gt-error">
           {errorMsg}
         </div>}
-        {isIniting && this.initing()}
         {!isIniting && (
           isNoInit ? [
             this.noInit()
