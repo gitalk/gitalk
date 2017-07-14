@@ -6,8 +6,6 @@ export default function Action (props) {
   return (
     <a className={className} onClick={props.onClick}>
       <span className="gt-action-text">{props.text}</span>
-      {props.isLoading && <span className="gt-btn-loading gt-spinner"/>}
     </a>
   )
 }
-

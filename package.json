@@ -65,7 +65,8 @@
       "^.+\\.jsx?$": "babel-jest"
     },
     "moduleNameMapper": {
-      "\\.(css|less|scss|styl)$": "<rootDir>/__mocks__/style.js"
+      "\\.(css|less|scss|styl)$": "<rootDir>/src/__mocks__/style.js",
+      "^!!raw-loader": "<rootDir>/src/__mocks__/text.js"
     },
     "moduleFileExtensions": [
       "js",
@@ -73,6 +74,9 @@
     ],
     "coveragePathIgnorePatterns": [
       "src/gitalk.jsx"
-    ]
+    ],
+    "globals": {
+      "VERSION": "1.0.0-test"
+    }
   }
 }

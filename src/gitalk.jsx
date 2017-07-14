@@ -269,18 +269,18 @@ class GitalkComponent extends Component {
     e.preventDefault()
     e.stopPropagation()
     const isVisible = !this.state.isPopupVisible
-    const hideHanlder = e1 => {
+    const hideHandle = e1 => {
       if (hasClassInParent(e1.target, 'gt-user', 'gt-popup')) {
         return
       }
-      document.removeEventListener('click', hideHanlder)
+      document.removeEventListener('click', hideHandle)
       this.setState({ isPopupVisible: false })
     }
     this.setState({ isPopupVisible: isVisible })
     if (isVisible) {
-      document.addEventListener('click', hideHanlder)
+      document.addEventListener('click', hideHandle)
     } else {
-      document.removeEventListener('click', hideHanlder)
+      document.removeEventListener('click', hideHandle)
     }
   }
 

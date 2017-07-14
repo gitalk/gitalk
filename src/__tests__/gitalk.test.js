@@ -2,7 +2,7 @@ import React from 'react'
 import { shallow } from 'enzyme'
 import moxios from 'moxios'
 
-import '../../__mocks__/setup'
+import '../__mocks__/setup'
 import Gitalk from '../gitalk'
 import Comment from '../component/comment'
 import { axiosGithub } from '../util'
