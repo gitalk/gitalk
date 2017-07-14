@@ -12,9 +12,9 @@ Two ways.
 
 - links
 ```html
-  <link rel="stylesheet" href="">
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
   
-  <script src=""></script>
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
 ```
 
 - npm install
@@ -33,7 +33,7 @@ import Gitalk from 'gitalk'
 Need **Github Application**, if don't have, [Click here register](https://github.com/settings/applications/new), `Authorization callback URL` write the domain that current use plugin page.
 
 ```js
-const gitalk = new Gitalk({
+var gitalk = new Gitalk({
   clientID: 'Github Application Client ID',
   clientSecret: 'Github Application Client Secret',
   repo: 'Github repo',
@@ -134,7 +134,7 @@ gitalk.render('gitalk-container')
 
 - **render(String/HTMLElement)**
 
-   Init render and mount plugin.
+  Init render and mount plugin.
 
 ## Contributing
 

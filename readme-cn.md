@@ -1,6 +1,6 @@
 # Gitalk [![NPM version][npm-version-image]][npm-version-url] [![travis][travis-image]][travis-image] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
-Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件，主要特性：
+Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件，主要特性：
 
 - 使用 Github 登录
 - 支持多语言 [en, zh-CN, zh-TW]
@@ -12,9 +12,9 @@ Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件，主要�
 
 - 直接引入
 ```html
-  <link rel="stylesheet" href="">
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
   
-  <script src=""></script>
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script
 ```
 
 - npm 安装
@@ -33,7 +33,7 @@ import Gitalk from 'gitalk'
 需要 **Github Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
 
 ```js
-const gitalk = new Gitalk({
+var gitalk = new Gitalk({
   clientID: 'Github Application Client ID',
   clientSecret: 'Github Application Client Secret',
   repo: 'Github repo',
