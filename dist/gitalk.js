@@ -3567,8 +3567,9 @@ var GitalkComponent = function (_Component) {
       });
     };
 
-    _this.handleCommentCreate = function () {
+    _this.handleCommentCreate = function (e) {
       if (!_this.state.comment.length) {
+        e.preventDefault();
         _this.commentEL.focus();
         return;
       }
@@ -3915,8 +3916,8 @@ var GitalkComponent = function (_Component) {
               { className: 'gt-header-controls-tip', href: 'https://guides.github.com/features/mastering-markdown/', target: '_blank' },
               _react2.default.createElement(_svg2.default, { className: 'gt-ico-tip', name: 'tip', text: this.i18n.t('support-markdown') })
             ),
-            user && _react2.default.createElement(_button2.default, { className: 'gt-btn-public', onClick: this.handleCommentCreate, text: this.i18n.t('comment'), isLoading: isCreating }),
-            !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: this.i18n.t('login-with-github') })
+            user && _react2.default.createElement(_button2.default, { className: 'gt-btn-public', onMouseDown: this.handleCommentCreate, text: this.i18n.t('comment'), isLoading: isCreating }),
+            !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onMouseDown: this.handleLogin, text: this.i18n.t('login-with-github') })
           )
         )
       );
@@ -7269,7 +7270,7 @@ function Button(props) {
   props.className && (className += props.className);
   return _react2.default.createElement(
     'button',
-    { className: className, onClick: props.onClick },
+    { className: className, onClick: props.onClick, onMouseDown: props.onMouseDown },
     _react2.default.createElement(
       'span',
       { className: 'gt-btn-text' },
@@ -8556,7 +8557,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.0.1-beta"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.0.0-beta.1"; // eslint-disable-line
 
 /***/ })
 /******/ ]);
