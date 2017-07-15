@@ -6,6 +6,8 @@ Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件，主要特
 - 支持多语言 [en, zh-CN, zh-TW]
 - 支持个人或组织
 
+[English Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
+
 ## 安装
 
 两种方式

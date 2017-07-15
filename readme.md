@@ -6,6 +6,8 @@ Gitalk is a comment plugin base on Github Issue and Preact, main feature:
 - Support multi-language [en, zh-CN, zh-TW]
 - Support personal user or organization
 
+[中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
+
 ## Install
 
 Two ways.
