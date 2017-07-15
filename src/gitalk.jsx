@@ -303,8 +303,9 @@ class GitalkComponent extends Component {
       })
     })
   }
-  handleCommentCreate = () => {
+  handleCommentCreate = (e) => {
     if (!this.state.comment.length) {
+      e.preventDefault()
       this.commentEL.focus()
       return
     }
@@ -384,8 +385,8 @@ class GitalkComponent extends Component {
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
               <Svg className="gt-ico-tip" name="tip" text={this.i18n.t('support-markdown')}/>
             </a>
-            {user && <Button className="gt-btn-public" onClick={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} />}
-            {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
+            {user && <Button className="gt-btn-public" onMouseDown={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} />}
+            {!user && <Button className="gt-btn-login" onMouseDown={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
         </div>
       </div>

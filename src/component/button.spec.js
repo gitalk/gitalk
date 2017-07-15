@@ -28,4 +28,10 @@ describe('Button', function () {
     wrapper.find('button').simulate('click')
     expect(onButtonClick.calledOnce).toBe(true)
   })
+  it('set props onMouseDown', function () {
+    const onMouseDown = sinon.spy()
+    const wrapper = shallow(<Button onMouseDown={onMouseDown} />)
+    wrapper.find('button').simulate('mouseDown')
+    expect(onMouseDown.calledOnce).toBe(true)
+  })
 })
