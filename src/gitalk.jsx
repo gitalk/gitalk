@@ -19,6 +19,7 @@ import Action from './component/action'
 import Comment from './component/comment'
 import Svg from './component/svg'
 import { GT_ACCESS_TOKEN, GT_VERSION } from './const'
+import QLGetComments from './graphql/getComments'
 
 class GitalkComponent extends Component {
   state = {
@@ -28,6 +29,8 @@ class GitalkComponent extends Component {
     localComments: [],
     comment: '',
     page: 1,
+    pagerDirection: 'last',
+    cursor: null,
 
     isNoInit: false,
     isIniting: true,
@@ -37,7 +40,7 @@ class GitalkComponent extends Component {
     isLoadOver: false,
     isIssueCreating: false,
     isPopupVisible: false,
-    isShowMask: false,
+    isInputFocused: false,
 
     isOccurError: false,
     errorMsg: '',
@@ -51,7 +54,9 @@ class GitalkComponent extends Component {
       body: '', // location.href + header.meta[description]
       language: navigator.language || navigator.userLanguage,
       perPage: 10,
+      pagerDirection: 'last', // last or first
       createIssueManually: false,
+      distractionFreeMode: false,
       proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
       flipMoveOptions: {
         staggerDelayBy: 150,
@@ -63,6 +68,7 @@ class GitalkComponent extends Component {
       url: location.href,
     }, props.options)
 
+    this.setState({ pagerDirection: this.options.pagerDirection })
 
     const query = queryParse()
     if (query.code) {
@@ -211,41 +217,16 @@ class GitalkComponent extends Component {
       return res.data
     })
   }
-  getComments = () => {
-    const { clientID, clientSecret, perPage } = this.options
-    const { page } = this.state
-    return this.getIssue()
-      .then(issue => {
-        if (!issue) return
 
-        return axiosGithub.get(issue.comments_url, {
-          headers: {
-            Accept: 'application/vnd.github.html+json'
-          },
-          params: {
-            client_id: clientID,
-            client_secret: clientSecret,
-            per_page: perPage,
-            page
-          }
-        }).then(res => {
-          const { comments, issue } = this.state
-          let isLoadOver = false
-          const cs = comments.concat(res.data)
-          if (cs.length >= issue.comments || res.data.length < perPage) {
-            isLoadOver = true
-          }
-          this.setState({
-            comments: cs,
-            isLoadOver,
-            page: page + 1
-          })
-          return cs
-        })
-      })
+  getComments () {
+    return this.getIssue().then(issue => {
+      if (!issue) return
+      return QLGetComments.call(this)
+    })
   }
+
   createComment () {
-    const { comment, localComments } = this.state
+    const { comment, localComments, pagerDirection } = this.state
 
     return this.getIssue()
       .then(issue => axiosGithub.post(issue.comments_url, {
@@ -257,7 +238,10 @@ class GitalkComponent extends Component {
         }
       }))
       .then(res => {
-        this.setState({ comment: '', localComments: localComments.concat(res.data) })
+        this.setState({
+          comment: '',
+          localComments: pagerDirection === 'last' ? [...res.data, ...localComments] : [...localComments, ...res.data]
+        })
       })
   }
   logout () {
@@ -303,7 +287,7 @@ class GitalkComponent extends Component {
       })
     })
   }
-  handleCommentCreate = (e) => {
+  handleCommentCreate = e => {
     if (!this.state.comment.length) {
       e.preventDefault()
       this.commentEL.focus()
@@ -328,13 +312,19 @@ class GitalkComponent extends Component {
     this.setState({ isLoadMore: true })
     this.getComments().then(() => this.setState({ isLoadMore: false }))
   }
-  handleCommentChange = e => this.setState({ comment: e.target.value })
+  handleCommentChange = e => {
+    console.log(e)
+    this.setState({ comment: e.target.value })
+  }
   handleLogout = () => {
     this.logout()
     location.reload()
   }
-  handleCommentFocus = () => this.setState({ isShowMask: true })
-  handleCommentBlur = () => this.setState({ isShowMask: false })
+  handleCommentFocus = () => this.setState({ isInputFocused: true })
+  handleCommentBlur = () => this.setState({ isInputFocused: false })
+  handleSort = direction => e => {
+    this.setState({ pagerDirection: direction })
+  }
 
   initing () {
     return <div className="gt-initing">
@@ -361,26 +351,35 @@ class GitalkComponent extends Component {
     )
   }
   header () {
-    const { user, comment, isCreating, isShowMask } = this.state
+    const { user, comment, isCreating } = this.state
+    const { distractionFreeMode } = this.options
     return (
-      <div className={`gt-header ${isShowMask ? 'gt-header-mask-show' : ''}`} key="header">
+      <div className="gt-header" key="header">
         {user ?
           <Avatar className="gt-header-avatar" src={user.avatar_url} /> :
           <a href={this.loginLink} className="gt-avatar-github">
             <Svg className="gt-ico-github" name="github"/>
           </a>
         }
-        <div className="gt-header-mask" />
         <div className="gt-header-comment">
-          <textarea
-            ref={t => { this.commentEL = t }}
-            className="gt-header-textarea"
-            value={comment}
-            onChange={this.handleCommentChange}
-            onFocus={this.handleCommentFocus}
-            onBlur={this.handleCommentBlur}
-            placeholder={this.i18n.t('leave-a-comment')}
-          />
+          {distractionFreeMode ?
+            <textarea
+              ref={t => { this.commentEL = t }}
+              className="gt-header-textarea"
+              value={comment}
+              onChange={this.handleCommentChange}
+              onFocus={this.handleCommentFocus}
+              onBlur={this.handleCommentBlur}
+              placeholder={this.i18n.t('leave-a-comment')}
+            /> :
+            <textarea
+              ref={t => { this.commentEL = t }}
+              className="gt-header-textarea"
+              value={comment}
+              onChange={this.handleCommentChange}
+              placeholder={this.i18n.t('leave-a-comment')}
+            />
+          }
           <div className="gt-header-controls">
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
               <Svg className="gt-ico-tip" name="tip" text={this.i18n.t('support-markdown')}/>
@@ -393,12 +392,14 @@ class GitalkComponent extends Component {
     )
   }
   comments () {
-    const { user, comments, localComments, isLoadOver, isLoadMore } = this.state
+    const { user, comments, localComments, isLoadOver, isLoadMore, pagerDirection } = this.state
     const { language, flipMoveOptions, admin } = this.options
+    const totalComments = pagerDirection === 'last' ? [...localComments, ...comments] : [...comments, ...localComments]
+    console.log('zzzzzz')
     return (
       <div className="gt-comments" key="comments">
         <FlipMove {...flipMoveOptions}>
-          {comments.concat(localComments).map(c => (
+          {totalComments.map(c => (
             <Comment
               comment={c}
               key={c.id}
@@ -409,16 +410,16 @@ class GitalkComponent extends Component {
             />
           ))}
         </FlipMove>
-        {!comments.concat(localComments).length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
-        {!isLoadOver && <div className="gt-comments-controls">
+        {!totalComments.length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
+        {(!isLoadOver && totalComments.length) && <div className="gt-comments-controls">
           <Button className="gt-btn-loadmore" onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />
         </div>}
       </div>
     )
   }
   meta () {
-    const { user, issue, isPopupVisible } = this.state
-
+    const { user, issue, isPopupVisible, pagerDirection } = this.state
+    const isDesc = pagerDirection === 'last'
     return (
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
@@ -429,8 +430,8 @@ class GitalkComponent extends Component {
         }}/>
         {isPopupVisible &&
           <div className="gt-popup">
-            <Action className="gt-action-sortasc is--active" text={this.i18n.t('sort-asc')}/>
-            <Action className="gt-action-sortdesc" text={this.i18n.t('sort-desc')}/>
+            <Action className={`gt-action-sortasc${!isDesc ? ' is--active' : ''}`} onClick={this.handleSort('first')} text={this.i18n.t('sort-asc')}/>
+            <Action className={`gt-action-sortdesc${isDesc ? ' is--active' : ''}`} onClick={this.handleSort('last')} text={this.i18n.t('sort-desc')}/>
             {user ?
               <Action className="gt-action-logout" onClick={this.handleLogout} text={this.i18n.t('logout')}/> :
               <a href={this.loginLink} className="gt-action gt-action-login">{this.i18n.t('login-with-github')}</a>
@@ -458,9 +459,9 @@ class GitalkComponent extends Component {
   }
 
   render () {
-    const { isIniting, isNoInit, isOccurError, errorMsg } = this.state
+    const { isIniting, isNoInit, isOccurError, errorMsg, isInputFocused } = this.state
     return (
-      <div className="gt-container">
+      <div className={`gt-container${isInputFocused ? ' gt-input-focused' : ''}`}>
         {isIniting && this.initing()}
         {!isIniting && (
           isNoInit ? [

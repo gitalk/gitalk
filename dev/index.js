@@ -6,7 +6,9 @@
  *   clientSecret: '',
  *   owner: '',
  *   repo: '',
- *   admin: []
+ *   admin: [],
+ *   distractionFreeMode: false,
+ *   pagerDirection: 'last'
  * }
  */
 const gitalk = new Gitalk(window.GT_CONFIG)
