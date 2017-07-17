@@ -86,7 +86,6 @@ function getComments () {
 
     if (pagerDirection === 'last') {
       cs = [...items, ...comments]
-      cs.reverse()
     } else {
       cs = [...comments, ...items]
     }
