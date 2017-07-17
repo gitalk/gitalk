@@ -59,6 +59,7 @@ class GitalkComponent extends Component {
         enterAnimation: 'accordionVertical',
         leaveAnimation: 'accordionVertical',
       },
+      enableHotKey: true,
 
       url: location.href,
     }, props.options)
@@ -305,7 +306,7 @@ class GitalkComponent extends Component {
   }
   handleCommentCreate = (e) => {
     if (!this.state.comment.length) {
-      e.preventDefault()
+      e && e.preventDefault()
       this.commentEL.focus()
       return
     }
@@ -335,6 +336,13 @@ class GitalkComponent extends Component {
   }
   handleCommentFocus = () => this.setState({ isShowMask: true })
   handleCommentBlur = () => this.setState({ isShowMask: false })
+  handleCommentKeyDown = e => {
+    const { enableHotKey } = this.options
+    if (enableHotKey && (e.metaKey || e.ctrlKey) && e.keyCode === 13) {
+      this.publicBtnEL && this.publicBtnEL.focus()
+      this.handleCommentCreate()
+    }
+  }
 
   initing () {
     return <div className="gt-initing">
@@ -379,13 +387,20 @@ class GitalkComponent extends Component {
             onChange={this.handleCommentChange}
             onFocus={this.handleCommentFocus}
             onBlur={this.handleCommentBlur}
+            onKeyDown={this.handleCommentKeyDown}
             placeholder={this.i18n.t('leave-a-comment')}
           />
           <div className="gt-header-controls">
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
               <Svg className="gt-ico-tip" name="tip" text={this.i18n.t('support-markdown')}/>
             </a>
-            {user && <Button className="gt-btn-public" onMouseDown={this.handleCommentCreate} text={this.i18n.t('comment')} isLoading={isCreating} />}
+            {user && <Button
+              getRef={b => this.publicBtnEL = b}
+              className="gt-btn-public"
+              onMouseDown={this.handleCommentCreate}
+              text={this.i18n.t('comment')}
+              isLoading={isCreating}
+            />}
             {!user && <Button className="gt-btn-login" onMouseDown={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
         </div>

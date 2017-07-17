@@ -131,6 +131,12 @@ gitalk.render('gitalk-container')
 
   评论列表的动画。 [参考](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
 
+- **enableHotKey** `Boolean` 
+  
+  Default: `true`.
+
+  启用快捷键(cmd|ctrl + enter) 提交评论.
+
 
 ## 实例方法
 

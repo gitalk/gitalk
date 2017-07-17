@@ -131,6 +131,12 @@ gitalk.render('gitalk-container')
 
   Comment list animation. [Reference](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
 
+- **enableHotKey** `Boolean` 
+  
+  Default: `true`.
+
+  Enable hot key (cmd|ctrl + enter) submit comment.
+
 
 ## Instance Methods
 
