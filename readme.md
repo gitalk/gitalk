@@ -1,4 +1,4 @@
-# Gitalk [![NPM version][npm-version-image]][npm-version-url] [![travis][travis-image]][travis-image] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
+# Gitalk [![NPM version][npm-version-image]][npm-version-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
 Gitalk is a comment plugin base on Github Issue and Preact, main feature:
 
@@ -157,9 +157,9 @@ MIT
 
 [npm-version-image]: https://img.shields.io/npm/v/gitalk.svg?style=flat-square
 [npm-version-url]: https://www.npmjs.com/package/gitalk
-[travis-image]: https://img.shields.io/travis/gitalk/gitalk.svg?style=flat-square
+[travis-image]: https://img.shields.io/travis/gitalk/gitalk/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/gitalk/gitalk
-[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk.svg?style=flat-square
+[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/master.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/github/gitalk/gitalk
 [gzip-size]: http://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
 [gzip-url]: https://unpkg.com/gitalk/dist/gitalk.min.js
