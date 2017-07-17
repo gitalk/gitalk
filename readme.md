@@ -1,10 +1,14 @@
 # Gitalk [![NPM version][npm-version-image]][npm-version-url] [![travis][travis-image]][travis-image] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
-Gitalk is a comment plugin base on Github Issue and Preact, main feature:
+Gitalk is a modern comment component based on Github Issue and Preact.
 
-- Login with Github
-- Support multi-language [en, zh-CN, zh-TW]
-- Support personal user or organization
+## Features
+
+- Authentication with github account
+- Serverless, all comments will be stored as github issues
+- Both personal and organization github projects can be used to store comments 
+- Localization, support multiple languages [en, zh-CN, zh-TW]
+- Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 
 [中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
 
@@ -32,15 +36,19 @@ import Gitalk from 'gitalk'
 
 ## Usage
 
-Need **Github Application**, if don't have, [Click here register](https://github.com/settings/applications/new), `Authorization callback URL` write the domain that current use plugin page.
+A **Github Application** is needed for authorization, if you don't have one, [Click here to register](https://github.com/settings/applications/new) a new one.
+
+**Note:** You must specify the website domain url in the `Authorization callback URL` field.
 
 ```js
-var gitalk = new Gitalk({
+const gitalk = new Gitalk({
   clientID: 'Github Application Client ID',
   clientSecret: 'Github Application Client Secret',
   repo: 'Github repo',
   owner: 'Github repo owner',
-  admin: ['Github repo collaborators'],
+  admin: ['Github repo collaborators, only these guys can initialize github issues'],
+  // facebook-like distraction free mode
+  distractionFreeMode: false
 })
 
 gitalk.render('gitalk-container')
@@ -63,11 +71,11 @@ gitalk.render('gitalk-container')
 
 - **owner** `String` 
 
-  **Required**. Github repository owner that personal user or organization.
+  **Required**. Github repository owner. Can be personal user or organization.
 
 - **admin** `Array` 
 
-  **Required**. Github repository collaborators. (Ensure can write access to this repository)
+  **Required**. Github repository collaborators. (Ensure having write access to this repository)
 
 - **id** `String` 
   
@@ -97,19 +105,31 @@ gitalk.render('gitalk-container')
   
   Default: `navigator.language || navigator.userLanguage`.
 
-  Set language, support [en, zh-CN, zh-TW].
+  Localization language key, `en`, `zh-CN` and `zh-TW` are currently available.
 
 - **perPage** `Number` 
   
   Default: `10`.
 
-  Every time load data size, maximum 100.
+  Pagination size, with maximum 100.
+
+- **distractionFreeMode** `Boolean` 
+  
+  Default: false.
+
+  Facebook-like distraction free mode.
+
+- **pagerDirection** `String`
+
+  Default: 'last'
+
+  Comment sorting direction, available values are `last` and `first`.
 
 - **createIssueManually** `Boolean` 
   
   Default: `false`.
 
-  If the current page does not have the corresponding issue and login user belong to admin, it will automatically create issue. Set `true` will show init page, create issue need admin click `init` button.
+  By default, Gitalk will create a corresponding github issue for your every single page automatically when the logined user is belong to the `admin` users. You can create it manually by setting this option to `true`.
 
 - **proxy** `String` 
   
