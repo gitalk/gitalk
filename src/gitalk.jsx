@@ -226,7 +226,7 @@ class GitalkComponent extends Component {
   }
 
   createComment () {
-    const { comment, localComments, pagerDirection } = this.state
+    const { comment, localComments } = this.state
 
     return this.getIssue()
       .then(issue => axiosGithub.post(issue.comments_url, {
@@ -240,7 +240,7 @@ class GitalkComponent extends Component {
       .then(res => {
         this.setState({
           comment: '',
-          localComments: pagerDirection === 'last' ? [...res.data, ...localComments] : [...localComments, ...res.data]
+          localComments: localComments.concat(res.data)
         })
       })
   }
@@ -312,10 +312,7 @@ class GitalkComponent extends Component {
     this.setState({ isLoadMore: true })
     this.getComments().then(() => this.setState({ isLoadMore: false }))
   }
-  handleCommentChange = e => {
-    console.log(e)
-    this.setState({ comment: e.target.value })
-  }
+  handleCommentChange = e => this.setState({ comment: e.target.value })
   handleLogout = () => {
     this.logout()
     location.reload()
@@ -394,7 +391,7 @@ class GitalkComponent extends Component {
   comments () {
     const { user, comments, localComments, isLoadOver, isLoadMore, pagerDirection } = this.state
     const { language, flipMoveOptions, admin } = this.options
-    const totalComments = pagerDirection === 'last' ? [...localComments, ...comments] : [...comments, ...localComments]
+    const totalComments = comments.concat(localComments)
     if (pagerDirection === 'last') {
       totalComments.reverse()
     }
@@ -420,14 +417,15 @@ class GitalkComponent extends Component {
     )
   }
   meta () {
-    const { user, issue, isPopupVisible, pagerDirection } = this.state
+    const { user, issue, isPopupVisible, pagerDirection, localComments } = this.state
+    const cnt = issue.comments + localComments.length
     const isDesc = pagerDirection === 'last'
     return (
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
           __html: this.i18n.t('counts', {
-            counts: `<a class="gt-link gt-link-counts" href="${issue.html_url}" target="_blank">${issue.comments}</a>`,
-            smart_count: issue.comments
+            counts: `<a class="gt-link gt-link-counts" href="${issue.html_url}" target="_blank">${cnt}</a>`,
+            smart_count: cnt
           })
         }}/>
         {isPopupVisible &&
