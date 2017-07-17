@@ -71,6 +71,7 @@ function getComments () {
   ).then(res => {
     const data = res.data.data.repository.issue.comments
     const items = data.nodes.map(node => ({
+      id: node.databaseId,
       user: {
         avatar_url: node.author.avatarUrl,
         login: node.author.login,

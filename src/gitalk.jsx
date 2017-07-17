@@ -395,7 +395,6 @@ class GitalkComponent extends Component {
     const { user, comments, localComments, isLoadOver, isLoadMore, pagerDirection } = this.state
     const { language, flipMoveOptions, admin } = this.options
     const totalComments = pagerDirection === 'last' ? [...localComments, ...comments] : [...comments, ...localComments]
-    console.log('zzzzzz')
     return (
       <div className="gt-comments" key="comments">
         <FlipMove {...flipMoveOptions}>
