@@ -11,6 +11,7 @@ Gitalk is a modern comment component based on Github Issue and Preact.
 - Both personal and organization github projects can be used to store comments 
 - Localization, support multiple languages [en, zh-CN, zh-TW]
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
+- Hotkey submit comment (cmd|ctrl + enter)
 
 [中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
 

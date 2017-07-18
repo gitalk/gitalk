@@ -2,11 +2,15 @@
 
 [![NPM][npm-version-image]][npm-version-url] [![david-dm][david-dm-image]][david-dm-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
-Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件，主要特性：
+Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件。
+
+## 特性
 
 - 使用 Github 登录
 - 支持多语言 [en, zh-CN, zh-TW]
 - 支持个人或组织
+- 无干扰模式（设置 distractionFreeMode 为 true 开启）
+- 快捷键提交评论 （cmd|ctrl + enter）
 
 [English Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
 
