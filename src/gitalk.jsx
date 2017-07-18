@@ -69,7 +69,7 @@ class GitalkComponent extends Component {
       url: location.href,
     }, props.options)
 
-    this.setState({ pagerDirection: this.options.pagerDirection })
+    this.state.pagerDirection = this.options.pagerDirection
 
     const query = queryParse()
     if (query.code) {
@@ -249,6 +249,9 @@ class GitalkComponent extends Component {
     this.setState({ user: null })
     localStorage.removeItem(GT_ACCESS_TOKEN)
   }
+  getRef = e => {
+    this.publicBtnEL = e
+  }
 
   handlePopup = e => {
     e.preventDefault()
@@ -268,7 +271,6 @@ class GitalkComponent extends Component {
       document.removeEventListener('click', hideHandle)
     }
   }
-
   handleLogin = () => {
     location.href = this.loginLink
   }
@@ -389,7 +391,7 @@ class GitalkComponent extends Component {
               <Svg className="gt-ico-tip" name="tip" text={this.i18n.t('support-markdown')}/>
             </a>
             {user && <Button
-              getRef={b => this.publicBtnEL = b}
+              getRef={this.getRef}
               className="gt-btn-public"
               onMouseDown={this.handleCommentCreate}
               text={this.i18n.t('comment')}

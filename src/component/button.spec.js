@@ -1,5 +1,5 @@
 import React from 'react'
-import { shallow } from 'enzyme'
+import { shallow, mount } from 'enzyme'
 import sinon from 'sinon'
 
 import Button from './button'
@@ -33,5 +33,12 @@ describe('Button', function () {
     const wrapper = shallow(<Button onMouseDown={onMouseDown} />)
     wrapper.find('button').simulate('mouseDown')
     expect(onMouseDown.calledOnce).toBe(true)
+  })
+  it('set props getRef', function () {
+    let ref = null
+    const getRef = e => { ref = e }
+    const wrapper = mount(<Button getRef={getRef} />)
+    wrapper.find('button').simulate('mouseDown')
+    expect(ref).not.toBe(null)
   })
 })

@@ -47,6 +47,32 @@ moxios.stubRequest(/\/repos\/.*\/issues/, {
     comments: 2
   }]
 })
+moxios.stubRequest(/\/graphql/, {
+  status: 200,
+  response: {
+    data: {
+      repository: {
+        issue: {
+          comments: {
+            nodes: [{
+              databaseId: 1,
+              author: {},
+              bodyHTML: '<p>111</p>',
+              createdAt: '2017-06-30T09:00:19Z',
+            }, {
+              databaseId: 2,
+              author: {},
+              bodyHTML: '<p>222</p>',
+              createdAt: '2017-06-30T09:01:19ZZ',
+            }],
+            pageInfo: {},
+            totalCount: 2
+          },
+        }
+      }
+    }
+  }
+})
 moxios.stubRequest(/.*/, {
   status: 404,
 })

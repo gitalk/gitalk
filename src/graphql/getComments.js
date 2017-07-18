@@ -1,5 +1,5 @@
 import {
-  axiosJSON
+  axiosGithub
 } from '../util'
 
 const getQL = (vars, pagerDirection) => {
@@ -52,8 +52,8 @@ const getQL = (vars, pagerDirection) => {
 function getComments () {
   const { owner, repo, perPage, pagerDirection } = this.options
   const { cursor, comments, issue } = this.state
-  return axiosJSON.post(
-    'https://api.github.com/graphql',
+  return axiosGithub.post(
+    '/graphql',
     getQL(
       {
         owner,
