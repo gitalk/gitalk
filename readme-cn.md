@@ -107,6 +107,18 @@ gitalk.render('gitalk-container')
 
   每次加载的数据大小，最多 100。
 
+- **distractionFreeMode** `Boolean` 
+  
+  Default: false。
+
+  类似Facebook评论框的全屏遮罩效果.
+
+- **pagerDirection** `String`
+
+  Default: 'last'
+
+  评论排序方式， `last`为按评论创建时间倒叙，`first`为按创建时间正序。
+
 - **createIssueManually** `Boolean` 
   
   Default: `false`.

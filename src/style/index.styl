@@ -261,8 +261,6 @@ $gt-size-avatar-mobi := em(32px)
       padding: 0 em(18px)
       position: relative
       text-decoration: none
-      &-sortasc, &-sortdesc
-        display: none
       &.is--active
         &:before
           content: ''
@@ -276,16 +274,6 @@ $gt-size-avatar-mobi := em(32px)
   .gt-header
     position: relative
     display: flex
-    &-mask
-      position: fixed
-      bottom: 100%
-      left: 0
-      right: 0
-      top: 0
-      background: #000
-      opacity: 0
-      transition: opacity .3s, bottom 0s .3s
-      z-index: $gt-mask-z-index
     &-comment
       flex: 1
       margin-left: em(20px)
@@ -325,11 +313,20 @@ $gt-size-avatar-mobi := em(32px)
         +mobile()
           float: none
           width: 100%
-  .gt-header-mask-show
-    .gt-header-mask
+  
+  &.gt-input-focused
+    position: relative
+    &:after
+      content: ''
+      position: fixed
       bottom: 0%
-      opacity: .6
-      transition: opacity .3s
+      left: 0
+      right: 0
+      top: 0
+      background: #000
+      opacity: 0.6
+      transition: opacity .3s, bottom 0s .3s
+      z-index: $gt-mask-z-index
     .gt-header-comment
       z-index: $gt-mask-z-index + 1
 

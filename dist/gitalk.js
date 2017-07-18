@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "/dist";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 17);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -80,7 +80,7 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var bind = __webpack_require__(10);
+var bind = __webpack_require__(11);
 var isBuffer = __webpack_require__(41);
 
 /*global toString:true*/
@@ -403,9 +403,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return Component$1; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PureComponent", function() { return PureComponent; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "unstable_renderSubtreeIntoContainer", function() { return renderSubtreeIntoContainer; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(18);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types__ = __webpack_require__(19);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_prop_types___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_prop_types__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_preact__ = __webpack_require__(22);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_preact__ = __webpack_require__(23);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_preact___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_preact__);
 /* harmony reexport (default from non-hamory) */ __webpack_require__.d(__webpack_exports__, "PropTypes", function() { return __WEBPACK_IMPORTED_MODULE_0_prop_types___default.a; });
 
@@ -1763,10 +1763,10 @@ function getDefaultAdapter() {
   var adapter;
   if (typeof XMLHttpRequest !== 'undefined') {
     // For browsers use XHR adapter
-    adapter = __webpack_require__(11);
+    adapter = __webpack_require__(12);
   } else if (typeof process !== 'undefined') {
     // For node use HTTP adapter
-    adapter = __webpack_require__(11);
+    adapter = __webpack_require__(12);
   }
   return adapter;
 }
@@ -1919,6 +1919,110 @@ module.exports = warning;
 "use strict";
 
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.hasClassInParent = exports.formatErrorMsg = exports.getMetaContent = exports.axiosGithub = exports.axiosJSON = exports.queryStringify = exports.queryParse = undefined;
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _axios = __webpack_require__(39);
+
+var _axios2 = _interopRequireDefault(_axios);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var queryParse = exports.queryParse = function queryParse() {
+  var search = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : window.location.search;
+
+  if (!search) return {};
+  var queryString = search[0] === '?' ? search.substring(1) : search;
+  var query = {};
+  queryString.split('&').forEach(function (queryStr) {
+    var _queryStr$split = queryStr.split('='),
+        _queryStr$split2 = _slicedToArray(_queryStr$split, 2),
+        key = _queryStr$split2[0],
+        value = _queryStr$split2[1];
+    /* istanbul ignore else */
+
+
+    if (key) query[decodeURIComponent(key)] = decodeURIComponent(value);
+  });
+
+  return query;
+};
+
+var queryStringify = exports.queryStringify = function queryStringify(query) {
+  var queryString = Object.keys(query).map(function (key) {
+    return key + '=' + encodeURIComponent(query[key] || '');
+  }).join('&');
+  return queryString;
+};
+
+var axiosJSON = exports.axiosJSON = _axios2.default.create({
+  headers: {
+    'Accept': 'application/json'
+  }
+});
+
+var axiosGithub = exports.axiosGithub = _axios2.default.create({
+  baseURL: 'https://api.github.com',
+  headers: {
+    'Accept': 'application/json'
+  }
+});
+
+var getMetaContent = exports.getMetaContent = function getMetaContent(name, content) {
+  /* istanbul ignore next */
+  content || (content = 'content');
+  /* istanbul ignore next */
+  var el = document.querySelector('meta[name=\'' + name + '\']');
+  /* istanbul ignore next */
+  return el && el.getAttribute(content);
+};
+
+var formatErrorMsg = exports.formatErrorMsg = function formatErrorMsg(err) {
+  var msg = 'Error: ';
+  if (err.response && err.response.data && err.response.data.message) {
+    msg += err.response.data.message + '. ';
+    err.response.data.errors && (msg += err.response.data.errors.map(function (e) {
+      return e.message;
+    }).join(', '));
+  } else {
+    msg += err.message;
+  }
+  return msg;
+};
+
+var hasClassInParent = exports.hasClassInParent = function hasClassInParent(element) {
+  for (var _len = arguments.length, className = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    className[_key - 1] = arguments[_key];
+  }
+
+  /* istanbul ignore next */
+  var yes = false;
+  /* istanbul ignore next */
+  if (typeof element.className === 'undefined') return false;
+  /* istanbul ignore next */
+  var classes = element.className.split(' ');
+  /* istanbul ignore next */
+  className.forEach(function (c, i) {
+    /* istanbul ignore next */
+    yes = yes || classes.indexOf(c) >= 0;
+  });
+  /* istanbul ignore next */
+  if (yes) return yes;
+  /* istanbul ignore next */
+  return element.parentNode && hasClassInParent(element.parentNode, className);
+};
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
 module.exports = function bind(fn, thisArg) {
   return function wrap() {
     var args = new Array(arguments.length);
@@ -1931,7 +2035,7 @@ module.exports = function bind(fn, thisArg) {
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1942,7 +2046,7 @@ var settle = __webpack_require__(44);
 var buildURL = __webpack_require__(46);
 var parseHeaders = __webpack_require__(47);
 var isURLSameOrigin = __webpack_require__(48);
-var createError = __webpack_require__(12);
+var createError = __webpack_require__(13);
 var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(49);
 
 module.exports = function xhrAdapter(config) {
@@ -2119,7 +2223,7 @@ module.exports = function xhrAdapter(config) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2144,7 +2248,7 @@ module.exports = function createError(message, config, code, request, response) 
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2156,7 +2260,7 @@ module.exports = function isCancel(value) {
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2182,7 +2286,7 @@ module.exports = Cancel;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2211,7 +2315,7 @@ function Avatar(props) {
 }
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2246,7 +2350,7 @@ function Svg(props) {
 }
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2260,7 +2364,7 @@ var _react2 = _interopRequireDefault(_react);
 
 var _reactDom = __webpack_require__(1);
 
-var _gitalk = __webpack_require__(23);
+var _gitalk = __webpack_require__(24);
 
 var _gitalk2 = _interopRequireDefault(_gitalk);
 
@@ -2302,7 +2406,7 @@ var Gitalk = function () {
 module.exports = Gitalk;
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {/**
@@ -2329,17 +2433,17 @@ if (process.env.NODE_ENV !== 'production') {
   // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
   var throwOnDirectAccess = true;
-  module.exports = __webpack_require__(19)(isValidElement, throwOnDirectAccess);
+  module.exports = __webpack_require__(20)(isValidElement, throwOnDirectAccess);
 } else {
   // By explicitly using `prop-types` you are opting into new production behavior.
   // http://fb.me/prop-types-in-prod
-  module.exports = __webpack_require__(21)();
+  module.exports = __webpack_require__(22)();
 }
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2359,7 +2463,7 @@ var invariant = __webpack_require__(5);
 var warning = __webpack_require__(9);
 
 var ReactPropTypesSecret = __webpack_require__(6);
-var checkPropTypes = __webpack_require__(20);
+var checkPropTypes = __webpack_require__(21);
 
 module.exports = function(isValidElement, throwOnDirectAccess) {
   /* global Symbol */
@@ -2859,7 +2963,7 @@ module.exports = function(isValidElement, throwOnDirectAccess) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2928,7 +3032,7 @@ module.exports = checkPropTypes;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2994,7 +3098,7 @@ module.exports = function() {
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 !function() {
@@ -3399,7 +3503,7 @@ module.exports = function() {
 //# sourceMappingURL=preact.js.map
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -3411,23 +3515,23 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _reactFlipMove = __webpack_require__(24);
+var _reactFlipMove = __webpack_require__(25);
 
 var _reactFlipMove2 = _interopRequireDefault(_reactFlipMove);
 
-var _autosize = __webpack_require__(31);
+var _autosize = __webpack_require__(32);
 
 var _autosize2 = _interopRequireDefault(_autosize);
 
-var _i18n = __webpack_require__(32);
+var _i18n = __webpack_require__(33);
 
 var _i18n2 = _interopRequireDefault(_i18n);
 
-__webpack_require__(37);
+__webpack_require__(38);
 
-var _util = __webpack_require__(38);
+var _util = __webpack_require__(10);
 
-var _avatar = __webpack_require__(15);
+var _avatar = __webpack_require__(16);
 
 var _avatar2 = _interopRequireDefault(_avatar);
 
@@ -3443,11 +3547,15 @@ var _comment = __webpack_require__(60);
 
 var _comment2 = _interopRequireDefault(_comment);
 
-var _svg = __webpack_require__(16);
+var _svg = __webpack_require__(17);
 
 var _svg2 = _interopRequireDefault(_svg);
 
 var _const = __webpack_require__(82);
+
+var _getComments = __webpack_require__(83);
+
+var _getComments2 = _interopRequireDefault(_getComments);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3472,6 +3580,7 @@ var GitalkComponent = function (_Component) {
       localComments: [],
       comment: '',
       page: 1,
+      cursor: null,
 
       isNoInit: false,
       isIniting: true,
@@ -3557,7 +3666,7 @@ var GitalkComponent = function (_Component) {
           isIssueCreating: false,
           isOccurError: false
         });
-        return _this.getComments();
+        return _this.getComments1();
       }).catch(function (err) {
         _this.setState({
           isIssueCreating: false,
@@ -3591,7 +3700,7 @@ var GitalkComponent = function (_Component) {
     _this.handleCommentLoad = function () {
       if (_this.state.isLoadMore) return;
       _this.setState({ isLoadMore: true });
-      _this.getComments().then(function () {
+      _this.getComments1().then(function () {
         return _this.setState({ isLoadMore: false });
       });
     };
@@ -3620,7 +3729,9 @@ var GitalkComponent = function (_Component) {
       body: '', // location.href + header.meta[description]
       language: navigator.language || navigator.userLanguage,
       perPage: 10,
+      pagerDirection: 'last', // last or first
       createIssueManually: false,
+      showMaskOnCommenting: false,
       proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
       flipMoveOptions: {
         staggerDelayBy: 150,
@@ -3704,7 +3815,7 @@ var GitalkComponent = function (_Component) {
       var _this2 = this;
 
       return this.getUserInfo().then(function () {
-        return _this2.getComments();
+        return _this2.getComments1();
       });
     }
   }, {
@@ -3798,9 +3909,19 @@ var GitalkComponent = function (_Component) {
       });
     }
   }, {
+    key: 'getComments1',
+    value: function getComments1() {
+      var _this6 = this;
+
+      return this.getIssue().then(function (issue) {
+        if (!issue) return;
+        return _getComments2.default.call(_this6);
+      });
+    }
+  }, {
     key: 'createComment',
     value: function createComment() {
-      var _this6 = this;
+      var _this7 = this;
 
       var _state = this.state,
           comment = _state.comment,
@@ -3813,11 +3934,11 @@ var GitalkComponent = function (_Component) {
         }, {
           headers: {
             Accept: 'application/vnd.github.html+json',
-            Authorization: 'token ' + _this6.accessToken
+            Authorization: 'token ' + _this7.accessToken
           }
         });
       }).then(function (res) {
-        _this6.setState({ comment: '', localComments: localComments.concat(res.data) });
+        _this7.setState({ comment: '', localComments: localComments.concat(res.data) });
       });
     }
   }, {
@@ -3877,7 +3998,7 @@ var GitalkComponent = function (_Component) {
   }, {
     key: 'header',
     value: function header() {
-      var _this7 = this;
+      var _this8 = this;
 
       var _state3 = this.state,
           user = _state3.user,
@@ -3885,9 +4006,10 @@ var GitalkComponent = function (_Component) {
           isCreating = _state3.isCreating,
           isShowMask = _state3.isShowMask;
 
+      var showMask = this.options.showMaskOnCommenting && isShowMask;
       return _react2.default.createElement(
         'div',
-        { className: 'gt-header ' + (isShowMask ? 'gt-header-mask-show' : ''), key: 'header' },
+        { className: 'gt-header ' + (showMask ? 'gt-header-mask-show' : ''), key: 'header' },
         user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url }) : _react2.default.createElement(
           'a',
           { href: this.loginLink, className: 'gt-avatar-github' },
@@ -3899,7 +4021,7 @@ var GitalkComponent = function (_Component) {
           { className: 'gt-header-comment' },
           _react2.default.createElement('textarea', {
             ref: function ref(t) {
-              _this7.commentEL = t;
+              _this8.commentEL = t;
             },
             className: 'gt-header-textarea',
             value: comment,
@@ -3925,7 +4047,7 @@ var GitalkComponent = function (_Component) {
   }, {
     key: 'comments',
     value: function comments() {
-      var _this8 = this;
+      var _this9 = this;
 
       var _state4 = this.state,
           user = _state4.user,
@@ -3950,7 +4072,7 @@ var GitalkComponent = function (_Component) {
               key: c.id,
               user: user,
               language: language,
-              commentedText: _this8.i18n.t('commented'),
+              commentedText: _this9.i18n.t('commented'),
               admin: admin
             });
           })
@@ -4087,7 +4209,7 @@ var GitalkComponent = function (_Component) {
 module.exports = GitalkComponent;
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4097,7 +4219,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _FlipMove = __webpack_require__(25);
+var _FlipMove = __webpack_require__(26);
 
 var _FlipMove2 = _interopRequireDefault(_FlipMove);
 
@@ -4112,7 +4234,7 @@ exports.default = _FlipMove2.default;
 module.exports = exports['default'];
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4132,13 +4254,13 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-__webpack_require__(26);
+__webpack_require__(27);
 
-var _propConverter = __webpack_require__(27);
+var _propConverter = __webpack_require__(28);
 
 var _propConverter2 = _interopRequireDefault(_propConverter);
 
-var _domManipulation = __webpack_require__(30);
+var _domManipulation = __webpack_require__(31);
 
 var _helpers = __webpack_require__(7);
 
@@ -4847,7 +4969,7 @@ exports.default = (0, _propConverter2.default)(FlipMove);
 module.exports = exports['default'];
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4933,7 +5055,7 @@ if (!Array.isArray) {
 }
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4953,9 +5075,9 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _errorMessages = __webpack_require__(28);
+var _errorMessages = __webpack_require__(29);
 
-var _enterLeavePresets = __webpack_require__(29);
+var _enterLeavePresets = __webpack_require__(30);
 
 var _helpers = __webpack_require__(7);
 
@@ -5177,7 +5299,7 @@ module.exports = exports['default'];
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(2)))
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5210,7 +5332,7 @@ var invalidEnterLeavePreset = exports.invalidEnterLeavePreset = function invalid
 };
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5286,7 +5408,7 @@ var defaultPreset = exports.defaultPreset = 'elevator';
 var disablePreset = exports.disablePreset = 'none';
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5541,7 +5663,7 @@ var createTransitionString = exports.createTransitionString = function createTra
 };
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -5841,7 +5963,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 });
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -5858,19 +5980,19 @@ exports.default = function (language) {
   });
 };
 
-var _polyglot = __webpack_require__(33);
+var _polyglot = __webpack_require__(34);
 
 var _polyglot2 = _interopRequireDefault(_polyglot);
 
-var _zhCN = __webpack_require__(34);
+var _zhCN = __webpack_require__(35);
 
 var _zhCN2 = _interopRequireDefault(_zhCN);
 
-var _zhTW = __webpack_require__(35);
+var _zhTW = __webpack_require__(36);
 
 var _zhTW2 = _interopRequireDefault(_zhTW);
 
-var _en = __webpack_require__(36);
+var _en = __webpack_require__(37);
 
 var _en2 = _interopRequireDefault(_en);
 
@@ -5884,7 +6006,7 @@ var i18nMap = {
 };
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     (c) 2012 Airbnb, Inc.
@@ -6192,7 +6314,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     (c) 2012 
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -6216,7 +6338,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -6240,7 +6362,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports) {
 
 module.exports = {
@@ -6264,114 +6386,10 @@ module.exports = {
 };
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
-
-/***/ }),
-/* 38 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.hasClassInParent = exports.formatErrorMsg = exports.getMetaContent = exports.axiosGithub = exports.axiosJSON = exports.queryStringify = exports.queryParse = undefined;
-
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _axios = __webpack_require__(39);
-
-var _axios2 = _interopRequireDefault(_axios);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var queryParse = exports.queryParse = function queryParse() {
-  var search = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : window.location.search;
-
-  if (!search) return {};
-  var queryString = search[0] === '?' ? search.substring(1) : search;
-  var query = {};
-  queryString.split('&').forEach(function (queryStr) {
-    var _queryStr$split = queryStr.split('='),
-        _queryStr$split2 = _slicedToArray(_queryStr$split, 2),
-        key = _queryStr$split2[0],
-        value = _queryStr$split2[1];
-    /* istanbul ignore else */
-
-
-    if (key) query[decodeURIComponent(key)] = decodeURIComponent(value);
-  });
-
-  return query;
-};
-
-var queryStringify = exports.queryStringify = function queryStringify(query) {
-  var queryString = Object.keys(query).map(function (key) {
-    return key + '=' + encodeURIComponent(query[key] || '');
-  }).join('&');
-  return queryString;
-};
-
-var axiosJSON = exports.axiosJSON = _axios2.default.create({
-  headers: {
-    'Accept': 'application/json'
-  }
-});
-
-var axiosGithub = exports.axiosGithub = _axios2.default.create({
-  baseURL: 'https://api.github.com',
-  headers: {
-    'Accept': 'application/json'
-  }
-});
-
-var getMetaContent = exports.getMetaContent = function getMetaContent(name, content) {
-  /* istanbul ignore next */
-  content || (content = 'content');
-  /* istanbul ignore next */
-  var el = document.querySelector('meta[name=\'' + name + '\']');
-  /* istanbul ignore next */
-  return el && el.getAttribute(content);
-};
-
-var formatErrorMsg = exports.formatErrorMsg = function formatErrorMsg(err) {
-  var msg = 'Error: ';
-  if (err.response && err.response.data && err.response.data.message) {
-    msg += err.response.data.message + '. ';
-    err.response.data.errors && (msg += err.response.data.errors.map(function (e) {
-      return e.message;
-    }).join(', '));
-  } else {
-    msg += err.message;
-  }
-  return msg;
-};
-
-var hasClassInParent = exports.hasClassInParent = function hasClassInParent(element) {
-  for (var _len = arguments.length, className = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    className[_key - 1] = arguments[_key];
-  }
-
-  /* istanbul ignore next */
-  var yes = false;
-  /* istanbul ignore next */
-  if (typeof element.className === 'undefined') return false;
-  /* istanbul ignore next */
-  var classes = element.className.split(' ');
-  /* istanbul ignore next */
-  className.forEach(function (c, i) {
-    /* istanbul ignore next */
-    yes = yes || classes.indexOf(c) >= 0;
-  });
-  /* istanbul ignore next */
-  if (yes) return yes;
-  /* istanbul ignore next */
-  return element.parentNode && hasClassInParent(element.parentNode, className);
-};
 
 /***/ }),
 /* 39 */
@@ -6387,7 +6405,7 @@ module.exports = __webpack_require__(40);
 
 
 var utils = __webpack_require__(0);
-var bind = __webpack_require__(10);
+var bind = __webpack_require__(11);
 var Axios = __webpack_require__(42);
 var defaults = __webpack_require__(8);
 
@@ -6422,9 +6440,9 @@ axios.create = function create(instanceConfig) {
 };
 
 // Expose Cancel & CancelToken
-axios.Cancel = __webpack_require__(14);
+axios.Cancel = __webpack_require__(15);
 axios.CancelToken = __webpack_require__(56);
-axios.isCancel = __webpack_require__(13);
+axios.isCancel = __webpack_require__(14);
 
 // Expose all/spread
 axios.all = function all(promises) {
@@ -6584,7 +6602,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 "use strict";
 
 
-var createError = __webpack_require__(12);
+var createError = __webpack_require__(13);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -7003,7 +7021,7 @@ module.exports = InterceptorManager;
 
 var utils = __webpack_require__(0);
 var transformData = __webpack_require__(53);
-var isCancel = __webpack_require__(13);
+var isCancel = __webpack_require__(14);
 var defaults = __webpack_require__(8);
 
 /**
@@ -7156,7 +7174,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 "use strict";
 
 
-var Cancel = __webpack_require__(14);
+var Cancel = __webpack_require__(15);
 
 /**
  * A `CancelToken` is an object that can be used to request cancellation of an operation.
@@ -7329,11 +7347,11 @@ var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _avatar = __webpack_require__(15);
+var _avatar = __webpack_require__(16);
 
 var _avatar2 = _interopRequireDefault(_avatar);
 
-var _svg = __webpack_require__(16);
+var _svg = __webpack_require__(17);
 
 var _svg2 = _interopRequireDefault(_svg);
 
@@ -8558,6 +8576,100 @@ Object.defineProperty(exports, "__esModule", {
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
 var GT_VERSION = exports.GT_VERSION = "1.0.0-beta.1"; // eslint-disable-line
+
+/***/ }),
+/* 83 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var getComments = function () {
+  var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
+    var _this = this;
+
+    var _options, owner, repo, perPage, pagerDirection, _state, cursor, comments, issue;
+
+    return regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _options = this.options, owner = _options.owner, repo = _options.repo, perPage = _options.perPage, pagerDirection = _options.pagerDirection;
+            _state = this.state, cursor = _state.cursor, comments = _state.comments, issue = _state.issue;
+            return _context.abrupt('return', _util.axiosJSON.post('https://api.github.com/graphql', getQL({
+              owner: owner,
+              repo: repo,
+              id: issue.number,
+              pageSize: perPage,
+              cursor: cursor
+            }, pagerDirection), {
+              headers: {
+                Authorization: 'bearer ' + this.accessToken
+              }
+            }).then(function (res) {
+              var data = res.data.data.repository.issue.comments;
+              var items = data.nodes.map(function (node) {
+                return {
+                  user: {
+                    avatar_url: node.author.avatarUrl,
+                    login: node.author.login,
+                    html_url: node.author.url
+                  },
+                  created_at: node.createdAt,
+                  body_html: node.bodyHTML,
+                  html_url: 'https://github.com/' + owner + '/' + repo + '/issues/' + issue.number + '#issuecomment-' + node.databaseId
+                };
+              });
+
+              if (pagerDirection === 'last') {
+                items.reverse();
+              }
+
+              var isLoadOver = data.pageInfo.hasPreviousPage === false || data.pageInfo.hasNextPage === false;
+              var cs = comments.concat(items);
+              _this.setState({
+                comments: cs,
+                isLoadOver: isLoadOver,
+                cursor: data.pageInfo.startCursor || data.pageInfo.endCursor
+              });
+              return cs;
+            }));
+
+          case 3:
+          case 'end':
+            return _context.stop();
+        }
+      }
+    }, _callee, this);
+  }));
+
+  return function getComments() {
+    return _ref.apply(this, arguments);
+  };
+}();
+
+var _util = __webpack_require__(10);
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+var getQL = function getQL(vars, pagerDirection) {
+  var cursorDirection = pagerDirection === 'last' ? 'before' : 'after';
+  var ql = '\n  query getIssueAndComments(\n    $owner: String!,\n    $repo: String!,\n    $id: Int!,\n    $cursor: String,\n    $pageSize: Int!\n  ) {\n    repository(owner: $owner, name: $repo) {\n      issue(number: $id) {\n        title\n        url\n        bodyHTML\n        createdAt\n        comments(' + pagerDirection + ': $pageSize, ' + cursorDirection + ': $cursor) {\n          totalCount\n          pageInfo {\n            ' + (pagerDirection === 'last' ? 'hasPreviousPage' : 'hasNextPage') + '\n            ' + (cursorDirection === 'before' ? 'startCursor' : 'endCursor') + '\n          }\n          nodes {\n            databaseId\n            author {\n              avatarUrl\n              login\n              url\n            }\n            bodyHTML\n            createdAt\n          }\n        }\n      }\n    }\n  }\n  ';
+
+  if (vars.cursor === null) delete vars.cursor;
+
+  return {
+    operationName: 'getIssueAndComments',
+    query: ql,
+    variables: vars
+  };
+};
+
+exports.default = getComments;
 
 /***/ })
 /******/ ]);
