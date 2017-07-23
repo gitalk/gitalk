@@ -141,7 +141,6 @@ class GitalkComponent extends Component {
     localStorage.setItem(GT_ACCESS_TOKEN, token)
     this._accessToken = token
   }
-
   get loginLink () {
     const githubOauthUrl = 'http://github.com/login/oauth/authorize'
     const { clientID } = this.options
@@ -218,11 +217,46 @@ class GitalkComponent extends Component {
       return res.data
     })
   }
+  // Get comments via v3 api, don't require login, but sorting feature is disable
+  getCommentsV3 = () => {
+    const { clientID, clientSecret, perPage } = this.options
+    const { page } = this.state
+    return this.getIssue()
+      .then(issue => {
+        if (!issue) return
 
+        return axiosGithub.get(issue.comments_url, {
+          headers: {
+            Accept: 'application/vnd.github.html+json'
+          },
+          params: {
+            client_id: clientID,
+            client_secret: clientSecret,
+            per_page: perPage,
+            page
+          }
+        }).then(res => {
+          const { comments, issue } = this.state
+          let isLoadOver = false
+          const cs = comments.concat(res.data)
+          if (cs.length >= issue.comments || res.data.length < perPage) {
+            isLoadOver = true
+          }
+          this.setState({
+            comments: cs,
+            isLoadOver,
+            page: page + 1
+          })
+          return cs
+        })
+      })
+  }
   getComments () {
     return this.getIssue().then(issue => {
       if (!issue) return
-      return QLGetComments.call(this)
+      // Get comments via v4 graphql api, login required and sorting feature is available
+      if (this.accessToken) return QLGetComments.call(this)
+      return this.getCommentsV3()
     })
   }
 
@@ -407,7 +441,7 @@ class GitalkComponent extends Component {
     const { user, comments, localComments, isLoadOver, isLoadMore, pagerDirection } = this.state
     const { language, flipMoveOptions, admin } = this.options
     const totalComments = comments.concat(localComments)
-    if (pagerDirection === 'last') {
+    if (pagerDirection === 'last' && this.accessToken) {
       totalComments.reverse()
     }
     return (
@@ -445,8 +479,8 @@ class GitalkComponent extends Component {
         }}/>
         {isPopupVisible &&
           <div className="gt-popup">
-            <Action className={`gt-action-sortasc${!isDesc ? ' is--active' : ''}`} onClick={this.handleSort('first')} text={this.i18n.t('sort-asc')}/>
-            <Action className={`gt-action-sortdesc${isDesc ? ' is--active' : ''}`} onClick={this.handleSort('last')} text={this.i18n.t('sort-desc')}/>
+            {user ? <Action className={`gt-action-sortasc${!isDesc ? ' is--active' : ''}`} onClick={this.handleSort('first')} text={this.i18n.t('sort-asc')}/> : null }
+            {user ? <Action className={`gt-action-sortdesc${isDesc ? ' is--active' : ''}`} onClick={this.handleSort('last')} text={this.i18n.t('sort-desc')}/> : null }
             {user ?
               <Action className="gt-action-logout" onClick={this.handleLogout} text={this.i18n.t('logout')}/> :
               <a href={this.loginLink} className="gt-action gt-action-login">{this.i18n.t('login-with-github')}</a>
