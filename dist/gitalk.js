@@ -3580,6 +3580,7 @@ var GitalkComponent = function (_Component) {
       localComments: [],
       comment: '',
       page: 1,
+      pagerDirection: 'last',
       cursor: null,
 
       isNoInit: false,
@@ -3590,13 +3591,13 @@ var GitalkComponent = function (_Component) {
       isLoadOver: false,
       isIssueCreating: false,
       isPopupVisible: false,
-      isShowMask: false,
+      isInputFocused: false,
 
       isOccurError: false,
       errorMsg: ''
     };
 
-    _this.getComments = function () {
+    _this.getCommentsV3 = function () {
       var _this$options = _this.options,
           clientID = _this$options.clientID,
           clientSecret = _this$options.clientSecret,
@@ -3636,6 +3637,10 @@ var GitalkComponent = function (_Component) {
       });
     };
 
+    _this.getRef = function (e) {
+      _this.publicBtnEL = e;
+    };
+
     _this.handlePopup = function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -3666,7 +3671,7 @@ var GitalkComponent = function (_Component) {
           isIssueCreating: false,
           isOccurError: false
         });
-        return _this.getComments1();
+        return _this.getComments();
       }).catch(function (err) {
         _this.setState({
           isIssueCreating: false,
@@ -3678,7 +3683,7 @@ var GitalkComponent = function (_Component) {
 
     _this.handleCommentCreate = function (e) {
       if (!_this.state.comment.length) {
-        e.preventDefault();
+        e && e.preventDefault();
         _this.commentEL.focus();
         return;
       }
@@ -3700,7 +3705,7 @@ var GitalkComponent = function (_Component) {
     _this.handleCommentLoad = function () {
       if (_this.state.isLoadMore) return;
       _this.setState({ isLoadMore: true });
-      _this.getComments1().then(function () {
+      _this.getComments().then(function () {
         return _this.setState({ isLoadMore: false });
       });
     };
@@ -3714,12 +3719,33 @@ var GitalkComponent = function (_Component) {
       location.reload();
     };
 
-    _this.handleCommentFocus = function () {
-      return _this.setState({ isShowMask: true });
+    _this.handleCommentFocus = function (e) {
+      var distractionFreeMode = _this.options.distractionFreeMode;
+
+      if (!distractionFreeMode) return e.preventDefault();
+      _this.setState({ isInputFocused: true });
     };
 
-    _this.handleCommentBlur = function () {
-      return _this.setState({ isShowMask: false });
+    _this.handleCommentBlur = function (e) {
+      var distractionFreeMode = _this.options.distractionFreeMode;
+
+      if (!distractionFreeMode) return e.preventDefault();
+      _this.setState({ isInputFocused: false });
+    };
+
+    _this.handleSort = function (direction) {
+      return function (e) {
+        _this.setState({ pagerDirection: direction });
+      };
+    };
+
+    _this.handleCommentKeyDown = function (e) {
+      var enableHotKey = _this.options.enableHotKey;
+
+      if (enableHotKey && (e.metaKey || e.ctrlKey) && e.keyCode === 13) {
+        _this.publicBtnEL && _this.publicBtnEL.focus();
+        _this.handleCommentCreate();
+      }
     };
 
     _this.options = Object.assign({}, {
@@ -3731,7 +3757,7 @@ var GitalkComponent = function (_Component) {
       perPage: 10,
       pagerDirection: 'last', // last or first
       createIssueManually: false,
-      showMaskOnCommenting: false,
+      distractionFreeMode: false,
       proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
       flipMoveOptions: {
         staggerDelayBy: 150,
@@ -3739,9 +3765,12 @@ var GitalkComponent = function (_Component) {
         enterAnimation: 'accordionVertical',
         leaveAnimation: 'accordionVertical'
       },
+      enableHotKey: true,
 
       url: location.href
     }, props.options);
+
+    _this.state.pagerDirection = _this.options.pagerDirection;
 
     var query = (0, _util.queryParse)();
     if (query.code) {
@@ -3815,7 +3844,7 @@ var GitalkComponent = function (_Component) {
       var _this2 = this;
 
       return this.getUserInfo().then(function () {
-        return _this2.getComments1();
+        return _this2.getComments();
       });
     }
   }, {
@@ -3908,14 +3937,18 @@ var GitalkComponent = function (_Component) {
         return res.data;
       });
     }
+    // Get comments via v3 api, don't require login, but sorting feature is disable
+
   }, {
-    key: 'getComments1',
-    value: function getComments1() {
+    key: 'getComments',
+    value: function getComments() {
       var _this6 = this;
 
       return this.getIssue().then(function (issue) {
         if (!issue) return;
-        return _getComments2.default.call(_this6);
+        // Get comments via v4 graphql api, login required and sorting feature is available
+        if (_this6.accessToken) return _getComments2.default.call(_this6);
+        return _this6.getCommentsV3();
       });
     }
   }, {
@@ -3938,7 +3971,10 @@ var GitalkComponent = function (_Component) {
           }
         });
       }).then(function (res) {
-        _this7.setState({ comment: '', localComments: localComments.concat(res.data) });
+        _this7.setState({
+          comment: '',
+          localComments: localComments.concat(res.data)
+        });
       });
     }
   }, {
@@ -4003,19 +4039,16 @@ var GitalkComponent = function (_Component) {
       var _state3 = this.state,
           user = _state3.user,
           comment = _state3.comment,
-          isCreating = _state3.isCreating,
-          isShowMask = _state3.isShowMask;
+          isCreating = _state3.isCreating;
 
-      var showMask = this.options.showMaskOnCommenting && isShowMask;
       return _react2.default.createElement(
         'div',
-        { className: 'gt-header ' + (showMask ? 'gt-header-mask-show' : ''), key: 'header' },
+        { className: 'gt-header', key: 'header' },
         user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url }) : _react2.default.createElement(
           'a',
           { href: this.loginLink, className: 'gt-avatar-github' },
           _react2.default.createElement(_svg2.default, { className: 'gt-ico-github', name: 'github' })
         ),
-        _react2.default.createElement('div', { className: 'gt-header-mask' }),
         _react2.default.createElement(
           'div',
           { className: 'gt-header-comment' },
@@ -4028,6 +4061,7 @@ var GitalkComponent = function (_Component) {
             onChange: this.handleCommentChange,
             onFocus: this.handleCommentFocus,
             onBlur: this.handleCommentBlur,
+            onKeyDown: this.handleCommentKeyDown,
             placeholder: this.i18n.t('leave-a-comment')
           }),
           _react2.default.createElement(
@@ -4038,7 +4072,13 @@ var GitalkComponent = function (_Component) {
               { className: 'gt-header-controls-tip', href: 'https://guides.github.com/features/mastering-markdown/', target: '_blank' },
               _react2.default.createElement(_svg2.default, { className: 'gt-ico-tip', name: 'tip', text: this.i18n.t('support-markdown') })
             ),
-            user && _react2.default.createElement(_button2.default, { className: 'gt-btn-public', onMouseDown: this.handleCommentCreate, text: this.i18n.t('comment'), isLoading: isCreating }),
+            user && _react2.default.createElement(_button2.default, {
+              getRef: this.getRef,
+              className: 'gt-btn-public',
+              onMouseDown: this.handleCommentCreate,
+              text: this.i18n.t('comment'),
+              isLoading: isCreating
+            }),
             !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onMouseDown: this.handleLogin, text: this.i18n.t('login-with-github') })
           )
         )
@@ -4054,19 +4094,24 @@ var GitalkComponent = function (_Component) {
           comments = _state4.comments,
           localComments = _state4.localComments,
           isLoadOver = _state4.isLoadOver,
-          isLoadMore = _state4.isLoadMore;
+          isLoadMore = _state4.isLoadMore,
+          pagerDirection = _state4.pagerDirection;
       var _options5 = this.options,
           language = _options5.language,
           flipMoveOptions = _options5.flipMoveOptions,
           admin = _options5.admin;
 
+      var totalComments = comments.concat(localComments);
+      if (pagerDirection === 'last' && this.accessToken) {
+        totalComments.reverse();
+      }
       return _react2.default.createElement(
         'div',
         { className: 'gt-comments', key: 'comments' },
         _react2.default.createElement(
           _reactFlipMove2.default,
           flipMoveOptions,
-          comments.concat(localComments).map(function (c) {
+          totalComments.map(function (c) {
             return _react2.default.createElement(_comment2.default, {
               comment: c,
               key: c.id,
@@ -4077,12 +4122,12 @@ var GitalkComponent = function (_Component) {
             });
           })
         ),
-        !comments.concat(localComments).length && _react2.default.createElement(
+        !totalComments.length && _react2.default.createElement(
           'p',
           { className: 'gt-comments-null' },
           this.i18n.t('first-comment-person')
         ),
-        !isLoadOver && _react2.default.createElement(
+        !isLoadOver && totalComments.length && _react2.default.createElement(
           'div',
           { className: 'gt-comments-controls' },
           _react2.default.createElement(_button2.default, { className: 'gt-btn-loadmore', onClick: this.handleCommentLoad, isLoading: isLoadMore, text: this.i18n.t('load-more') })
@@ -4095,23 +4140,26 @@ var GitalkComponent = function (_Component) {
       var _state5 = this.state,
           user = _state5.user,
           issue = _state5.issue,
-          isPopupVisible = _state5.isPopupVisible;
+          isPopupVisible = _state5.isPopupVisible,
+          pagerDirection = _state5.pagerDirection,
+          localComments = _state5.localComments;
 
-
+      var cnt = issue.comments + localComments.length;
+      var isDesc = pagerDirection === 'last';
       return _react2.default.createElement(
         'div',
         { className: 'gt-meta', key: 'meta' },
         _react2.default.createElement('span', { className: 'gt-counts', dangerouslySetInnerHTML: {
             __html: this.i18n.t('counts', {
-              counts: '<a class="gt-link gt-link-counts" href="' + issue.html_url + '" target="_blank">' + issue.comments + '</a>',
-              smart_count: issue.comments
+              counts: '<a class="gt-link gt-link-counts" href="' + issue.html_url + '" target="_blank">' + cnt + '</a>',
+              smart_count: cnt
             })
           } }),
         isPopupVisible && _react2.default.createElement(
           'div',
           { className: 'gt-popup' },
-          _react2.default.createElement(_action2.default, { className: 'gt-action-sortasc is--active', text: this.i18n.t('sort-asc') }),
-          _react2.default.createElement(_action2.default, { className: 'gt-action-sortdesc', text: this.i18n.t('sort-desc') }),
+          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortasc' + (!isDesc ? ' is--active' : ''), onClick: this.handleSort('first'), text: this.i18n.t('sort-asc') }) : null,
+          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortdesc' + (isDesc ? ' is--active' : ''), onClick: this.handleSort('last'), text: this.i18n.t('sort-desc') }) : null,
           user ? _react2.default.createElement(_action2.default, { className: 'gt-action-logout', onClick: this.handleLogout, text: this.i18n.t('logout') }) : _react2.default.createElement(
             'a',
             { href: this.loginLink, className: 'gt-action gt-action-login' },
@@ -4164,11 +4212,12 @@ var GitalkComponent = function (_Component) {
           isIniting = _state6.isIniting,
           isNoInit = _state6.isNoInit,
           isOccurError = _state6.isOccurError,
-          errorMsg = _state6.errorMsg;
+          errorMsg = _state6.errorMsg,
+          isInputFocused = _state6.isInputFocused;
 
       return _react2.default.createElement(
         'div',
-        { className: 'gt-container' },
+        { className: 'gt-container' + (isInputFocused ? ' gt-input-focused' : '') },
         isIniting && this.initing(),
         !isIniting && (isNoInit ? [] : [this.meta()]),
         isOccurError && _react2.default.createElement(
@@ -7288,7 +7337,9 @@ function Button(props) {
   props.className && (className += props.className);
   return _react2.default.createElement(
     'button',
-    { className: className, onClick: props.onClick, onMouseDown: props.onMouseDown },
+    { ref: function ref(el) {
+        return props.getRef && props.getRef(el);
+      }, className: className, onClick: props.onClick, onMouseDown: props.onMouseDown },
     _react2.default.createElement(
       'span',
       { className: 'gt-btn-text' },
@@ -8575,7 +8626,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.0.0-beta.1"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.0.1"; // eslint-disable-line
 
 /***/ }),
 /* 83 */
@@ -8588,73 +8639,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var getComments = function () {
-  var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {
-    var _this = this;
-
-    var _options, owner, repo, perPage, pagerDirection, _state, cursor, comments, issue;
-
-    return regeneratorRuntime.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            _options = this.options, owner = _options.owner, repo = _options.repo, perPage = _options.perPage, pagerDirection = _options.pagerDirection;
-            _state = this.state, cursor = _state.cursor, comments = _state.comments, issue = _state.issue;
-            return _context.abrupt('return', _util.axiosJSON.post('https://api.github.com/graphql', getQL({
-              owner: owner,
-              repo: repo,
-              id: issue.number,
-              pageSize: perPage,
-              cursor: cursor
-            }, pagerDirection), {
-              headers: {
-                Authorization: 'bearer ' + this.accessToken
-              }
-            }).then(function (res) {
-              var data = res.data.data.repository.issue.comments;
-              var items = data.nodes.map(function (node) {
-                return {
-                  user: {
-                    avatar_url: node.author.avatarUrl,
-                    login: node.author.login,
-                    html_url: node.author.url
-                  },
-                  created_at: node.createdAt,
-                  body_html: node.bodyHTML,
-                  html_url: 'https://github.com/' + owner + '/' + repo + '/issues/' + issue.number + '#issuecomment-' + node.databaseId
-                };
-              });
-
-              if (pagerDirection === 'last') {
-                items.reverse();
-              }
-
-              var isLoadOver = data.pageInfo.hasPreviousPage === false || data.pageInfo.hasNextPage === false;
-              var cs = comments.concat(items);
-              _this.setState({
-                comments: cs,
-                isLoadOver: isLoadOver,
-                cursor: data.pageInfo.startCursor || data.pageInfo.endCursor
-              });
-              return cs;
-            }));
-
-          case 3:
-          case 'end':
-            return _context.stop();
-        }
-      }
-    }, _callee, this);
-  }));
-
-  return function getComments() {
-    return _ref.apply(this, arguments);
-  };
-}();
-
 var _util = __webpack_require__(10);
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 var getQL = function getQL(vars, pagerDirection) {
   var cursorDirection = pagerDirection === 'last' ? 'before' : 'after';
@@ -8668,6 +8655,63 @@ var getQL = function getQL(vars, pagerDirection) {
     variables: vars
   };
 };
+
+function getComments() {
+  var _this = this;
+
+  var _options = this.options,
+      owner = _options.owner,
+      repo = _options.repo,
+      perPage = _options.perPage,
+      pagerDirection = _options.pagerDirection;
+  var _state = this.state,
+      cursor = _state.cursor,
+      comments = _state.comments,
+      issue = _state.issue;
+
+  return _util.axiosGithub.post('/graphql', getQL({
+    owner: owner,
+    repo: repo,
+    id: issue.number,
+    pageSize: perPage,
+    cursor: cursor
+  }, pagerDirection), {
+    headers: {
+      Authorization: 'bearer ' + this.accessToken
+    }
+  }).then(function (res) {
+    var data = res.data.data.repository.issue.comments;
+    var items = data.nodes.map(function (node) {
+      return {
+        id: node.databaseId,
+        user: {
+          avatar_url: node.author.avatarUrl,
+          login: node.author.login,
+          html_url: node.author.url
+        },
+        created_at: node.createdAt,
+        body_html: node.bodyHTML,
+        html_url: 'https://github.com/' + owner + '/' + repo + '/issues/' + issue.number + '#issuecomment-' + node.databaseId
+      };
+    });
+
+    var cs = void 0;
+
+    if (pagerDirection === 'last') {
+      cs = [].concat(_toConsumableArray(items), _toConsumableArray(comments));
+    } else {
+      cs = [].concat(_toConsumableArray(comments), _toConsumableArray(items));
+    }
+
+    var isLoadOver = data.pageInfo.hasPreviousPage === false || data.pageInfo.hasNextPage === false;
+    _this.setState({
+      comments: cs,
+      isLoadOver: isLoadOver,
+      cursor: data.pageInfo.startCursor || data.pageInfo.endCursor
+    });
+    return cs;
+  });
+}
 
 exports.default = getComments;
 
