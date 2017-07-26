@@ -5,7 +5,7 @@ export default function Svg (props) {
   props.className && (className += props.className)
   return (
     <span className={className}>
-      <span class="gt-svg" dangerouslySetInnerHTML={{
+      <span className="gt-svg" dangerouslySetInnerHTML={{
         __html: require(`!!raw-loader!../assets/icon/${props.name}.svg`)
       }}/>
       {props.text &&
