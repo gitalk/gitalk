@@ -49,9 +49,9 @@ const getQL = (vars, pagerDirection) => {
   }
 }
 
-function getComments () {
+function getComments (issue) {
   const { owner, repo, perPage, pagerDirection } = this.options
-  const { cursor, comments, issue } = this.state
+  const { cursor, comments } = this.state
   return axiosGithub.post(
     '/graphql',
     getQL(

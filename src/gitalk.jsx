@@ -153,7 +153,7 @@ class GitalkComponent extends Component {
   }
 
   getInit () {
-    return this.getUserInfo().then(() => this.getComments())
+    return this.getUserInfo().then(() => this.getIssue()).then(issue => this.getComments(issue))
   }
   getUserInfo () {
     return axiosGithub.get('/user', {
@@ -218,7 +218,7 @@ class GitalkComponent extends Component {
     })
   }
   // Get comments via v3 api, don't require login, but sorting feature is disable
-  getCommentsV3 = () => {
+  getCommentsV3 = (issue) => {
     const { clientID, clientSecret, perPage } = this.options
     const { page } = this.state
     return this.getIssue()
@@ -251,13 +251,11 @@ class GitalkComponent extends Component {
         })
       })
   }
-  getComments () {
-    return this.getIssue().then(issue => {
-      if (!issue) return
-      // Get comments via v4 graphql api, login required and sorting feature is available
-      if (this.accessToken) return QLGetComments.call(this)
-      return this.getCommentsV3()
-    })
+  getComments (issue) {
+    if (!issue) return
+    // Get comments via v4 graphql api, login required and sorting feature is available
+    if (this.accessToken) return QLGetComments.call(this, issue)
+    return this.getCommentsV3(issue)
   }
 
   createComment () {
@@ -310,12 +308,12 @@ class GitalkComponent extends Component {
   }
   handleIssueCreate = () => {
     this.setState({ isIssueCreating: true })
-    this.createIssue().then(() => {
+    this.createIssue().then(issue => {
       this.setState({
         isIssueCreating: false,
         isOccurError: false
       })
-      return this.getComments()
+      return this.getComments(issue)
     }).catch(err => {
       this.setState({
         isIssueCreating: false,
@@ -345,9 +343,10 @@ class GitalkComponent extends Component {
       })
   }
   handleCommentLoad = () => {
-    if (this.state.isLoadMore) return
+    const { issue, isLoadMore } = this.state
+    if (isLoadMore) return
     this.setState({ isLoadMore: true })
-    this.getComments().then(() => this.setState({ isLoadMore: false }))
+    this.getComments(issue).then(() => this.setState({ isLoadMore: false }))
   }
   handleCommentChange = e => this.setState({ comment: e.target.value })
   handleLogout = () => {
