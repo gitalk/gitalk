@@ -3597,7 +3597,7 @@ var GitalkComponent = function (_Component) {
       errorMsg: ''
     };
 
-    _this.getCommentsV3 = function () {
+    _this.getCommentsV3 = function (issue) {
       var _this$options = _this.options,
           clientID = _this$options.clientID,
           clientSecret = _this$options.clientSecret,
@@ -3666,12 +3666,12 @@ var GitalkComponent = function (_Component) {
 
     _this.handleIssueCreate = function () {
       _this.setState({ isIssueCreating: true });
-      _this.createIssue().then(function () {
+      _this.createIssue().then(function (issue) {
         _this.setState({
           isIssueCreating: false,
           isOccurError: false
         });
-        return _this.getComments();
+        return _this.getComments(issue);
       }).catch(function (err) {
         _this.setState({
           isIssueCreating: false,
@@ -3703,9 +3703,13 @@ var GitalkComponent = function (_Component) {
     };
 
     _this.handleCommentLoad = function () {
-      if (_this.state.isLoadMore) return;
+      var _this$state2 = _this.state,
+          issue = _this$state2.issue,
+          isLoadMore = _this$state2.isLoadMore;
+
+      if (isLoadMore) return;
       _this.setState({ isLoadMore: true });
-      _this.getComments().then(function () {
+      _this.getComments(issue).then(function () {
         return _this.setState({ isLoadMore: false });
       });
     };
@@ -3844,7 +3848,9 @@ var GitalkComponent = function (_Component) {
       var _this2 = this;
 
       return this.getUserInfo().then(function () {
-        return _this2.getComments();
+        return _this2.getIssue();
+      }).then(function (issue) {
+        return _this2.getComments(issue);
       });
     }
   }, {
@@ -3941,20 +3947,16 @@ var GitalkComponent = function (_Component) {
 
   }, {
     key: 'getComments',
-    value: function getComments() {
-      var _this6 = this;
-
-      return this.getIssue().then(function (issue) {
-        if (!issue) return;
-        // Get comments via v4 graphql api, login required and sorting feature is available
-        if (_this6.accessToken) return _getComments2.default.call(_this6);
-        return _this6.getCommentsV3();
-      });
+    value: function getComments(issue) {
+      if (!issue) return;
+      // Get comments via v4 graphql api, login required and sorting feature is available
+      if (this.accessToken) return _getComments2.default.call(this, issue);
+      return this.getCommentsV3(issue);
     }
   }, {
     key: 'createComment',
     value: function createComment() {
-      var _this7 = this;
+      var _this6 = this;
 
       var _state = this.state,
           comment = _state.comment,
@@ -3967,11 +3969,11 @@ var GitalkComponent = function (_Component) {
         }, {
           headers: {
             Accept: 'application/vnd.github.html+json',
-            Authorization: 'token ' + _this7.accessToken
+            Authorization: 'token ' + _this6.accessToken
           }
         });
       }).then(function (res) {
-        _this7.setState({
+        _this6.setState({
           comment: '',
           localComments: localComments.concat(res.data)
         });
@@ -4034,7 +4036,7 @@ var GitalkComponent = function (_Component) {
   }, {
     key: 'header',
     value: function header() {
-      var _this8 = this;
+      var _this7 = this;
 
       var _state3 = this.state,
           user = _state3.user,
@@ -4054,7 +4056,7 @@ var GitalkComponent = function (_Component) {
           { className: 'gt-header-comment' },
           _react2.default.createElement('textarea', {
             ref: function ref(t) {
-              _this8.commentEL = t;
+              _this7.commentEL = t;
             },
             className: 'gt-header-textarea',
             value: comment,
@@ -4087,7 +4089,7 @@ var GitalkComponent = function (_Component) {
   }, {
     key: 'comments',
     value: function comments() {
-      var _this9 = this;
+      var _this8 = this;
 
       var _state4 = this.state,
           user = _state4.user,
@@ -4117,7 +4119,7 @@ var GitalkComponent = function (_Component) {
               key: c.id,
               user: user,
               language: language,
-              commentedText: _this9.i18n.t('commented'),
+              commentedText: _this8.i18n.t('commented'),
               admin: admin
             });
           })
@@ -8626,7 +8628,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.0.2"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.0.3"; // eslint-disable-line
 
 /***/ }),
 /* 83 */
@@ -8656,7 +8658,7 @@ var getQL = function getQL(vars, pagerDirection) {
   };
 };
 
-function getComments() {
+function getComments(issue) {
   var _this = this;
 
   var _options = this.options,
@@ -8666,8 +8668,7 @@ function getComments() {
       pagerDirection = _options.pagerDirection;
   var _state = this.state,
       cursor = _state.cursor,
-      comments = _state.comments,
-      issue = _state.issue;
+      comments = _state.comments;
 
   return _util.axiosGithub.post('/graphql', getQL({
     owner: owner,

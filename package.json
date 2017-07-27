@@ -1,6 +1,6 @@
 {
   "name": "gitalk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A comment plugin base on Github issues",
   "keywords": [
     "comment",
