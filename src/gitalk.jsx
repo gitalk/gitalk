@@ -392,9 +392,9 @@ class GitalkComponent extends Component {
           })
         }}/>
         <p>{this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
-        {(user && ~[].concat(admin).indexOf(user.login)) && <p>
+        {(user && ~[].concat(admin).indexOf(user.login)) ? <p>
           <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
-        </p>}
+        </p> : null}
         {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
       </div>
     )
@@ -459,21 +459,21 @@ class GitalkComponent extends Component {
           ))}
         </FlipMove>
         {!totalComments.length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
-        {(!isLoadOver && totalComments.length) && <div className="gt-comments-controls">
+        {(!isLoadOver && totalComments.length) ? <div className="gt-comments-controls">
           <Button className="gt-btn-loadmore" onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />
-        </div>}
+        </div> : null}
       </div>
     )
   }
   meta () {
     const { user, issue, isPopupVisible, pagerDirection, localComments } = this.state
-    const cnt = issue.comments + localComments.length
+    const cnt = (issue && issue.comments) + localComments.length
     const isDesc = pagerDirection === 'last'
     return (
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
           __html: this.i18n.t('counts', {
-            counts: `<a class="gt-link gt-link-counts" href="${issue.html_url}" target="_blank">${cnt}</a>`,
+            counts: `<a class="gt-link gt-link-counts" href="${issue && issue.html_url}" target="_blank">${cnt}</a>`,
             smart_count: cnt
           })
         }}/>
