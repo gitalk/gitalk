@@ -2338,7 +2338,7 @@ function Svg(props) {
   return _react2.default.createElement(
     'span',
     { className: className },
-    _react2.default.createElement('span', { 'class': 'gt-svg', dangerouslySetInnerHTML: {
+    _react2.default.createElement('span', { className: 'gt-svg', dangerouslySetInnerHTML: {
         __html: __webpack_require__(61)("./" + props.name + '.svg')
       } }),
     props.text && _react2.default.createElement(
@@ -4023,11 +4023,11 @@ var GitalkComponent = function (_Component) {
               return '@' + u;
             }).join(' ') })
         ),
-        user && ~[].concat(admin).indexOf(user.login) && _react2.default.createElement(
+        user && ~[].concat(admin).indexOf(user.login) ? _react2.default.createElement(
           'p',
           null,
           _react2.default.createElement(_button2.default, { onClick: this.handleIssueCreate, isLoading: isIssueCreating, text: this.i18n.t('init-issue') })
-        ),
+        ) : null,
         !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: this.i18n.t('login-with-github') })
       );
     }
@@ -4127,11 +4127,11 @@ var GitalkComponent = function (_Component) {
           { className: 'gt-comments-null' },
           this.i18n.t('first-comment-person')
         ),
-        !isLoadOver && totalComments.length && _react2.default.createElement(
+        !isLoadOver && totalComments.length ? _react2.default.createElement(
           'div',
           { className: 'gt-comments-controls' },
           _react2.default.createElement(_button2.default, { className: 'gt-btn-loadmore', onClick: this.handleCommentLoad, isLoading: isLoadMore, text: this.i18n.t('load-more') })
-        )
+        ) : null
       );
     }
   }, {
@@ -4144,14 +4144,14 @@ var GitalkComponent = function (_Component) {
           pagerDirection = _state5.pagerDirection,
           localComments = _state5.localComments;
 
-      var cnt = issue.comments + localComments.length;
+      var cnt = (issue && issue.comments) + localComments.length;
       var isDesc = pagerDirection === 'last';
       return _react2.default.createElement(
         'div',
         { className: 'gt-meta', key: 'meta' },
         _react2.default.createElement('span', { className: 'gt-counts', dangerouslySetInnerHTML: {
             __html: this.i18n.t('counts', {
-              counts: '<a class="gt-link gt-link-counts" href="' + issue.html_url + '" target="_blank">' + cnt + '</a>',
+              counts: '<a class="gt-link gt-link-counts" href="' + (issue && issue.html_url) + '" target="_blank">' + cnt + '</a>',
               smart_count: cnt
             })
           } }),
@@ -8626,7 +8626,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.0.1"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.0.2"; // eslint-disable-line
 
 /***/ }),
 /* 83 */
