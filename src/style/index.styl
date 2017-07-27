@@ -313,7 +313,15 @@ $gt-size-avatar-mobi := em(32px)
         +mobile()
           float: none
           width: 100%
-  
+
+  &:after
+    content: ''
+    position: fixed
+    bottom: 100%
+    left: 0
+    right: 0
+    top: 0
+    opacity: 0
   &.gt-input-focused
     position: relative
     &:after
@@ -325,7 +333,7 @@ $gt-size-avatar-mobi := em(32px)
       top: 0
       background: #000
       opacity: 0.6
-      transition: opacity .3s, bottom 0s .3s
+      transition: opacity .3s, bottom 0s
       z-index: $gt-mask-z-index
     .gt-header-comment
       z-index: $gt-mask-z-index + 1
