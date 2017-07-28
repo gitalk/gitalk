@@ -22,7 +22,7 @@ Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件。
 ```html
   <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
   
-  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script
+  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
 ```
 
 - npm 安装
