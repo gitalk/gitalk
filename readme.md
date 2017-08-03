@@ -170,7 +170,7 @@ gitalk.render('gitalk-container')
 ## Contributing
 
 1. Create an issue and describe your idea
-2. [Fork it] (https://github.com/gitalk/gitalk/fork)
+2. [Fork it](https://github.com/gitalk/gitalk/fork)
 3. Create your branch (git checkout -b my-new-branch)
 4. Commit your changes (git commit) [Commit Message Format Reference](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines)
 5. Publish the branch (git push origin my-new-branch)
