@@ -14,6 +14,7 @@ Gitalk is a modern comment component based on Github Issue and Preact.
 - Hotkey submit comment (cmd|ctrl + enter)
 
 [中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
+[Online Demo](https://gitalk.github.io)
 
 ## Install
 
