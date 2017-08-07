@@ -5,16 +5,19 @@ import distanceInWordsToNow from 'date-fns/distance_in_words_to_now'
 import buildDistanceInWordsLocaleZHCN from 'date-fns/locale/zh_cn/build_distance_in_words_locale/index'
 import buildDistanceInWordsLocaleZHTW from 'date-fns/locale/zh_tw/build_distance_in_words_locale/index'
 import buildDistanceInWordsLocaleES from 'date-fns/locale/es/build_distance_in_words_locale/index'
+import buildDistanceInWordsLocaleFR from 'date-fns/locale/fr/build_distance_in_words_locale/index'
 import 'github-markdown-css/github-markdown.css'
 
 const ZHCN = buildDistanceInWordsLocaleZHCN()
 const ZHTW = buildDistanceInWordsLocaleZHTW()
 const ES = buildDistanceInWordsLocaleES()
+const FR = buildDistanceInWordsLocaleFR()
 window.GT_i18n_distanceInWordsLocaleMap = {
   'zh': ZHCN,
   'zh-CN': ZHCN,
   'zh-TW': ZHTW,
-  'es-ES': ES
+  'es-ES': ES,
+  'fr': FR,
 }
 
 export default class Comment extends Component {
