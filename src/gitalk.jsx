@@ -296,6 +296,7 @@ class GitalkComponent extends Component {
     replyCommentArray.unshift(`@${replyComment.user.login}`)
     replyCommentArray = replyCommentArray.map(t => `> ${t}`)
     replyCommentArray.push('')
+    replyCommentArray.push('')
     if (comment) replyCommentArray.unshift('')
     this.setState({comment: comment + replyCommentArray.join('\n')}, () => {
       autosize.update(this.commentEL)
