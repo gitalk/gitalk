@@ -58,11 +58,13 @@ moxios.stubRequest(/\/graphql/, {
               databaseId: 1,
               author: {},
               bodyHTML: '<p>111</p>',
+              body: '111',
               createdAt: '2017-06-30T09:00:19Z',
             }, {
               databaseId: 2,
               author: {},
               bodyHTML: '<p>222</p>',
+              body: '222',
               createdAt: '2017-06-30T09:01:19ZZ',
             }],
             pageInfo: {},

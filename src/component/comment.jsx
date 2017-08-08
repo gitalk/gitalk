@@ -22,7 +22,7 @@ window.GT_i18n_distanceInWordsLocaleMap = {
 
 export default class Comment extends Component {
   render () {
-    const { comment, user, language, commentedText = '', admin = [] } = this.props
+    const { comment, user, language, commentedText = '', admin = [], replyCallback } = this.props
     const enableEdit = user && comment.user.login === user.login
     const isAdmin = ~admin.indexOf(comment.user.login)
     return (
@@ -42,9 +42,12 @@ export default class Comment extends Component {
                 }
               })}
             </span>
-            {enableEdit &&
+            {enableEdit ?
               <a href={comment.html_url} className="gt-comment-edit" target="_blank">
                 <Svg className="gt-ico-edit" name="edit"/>
+              </a> :
+              <a className="gt-comment-reply" onClick={replyCallback}>
+                <Svg className="gt-ico-reply" name="reply"/>
               </a>
             }
           </div>

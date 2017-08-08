@@ -289,6 +289,20 @@ class GitalkComponent extends Component {
   getRef = e => {
     this.publicBtnEL = e
   }
+  reply (replyComment) {
+    console.log('replyComment:', replyComment)
+    const { comment } = this.state
+    const replyCommentBody = replyComment.body
+    let replyCommentArray = replyCommentBody.split('\n')
+    replyCommentArray.unshift(`@${replyComment.user.login}`)
+    replyCommentArray = replyCommentArray.map(t => `> ${t}`)
+    replyCommentArray.push('')
+    if (comment) replyCommentArray.unshift('')
+    this.setState({comment: comment + replyCommentArray.join('\n')}, () => {
+      autosize.update(this.commentEL)
+      this.commentEL.focus()
+    })
+  }
 
   handlePopup = e => {
     e.preventDefault()
@@ -461,6 +475,7 @@ class GitalkComponent extends Component {
               language={language}
               commentedText={this.i18n.t('commented')}
               admin={admin}
+              replyCallback={this.reply.bind(this, c)}
             />
           ))}
         </FlipMove>

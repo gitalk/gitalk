@@ -32,6 +32,7 @@ const getQL = (vars, pagerDirection) => {
               url
             }
             bodyHTML
+            body
             createdAt
           }
         }
@@ -79,6 +80,7 @@ function getComments (issue) {
       },
       created_at: node.createdAt,
       body_html: node.bodyHTML,
+      body: node.body,
       html_url: `https://github.com/${owner}/${repo}/issues/${issue.number}#issuecomment-${node.databaseId}`
     }))
 
