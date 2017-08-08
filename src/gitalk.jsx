@@ -232,7 +232,7 @@ class GitalkComponent extends Component {
 
         return axiosGithub.get(issue.comments_url, {
           headers: {
-            Accept: 'application/vnd.github.html+json'
+            Accept: 'application/vnd.github.v3.full+json'
           },
           params: {
             client_id: clientID,
@@ -271,7 +271,7 @@ class GitalkComponent extends Component {
         body: comment
       }, {
         headers: {
-          Accept: 'application/vnd.github.html+json',
+          Accept: 'application/vnd.github.v3.full+json',
           Authorization: `token ${this.accessToken}`
         }
       }))
