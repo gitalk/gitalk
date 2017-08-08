@@ -3609,7 +3609,7 @@ var GitalkComponent = function (_Component) {
 
         return _util.axiosGithub.get(issue.comments_url, {
           headers: {
-            Accept: 'application/vnd.github.html+json'
+            Accept: 'application/vnd.github.v3.full+json'
           },
           params: {
             client_id: clientID,
@@ -3976,7 +3976,7 @@ var GitalkComponent = function (_Component) {
           body: comment
         }, {
           headers: {
-            Accept: 'application/vnd.github.html+json',
+            Accept: 'application/vnd.github.v3.full+json',
             Authorization: 'token ' + _this6.accessToken
           }
         });
@@ -8949,7 +8949,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.1.0"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.1.1"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
