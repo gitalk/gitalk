@@ -4007,6 +4007,7 @@ var GitalkComponent = function (_Component) {
         return '> ' + t;
       });
       replyCommentArray.push('');
+      replyCommentArray.push('');
       if (comment) replyCommentArray.unshift('');
       this.setState({ comment: comment + replyCommentArray.join('\n') }, function () {
         _autosize2.default.update(_this7.commentEL);
@@ -8949,7 +8950,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.1.1"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.1.2"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
