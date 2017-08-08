@@ -42,14 +42,16 @@ import Gitalk from 'gitalk'
 需要 **Github Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
 
 ```js
-var gitalk = new Gitalk({
-  clientID: 'Github Application Client ID',
-  clientSecret: 'Github Application Client Secret',
-  repo: 'Github repo',
-  owner: 'Github repo owner',
-  admin: ['Github repo collaborators'],
-})
-
+<div id="gitalk-container"></div>
+<script>
+  var gitalk = new Gitalk({
+    clientID: 'Github Application Client ID',
+    clientSecret: 'Github Application Client Secret',
+    repo: 'Github repo',
+    owner: 'Github repo owner',
+    admin: ['Github repo collaborators'],
+  })
+</script>
 gitalk.render('gitalk-container')
 ```
 
