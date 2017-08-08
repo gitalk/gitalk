@@ -20,6 +20,9 @@ describe('util', function () {
     it('object', function () {
       expect(queryStringify(searchObject)).toEqual(search)
     })
+    it('empty value', function () {
+      expect(queryStringify({ a: '' })).toEqual('a=')
+    })
   })
 
   describe('formatErrorMsg', function () {

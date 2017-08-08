@@ -290,7 +290,6 @@ class GitalkComponent extends Component {
     this.publicBtnEL = e
   }
   reply (replyComment) {
-    console.log('replyComment:', replyComment)
     const { comment } = this.state
     const replyCommentBody = replyComment.body
     let replyCommentArray = replyCommentBody.split('\n')
