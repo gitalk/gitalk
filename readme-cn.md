@@ -12,7 +12,7 @@ Gitalk 是一个基于 Github Issue 和 Preact 开发的评论插件。
 - 无干扰模式（设置 distractionFreeMode 为 true 开启）
 - 快捷键提交评论 （cmd|ctrl + enter）
 
-[English Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
+[Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
 [在线示例](https://gitalk.github.io)
 
 ## 安装
@@ -165,12 +165,12 @@ gitalk.render('gitalk-container')
 
 ## 贡献
 
-1. 创建一个 issue 描述你的想法
-2. [Fork it](https://github.com/gitalk/gitalk/fork)
-3. 创建你的分支 (git checkout -b my-new-branch)
-4. 提交修改 (git commit) [提交信息格式参考](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines)
-5. 推送你的分支 (git push origin my-new-branch)
-6. 发起一个新的 Pull Request
+1. [Fork 代码仓库](https://github.com/gitalk/gitalk/fork) 并从 master 创建你的分支
+2. 如果你添加的代码需要测试，请添加测试！
+3. 如果你修改了 API，请更新文档。
+4. 确保单元测试通过 (npm test).
+5. 确保代码风格一致 (npm run lint).
+6. 提交你的代码 (git commit) [提交信息格式参考](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines)
 
 ## 类似项目
 
