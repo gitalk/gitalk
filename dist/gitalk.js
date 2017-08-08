@@ -1224,7 +1224,7 @@ process.umask = function() { return 0; };
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isDate = __webpack_require__(71)
+var isDate = __webpack_require__(72)
 
 var MILLISECONDS_IN_HOUR = 3600000
 var MILLISECONDS_IN_MINUTE = 60000
@@ -3551,9 +3551,9 @@ var _svg = __webpack_require__(17);
 
 var _svg2 = _interopRequireDefault(_svg);
 
-var _const = __webpack_require__(86);
+var _const = __webpack_require__(87);
 
-var _getComments = __webpack_require__(87);
+var _getComments = __webpack_require__(88);
 
 var _getComments2 = _interopRequireDefault(_getComments);
 
@@ -3661,6 +3661,9 @@ var GitalkComponent = function (_Component) {
     };
 
     _this.handleLogin = function () {
+      var comment = _this.state.comment;
+
+      localStorage.setItem(_const.GT_COMMENT, encodeURIComponent(comment));
       location.href = _this.loginLink;
     };
 
@@ -3775,6 +3778,11 @@ var GitalkComponent = function (_Component) {
     }, props.options);
 
     _this.state.pagerDirection = _this.options.pagerDirection;
+    var storedComment = localStorage.getItem(_const.GT_COMMENT);
+    if (storedComment) {
+      _this.state.comment = decodeURIComponent(storedComment);
+      localStorage.removeItem(_const.GT_COMMENT);
+    }
 
     var query = (0, _util.queryParse)();
     if (query.code) {
@@ -3986,6 +3994,26 @@ var GitalkComponent = function (_Component) {
       localStorage.removeItem(_const.GT_ACCESS_TOKEN);
     }
   }, {
+    key: 'reply',
+    value: function reply(replyComment) {
+      var _this7 = this;
+
+      var comment = this.state.comment;
+
+      var replyCommentBody = replyComment.body;
+      var replyCommentArray = replyCommentBody.split('\n');
+      replyCommentArray.unshift('@' + replyComment.user.login);
+      replyCommentArray = replyCommentArray.map(function (t) {
+        return '> ' + t;
+      });
+      replyCommentArray.push('');
+      if (comment) replyCommentArray.unshift('');
+      this.setState({ comment: comment + replyCommentArray.join('\n') }, function () {
+        _autosize2.default.update(_this7.commentEL);
+        _this7.commentEL.focus();
+      });
+    }
+  }, {
     key: 'initing',
     value: function initing() {
       return _react2.default.createElement(
@@ -4036,7 +4064,7 @@ var GitalkComponent = function (_Component) {
   }, {
     key: 'header',
     value: function header() {
-      var _this7 = this;
+      var _this8 = this;
 
       var _state3 = this.state,
           user = _state3.user,
@@ -4048,7 +4076,7 @@ var GitalkComponent = function (_Component) {
         { className: 'gt-header', key: 'header' },
         user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url }) : _react2.default.createElement(
           'a',
-          { href: this.loginLink, className: 'gt-avatar-github' },
+          { className: 'gt-avatar-github', onMouseDown: this.handleLogin },
           _react2.default.createElement(_svg2.default, { className: 'gt-ico-github', name: 'github' })
         ),
         _react2.default.createElement(
@@ -4056,7 +4084,7 @@ var GitalkComponent = function (_Component) {
           { className: 'gt-header-comment' },
           _react2.default.createElement('textarea', {
             ref: function ref(t) {
-              _this7.commentEL = t;
+              _this8.commentEL = t;
             },
             className: 'gt-header-textarea',
             value: comment,
@@ -4089,7 +4117,7 @@ var GitalkComponent = function (_Component) {
   }, {
     key: 'comments',
     value: function comments() {
-      var _this8 = this;
+      var _this9 = this;
 
       var _state4 = this.state,
           user = _state4.user,
@@ -4119,8 +4147,9 @@ var GitalkComponent = function (_Component) {
               key: c.id,
               user: user,
               language: language,
-              commentedText: _this8.i18n.t('commented'),
-              admin: admin
+              commentedText: _this9.i18n.t('commented'),
+              admin: admin,
+              replyCallback: _this9.reply.bind(_this9, c)
             });
           })
         ),
@@ -4164,7 +4193,7 @@ var GitalkComponent = function (_Component) {
           user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortdesc' + (isDesc ? ' is--active' : ''), onClick: this.handleSort('last'), text: this.i18n.t('sort-desc') }) : null,
           user ? _react2.default.createElement(_action2.default, { className: 'gt-action-logout', onClick: this.handleLogout, text: this.i18n.t('logout') }) : _react2.default.createElement(
             'a',
-            { href: this.loginLink, className: 'gt-action gt-action-login' },
+            { className: 'gt-action gt-action-login', onMouseDown: this.handleLogin },
             this.i18n.t('login-with-github')
           ),
           _react2.default.createElement(
@@ -7466,27 +7495,27 @@ var _svg = __webpack_require__(17);
 
 var _svg2 = _interopRequireDefault(_svg);
 
-var _distance_in_words_to_now = __webpack_require__(68);
+var _distance_in_words_to_now = __webpack_require__(69);
 
 var _distance_in_words_to_now2 = _interopRequireDefault(_distance_in_words_to_now);
 
-var _index = __webpack_require__(81);
+var _index = __webpack_require__(82);
 
 var _index2 = _interopRequireDefault(_index);
 
-var _index3 = __webpack_require__(82);
+var _index3 = __webpack_require__(83);
 
 var _index4 = _interopRequireDefault(_index3);
 
-var _index5 = __webpack_require__(83);
+var _index5 = __webpack_require__(84);
 
 var _index6 = _interopRequireDefault(_index5);
 
-var _index7 = __webpack_require__(84);
+var _index7 = __webpack_require__(85);
 
 var _index8 = _interopRequireDefault(_index7);
 
-__webpack_require__(85);
+__webpack_require__(86);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -7527,7 +7556,8 @@ var Comment = function (_Component) {
           _props$commentedText = _props.commentedText,
           commentedText = _props$commentedText === undefined ? '' : _props$commentedText,
           _props$admin = _props.admin,
-          admin = _props$admin === undefined ? [] : _props$admin;
+          admin = _props$admin === undefined ? [] : _props$admin,
+          replyCallback = _props.replyCallback;
 
       var enableEdit = user && comment.user.login === user.login;
       var isAdmin = ~admin.indexOf(comment.user.login);
@@ -7561,10 +7591,14 @@ var Comment = function (_Component) {
                 }
               })
             ),
-            enableEdit && _react2.default.createElement(
+            enableEdit ? _react2.default.createElement(
               'a',
               { href: comment.html_url, className: 'gt-comment-edit', target: '_blank' },
               _react2.default.createElement(_svg2.default, { className: 'gt-ico-edit', name: 'edit' })
+            ) : _react2.default.createElement(
+              'a',
+              { className: 'gt-comment-reply', onClick: replyCallback },
+              _react2.default.createElement(_svg2.default, { className: 'gt-ico-reply', name: 'reply' })
             )
           ),
           _react2.default.createElement('div', { className: 'gt-comment-body markdown-body', dangerouslySetInnerHTML: {
@@ -7588,7 +7622,8 @@ var map = {
 	"./arrow_down.svg": 64,
 	"./edit.svg": 65,
 	"./github.svg": 66,
-	"./tip.svg": 67
+	"./reply.svg": 67,
+	"./tip.svg": 68
 };
 function webpackContext(req) {
 	return __webpack_require__(webpackContextResolve(req));
@@ -7628,13 +7663,19 @@ module.exports = "<svg viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://
 /* 67 */
 /***/ (function(module, exports) {
 
-module.exports = "<svg viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M512 366.949535c-16.065554 0-29.982212 13.405016-29.982212 29.879884l0 359.070251c0 16.167882 13.405016 29.879884 29.982212 29.879884 15.963226 0 29.879884-13.405016 29.879884-29.879884L541.879884 396.829419C541.879884 380.763865 528.474868 366.949535 512 366.949535L512 366.949535z\"\n    p-id=\"3083\"></path>\n  <path d=\"M482.017788 287.645048c0-7.776956 3.274508-15.553912 8.80024-21.181973 5.525732-5.525732 13.302688-8.80024 21.181973-8.80024 7.776956 0 15.553912 3.274508 21.079644 8.80024 5.525732 5.62806 8.80024 13.405016 8.80024 21.181973 0 7.776956-3.274508 15.656241-8.80024 21.181973-5.525732 5.525732-13.405016 8.697911-21.079644 8.697911-7.879285 0-15.656241-3.274508-21.181973-8.697911C485.292295 303.301289 482.017788 295.524333 482.017788 287.645048L482.017788 287.645048z\"\n    p-id=\"3084\"></path>\n  <path d=\"M512 946.844409c-239.8577 0-434.895573-195.037873-434.895573-434.895573 0-239.8577 195.037873-434.895573 434.895573-434.895573 239.755371 0 434.895573 195.037873 434.895573 434.895573C946.895573 751.806535 751.755371 946.844409 512 946.844409zM512 126.17088c-212.740682 0-385.880284 173.037274-385.880284 385.777955 0 212.740682 173.037274 385.777955 385.880284 385.777955 212.740682 0 385.777955-173.037274 385.777955-385.777955C897.777955 299.208154 724.740682 126.17088 512 126.17088z\"\n    p-id=\"3085\"></path>\n</svg>\n"
+module.exports = "<svg viewBox=\"0 0 1332 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M529.066665 273.066666 529.066665 0 51.2 477.866666 529.066665 955.733335 529.066665 675.84C870.4 675.84 1109.333335 785.066665 1280 1024 1211.733335 682.666665 1006.933335 341.333334 529.066665 273.066666\"></path>\n</svg>\n"
 
 /***/ }),
 /* 68 */
+/***/ (function(module, exports) {
+
+module.exports = "<svg viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M512 366.949535c-16.065554 0-29.982212 13.405016-29.982212 29.879884l0 359.070251c0 16.167882 13.405016 29.879884 29.982212 29.879884 15.963226 0 29.879884-13.405016 29.879884-29.879884L541.879884 396.829419C541.879884 380.763865 528.474868 366.949535 512 366.949535L512 366.949535z\"\n    p-id=\"3083\"></path>\n  <path d=\"M482.017788 287.645048c0-7.776956 3.274508-15.553912 8.80024-21.181973 5.525732-5.525732 13.302688-8.80024 21.181973-8.80024 7.776956 0 15.553912 3.274508 21.079644 8.80024 5.525732 5.62806 8.80024 13.405016 8.80024 21.181973 0 7.776956-3.274508 15.656241-8.80024 21.181973-5.525732 5.525732-13.405016 8.697911-21.079644 8.697911-7.879285 0-15.656241-3.274508-21.181973-8.697911C485.292295 303.301289 482.017788 295.524333 482.017788 287.645048L482.017788 287.645048z\"\n    p-id=\"3084\"></path>\n  <path d=\"M512 946.844409c-239.8577 0-434.895573-195.037873-434.895573-434.895573 0-239.8577 195.037873-434.895573 434.895573-434.895573 239.755371 0 434.895573 195.037873 434.895573 434.895573C946.895573 751.806535 751.755371 946.844409 512 946.844409zM512 126.17088c-212.740682 0-385.880284 173.037274-385.880284 385.777955 0 212.740682 173.037274 385.777955 385.880284 385.777955 212.740682 0 385.777955-173.037274 385.777955-385.777955C897.777955 299.208154 724.740682 126.17088 512 126.17088z\"\n    p-id=\"3085\"></path>\n</svg>\n"
+
+/***/ }),
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var distanceInWords = __webpack_require__(69)
+var distanceInWords = __webpack_require__(70)
 
 /**
  * @category Common Helpers
@@ -7722,14 +7763,14 @@ module.exports = distanceInWordsToNow
 
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var compareDesc = __webpack_require__(70)
+var compareDesc = __webpack_require__(71)
 var parse = __webpack_require__(3)
-var differenceInSeconds = __webpack_require__(72)
-var differenceInMonths = __webpack_require__(74)
-var enLocale = __webpack_require__(77)
+var differenceInSeconds = __webpack_require__(73)
+var differenceInMonths = __webpack_require__(75)
+var enLocale = __webpack_require__(78)
 
 var MINUTES_IN_DAY = 1440
 var MINUTES_IN_ALMOST_TWO_DAYS = 2520
@@ -7931,7 +7972,7 @@ module.exports = distanceInWords
 
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(3)
@@ -7988,7 +8029,7 @@ module.exports = compareDesc
 
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ (function(module, exports) {
 
 /**
@@ -8014,10 +8055,10 @@ module.exports = isDate
 
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var differenceInMilliseconds = __webpack_require__(73)
+var differenceInMilliseconds = __webpack_require__(74)
 
 /**
  * @category Second Helpers
@@ -8048,7 +8089,7 @@ module.exports = differenceInSeconds
 
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(3)
@@ -8083,12 +8124,12 @@ module.exports = differenceInMilliseconds
 
 
 /***/ }),
-/* 74 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(3)
-var differenceInCalendarMonths = __webpack_require__(75)
-var compareAsc = __webpack_require__(76)
+var differenceInCalendarMonths = __webpack_require__(76)
+var compareAsc = __webpack_require__(77)
 
 /**
  * @category Month Helpers
@@ -8127,7 +8168,7 @@ module.exports = differenceInMonths
 
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(3)
@@ -8165,7 +8206,7 @@ module.exports = differenceInCalendarMonths
 
 
 /***/ }),
-/* 76 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(3)
@@ -8222,11 +8263,11 @@ module.exports = compareAsc
 
 
 /***/ }),
-/* 77 */
+/* 78 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var buildDistanceInWordsLocale = __webpack_require__(78)
-var buildFormatLocale = __webpack_require__(79)
+var buildDistanceInWordsLocale = __webpack_require__(79)
+var buildFormatLocale = __webpack_require__(80)
 
 /**
  * @category Locales
@@ -8239,7 +8280,7 @@ module.exports = {
 
 
 /***/ }),
-/* 78 */
+/* 79 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -8344,10 +8385,10 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 79 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var buildFormattingTokensRegExp = __webpack_require__(80)
+var buildFormattingTokensRegExp = __webpack_require__(81)
 
 function buildFormatLocale () {
   // Note: in English, the names of days of the week and months are capitalized.
@@ -8438,7 +8479,7 @@ module.exports = buildFormatLocale
 
 
 /***/ }),
-/* 80 */
+/* 81 */
 /***/ (function(module, exports) {
 
 var commonFormatterKeys = [
@@ -8472,7 +8513,7 @@ module.exports = buildFormattingTokensRegExp
 
 
 /***/ }),
-/* 81 */
+/* 82 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -8577,7 +8618,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 82 */
+/* 83 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -8682,7 +8723,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 83 */
+/* 84 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -8787,7 +8828,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 84 */
+/* 85 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -8892,13 +8933,13 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 85 */
+/* 86 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 86 */
+/* 87 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8908,10 +8949,11 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.0.5"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.1.0"; // eslint-disable-line
+var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
-/* 87 */
+/* 88 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8927,7 +8969,7 @@ function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr
 
 var getQL = function getQL(vars, pagerDirection) {
   var cursorDirection = pagerDirection === 'last' ? 'before' : 'after';
-  var ql = '\n  query getIssueAndComments(\n    $owner: String!,\n    $repo: String!,\n    $id: Int!,\n    $cursor: String,\n    $pageSize: Int!\n  ) {\n    repository(owner: $owner, name: $repo) {\n      issue(number: $id) {\n        title\n        url\n        bodyHTML\n        createdAt\n        comments(' + pagerDirection + ': $pageSize, ' + cursorDirection + ': $cursor) {\n          totalCount\n          pageInfo {\n            ' + (pagerDirection === 'last' ? 'hasPreviousPage' : 'hasNextPage') + '\n            ' + (cursorDirection === 'before' ? 'startCursor' : 'endCursor') + '\n          }\n          nodes {\n            databaseId\n            author {\n              avatarUrl\n              login\n              url\n            }\n            bodyHTML\n            createdAt\n          }\n        }\n      }\n    }\n  }\n  ';
+  var ql = '\n  query getIssueAndComments(\n    $owner: String!,\n    $repo: String!,\n    $id: Int!,\n    $cursor: String,\n    $pageSize: Int!\n  ) {\n    repository(owner: $owner, name: $repo) {\n      issue(number: $id) {\n        title\n        url\n        bodyHTML\n        createdAt\n        comments(' + pagerDirection + ': $pageSize, ' + cursorDirection + ': $cursor) {\n          totalCount\n          pageInfo {\n            ' + (pagerDirection === 'last' ? 'hasPreviousPage' : 'hasNextPage') + '\n            ' + (cursorDirection === 'before' ? 'startCursor' : 'endCursor') + '\n          }\n          nodes {\n            databaseId\n            author {\n              avatarUrl\n              login\n              url\n            }\n            bodyHTML\n            body\n            createdAt\n          }\n        }\n      }\n    }\n  }\n  ';
 
   if (vars.cursor === null) delete vars.cursor;
 
@@ -8972,6 +9014,7 @@ function getComments(issue) {
         },
         created_at: node.createdAt,
         body_html: node.bodyHTML,
+        body: node.body,
         html_url: 'https://github.com/' + owner + '/' + repo + '/issues/' + issue.number + '#issuecomment-' + node.databaseId
       };
     });

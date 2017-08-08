@@ -1131,12 +1131,17 @@
   margin-left: 0.5em;
   color: #a1a1a1;
 }
-.gt-container .gt-comment-edit {
+.gt-container .gt-comment-edit,
+.gt-container .gt-comment-reply {
   position: absolute;
   top: 0;
   right: 0;
   width: 1.375em;
   height: 1.375em;
+}
+.gt-container .gt-comment-edit:hover,
+.gt-container .gt-comment-reply:hover {
+  cursor: pointer;
 }
 .gt-container .gt-comment-body {
   color: #333 !important;
