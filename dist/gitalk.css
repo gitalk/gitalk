@@ -1097,6 +1097,7 @@
   margin-left: 1.25em;
   padding: 0.75em 1em;
   background-color: #f9f9f9;
+  overflow: auto;
   -webkit-transition: all ease 0.25s;
   transition: all ease 0.25s;
 }
