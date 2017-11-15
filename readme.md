@@ -50,7 +50,7 @@ const gitalk = new Gitalk({
   clientSecret: 'Github Application Client Secret',
   repo: 'Github repo',
   owner: 'Github repo owner',
-  admin: ['Github repo collaborators, only these guys can initialize github issues'],
+  admin: ['Github repo owner and collaborators, only these guys can initialize github issues'],
   // facebook-like distraction free mode
   distractionFreeMode: false
 })
@@ -79,7 +79,7 @@ gitalk.render('gitalk-container')
 
 - **admin** `Array` 
 
-  **Required**. Github repository collaborators. (Ensure having write access to this repository)
+  **Required**. Github repository owner and collaborators. (Users who having write access to this repository)
 
 - **id** `String` 
   

@@ -48,7 +48,7 @@ var gitalk = new Gitalk({
   clientSecret: 'Github Application Client Secret',
   repo: 'Github repo',
   owner: 'Github repo owner',
-  admin: ['Github repo collaborators'],
+  admin: ['Github repo owner and collaborators, only these guys can initialize github issues'],
 })
 
 gitalk.render('gitalk-container')
@@ -75,7 +75,7 @@ gitalk.render('gitalk-container')
 
 - **admin** `Array`
 
-  **必須**. Github repository 合作者 (確保對這個 repository 是有寫入的權限)。
+  **必須**. Github repository 的所有者和合作者 (對這個 repository 有寫權限的用戶)。
 
 - **id** `String`
 
