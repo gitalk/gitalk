@@ -1,13 +1,22 @@
 import React from 'react'
 
-export default function Button (props) {
-  let className = 'gt-btn '
-  props.className && (className+=props.className)
-  return (
-    <button ref={el => (props.getRef && props.getRef(el))} className={className} onClick={props.onClick} onMouseDown={props.onMouseDown}>
-      <span className="gt-btn-text">{props.text}</span>
-      {props.isLoading && <span className="gt-btn-loading gt-spinner"></span>}
-    </button>
-  )
-}
+export default ({
+  className,
+  getRef,
+  onClick,
+  onMouseDown,
+  text,
+  isLoading
+}) => (
+  <button
+    ref={el => getRef && getRef(el)}
+    className={`gt-btn ${className}`}
+    onClick={onClick}
+    onMouseDown={onMouseDown}>
+    <span className="gt-btn-text">{text}</span>
+    {
+      isLoading && <span className="gt-btn-loading gt-spinner"></span>
+    }
+  </button>
+)
 
