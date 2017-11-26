@@ -1,16 +1,12 @@
 import React from 'react'
 
-export default function Svg (props) {
-  let className = 'gt-ico '
-  props.className && (className += props.className)
-  return (
-    <span className={className}>
-      <span className="gt-svg" dangerouslySetInnerHTML={{
-        __html: require(`!!raw-loader!../assets/icon/${props.name}.svg`)
-      }}/>
-      {props.text &&
-        <span className="gt-ico-text">{props.text}</span>
-      }
-    </span>
-  )
-}
+export default ({ className, text, name }) => (
+  <span className={`gt-ico ${className}`}>
+    <span className="gt-svg" dangerouslySetInnerHTML={{
+      __html: require(`!!raw-loader!../assets/icon/${name}.svg`)
+    }}/>
+    {
+      text && <span className="gt-ico-text">{text}</span>
+    }
+  </span>
+)
