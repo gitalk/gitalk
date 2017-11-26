@@ -490,6 +490,9 @@ class GitalkComponent extends Component {
     const { user, issue, isPopupVisible, pagerDirection, localComments } = this.state
     const cnt = (issue && issue.comments) + localComments.length
     const isDesc = pagerDirection === 'last'
+
+    window.GITALK_COMMENTS_COUNT = cnt
+
     return (
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
