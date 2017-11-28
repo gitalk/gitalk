@@ -464,6 +464,12 @@ class GitalkComponent extends Component {
     if (pagerDirection === 'last' && this.accessToken) {
       totalComments.reverse()
     }
+
+    var counter = $(".gitalk-comment-count");
+    if (counter && counter.attr("itemprop") == "commentCount") {
+      counter.html(window.GITALK_COMMENTS_COUNT + " Comments");
+    }
+
     return (
       <div className="gt-comments" key="comments">
         <FlipMove {...flipMoveOptions}>
