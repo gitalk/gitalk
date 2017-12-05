@@ -55,6 +55,7 @@
     "autosize": "3.0.21",
     "axios": "0.16.2",
     "date-fns": "1.28.5",
+    "es6-promise": "4.1.1",
     "github-markdown-css": "2.8.0",
     "node-polyglot": "2.2.2",
     "preact": "8.1.0",
