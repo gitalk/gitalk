@@ -30,7 +30,7 @@ export default ({
   likeCallback
 }) => {
   const enableEdit = user && comment.user.login === user.login
-  const isAdmin = ~admin.indexOf(comment.user.login)
+  const isAdmin = ~[].concat(admin).map(a => a.toLowerCase()).indexOf(comment.user.login.toLowerCase())
   const reactions = comment.reactions
 
   let reactionTotalCount = ''

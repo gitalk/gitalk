@@ -156,6 +156,12 @@ class GitalkComponent extends Component {
     }
     return `${githubOauthUrl}?${queryStringify(query)}`
   }
+  get isAdmin () {
+    const { admin } = this.options
+    const { user } = this.state
+
+    return user && ~[].concat(admin).map(a => a.toLowerCase()).indexOf(user.login.toLowerCase())
+  }
 
   getInit () {
     return this.getUserInfo().then(() => this.getIssue()).then(issue => this.getComments(issue))
@@ -192,7 +198,7 @@ class GitalkComponent extends Component {
       let isNoInit = false
       let issue = null
       if (!(res && res.data && res.data.length)) {
-        if (!createIssueManually && user && ~admin.indexOf(user.login)) {
+        if (!createIssueManually && this.isAdmin) {
           return this.createIssue()
         }
 
@@ -508,7 +514,7 @@ class GitalkComponent extends Component {
           })
         }}/>
         <p>{this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
-        {(user && ~[].concat(admin).indexOf(user.login)) ? <p>
+        {this.isAdmin ? <p>
           <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
         </p> : null}
         {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
