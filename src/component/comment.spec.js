@@ -28,6 +28,7 @@ describe('Comment', function () {
     expect(wrapper.find('.gt-comment-username').text()).toEqual(comment.user.login)
     expect(wrapper.find('.gt-comment-date').text()).toEqual(expect.stringMatching(/ago$/))
     expect(wrapper.find('.gt-comment-body').render().html()).toEqual(expect.stringContaining(comment.body_html))
+    expect(wrapper.find('.gt-comment-like')).toHaveLength(0)
   })
 
   it('render with user but isn\'t creator', function () {
@@ -83,5 +84,41 @@ describe('Comment', function () {
     }
     const wrapper = shallow(<Comment {...props} />)
     expect(wrapper.find('.gt-comment-date').text()).toEqual(expect.stringContaining('前'))
+  })
+
+  it('set props comment reactions 10', function () {
+    const props = {
+      comment: Object.assign({}, comment, {
+        reactions: {
+          totalCount: 10,
+          viewerHasReacted: true,
+          pageInfo: {
+            hasNextPage: false
+          },
+          nodes: []
+        }
+      })
+    }
+
+    const wrapper = shallow(<Comment {...props} />)
+    expect(wrapper.render().find('.gt-ico-heart .gt-ico-text').text()).toEqual('10')
+  })
+
+  it('set props comment reactions 100+', function () {
+    const props = {
+      comment: Object.assign({}, comment, {
+        reactions: {
+          totalCount: 100,
+          viewerHasReacted: false,
+          pageInfo: {
+            hasNextPage: true
+          },
+          nodes: []
+        }
+      })
+    }
+
+    const wrapper = shallow(<Comment {...props} />)
+    expect(wrapper.render().find('.gt-ico-heart .gt-ico-text').text()).toEqual('100+')
   })
 })

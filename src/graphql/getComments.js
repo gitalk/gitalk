@@ -25,6 +25,7 @@ const getQL = (vars, pagerDirection) => {
             ${cursorDirection === 'before' ? 'startCursor' : 'endCursor'}
           }
           nodes {
+            id
             databaseId
             author {
               avatarUrl
@@ -34,6 +35,20 @@ const getQL = (vars, pagerDirection) => {
             bodyHTML
             body
             createdAt
+            reactions(first: 100, content: HEART) {
+              totalCount
+              viewerHasReacted
+              pageInfo{
+                hasNextPage
+              }
+              nodes {
+                id
+                databaseId
+                user {
+                  login
+                }
+              }
+            }
           }
         }
       }
@@ -73,6 +88,7 @@ function getComments (issue) {
     const data = res.data.data.repository.issue.comments
     const items = data.nodes.map(node => ({
       id: node.databaseId,
+      gId: node.id,
       user: {
         avatar_url: node.author.avatarUrl,
         login: node.author.login,
@@ -81,7 +97,8 @@ function getComments (issue) {
       created_at: node.createdAt,
       body_html: node.bodyHTML,
       body: node.body,
-      html_url: `https://github.com/${owner}/${repo}/issues/${issue.number}#issuecomment-${node.databaseId}`
+      html_url: `https://github.com/${owner}/${repo}/issues/${issue.number}#issuecomment-${node.databaseId}`,
+      reactions: node.reactions
     }))
 
     let cs

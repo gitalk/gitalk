@@ -69,6 +69,7 @@ $gt-size-avatar-mobi := em(32px)
     vertical-align: sub
     svg
       width: 100%
+      height: 100%
       fill: $gt-color-main
   .gt-ico
     display: inline-block
@@ -380,14 +381,17 @@ $gt-size-avatar-mobi := em(32px)
     &-date
       margin-left: em(8px)
       color: $gt-color-sub
-    &-edit, &-reply
+    &-like, &-edit, &-reply
       position: absolute
-      top: 0
-      right: 0
-      width: em(22px)
       height: em(22px)
       &:hover
         cursor: pointer
+    &-like
+      top: 0
+      right: em(32px)
+    &-edit, &-reply
+      top: 0
+      right: 0
     &-body
       color: $gt-color-comment-txt !important
     &-admin

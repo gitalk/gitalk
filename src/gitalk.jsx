@@ -264,7 +264,7 @@ class GitalkComponent extends Component {
   }
 
   createComment () {
-    const { comment, localComments } = this.state
+    const { comment, localComments, comments } = this.state
 
     return this.getIssue()
       .then(issue => axiosGithub.post(issue.comments_url, {
@@ -278,6 +278,7 @@ class GitalkComponent extends Component {
       .then(res => {
         this.setState({
           comment: '',
+          comments: comments.concat(res.data),
           localComments: localComments.concat(res.data)
         })
       })
@@ -303,6 +304,101 @@ class GitalkComponent extends Component {
       this.commentEL.focus()
     })
   }
+  like (comment) {
+    const { owner, repo } = this.options
+    let { comments, user } = this.state
+
+
+    axiosGithub.post(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, {
+      content: 'heart'
+    }, {
+      headers: {
+        Authorization: `token ${this.accessToken}`,
+        Accept: 'application/vnd.github.squirrel-girl-preview'
+      }
+    }).then(res => {
+      comments = comments.map(c => {
+        if (c.id === comment.id) {
+          if (c.reactions) {
+            if (!~c.reactions.nodes.findIndex(n => n.user.login === user.login)) {
+              c.reactions.totalCount += 1
+            }
+          } else {
+            c.reactions = { nodes: [] }
+            c.reactions.totalCount = 1
+          }
+
+          c.reactions.nodes.push(res.data)
+          c.reactions.viewerHasReacted = true
+        }
+        return c
+      })
+
+      this.setState({
+        comments
+      })
+    })
+  }
+  unLike (comment) {
+    let { comments, user } = this.state
+
+    // const {  user } = this.state
+    // let id
+    // comment.reactions.nodes.forEach(r => {
+    //   if (r.user.login = user.login) id = r.databaseId
+    // })
+    // return axiosGithub.delete(`/reactions/${id}`, {
+    //   headers: {
+    //     Authorization: `token ${this.accessToken}`,
+    //     Accept: 'application/vnd.github.squirrel-girl-preview'
+    //   }
+    // }).then(res => {
+    //   console.log('res:', res)
+    // })
+
+    const getQL = id => {
+      return {
+        operationName: 'RemoveReaction',
+        query: `
+          mutation RemoveReaction{
+            removeReaction (input:{
+              subjectId: "${id}",
+              content: HEART
+            }) {
+              reaction {
+                content
+              }
+            }
+          }
+        `
+      }
+    }
+
+    axiosGithub.post('/graphql', getQL(comment.gId), {
+      headers: {
+        Authorization: `bearer ${this.accessToken}`
+      }
+    }).then(res => {
+      if (res.data) {
+        comments = comments.map(c => {
+          if (c.id === comment.id) {
+            const index = c.reactions.nodes.findIndex(n => n.user.login === user.login)
+            if (~index) {
+              c.reactions.totalCount -= 1
+              c.reactions.nodes.splice(index, 1)
+            }
+            c.reactions.viewerHasReacted = false
+          }
+          return c
+        })
+
+        this.setState({
+          comments
+        })
+      }
+    })
+  }
+
 
   handlePopup = e => {
     e.preventDefault()
@@ -458,9 +554,9 @@ class GitalkComponent extends Component {
     )
   }
   comments () {
-    const { user, comments, localComments, isLoadOver, isLoadMore, pagerDirection } = this.state
+    const { user, comments, isLoadOver, isLoadMore, pagerDirection } = this.state
     const { language, flipMoveOptions, admin } = this.options
-    const totalComments = comments.concat(localComments)
+    const totalComments = comments.concat([])
     if (pagerDirection === 'last' && this.accessToken) {
       totalComments.reverse()
     }
@@ -476,6 +572,7 @@ class GitalkComponent extends Component {
               commentedText={this.i18n.t('commented')}
               admin={admin}
               replyCallback={this.reply.bind(this, c)}
+              likeCallback={c.reactions && c.reactions.viewerHasReacted ? this.unLike.bind(this, c) : this.like.bind(this, c)}
             />
           ))}
         </FlipMove>

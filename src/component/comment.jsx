@@ -26,10 +26,20 @@ export default ({
   language,
   commentedText = '',
   admin = [],
-  replyCallback
+  replyCallback,
+  likeCallback
 }) => {
   const enableEdit = user && comment.user.login === user.login
   const isAdmin = ~admin.indexOf(comment.user.login)
+  const reactions = comment.reactions
+
+  let reactionTotalCount = ''
+  if (reactions && reactions.totalCount) {
+    reactionTotalCount = reactions.totalCount
+    if (reactions.totalCount === 100 && reactions.pageInfo && reactions.pageInfo.hasNextPage) {
+      reactionTotalCount = '100+'
+    }
+  }
 
   return (
     <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
@@ -56,6 +66,16 @@ export default ({
               }
             })}
           </span>
+
+          {reactions &&
+            <a className="gt-comment-like" onClick={likeCallback}>
+              {reactions.viewerHasReacted ?
+                <Svg className="gt-ico-heart" name="heart_on" text={reactionTotalCount}/>:
+                <Svg className="gt-ico-heart" name="heart" text={reactionTotalCount}/>
+              }
+            </a>
+          }
+
           {enableEdit ?
             <a href={comment.html_url} className="gt-comment-edit" target="_blank">
               <Svg className="gt-ico-edit" name="edit"/>
