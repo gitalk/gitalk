@@ -21,9 +21,14 @@ Gitalk 是一個基於 Github Issue 和 Preact 開發的評論插件。
 兩種方式
 
 - 直接引入
-```html
-  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
 
+```html
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+  <!-- or -->
+
+  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
   <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
 ```
 

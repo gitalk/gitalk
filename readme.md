@@ -21,13 +21,14 @@ Gitalk is a modern comment component based on Github Issue and Preact.
 Two ways.
 
 - links
+
 ```html
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-  
   <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
   <!-- or -->
+
   <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
-  
   <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
 ```
 
