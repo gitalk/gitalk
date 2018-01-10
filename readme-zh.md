@@ -8,7 +8,7 @@ Gitalk 是一個基於 Github Issue 和 Preact 開發的評論插件。
 ## 特性
 
 - 使用 Github 登錄
-- 支持多語言 [en, zh-CN, zh-TW, es-ES, fr]
+- 支持多語言 [en, zh-CN, zh-TW, es-ES, fr, ru]
 - 支持個人或組織
 - 無干擾模式（設置 distractionFreeMode 為 true 開啟）
 - 快捷鍵提交評論 （cmd|ctrl + enter）
