@@ -10,7 +10,6 @@
   "first-comment-person": "Sé el primero en dejar un comentario!",
   "commented": "comentó",
   "load-more": "Cargar más",
-  "power": "%{link} v1.0.0",
   "counts": "%{counts} comentario |||| %{counts} comentarios",
   "sort-asc": "Ordenar por Antiguos",
   "sort-desc": "Ordenar por Recientes",

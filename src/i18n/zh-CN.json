@@ -10,7 +10,6 @@
   "first-comment-person": "来做第一个留言的人吧！",
   "commented": "发表于",
   "load-more": "加载更多",
-  "power": "由 %{link} 驱动",
   "counts": "%{counts} 条评论",
   "sort-asc": "从旧到新排序",
   "sort-desc": "从新到旧排序",

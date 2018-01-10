@@ -10,7 +10,6 @@
   "first-comment-person": "Être le premier à laisser un commentaire !",
   "commented": "commenter",
   "load-more": "Charger plus",
-  "power": "%{link} v1.0.0",
   "counts": "%{counts} commentaire |||| %{counts} commentaires",
   "sort-asc": "Trier par plus ancien",
   "sort-desc": "Trier par plus récent",
