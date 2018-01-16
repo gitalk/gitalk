@@ -190,7 +190,8 @@ class GitalkComponent extends Component {
       params: {
         client_id: clientID,
         client_secret: clientSecret,
-        labels: labels.concat(id).join(',')
+        labels: labels.concat(id).join(','),
+        t: Date.now()
       }
     }).then(res => {
       const { admin, createIssueManually } = this.options
