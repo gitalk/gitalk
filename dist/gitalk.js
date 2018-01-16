@@ -10068,22 +10068,22 @@ module.exports = {
 /***/ (function(module, exports) {
 
 module.exports = {
-	"init": "Gitalk 加載中 ...",
-	"no-found-related": "未找到相關的 %{link} 進行評論",
-	"please-contact": "請聯系 %{user} 初始化創建",
+	"init": "Gitalk 載入中…",
+	"no-found-related": "未找到相關的 %{link}",
+	"please-contact": "請聯絡 %{user} 初始化評論",
 	"init-issue": "初始化 Issue",
-	"leave-a-comment": "說點什麽",
+	"leave-a-comment": "寫點什麼",
 	"comment": "評論",
-	"support-markdown": "支持 Markdown 語法",
-	"login-with-github": "使用 Github 登錄",
-	"first-comment-person": "來做第一個留言的人吧！",
-	"commented": "發表於",
-	"load-more": "加載更多",
-	"counts": "%{counts} 條評論",
-	"sort-asc": "從舊到新排序",
-	"sort-desc": "從新到舊排序",
-	"logout": "註銷",
-	"anonymous": "未登錄用戶"
+	"support-markdown": "支援 Markdown 語法",
+	"login-with-github": "使用 Github 登入",
+	"first-comment-person": "成為首個留言的人吧！",
+	"commented": "評論於",
+	"load-more": "載入更多",
+	"counts": "%{counts} 筆評論",
+	"sort-asc": "從舊至新排序",
+	"sort-desc": "從新至舊排序",
+	"logout": "登出",
+	"anonymous": "訪客"
 };
 
 /***/ }),
@@ -13006,7 +13006,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.2.1"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.2.2"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
