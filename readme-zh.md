@@ -1,7 +1,7 @@
 
 # Gitalk
 
-[![NPM][npm-version-image]][npm-version-url] [![david-dm][david-dm-image]][david-dm-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
+[![NPM][npm-version-image]][npm-version-url] [![CDNJS][cdnjs-version-image]][cdnjs-version-url] [![david-dm][david-dm-image]][david-dm-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
 Gitalk 是一個基於 Github Issue 和 Preact 開發的評論插件。
 
@@ -188,6 +188,8 @@ MIT
 
 [npm-version-image]: https://img.shields.io/npm/v/gitalk.svg?style=flat-square
 [npm-version-url]: https://www.npmjs.com/package/gitalk
+[cdnjs-version-image]: https://img.shields.io/cdnjs/v/gitalk.svg?style=flat-square
+[cdnjs-version-url]: https://cdnjs.com/libraries/gitalk
 [david-dm-image]: https://david-dm.org/gitalk/gitalk.svg?style=flat-square
 [david-dm-url]: https://david-dm.org/gitalk/gitalk
 [travis-image]: https://img.shields.io/travis/gitalk/gitalk/master.svg?style=flat-square
