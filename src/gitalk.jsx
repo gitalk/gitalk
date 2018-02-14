@@ -184,38 +184,40 @@ class GitalkComponent extends Component {
       return Promise.resolve(issue)
     }
 
-    const { owner, repo, id, labels, clientID, clientSecret } = this.options
+    const { owner, repo, labels, title, clientID, clientSecret } = this.options
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
       params: {
         client_id: clientID,
         client_secret: clientSecret,
-        labels: labels.concat(id).join(','),
+        labels: labels.join(','),
         t: Date.now()
       }
     }).then(res => {
-      const { admin, createIssueManually } = this.options
-      const { user } = this.state
+      const { createIssueManually } = this.options
       let isNoInit = false
       let issue = null
-      if (!(res && res.data && res.data.length)) {
+
+      if (res && res.data && res.data.length) {
+        issue = (res.data.filter(i => i.title === title))[0]
+      }
+
+      if (!issue) {
+        isNoInit = true
+
         if (!createIssueManually && this.isAdmin) {
           return this.createIssue()
         }
-
-        isNoInit = true
-      } else {
-        issue = res.data[0]
       }
       this.setState({ issue, isNoInit })
       return issue
     })
   }
   createIssue () {
-    const { owner, repo, title, body, id, labels, url } = this.options
+    const { owner, repo, title, body, labels, url } = this.options
     return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
       title,
-      labels: labels.concat(id),
+      labels,
       body: body || `${url} \n\n ${
         getMetaContent('description') ||
         getMetaContent('description', 'og:description') || ''
