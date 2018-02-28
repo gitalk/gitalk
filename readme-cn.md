@@ -53,6 +53,8 @@ var gitalk = new Gitalk({
   repo: 'Github repo',
   owner: 'Github repo owner',
   admin: ['Github repo owner and collaborators, only these guys can initialize github issues'],
+  id: location.pathname,      // Ensure uniqueness and length less than 50
+  distractionFreeMode: false  // Facebook-like distraction free mode
 })
 
 gitalk.render('gitalk-container')
@@ -85,7 +87,7 @@ gitalk.render('gitalk-container')
   
   Default: `location.href`.
 
-  页面的唯一标识。
+  页面的唯一标识。长度必须小于50。
 
 - **labels** `Array` 
   

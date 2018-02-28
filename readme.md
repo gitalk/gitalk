@@ -56,8 +56,8 @@ const gitalk = new Gitalk({
   repo: 'Github repo',
   owner: 'Github repo owner',
   admin: ['Github repo owner and collaborators, only these guys can initialize github issues'],
-  // facebook-like distraction free mode
-  distractionFreeMode: false
+  id: location.pathname,      // Ensure uniqueness and length less than 50
+  distractionFreeMode: false  // Facebook-like distraction free mode
 })
 
 gitalk.render('gitalk-container')
@@ -90,7 +90,7 @@ gitalk.render('gitalk-container')
   
   Default: `location.href`.
 
-  The unique id of the page.
+  The unique id of the page. Length must less than 50.
 
 - **labels** `Array` 
   
