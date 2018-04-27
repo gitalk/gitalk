@@ -2,7 +2,7 @@
 
 [![NPM][npm-version-image]][npm-version-url] [![CDNJS][cdnjs-version-image]][cdnjs-version-url] [![david-dm][david-dm-image]][david-dm-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
-Gitalk is a modern comment component based on Github Issue and Preact.
+Gitalk is a modern comment component based on GitHub Issue and Preact.
 
 ## Features
 
@@ -45,17 +45,17 @@ import Gitalk from 'gitalk'
 
 ## Usage
 
-A **Github Application** is needed for authorization, if you don't have one, [Click here to register](https://github.com/settings/applications/new) a new one.
+A **GitHub Application** is needed for authorization, if you don't have one, [Click here to register](https://github.com/settings/applications/new) a new one.
 
 **Note:** You must specify the website domain url in the `Authorization callback URL` field.
 
 ```js
 const gitalk = new Gitalk({
-  clientID: 'Github Application Client ID',
-  clientSecret: 'Github Application Client Secret',
-  repo: 'Github repo',
-  owner: 'Github repo owner',
-  admin: ['Github repo owner and collaborators, only these guys can initialize github issues'],
+  clientID: 'GitHub Application Client ID',
+  clientSecret: 'GitHub Application Client Secret',
+  repo: 'GitHub repo',
+  owner: 'GitHub repo owner',
+  admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
   id: location.pathname,      // Ensure uniqueness and length less than 50
   distractionFreeMode: false  // Facebook-like distraction free mode
 })
@@ -68,23 +68,23 @@ gitalk.render('gitalk-container')
 
 - **clientID** `String` 
 
-  **Required**. Github Application Client ID.
+  **Required**. GitHub Application Client ID.
 
 - **clientSecret** `String` 
 
-  **Required**. Github Application Client Secret.
+  **Required**. GitHub Application Client Secret.
 
 - **repo** `String` 
 
-  **Required**. Github repository.
+  **Required**. GitHub repository.
 
 - **owner** `String` 
 
-  **Required**. Github repository owner. Can be personal user or organization.
+  **Required**. GitHub repository owner. Can be personal user or organization.
 
 - **admin** `Array` 
 
-  **Required**. Github repository owner and collaborators. (Users who having write access to this repository)
+  **Required**. GitHub repository owner and collaborators. (Users who having write access to this repository)
 
 - **id** `String` 
   
@@ -96,19 +96,19 @@ gitalk.render('gitalk-container')
   
   Default: `['Gitalk']`.
 
-  Github issue labels.
+  GitHub issue labels.
 
 - **title** `String` 
   
   Default: `document.title`.
 
-  Github issue title.
+  GitHub issue title.
 
 - **body** `String` 
   
   Default: `location.href + header.meta[description]`.
 
-  Github issue body.
+  GitHub issue body.
 
 - **language** `String` 
   
@@ -144,7 +144,7 @@ gitalk.render('gitalk-container')
   
   Default: `https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token`.
 
-  Github oauth request reverse proxy for CORS. [Why need this?](https://github.com/isaacs/github/issues/330)
+  GitHub oauth request reverse proxy for CORS. [Why need this?](https://github.com/isaacs/github/issues/330)
 
 - **flipMoveOptions** `Object` 
   
