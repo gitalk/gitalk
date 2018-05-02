@@ -3,11 +3,11 @@
 
 [![NPM][npm-version-image]][npm-version-url] [![CDNJS][cdnjs-version-image]][cdnjs-version-url] [![david-dm][david-dm-image]][david-dm-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
 
-Gitalk 是一個基於 Github Issue 和 Preact 開發的評論插件。
+Gitalk 是一個基於 GitHub Issue 和 Preact 開發的評論插件。
 
 ## 特性
 
-- 使用 Github 登錄
+- 使用 GitHub 登錄
 - 支持多語言 [en, zh-CN, zh-TW, es-ES, fr, ru]
 - 支持個人或組織
 - 無干擾模式（設置 distractionFreeMode 為 true 開啟）
@@ -45,15 +45,15 @@ import Gitalk from 'gitalk'
 
 ## 使用
 
-需要 **Github Application**，如果沒有 [點擊這裡申請](https://github.com/settings/applications/new)，`Authorization callback URL` 填寫當前使用插件頁面的域名。
+需要 **GitHub Application**，如果沒有 [點擊這裡申請](https://github.com/settings/applications/new)，`Authorization callback URL` 填寫當前使用插件頁面的域名。
 
 ```js
 var gitalk = new Gitalk({
-  clientID: 'Github Application Client ID',
-  clientSecret: 'Github Application Client Secret',
-  repo: 'Github repo',
-  owner: 'Github repo owner',
-  admin: ['Github repo owner and collaborators, only these guys can initialize github issues'],
+  clientID: 'GitHub Application Client ID',
+  clientSecret: 'GitHub Application Client Secret',
+  repo: 'GitHub repo',
+  owner: 'GitHub repo owner',
+  admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
   id: location.pathname,      // Ensure uniqueness and length less than 50
   distractionFreeMode: false  // Facebook-like distraction free mode
 })
@@ -66,23 +66,23 @@ gitalk.render('gitalk-container')
 
 - **clientID** `String`
 
-  **必須**. Github Application Client ID.
+  **必須**. GitHub Application Client ID.
 
 - **clientSecret** `String`
 
-  **必須**. Github Application Client Secret.
+  **必須**. GitHub Application Client Secret.
 
 - **repo** `String`
 
-  **必須**. Github repository.
+  **必須**. GitHub repository.
 
 - **owner** `String`
 
-  **必須**. Github repository 所有者，可以是個人或者組織。
+  **必須**. GitHub repository 所有者，可以是個人或者組織。
 
 - **admin** `Array`
 
-  **必須**. Github repository 的所有者和合作者 (對這個 repository 有寫權限的用戶)。
+  **必須**. GitHub repository 的所有者和合作者 (對這個 repository 有寫權限的用戶)。
 
 - **id** `String`
 
@@ -94,19 +94,19 @@ gitalk.render('gitalk-container')
 
   Default: `['Gitalk']`.
 
-  Github issue 的標籤。
+  GitHub issue 的標籤。
 
 - **title** `String`
 
   Default: `document.title`.
 
-  Github issue 的標題。
+  GitHub issue 的標題。
 
 - **body** `String`
 
   Default: `location.href + header.meta[description]`.
 
-  Github issue 的內容。
+  GitHub issue 的內容。
 
 - **language** `String`
 
@@ -142,7 +142,7 @@ gitalk.render('gitalk-container')
 
   Default: `https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token`.
 
-   Github oauth 請求到反向代理，為了支持 CORS。 [為什麼要這樣?](https://github.com/isaacs/github/issues/330)
+   GitHub oauth 請求到反向代理，為了支持 CORS。 [為什麼要這樣?](https://github.com/isaacs/github/issues/330)
 
 - **flipMoveOptions** `Object`
 
