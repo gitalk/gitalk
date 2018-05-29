@@ -10052,7 +10052,7 @@ module.exports = {
 	"leave-a-comment": "说点什么",
 	"comment": "评论",
 	"support-markdown": "支持 Markdown 语法",
-	"login-with-github": "使用 Github 登录",
+	"login-with-github": "使用 GitHub 登录",
 	"first-comment-person": "来做第一个留言的人吧！",
 	"commented": "发表于",
 	"load-more": "加载更多",
@@ -10075,7 +10075,7 @@ module.exports = {
 	"leave-a-comment": "寫點什麼",
 	"comment": "評論",
 	"support-markdown": "支援 Markdown 語法",
-	"login-with-github": "使用 Github 登入",
+	"login-with-github": "使用 GitHub 登入",
 	"first-comment-person": "成為首個留言的人吧！",
 	"commented": "評論於",
 	"load-more": "載入更多",
@@ -10098,7 +10098,7 @@ module.exports = {
 	"leave-a-comment": "Leave a comment",
 	"comment": "Comment",
 	"support-markdown": "Markdown is supported",
-	"login-with-github": "Login with Github",
+	"login-with-github": "Login with GitHub",
 	"first-comment-person": "Be the first guy leaving a comment!",
 	"commented": "commented",
 	"load-more": "Load more",
@@ -10121,7 +10121,7 @@ module.exports = {
 	"leave-a-comment": "Deja un comentario",
 	"comment": "Comentario",
 	"support-markdown": "Markdown es soportado",
-	"login-with-github": "Entrar con Github",
+	"login-with-github": "Entrar con GitHub",
 	"first-comment-person": "Sé el primero en dejar un comentario!",
 	"commented": "comentó",
 	"load-more": "Cargar más",
@@ -10144,7 +10144,7 @@ module.exports = {
 	"leave-a-comment": "Laisser un commentaire",
 	"comment": "Commentaire",
 	"support-markdown": "Markdown est supporté",
-	"login-with-github": "Se connecter avec Github",
+	"login-with-github": "Se connecter avec GitHub",
 	"first-comment-person": "Être le premier à laisser un commentaire !",
 	"commented": "commenter",
 	"load-more": "Charger plus",
@@ -10167,7 +10167,7 @@ module.exports = {
 	"leave-a-comment": "Оставить комментарий",
 	"comment": "Комментарий",
 	"support-markdown": "Поддерживается Markdown",
-	"login-with-github": "Вход через Github",
+	"login-with-github": "Вход через GitHub",
 	"first-comment-person": "Будьте первым, кто оставил комментарий",
 	"commented": "прокомментированный",
 	"load-more": "Загрузить ещё",
@@ -13006,7 +13006,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.2.2"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.2.4"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
