@@ -61,6 +61,8 @@ $gt-size-avatar-mobi := em(32px)
       cursor: default !important
       &:hover
         color: $gt-color-link-active
+  .hide
+    display: none !important
   // icons
   .gt-svg
     display: inline-block
@@ -141,21 +143,18 @@ $gt-size-avatar-mobi := em(32px)
         height: $gt-size-avatar-mobi - em(2px)
   // button
   .gt-btn
-    padding: em(12px) em(16px)
+    padding: em(12px) em(20px)
     display: inline-block
     line-height: 1
     text-decoration: none
     white-space: nowrap
     cursor: pointer
-    border: none
+    border: 1px solid $gt-color-main
     border-radius: $gt-size-border-radius
     background-color: $gt-color-main
     color: $gt-color-btn
     outline: none
     font-size: em(12px)
-    &:hover
-      background-color: lighten($gt-color-main, 20%)
-      color: $gt-color-btn
     &-text
       font-weight: 400
     &-loading
@@ -170,8 +169,16 @@ $gt-size-avatar-mobi := em(32px)
       opacity: 0.5
     &-login
       margin-right: 0
+    &-preview
+      background-color: $gt-color-btn
+      color: $gt-color-main
+      &:hover
+        background-color: darken($gt-color-btn, 5%)
+        border-color: lighten($gt-color-main, 20%)
     &-public
-      // margin-right: em(12px)
+      &:hover
+        background-color: lighten($gt-color-main, 20%)
+        border-color: lighten($gt-color-main, 20%)
     &-loadmore
       // loadmore
 
@@ -298,6 +305,11 @@ $gt-size-avatar-mobi := em(32px)
       &:hover
         background-color: lighten($gt-color-input-bg, 50%)
         // box-shadow: 0 em(10px) em(60px) 0 $gt-color-input-bg
+    &-preview
+      padding: em(12px)
+      border-radius: $gt-size-border-radius
+      border: 1px solid $gt-color-input-border
+      background-color: $gt-color-input-bg
     &-controls
       position: relative
       margin: em(12px) 0 0
@@ -311,6 +323,7 @@ $gt-size-avatar-mobi := em(32px)
           display: none
       .gt-btn
         float: right
+        margin-left: em(20px)
         +mobile()
           float: none
           width: 100%

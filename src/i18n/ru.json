@@ -4,6 +4,8 @@
   "please-contact": "Пожалуйста, свяжитесь с %{user} чтобы инициализировать комментарий",
   "init-issue": "Выпуск инициализации",
   "leave-a-comment": "Оставить комментарий",
+  "preview": "Предварительный просмотр",
+  "edit": "Pедактировать",
   "comment": "Комментарий",
   "support-markdown": "Поддерживается Markdown",
   "login-with-github": "Вход через GitHub",

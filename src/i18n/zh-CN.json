@@ -4,6 +4,8 @@
   "please-contact": "请联系 %{user} 初始化创建",
   "init-issue": "初始化 Issue",
   "leave-a-comment": "说点什么",
+  "preview": "预览",
+  "edit": "编辑",
   "comment": "评论",
   "support-markdown": "支持 Markdown 语法",
   "login-with-github": "使用 GitHub 登录",

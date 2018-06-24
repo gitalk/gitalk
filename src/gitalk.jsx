@@ -31,6 +31,7 @@ class GitalkComponent extends Component {
     page: 1,
     pagerDirection: 'last',
     cursor: null,
+    previewHtml: '',
 
     isNoInit: false,
     isIniting: true,
@@ -41,6 +42,7 @@ class GitalkComponent extends Component {
     isIssueCreating: false,
     isPopupVisible: false,
     isInputFocused: false,
+    isPreview: false,
 
     isOccurError: false,
     errorMsg: '',
@@ -194,8 +196,7 @@ class GitalkComponent extends Component {
         t: Date.now()
       }
     }).then(res => {
-      const { admin, createIssueManually } = this.options
-      const { user } = this.state
+      const { createIssueManually } = this.options
       let isNoInit = false
       let issue = null
       if (!(res && res.data && res.data.length)) {
@@ -306,7 +307,7 @@ class GitalkComponent extends Component {
     replyCommentArray.push('')
     replyCommentArray.push('')
     if (comment) replyCommentArray.unshift('')
-    this.setState({comment: comment + replyCommentArray.join('\n')}, () => {
+    this.setState({ comment: comment + replyCommentArray.join('\n') }, () => {
       autosize.update(this.commentEL)
       this.commentEL.focus()
     })
@@ -314,7 +315,6 @@ class GitalkComponent extends Component {
   like (comment) {
     const { owner, repo } = this.options
     let { comments, user } = this.state
-
 
     axiosGithub.post(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, {
       content: 'heart'
@@ -466,6 +466,26 @@ class GitalkComponent extends Component {
         })
       })
   }
+  handleCommentPreview = e => {
+    this.setState({
+      isPreview: !this.state.isPreview
+    })
+
+    axiosGithub.post('/markdown', {
+      text: this.state.comment
+    }, {
+      headers: { Authorization: `token ${this.accessToken}` }
+    }).then(res => {
+      this.setState({
+        previewHtml: res.data
+      })
+    }).catch(err => {
+      this.setState({
+        isOccurError: true,
+        errorMsg: formatErrorMsg(err)
+      })
+    })
+  }
   handleCommentLoad = () => {
     const { issue, isLoadMore } = this.state
     if (isLoadMore) return
@@ -523,7 +543,7 @@ class GitalkComponent extends Component {
     )
   }
   header () {
-    const { user, comment, isCreating } = this.state
+    const { user, comment, isCreating, previewHtml, isPreview } = this.state
     return (
       <div className="gt-header" key="header">
         {user ?
@@ -535,13 +555,17 @@ class GitalkComponent extends Component {
         <div className="gt-header-comment">
           <textarea
             ref={t => { this.commentEL = t }}
-            className="gt-header-textarea"
+            className={`gt-header-textarea ${isPreview ? 'hide' : ''}`}
             value={comment}
             onChange={this.handleCommentChange}
             onFocus={this.handleCommentFocus}
             onBlur={this.handleCommentBlur}
             onKeyDown={this.handleCommentKeyDown}
             placeholder={this.i18n.t('leave-a-comment')}
+          />
+          <div
+            className={`gt-header-preview markdown-body ${isPreview ? '' : 'hide'}`}
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
           />
           <div className="gt-header-controls">
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
@@ -554,6 +578,13 @@ class GitalkComponent extends Component {
               text={this.i18n.t('comment')}
               isLoading={isCreating}
             />}
+
+            <Button
+              className="gt-btn-preview"
+              onMouseDown={this.handleCommentPreview}
+              text={isPreview ? this.i18n.t('edit') : this.i18n.t('preview')}
+              // isLoading={isPreviewing}
+            />
             {!user && <Button className="gt-btn-login" onMouseDown={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
         </div>
