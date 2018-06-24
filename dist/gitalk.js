@@ -5809,6 +5809,7 @@ var GitalkComponent = function (_Component) {
       page: 1,
       pagerDirection: 'last',
       cursor: null,
+      previewHtml: '',
 
       isNoInit: false,
       isIniting: true,
@@ -5819,6 +5820,7 @@ var GitalkComponent = function (_Component) {
       isIssueCreating: false,
       isPopupVisible: false,
       isInputFocused: false,
+      isPreview: false,
 
       isOccurError: false,
       errorMsg: ''
@@ -5932,6 +5934,27 @@ var GitalkComponent = function (_Component) {
       });
     };
 
+    _this.handleCommentPreview = function (e) {
+      _this.setState({
+        isPreview: !_this.state.isPreview
+      });
+
+      _util.axiosGithub.post('/markdown', {
+        text: _this.state.comment
+      }, {
+        headers: { Authorization: 'token ' + _this.accessToken }
+      }).then(function (res) {
+        _this.setState({
+          previewHtml: res.data
+        });
+      }).catch(function (err) {
+        _this.setState({
+          isOccurError: true,
+          errorMsg: (0, _util.formatErrorMsg)(err)
+        });
+      });
+    };
+
     _this.handleCommentLoad = function () {
       var _this$state2 = _this.state,
           issue = _this$state2.issue,
@@ -6001,7 +6024,9 @@ var GitalkComponent = function (_Component) {
       },
       enableHotKey: true,
 
-      url: location.href
+      url: location.href,
+
+      updateCountCallback: null
     }, props.options);
 
     _this.state.pagerDirection = _this.options.pagerDirection;
@@ -6132,10 +6157,7 @@ var GitalkComponent = function (_Component) {
           t: Date.now()
         }
       }).then(function (res) {
-        var _options2 = _this4.options,
-            admin = _options2.admin,
-            createIssueManually = _options2.createIssueManually;
-        var user = _this4.state.user;
+        var createIssueManually = _this4.options.createIssueManually;
 
         var isNoInit = false;
         var issue = null;
@@ -6157,14 +6179,14 @@ var GitalkComponent = function (_Component) {
     value: function createIssue() {
       var _this5 = this;
 
-      var _options3 = this.options,
-          owner = _options3.owner,
-          repo = _options3.repo,
-          title = _options3.title,
-          body = _options3.body,
-          id = _options3.id,
-          labels = _options3.labels,
-          url = _options3.url;
+      var _options2 = this.options,
+          owner = _options2.owner,
+          repo = _options2.repo,
+          title = _options2.title,
+          body = _options2.body,
+          id = _options2.id,
+          labels = _options2.labels,
+          url = _options2.url;
 
       return _util.axiosGithub.post('/repos/' + owner + '/' + repo + '/issues', {
         title: title,
@@ -6249,9 +6271,9 @@ var GitalkComponent = function (_Component) {
     value: function like(comment) {
       var _this8 = this;
 
-      var _options4 = this.options,
-          owner = _options4.owner,
-          repo = _options4.repo;
+      var _options3 = this.options,
+          owner = _options3.owner,
+          repo = _options3.repo;
       var _state2 = this.state,
           comments = _state2.comments,
           user = _state2.user;
@@ -6365,10 +6387,10 @@ var GitalkComponent = function (_Component) {
       var _state4 = this.state,
           user = _state4.user,
           isIssueCreating = _state4.isIssueCreating;
-      var _options5 = this.options,
-          owner = _options5.owner,
-          repo = _options5.repo,
-          admin = _options5.admin;
+      var _options4 = this.options,
+          owner = _options4.owner,
+          repo = _options4.repo,
+          admin = _options4.admin;
 
       return _react2.default.createElement(
         'div',
@@ -6401,7 +6423,9 @@ var GitalkComponent = function (_Component) {
       var _state5 = this.state,
           user = _state5.user,
           comment = _state5.comment,
-          isCreating = _state5.isCreating;
+          isCreating = _state5.isCreating,
+          previewHtml = _state5.previewHtml,
+          isPreview = _state5.isPreview;
 
       return _react2.default.createElement(
         'div',
@@ -6418,13 +6442,17 @@ var GitalkComponent = function (_Component) {
             ref: function ref(t) {
               _this10.commentEL = t;
             },
-            className: 'gt-header-textarea',
+            className: 'gt-header-textarea ' + (isPreview ? 'hide' : ''),
             value: comment,
             onChange: this.handleCommentChange,
             onFocus: this.handleCommentFocus,
             onBlur: this.handleCommentBlur,
             onKeyDown: this.handleCommentKeyDown,
             placeholder: this.i18n.t('leave-a-comment')
+          }),
+          _react2.default.createElement('div', {
+            className: 'gt-header-preview markdown-body ' + (isPreview ? '' : 'hide'),
+            dangerouslySetInnerHTML: { __html: previewHtml }
           }),
           _react2.default.createElement(
             'div',
@@ -6440,6 +6468,12 @@ var GitalkComponent = function (_Component) {
               onMouseDown: this.handleCommentCreate,
               text: this.i18n.t('comment'),
               isLoading: isCreating
+            }),
+            _react2.default.createElement(_button2.default, {
+              className: 'gt-btn-preview',
+              onMouseDown: this.handleCommentPreview,
+              text: isPreview ? this.i18n.t('edit') : this.i18n.t('preview')
+              // isLoading={isPreviewing}
             }),
             !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onMouseDown: this.handleLogin, text: this.i18n.t('login-with-github') })
           )
@@ -6457,10 +6491,10 @@ var GitalkComponent = function (_Component) {
           isLoadOver = _state6.isLoadOver,
           isLoadMore = _state6.isLoadMore,
           pagerDirection = _state6.pagerDirection;
-      var _options6 = this.options,
-          language = _options6.language,
-          flipMoveOptions = _options6.flipMoveOptions,
-          admin = _options6.admin;
+      var _options5 = this.options,
+          language = _options5.language,
+          flipMoveOptions = _options5.flipMoveOptions,
+          admin = _options5.admin;
 
       var totalComments = comments.concat([]);
       if (pagerDirection === 'last' && this.accessToken) {
@@ -6509,8 +6543,17 @@ var GitalkComponent = function (_Component) {
 
       var cnt = (issue && issue.comments) + localComments.length;
       var isDesc = pagerDirection === 'last';
+      var updateCountCallback = this.options.updateCountCallback;
 
-      window.GITALK_COMMENTS_COUNT = cnt;
+      // window.GITALK_COMMENTS_COUNT = cnt
+
+      if (updateCountCallback && {}.toString.call(updateCountCallback) === '[object Function]') {
+        try {
+          updateCountCallback(cnt);
+        } catch (err) {
+          console.log('An error occurred executing the updateCountCallback:', err);
+        }
+      }
 
       return _react2.default.createElement(
         'div',
@@ -10050,6 +10093,8 @@ module.exports = {
 	"please-contact": "请联系 %{user} 初始化创建",
 	"init-issue": "初始化 Issue",
 	"leave-a-comment": "说点什么",
+	"preview": "预览",
+	"edit": "编辑",
 	"comment": "评论",
 	"support-markdown": "支持 Markdown 语法",
 	"login-with-github": "使用 GitHub 登录",
@@ -10073,6 +10118,8 @@ module.exports = {
 	"please-contact": "請聯絡 %{user} 初始化評論",
 	"init-issue": "初始化 Issue",
 	"leave-a-comment": "寫點什麼",
+	"preview": "預覽",
+	"edit": "編輯",
 	"comment": "評論",
 	"support-markdown": "支援 Markdown 語法",
 	"login-with-github": "使用 GitHub 登入",
@@ -10096,6 +10143,8 @@ module.exports = {
 	"please-contact": "Please contact %{user} to initialize the comment",
 	"init-issue": "Init Issue",
 	"leave-a-comment": "Leave a comment",
+	"preview": "Preview",
+	"edit": "Edit",
 	"comment": "Comment",
 	"support-markdown": "Markdown is supported",
 	"login-with-github": "Login with GitHub",
@@ -10119,6 +10168,8 @@ module.exports = {
 	"please-contact": "Por favor contacta con %{user} para inicializar el comentario",
 	"init-issue": "Iniciar Issue",
 	"leave-a-comment": "Deja un comentario",
+	"preview": "Avance",
+	"edit": "Editar",
 	"comment": "Comentario",
 	"support-markdown": "Markdown es soportado",
 	"login-with-github": "Entrar con GitHub",
@@ -10142,6 +10193,8 @@ module.exports = {
 	"please-contact": "S’il vous plaît contactez %{user} pour initialiser les commentaires",
 	"init-issue": "Initialisation des issues",
 	"leave-a-comment": "Laisser un commentaire",
+	"preview": "Aperçu",
+	"edit": "Modifier",
 	"comment": "Commentaire",
 	"support-markdown": "Markdown est supporté",
 	"login-with-github": "Se connecter avec GitHub",
@@ -10165,6 +10218,8 @@ module.exports = {
 	"please-contact": "Пожалуйста, свяжитесь с %{user} чтобы инициализировать комментарий",
 	"init-issue": "Выпуск инициализации",
 	"leave-a-comment": "Оставить комментарий",
+	"preview": "Предварительный просмотр",
+	"edit": "Pедактировать",
 	"comment": "Комментарий",
 	"support-markdown": "Поддерживается Markdown",
 	"login-with-github": "Вход через GitHub",
@@ -13006,7 +13061,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.2.4"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.3.0"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),

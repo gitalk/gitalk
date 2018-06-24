@@ -741,6 +741,9 @@
 .gt-container a.is--active:hover {
   color: #333;
 }
+.gt-container .hide {
+  display: none !important;
+}
 .gt-container .gt-svg {
   display: inline-block;
   width: 1em;
@@ -836,22 +839,18 @@
   }
 }
 .gt-container .gt-btn {
-  padding: 0.75em 1em;
+  padding: 0.75em 1.25em;
   display: inline-block;
   line-height: 1;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  border: none;
+  border: 1px solid #6190e8;
   border-radius: 5px;
   background-color: #6190e8;
   color: #fff;
   outline: none;
   font-size: 0.75em;
-}
-.gt-container .gt-btn:hover {
-  background-color: #81a6ed;
-  color: #fff;
 }
 .gt-container .gt-btn-text {
   font-weight: 400;
@@ -870,6 +869,18 @@
 }
 .gt-container .gt-btn-login {
   margin-right: 0;
+}
+.gt-container .gt-btn-preview {
+  background-color: #fff;
+  color: #6190e8;
+}
+.gt-container .gt-btn-preview:hover {
+  background-color: #f2f2f2;
+  border-color: #81a6ed;
+}
+.gt-container .gt-btn-public:hover {
+  background-color: #81a6ed;
+  border-color: #81a6ed;
 }
 .gt-container .gt-error {
   text-align: center;
@@ -1014,6 +1025,12 @@
 .gt-container .gt-header-textarea:hover {
   background-color: #fbfbfb;
 }
+.gt-container .gt-header-preview {
+  padding: 0.75em;
+  border-radius: 5px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background-color: #f6f6f6;
+}
 .gt-container .gt-header-controls {
   position: relative;
   margin: 0.75em 0 0;
@@ -1039,6 +1056,7 @@
 }
 .gt-container .gt-header-controls .gt-btn {
   float: right;
+  margin-left: 1.25em;
 }
 @media (max-width: 479px) {
   .gt-container .gt-header-controls .gt-btn {
