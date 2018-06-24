@@ -69,6 +69,8 @@ class GitalkComponent extends Component {
       enableHotKey: true,
 
       url: location.href,
+
+      updateCountCallback: null
     }, props.options)
 
     this.state.pagerDirection = this.options.pagerDirection
@@ -625,8 +627,19 @@ class GitalkComponent extends Component {
     const { user, issue, isPopupVisible, pagerDirection, localComments } = this.state
     const cnt = (issue && issue.comments) + localComments.length
     const isDesc = pagerDirection === 'last'
+    const { updateCountCallback } = this.options
 
-    window.GITALK_COMMENTS_COUNT = cnt
+    // window.GITALK_COMMENTS_COUNT = cnt
+    if (
+      updateCountCallback &&
+      {}.toString.call(updateCountCallback) === '[object Function]'
+    ) {
+      try {
+        updateCountCallback(cnt)
+      } catch (err) {
+        console.log('An error occurred executing the updateCountCallback:', err)
+      }
+    }
 
     return (
       <div className="gt-meta" key="meta" >
