@@ -314,6 +314,8 @@ $gt-size-avatar-mobi := em(32px)
       position: relative
       margin: em(12px) 0 0
       clearfix()
+      +mobile()
+        margin: 0
       &-tip
         font-size: em(14px)
         color: $gt-color-main
@@ -327,6 +329,7 @@ $gt-size-avatar-mobi := em(32px)
         +mobile()
           float: none
           width: 100%
+          margin: em(12px) 0 0
 
   &:after
     content: ''
