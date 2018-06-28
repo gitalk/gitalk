@@ -1043,6 +1043,11 @@
 .gt-container .gt-header-controls:after {
   clear: both;
 }
+@media (max-width: 479px) {
+  .gt-container .gt-header-controls {
+    margin: 0;
+  }
+}
 .gt-container .gt-header-controls-tip {
   font-size: 0.875em;
   color: #6190e8;
@@ -1062,6 +1067,7 @@
   .gt-container .gt-header-controls .gt-btn {
     float: none;
     width: 100%;
+    margin: 0.75em 0 0;
   }
 }
 .gt-container:after {
