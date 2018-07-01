@@ -476,7 +476,7 @@ class GitalkComponent extends Component {
     axiosGithub.post('/markdown', {
       text: this.state.comment
     }, {
-      headers: { Authorization: `token ${this.accessToken}` }
+      headers: this.accessToken && { Authorization: `token ${this.accessToken}` }
     }).then(res => {
       this.setState({
         previewHtml: res.data
