@@ -66,7 +66,7 @@ const getQL = (vars, pagerDirection) => {
 }
 
 function getComments (issue) {
-  const { owner, repo, perPage, pagerDirection } = this.options
+  const { owner, repo, perPage, pagerDirection, defaultAuthor } = this.options
   const { cursor, comments } = this.state
   return axiosGithub.post(
     '/graphql',
@@ -86,20 +86,24 @@ function getComments (issue) {
     }
   ).then(res => {
     const data = res.data.data.repository.issue.comments
-    const items = data.nodes.map(node => ({
-      id: node.databaseId,
-      gId: node.id,
-      user: {
-        avatar_url: node.author.avatarUrl,
-        login: node.author.login,
-        html_url: node.author.url
-      },
-      created_at: node.createdAt,
-      body_html: node.bodyHTML,
-      body: node.body,
-      html_url: `https://github.com/${owner}/${repo}/issues/${issue.number}#issuecomment-${node.databaseId}`,
-      reactions: node.reactions
-    }))
+    const items = data.nodes.map(node => {
+      const author = node.author || defaultAuthor
+
+      return {
+        id: node.databaseId,
+        gId: node.id,
+        user: {
+          avatar_url: author.avatarUrl,
+          login: author.login,
+          html_url: author.url
+        },
+        created_at: node.createdAt,
+        body_html: node.bodyHTML,
+        body: node.body,
+        html_url: `https://github.com/${owner}/${repo}/issues/${issue.number}#issuecomment-${node.databaseId}`,
+        reactions: node.reactions
+      }
+    })
 
     let cs
 

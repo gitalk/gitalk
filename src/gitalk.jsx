@@ -70,6 +70,12 @@ class GitalkComponent extends Component {
 
       url: location.href,
 
+      defaultAuthor: {
+        avatarUrl: '//avatars1.githubusercontent.com/u/29697133?s=50',
+        login: 'null',
+        url: '',
+      },
+
       updateCountCallback: null
     }, props.options)
 
