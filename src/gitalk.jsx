@@ -51,7 +51,7 @@ class GitalkComponent extends Component {
     super(props)
     this.options = Object.assign({}, {
       id: location.href,
-      number: null,
+      number: -1,
       labels: ['Gitalk'],
       title: document.title,
       body: '', // location.href + header.meta[description]
@@ -196,11 +196,18 @@ class GitalkComponent extends Component {
     }
 
     const { owner, repo, id, number, labels, clientID, clientSecret } = this.options
+    const getConf = {
+      params: {
+        client_id: clientID,
+        client_secret: clientSecret,
+        t: Date.now()
+      }
+    }
 
     if (typeof number === 'number' && number > 0) {
       const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
 
-      return axiosGithub.get(getUrl)
+      return axiosGithub.get(getUrl, getConf)
         .then(res => {
           let isNoInit = false
           let issue = null
@@ -224,12 +231,8 @@ class GitalkComponent extends Component {
     }
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
-      params: {
-        client_id: clientID,
-        client_secret: clientSecret,
-        labels: labels.concat(id).join(','),
-        t: Date.now()
-      }
+      ...getConf,
+      labels: labels.concat(id).join(',')
     }).then(res => {
       const { createIssueManually } = this.options
       let isNoInit = false
