@@ -224,7 +224,7 @@ class GitalkComponent extends Component {
         .catch(reject)
     })
       .catch(() => {
-        axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+        return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
           params: {
             ...reqParams,
             labels: labels.concat(id).join(',')
@@ -246,26 +246,6 @@ class GitalkComponent extends Component {
           return issue
         })
       })
-    // if (typeof number === 'number' && number > 0) {
-    //   const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
-    //   let isNumUseful = false
-
-    //   const numFecthFunc = axiosGithub.get(getUrl, { param: reqParams })
-    //     .then(res => {
-    //       let issue = null
-
-    //       if (res && res.data && res.data.number === number) {
-    //         isNumUseful = true
-    //         issue = res.data
-
-    //         this.setState({ issue, isNoInit: false })
-    //       }
-
-    //       return issue
-    //     })
-
-    //   if (isNumUseful) return numFecthFunc
-    // }
   }
   createIssue () {
     const { owner, repo, title, body, id, labels, url } = this.options
