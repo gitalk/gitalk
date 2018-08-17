@@ -196,59 +196,76 @@ class GitalkComponent extends Component {
     }
 
     const { owner, repo, id, number, labels, clientID, clientSecret } = this.options
-    const getConf = {
-      params: {
-        client_id: clientID,
-        client_secret: clientSecret,
-        t: Date.now()
-      }
+    const reqParams = {
+      client_id: clientID,
+      client_secret: clientSecret,
+      t: Date.now()
     }
 
-    if (typeof number === 'number' && number > 0) {
+    return new Promise((resolve, reject) => {
+      if (!(typeof number === 'number' && number > 0)) reject()
+
       const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
 
-      return axiosGithub.get(getUrl, getConf)
+      axiosGithub.get(getUrl, { param: reqParams })
         .then(res => {
-          let isNoInit = false
           let issue = null
 
           if (res && res.data && res.data.number === number) {
             issue = res.data
+
+            this.setState({ issue, isNoInit: false })
           } else {
+            reject()
+          }
+
+          resolve(issue)
+        })
+        .catch(reject)
+    })
+      .catch(() => {
+        axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+          params: {
+            ...reqParams,
+            labels: labels.concat(id).join(',')
+          }
+        }).then(res => {
+          const { createIssueManually } = this.options
+          let isNoInit = false
+          let issue = null
+          if (!(res && res.data && res.data.length)) {
+            if (!createIssueManually && this.isAdmin) {
+              return this.createIssue()
+            }
+
             isNoInit = true
+          } else {
+            issue = res.data[0]
           }
           this.setState({ issue, isNoInit })
           return issue
         })
-        .catch(() => {
-          const { createIssueManually } = this.options
+      })
+    // if (typeof number === 'number' && number > 0) {
+    //   const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
+    //   let isNumUseful = false
 
-          this.setState({ issue: null, isNoInit: true })
-          if (!createIssueManually && this.isAdmin) {
-            return this.createIssue()
-          }
-        })
-    }
+    //   const numFecthFunc = axiosGithub.get(getUrl, { param: reqParams })
+    //     .then(res => {
+    //       let issue = null
 
-    return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
-      ...getConf,
-      labels: labels.concat(id).join(',')
-    }).then(res => {
-      const { createIssueManually } = this.options
-      let isNoInit = false
-      let issue = null
-      if (!(res && res.data && res.data.length)) {
-        if (!createIssueManually && this.isAdmin) {
-          return this.createIssue()
-        }
+    //       if (res && res.data && res.data.number === number) {
+    //         isNumUseful = true
+    //         issue = res.data
 
-        isNoInit = true
-      } else {
-        issue = res.data[0]
-      }
-      this.setState({ issue, isNoInit })
-      return issue
-    })
+    //         this.setState({ issue, isNoInit: false })
+    //       }
+
+    //       return issue
+    //     })
+
+    //   if (isNumUseful) return numFecthFunc
+    // }
   }
   createIssue () {
     const { owner, repo, title, body, id, labels, url } = this.options

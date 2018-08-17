@@ -6145,7 +6145,6 @@ var GitalkComponent = function (_Component) {
 
     _this.options = (0, _assign2.default)({}, {
       id: location.href,
-      number: null,
       labels: ['Gitalk'],
       title: document.title,
       body: '', // location.href + header.meta[description]
@@ -6289,36 +6288,10 @@ var GitalkComponent = function (_Component) {
           owner = _options.owner,
           repo = _options.repo,
           id = _options.id,
-          number = _options.number,
           labels = _options.labels,
           clientID = _options.clientID,
           clientSecret = _options.clientSecret;
 
-
-      if (typeof number === 'number' && number > 0) {
-        var getUrl = '/repos/' + owner + '/' + repo + '/issues' + (number ? '/' + number : '');
-
-        return _util.axiosGithub.get(getUrl).then(function (res) {
-          var isNoInit = false;
-          var issue = null;
-
-          if (res && res.data && res.data.number === number) {
-            issue = res.data;
-          } else {
-            isNoInit = true;
-          }
-          _this4.setState({ issue: issue, isNoInit: isNoInit });
-          return issue;
-        }).catch(function () {
-          var createIssueManually = _this4.options.createIssueManually;
-
-
-          _this4.setState({ issue: null, isNoInit: true });
-          if (!createIssueManually && _this4.isAdmin) {
-            return _this4.createIssue();
-          }
-        });
-      }
 
       return _util.axiosGithub.get('/repos/' + owner + '/' + repo + '/issues', {
         params: {
