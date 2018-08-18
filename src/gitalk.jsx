@@ -188,26 +188,18 @@ class GitalkComponent extends Component {
       this.logout()
     })
   }
-  getIssue () {
-    const { issue } = this.state
-    if (issue) {
-      this.setState({ isNoInit: false })
-      return Promise.resolve(issue)
-    }
-
-    const { owner, repo, id, number, labels, clientID, clientSecret } = this.options
-    const reqParams = {
-      client_id: clientID,
-      client_secret: clientSecret,
-      t: Date.now()
-    }
+  getIssueById () {
+    const { owner, repo, number, clientID, clientSecret } = this.options
+    const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
 
     return new Promise((resolve, reject) => {
-      if (!(typeof number === 'number' && number > 0)) reject()
-
-      const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
-
-      axiosGithub.get(getUrl, { param: reqParams })
+      axiosGithub.get(getUrl, {
+        params: {
+          client_id: clientID,
+          client_secret: clientSecret,
+          t: Date.now()
+        }
+      })
         .then(res => {
           let issue = null
 
@@ -215,37 +207,59 @@ class GitalkComponent extends Component {
             issue = res.data
 
             this.setState({ issue, isNoInit: false })
-          } else {
-            reject()
           }
-
           resolve(issue)
         })
-        .catch(reject)
-    })
-      .catch(() => {
-        return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
-          params: {
-            ...reqParams,
-            labels: labels.concat(id).join(',')
-          }
-        }).then(res => {
-          const { createIssueManually } = this.options
-          let isNoInit = false
-          let issue = null
-          if (!(res && res.data && res.data.length)) {
-            if (!createIssueManually && this.isAdmin) {
-              return this.createIssue()
-            }
-
-            isNoInit = true
-          } else {
-            issue = res.data[0]
-          }
-          this.setState({ issue, isNoInit })
-          return issue
+        .catch(err => {
+          // 当状态码为404时resolve null
+          if (err.response.status === 404) resolve(null)
+          reject()
         })
+    })
+  }
+  getIssueByLabels () {
+    const { issue } = this.state
+    if (issue) {
+      this.setState({ isNoInit: false })
+      return Promise.resolve(issue)
+    }
+
+    const { owner, repo, id, labels, clientID, clientSecret } = this.options
+
+    return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+      params: {
+        client_id: clientID,
+        client_secret: clientSecret,
+        labels: labels.concat(id).join(','),
+        t: Date.now()
+      }
+    }).then(res => {
+      const { createIssueManually } = this.options
+      let isNoInit = false
+      let issue = null
+      if (!(res && res.data && res.data.length)) {
+        if (!createIssueManually && this.isAdmin) {
+          return this.createIssue()
+        }
+
+        isNoInit = true
+      } else {
+        issue = res.data[0]
+      }
+      this.setState({ issue, isNoInit })
+      return issue
+    })
+  }
+  getIssue () {
+    const { number } = this.options
+
+    if (typeof number === 'number' && number > 0) {
+      return this.getIssueById().then(issue => {
+        if (!issue) return this.getIssueByLabels()
+        return issue
       })
+    }
+    return this.getIssueByLabels()
   }
   createIssue () {
     const { owner, repo, title, body, id, labels, url } = this.options
