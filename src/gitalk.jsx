@@ -190,7 +190,7 @@ class GitalkComponent extends Component {
   }
   getIssueById () {
     const { owner, repo, number, clientID, clientSecret } = this.options
-    const getUrl = `/repos/${owner}/${repo}/issues${number ? `/${number}` : ''}`
+    const getUrl = `/repos/${owner}/${repo}/issues/${number}`
 
     return new Promise((resolve, reject) => {
       axiosGithub.get(getUrl, {
@@ -211,19 +211,13 @@ class GitalkComponent extends Component {
           resolve(issue)
         })
         .catch(err => {
-          // 当状态码为404时resolve null
+          // When the status code is 404, promise will be resolved with null
           if (err.response.status === 404) resolve(null)
-          reject()
+          reject(err)
         })
     })
   }
   getIssueByLabels () {
-    const { issue } = this.state
-    if (issue) {
-      this.setState({ isNoInit: false })
-      return Promise.resolve(issue)
-    }
-
     const { owner, repo, id, labels, clientID, clientSecret } = this.options
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
@@ -251,12 +245,16 @@ class GitalkComponent extends Component {
     })
   }
   getIssue () {
-    const { number } = this.options
+    const { number, issue } = this.options
+    if (issue) {
+      this.setState({ isNoInit: false })
+      return Promise.resolve(issue)
+    }
 
     if (typeof number === 'number' && number > 0) {
-      return this.getIssueById().then(issue => {
-        if (!issue) return this.getIssueByLabels()
-        return issue
+      return this.getIssueById().then(resIssue => {
+        if (!resIssue) return this.getIssueByLabels()
+        return resIssue
       })
     }
     return this.getIssueByLabels()
