@@ -48,7 +48,7 @@ import Gitalk from 'gitalk'
 Add a container to you page:
 
 ```html
-<div id="gitalk-container"><div>
+<div id="gitalk-container"></div>
 ```
 
 Then use the Javascript code below to generate the gitalk plugin:
