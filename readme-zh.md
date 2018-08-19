@@ -90,6 +90,12 @@ gitalk.render('gitalk-container')
 
   頁面的唯一標識。長度必須小於50。
 
+- **number** `Number` 
+  
+  Default: `null`.
+
+  頁面的 issue ID，若未定義`number`屬性則會使用`id`進行定位。  
+
 - **labels** `Array`
 
   Default: `['Gitalk']`.

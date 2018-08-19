@@ -92,6 +92,12 @@ gitalk.render('gitalk-container')
 
   The unique id of the page. Length must less than 50.
 
+- **number** `Number` 
+  
+  Default: `location.href`.
+
+  The issue ID of the page, if the `number` attribute is not defined, issue will be located using `id`.
+
 - **labels** `Array` 
   
   Default: `['Gitalk']`.

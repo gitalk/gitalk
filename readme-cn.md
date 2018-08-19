@@ -88,6 +88,12 @@ gitalk.render('gitalk-container')
   Default: `location.href`.
 
   页面的唯一标识。长度必须小于50。
+  
+- **number** `Number` 
+  
+  Default: `null`.
+
+  页面的 issue ID 标识，若未定义`number`属性则会使用`id`进行定位。
 
 - **labels** `Array` 
   

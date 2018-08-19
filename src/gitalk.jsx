@@ -51,6 +51,7 @@ class GitalkComponent extends Component {
     super(props)
     this.options = Object.assign({}, {
       id: location.href,
+      number: -1,
       labels: ['Gitalk'],
       title: document.title,
       body: '', // location.href + header.meta[description]
@@ -187,13 +188,36 @@ class GitalkComponent extends Component {
       this.logout()
     })
   }
-  getIssue () {
-    const { issue } = this.state
-    if (issue) {
-      this.setState({ isNoInit: false })
-      return Promise.resolve(issue)
-    }
+  getIssueById () {
+    const { owner, repo, number, clientID, clientSecret } = this.options
+    const getUrl = `/repos/${owner}/${repo}/issues/${number}`
 
+    return new Promise((resolve, reject) => {
+      axiosGithub.get(getUrl, {
+        params: {
+          client_id: clientID,
+          client_secret: clientSecret,
+          t: Date.now()
+        }
+      })
+        .then(res => {
+          let issue = null
+
+          if (res && res.data && res.data.number === number) {
+            issue = res.data
+
+            this.setState({ issue, isNoInit: false })
+          }
+          resolve(issue)
+        })
+        .catch(err => {
+          // When the status code is 404, promise will be resolved with null
+          if (err.response.status === 404) resolve(null)
+          reject(err)
+        })
+    })
+  }
+  getIssueByLabels () {
     const { owner, repo, id, labels, clientID, clientSecret } = this.options
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
@@ -219,6 +243,21 @@ class GitalkComponent extends Component {
       this.setState({ issue, isNoInit })
       return issue
     })
+  }
+  getIssue () {
+    const { number, issue } = this.options
+    if (issue) {
+      this.setState({ isNoInit: false })
+      return Promise.resolve(issue)
+    }
+
+    if (typeof number === 'number' && number > 0) {
+      return this.getIssueById().then(resIssue => {
+        if (!resIssue) return this.getIssueByLabels()
+        return resIssue
+      })
+    }
+    return this.getIssueByLabels()
   }
   createIssue () {
     const { owner, repo, title, body, id, labels, url } = this.options
