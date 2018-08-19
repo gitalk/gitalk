@@ -245,7 +245,8 @@ class GitalkComponent extends Component {
     })
   }
   getIssue () {
-    const { number, issue } = this.options
+    const { number } = this.options
+    const { issue } = this.state
     if (issue) {
       this.setState({ isNoInit: false })
       return Promise.resolve(issue)
