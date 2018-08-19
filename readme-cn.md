@@ -44,7 +44,13 @@ import Gitalk from 'gitalk'
 
 ## 使用
 
-需要 **GitHub Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
+添加一个容器：
+
+```html
+<div id="gitalk-container"></div>
+```
+
+用下面的 Javascript 代码来生成 gitalk 插件：
 
 ```js
 var gitalk = new Gitalk({
@@ -60,6 +66,7 @@ var gitalk = new Gitalk({
 gitalk.render('gitalk-container')
 ```
 
+需要 **GitHub Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
 
 ## 设置
 
