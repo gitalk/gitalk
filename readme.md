@@ -94,7 +94,7 @@ gitalk.render('gitalk-container')
 
 - **number** `Number` 
   
-  Default: `location.href`.
+  Default: `-1`.
 
   The issue ID of the page, if the `number` attribute is not defined, issue will be located using `id`.
 

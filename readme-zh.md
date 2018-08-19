@@ -92,7 +92,7 @@ gitalk.render('gitalk-container')
 
 - **number** `Number` 
   
-  Default: `null`.
+  Default: `-1`.
 
   頁面的 issue ID，若未定義`number`屬性則會使用`id`進行定位。  
 
