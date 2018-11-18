@@ -761,6 +761,10 @@
 .gt-container .gt-ico-text {
   margin-left: 0.3125em;
 }
+.gt-container .gt-ico-github {
+  width: 100%;
+  height: 100%;
+}
 .gt-container .gt-ico-github .gt-svg {
   width: 100%;
   height: 100%;
