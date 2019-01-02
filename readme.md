@@ -45,7 +45,7 @@ import Gitalk from 'gitalk'
 
 ## Usage
 
-Add a container to you page:
+Add a container to your page:
 
 ```html
 <div id="gitalk-container"></div>
