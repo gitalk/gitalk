@@ -195,9 +195,10 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 5. Make sure your code lints (npm run lint).
 6. Commit your changes (git commit) [Commit Message Format Reference](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines)
 
-## Similar Project
+## Similar Projects
 
 - [gitment](https://github.com/imsun/gitment)
+- [vssue](https://vssue.js.org)
 
 ## LICENSE
 

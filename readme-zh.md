@@ -196,6 +196,7 @@ gitalk.render('gitalk-container')
 ## 類似項目
 
 - [gitment](https://github.com/imsun/gitment)
+- [vssue](https://vssue.js.org/zh)
 
 ## 許可
 
