@@ -10,8 +10,9 @@
   ],
   "main": "dist/gitalk.js",
   "scripts": {
+    "prepublishOnly": "npm run build",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --no-info --progress",
-    "build": "rimraf ./dist && cross-env NODE_ENV=production webpack --hide-modules && cross-env NODE_ENV=production webpack --config webpack.config.min.js",
+    "build": "rimraf ./dist && cross-env NODE_ENV=production webpack --hide-modules && cross-env NODE_ENV=production webpack --config webpack.config.comp.js && cross-env NODE_ENV=production webpack --config webpack.config.min.js",
     "lint": "eslint src",
     "coverage": "jest --coverage",
     "test": "jest"
