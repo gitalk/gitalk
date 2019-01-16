@@ -279,7 +279,7 @@ class GitalkComponent extends Component {
     })
   }
   // Get comments via v3 api, don't require login, but sorting feature is disable
-  getCommentsV3 = (issue) => {
+  getCommentsV3 = issue => {
     const { clientID, clientSecret, perPage } = this.options
     const { page } = this.state
     return this.getIssue()
@@ -346,7 +346,7 @@ class GitalkComponent extends Component {
   getRef = e => {
     this.publicBtnEL = e
   }
-  reply (replyComment) {
+  reply = replyComment => () => {
     const { comment } = this.state
     const replyCommentBody = replyComment.body
     let replyCommentArray = replyCommentBody.split('\n')
@@ -362,7 +362,8 @@ class GitalkComponent extends Component {
   }
   like (comment) {
     const { owner, repo } = this.options
-    let { comments, user } = this.state
+    const { user } = this.state
+    let { comments } = this.state
 
     axiosGithub.post(`/repos/${owner}/${repo}/issues/comments/${comment.id}/reactions`, {
       content: 'heart'
@@ -395,7 +396,8 @@ class GitalkComponent extends Component {
     })
   }
   unLike (comment) {
-    let { comments, user } = this.state
+    const { user } = this.state
+    let { comments } = this.state
 
     // const {  user } = this.state
     // let id
@@ -411,10 +413,9 @@ class GitalkComponent extends Component {
     //   console.log('res:', res)
     // })
 
-    const getQL = id => {
-      return {
-        operationName: 'RemoveReaction',
-        query: `
+    const getQL = id => ({
+      operationName: 'RemoveReaction',
+      query: `
           mutation RemoveReaction{
             removeReaction (input:{
               subjectId: "${id}",
@@ -426,8 +427,7 @@ class GitalkComponent extends Component {
             }
           }
         `
-      }
-    }
+    })
 
     axiosGithub.post('/graphql', getQL(comment.gId), {
       headers: {
@@ -657,7 +657,7 @@ class GitalkComponent extends Component {
               language={language}
               commentedText={this.i18n.t('commented')}
               admin={admin}
-              replyCallback={this.reply.bind(this, c)}
+              replyCallback={this.reply(c)}
               likeCallback={c.reactions && c.reactions.viewerHasReacted ? this.unLike.bind(this, c) : this.like.bind(this, c)}
             />
           ))}
