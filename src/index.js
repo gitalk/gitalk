@@ -15,8 +15,8 @@ class Gitalk {
     if (!container) throw new Error(`Container is required: ${container}`)
 
     if (!(container instanceof HTMLElement)) {
-      node = document.getElementById(container)
-      if (!node) throw new Error(`Container not found, document.getElementById: ${container}`)
+      node = window.document.getElementById(container)
+      if (!node) throw new Error(`Container not found, window.document.getElementById: ${container}`)
     } else {
       node = container
     }

@@ -39,7 +39,7 @@ export const getMetaContent = (name, content) => {
   /* istanbul ignore next */
   content || (content = 'content')
   /* istanbul ignore next */
-  const el = document.querySelector(`meta[name='${name}']`)
+  const el = window.document.querySelector(`meta[name='${name}']`)
   /* istanbul ignore next */
   return el && el.getAttribute(content)
 }

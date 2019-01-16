@@ -50,12 +50,12 @@ class GitalkComponent extends Component {
   constructor (props) {
     super(props)
     this.options = Object.assign({}, {
-      id: location.href,
+      id: window.location.href,
       number: -1,
       labels: ['Gitalk'],
-      title: document.title,
-      body: '', // location.href + header.meta[description]
-      language: navigator.language || navigator.userLanguage,
+      title: window.document.title,
+      body: '', // window.location.href + header.meta[description]
+      language: window.navigator.language || window.navigator.userLanguage,
       perPage: 10,
       pagerDirection: 'last', // last or first
       createIssueManually: false,
@@ -69,7 +69,7 @@ class GitalkComponent extends Component {
       },
       enableHotKey: true,
 
-      url: location.href,
+      url: window.location.href,
 
       defaultAuthor: {
         avatarUrl: '//avatars1.githubusercontent.com/u/29697133?s=50',
@@ -81,17 +81,17 @@ class GitalkComponent extends Component {
     }, props.options)
 
     this.state.pagerDirection = this.options.pagerDirection
-    const storedComment = localStorage.getItem(GT_COMMENT)
+    const storedComment = window.localStorage.getItem(GT_COMMENT)
     if (storedComment) {
       this.state.comment = decodeURIComponent(storedComment)
-      localStorage.removeItem(GT_COMMENT)
+      window.localStorage.removeItem(GT_COMMENT)
     }
 
     const query = queryParse()
     if (query.code) {
       const code = query.code
       delete query.code
-      const replacedUrl = `${location.origin}${location.pathname}${queryStringify(query)}${location.hash}`
+      const replacedUrl = `${window.location.origin}${window.location.pathname}${queryStringify(query)}${window.location.hash}`
       history.replaceState(null, null, replacedUrl)
       this.options = Object.assign({}, this.options, {
         url: replacedUrl,
@@ -151,10 +151,10 @@ class GitalkComponent extends Component {
   }
 
   get accessToken () {
-    return this._accessToke || localStorage.getItem(GT_ACCESS_TOKEN)
+    return this._accessToke || window.localStorage.getItem(GT_ACCESS_TOKEN)
   }
   set accessToken (token) {
-    localStorage.setItem(GT_ACCESS_TOKEN, token)
+    window.localStorage.setItem(GT_ACCESS_TOKEN, token)
     this._accessToken = token
   }
   get loginLink () {
@@ -162,7 +162,7 @@ class GitalkComponent extends Component {
     const { clientID } = this.options
     const query = {
       client_id: clientID,
-      redirect_uri: location.href,
+      redirect_uri: window.location.href,
       scope: 'public_repo'
     }
     return `${githubOauthUrl}?${queryStringify(query)}`
@@ -341,7 +341,7 @@ class GitalkComponent extends Component {
   }
   logout () {
     this.setState({ user: null })
-    localStorage.removeItem(GT_ACCESS_TOKEN)
+    window.localStorage.removeItem(GT_ACCESS_TOKEN)
   }
   getRef = e => {
     this.publicBtnEL = e
@@ -463,20 +463,20 @@ class GitalkComponent extends Component {
       if (hasClassInParent(e1.target, 'gt-user', 'gt-popup')) {
         return
       }
-      document.removeEventListener('click', hideHandle)
+      window.document.removeEventListener('click', hideHandle)
       this.setState({ isPopupVisible: false })
     }
     this.setState({ isPopupVisible: isVisible })
     if (isVisible) {
-      document.addEventListener('click', hideHandle)
+      window.document.addEventListener('click', hideHandle)
     } else {
-      document.removeEventListener('click', hideHandle)
+      window.document.removeEventListener('click', hideHandle)
     }
   }
   handleLogin = () => {
     const { comment } = this.state
-    localStorage.setItem(GT_COMMENT, encodeURIComponent(comment))
-    location.href = this.loginLink
+    window.localStorage.setItem(GT_COMMENT, encodeURIComponent(comment))
+    window.location.href = this.loginLink
   }
   handleIssueCreate = () => {
     this.setState({ isIssueCreating: true })
@@ -543,7 +543,7 @@ class GitalkComponent extends Component {
   handleCommentChange = e => this.setState({ comment: e.target.value })
   handleLogout = () => {
     this.logout()
-    location.reload()
+    window.location.reload()
   }
   handleCommentFocus = e => {
     const { distractionFreeMode } = this.options
