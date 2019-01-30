@@ -28,6 +28,21 @@ if (typeof window !== `undefined`) {
 
 
 export default class Comment extends Component {
+  shouldComponentUpdate () {
+    return false
+  }
+
+  componentDidMount () {
+    const comment = this.node
+    const emailResponse = comment.querySelector('.email-hidden-toggle>a')
+    if (emailResponse) {
+      emailResponse.addEventListener('click', e => {
+        e.preventDefault()
+        comment.querySelector('.email-hidden-reply').classList.toggle('expanded')
+      }, true)
+    }
+  }
+
   render () {
     const {
       comment,
@@ -58,7 +73,7 @@ export default class Comment extends Component {
     }
 
     return (
-      <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
+      <div ref={node => { this.node = node }} className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
         <Avatar
           className="gt-comment-avatar"
           src={comment.user && comment.user.avatar_url}

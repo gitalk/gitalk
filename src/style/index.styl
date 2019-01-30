@@ -420,6 +420,11 @@ $gt-size-avatar-mobi := em(32px)
       right: 0
     &-body
       color: $gt-color-comment-txt !important
+      .email-hidden-reply
+        display: none;
+        white-space: pre-wrap
+      .email-hidden-reply.expanded
+        display: block
     &-admin
       .gt-comment-content
         background-color: $gt-color-comment-adminbg
