@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import ReactDOM from 'react-dom'
 import Avatar from './avatar'
 import Svg from './svg'
 import distanceInWordsToNow from 'date-fns/distance_in_words_to_now'
@@ -28,6 +29,22 @@ if (typeof window !== `undefined`) {
 
 
 export default class Comment extends Component {
+  shouldComponentUpdate () {
+    return false
+  }
+
+  componentDidMount () {
+    const comment = ReactDOM.findDOMNode(this)
+    const emailResponse = comment.querySelector('.email-hidden-toggle>a')
+    if (emailResponse) {
+      emailResponse.setAttribute('href', '')
+      emailResponse.addEventListener('click', e => {
+        e.preventDefault()
+        comment.querySelector('.email-hidden-reply').classList.toggle('expanded')
+      }, true)
+    }
+  }
+
   render () {
     const {
       comment,
