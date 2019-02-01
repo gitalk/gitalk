@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import ReactDOM from 'react-dom'
 import Avatar from './avatar'
 import Svg from './svg'
 import distanceInWordsToNow from 'date-fns/distance_in_words_to_now'
@@ -34,10 +33,9 @@ export default class Comment extends Component {
   }
 
   componentDidMount () {
-    const comment = ReactDOM.findDOMNode(this)
+    const comment = this.node
     const emailResponse = comment.querySelector('.email-hidden-toggle>a')
     if (emailResponse) {
-      emailResponse.setAttribute('href', '')
       emailResponse.addEventListener('click', e => {
         e.preventDefault()
         comment.querySelector('.email-hidden-reply').classList.toggle('expanded')
@@ -75,7 +73,7 @@ export default class Comment extends Component {
     }
 
     return (
-      <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
+      <div ref={node => { this.node = node; return this.node }} className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
         <Avatar
           className="gt-comment-avatar"
           src={comment.user && comment.user.avatar_url}
