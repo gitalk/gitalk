@@ -1,5 +1,6 @@
 import React from 'react'
-import { shallow } from 'enzyme'
+import { shallow, mount } from 'enzyme'
+import sinon from 'sinon'
 
 import Comment from './comment'
 import Avatar from './avatar'
@@ -74,12 +75,16 @@ const emailComment = {
 }
 
 describe('Comment', function () {
-  it('render extended emailed comment', function () {
+  it('render extended emailed comment and add event listener', function () {
+    // let ref = null    
     const props = {
       comment: emailComment
     }
-    const wrapper = shallow(<Comment {...props} />)
-    expect(wrapper.find('.gt-comment-body').render().html()).toEqual(expect.stringContaining(cheerio.load(emailComment.body_html).html()))
+    const wrapper = mount(<Comment {...props} />)
+    wrapper.find('.email-hidden-toggle>a').click()
+    // expect(ref).not.toBe(null)
+
+    // expect(wrapper.find('.email-hidden-reply').render().html()).toEqual(expect.stringContaining(cheerio.load(emailComment.body_html).html()))
   })
 
   it('render with no user', function () {
