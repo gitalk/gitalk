@@ -71,6 +71,24 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 
 **Note:** You must specify the website domain url in the `Authorization callback URL` field.
 
+### Use in React
+
+Import the Gitalk with
+
+```jsx
+import GitalkComponent from "gitalk/dist/gitalk-component";
+```
+
+And use the component like
+
+```jsx
+<GitalkComponent options={{
+  clientID: "...",
+  // ...
+  // options below
+}} />
+```
+
 ## Options
 
 - **clientID** `String` 

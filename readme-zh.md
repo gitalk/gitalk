@@ -69,6 +69,24 @@ gitalk.render('gitalk-container')
 
 需要 **GitHub Application**，如果沒有 [點擊這裡申請](https://github.com/settings/applications/new)，`Authorization callback URL` 填寫當前使用插件頁面的域名。
 
+### 在React使用
+
+使用以下代碼引入Gitalk組件
+
+```jsx
+import GitalkComponent from "gitalk/dist/gitalk-component";
+```
+
+按以下方式在React中使用Gitalk組件
+
+```jsx
+<GitalkComponent options={{
+  clientID: "...",
+  // ...
+  // 設置項
+}} />
+```
+
 ## 設置
 
 - **clientID** `String`
