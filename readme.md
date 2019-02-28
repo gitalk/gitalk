@@ -204,6 +204,12 @@ And use the component like
 
   Init render and mount plugin.
 
+## TypeScript
+
+TypeScript definitions for options and Gitalk class come with the package and should be automatically detected.
+
+Definitions for React component usage are not included.
+
 ## Contributing
 
 1. [Fork the repository](https://github.com/gitalk/gitalk/fork) and create your branch from master

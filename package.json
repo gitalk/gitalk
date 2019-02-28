@@ -9,6 +9,7 @@
     "GitHub"
   ],
   "main": "dist/gitalk.js",
+  "types": "typings/index.d.ts",
   "scripts": {
     "prepublishOnly": "npm run build",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --no-info --progress",

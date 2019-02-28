@@ -201,6 +201,10 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   初始化渲染并挂载插件。
 
+## TypeScript
+
+已经包括了配置项和Gitalk类的类型定义，不包括React组件的类型定义。
+
 ## 贡献
 
 1. [Fork 代码仓库](https://github.com/gitalk/gitalk/fork) 并从 master 创建你的分支
