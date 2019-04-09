@@ -8,7 +8,7 @@ class Gitalk {
     this.options = options
   }
 
-  render (container) {
+  render (container, callback) {
     let node = null
     container = container || this.options.container
 
@@ -21,7 +21,11 @@ class Gitalk {
       node = container
     }
 
-    return render(<GitalkComponent options={this.options}/>, node)
+    if (!callback) {
+      callback = () => {}
+    }
+
+    return render(<GitalkComponent options={this.options}/>, node, callback)
   }
 }
 
