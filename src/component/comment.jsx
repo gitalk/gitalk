@@ -62,7 +62,7 @@ export default class Comment extends Component {
         <Avatar
           className="gt-comment-avatar"
           src={comment.user && comment.user.avatar_url}
-          alt={`@${comment.user && comment.user.login}`}
+          alt={comment.user && comment.user.login}
         />
 
         <div className="gt-comment-content">
