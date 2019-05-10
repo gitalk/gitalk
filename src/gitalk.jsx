@@ -595,7 +595,7 @@ class GitalkComponent extends Component {
     return (
       <div className="gt-header" key="header">
         {user ?
-          <Avatar className="gt-header-avatar" src={user.avatar_url} /> :
+          <Avatar className="gt-header-avatar" src={user.avatar_url} alt={`@${user.login}`} /> :
           <a className="gt-avatar-github" onMouseDown={this.handleLogin}>
             <Svg className="gt-ico-github" name="github"/>
           </a>
