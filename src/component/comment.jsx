@@ -67,6 +67,7 @@ export default class Comment extends Component {
 
         <div className="gt-comment-content">
           <div className="gt-comment-header">
+            <div className={`gt-comment-block-${user ? '2' : '1'}`} />
             <a
               className="gt-comment-username"
               href={comment.user && comment.user.html_url}
