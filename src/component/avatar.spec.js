@@ -20,7 +20,7 @@ describe('Avatar', function () {
     const alt = 'alt'
     expect(shallow(<Avatar alt={alt} />)
       .find('img').prop('alt')
-    ).toEqual(alt)
+    ).toEqual(`@${alt}`)
   })
 })
 
