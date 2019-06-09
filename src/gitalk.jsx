@@ -224,7 +224,7 @@ class GitalkComponent extends Component {
       params: {
         client_id: clientID,
         client_secret: clientSecret,
-        labels: labels.concat(id).join(','),
+        labels: labels.join(','),
         t: Date.now()
       }
     }).then(res => {
@@ -264,7 +264,7 @@ class GitalkComponent extends Component {
     const { owner, repo, title, body, id, labels, url } = this.options
     return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
       title,
-      labels: labels.concat(id),
+      labels,
       body: body || `${url} \n\n ${
         getMetaContent('description') ||
         getMetaContent('description', 'og:description') || ''
