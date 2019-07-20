@@ -492,6 +492,12 @@ class GitalkComponent extends Component {
         isOccurError: true,
         errorMsg: formatErrorMsg(err)
       })
+    }).then(res => {
+      if (res) {
+        this.setState({
+          isNoInit: false,
+        })
+      }
     })
   }
   handleCommentCreate = e => {
