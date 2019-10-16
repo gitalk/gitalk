@@ -502,6 +502,11 @@ class GitalkComponent extends Component {
     })
   }
   handleCommentCreate = e => {
+    if (this.state.isCreating) {
+      e && e.preventDefault()
+      return
+    }
+
     if (!this.state.comment.length) {
       e && e.preventDefault()
       this.commentEL.focus()
