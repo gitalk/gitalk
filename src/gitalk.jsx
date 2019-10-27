@@ -601,7 +601,9 @@ class GitalkComponent extends Component {
           </a>
         }
         <div className="gt-header-comment">
+          <label for="gt-header-textarea" class="gt-header-label">{this.i18n.t('leave-a-comment')}</label>
           <textarea
+            id="gt-header-textarea"
             ref={t => { this.commentEL = t }}
             className={`gt-header-textarea ${isPreview ? 'hide' : ''}`}
             value={comment}

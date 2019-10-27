@@ -1008,6 +1008,19 @@
     margin-left: 0.875em;
   }
 }
+.gt-container .gt-header-label {
+  border: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  -webkit-clip-path: inset(50%) !important;
+          clip-path: inset(50%) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  white-space: nowrap !important;
+  width: 1px !important;
+}
 .gt-container .gt-header-textarea {
   padding: 0.75em;
   display: block;
@@ -1144,6 +1157,16 @@
   margin-bottom: 0.5em;
   font-size: 0.875em;
   position: relative;
+}
+.gt-container .gt-comment-block-1 {
+  float: right;
+  height: 1.375em;
+  width: 2em;
+}
+.gt-container .gt-comment-block-2 {
+  float: right;
+  height: 1.375em;
+  width: 4em;
 }
 .gt-container .gt-comment-username {
   font-weight: 500;
