@@ -26,6 +26,18 @@ clearfix() {
   }
   &:after { clear: both; }
 }
+visibility-hidden(){
+   border: 0 !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  height: 1px !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  position: absolute !important;
+  white-space: nowrap !important;
+  width: 1px !important;
+}
 em($px, $base-size = $gt-size-base)
   u = unit($px)
   if (u is 'px')
@@ -289,6 +301,8 @@ $gt-size-avatar-mobi := em(32px)
       margin-left: em(20px)
       +mobile()
         margin-left: em(14px)
+    &-label
+      visibility-hidden()
     &-textarea
       padding: em(12px)
       display: block
@@ -387,6 +401,14 @@ $gt-size-avatar-mobi := em(32px)
       margin-bottom: em(8px)
       font-size: em(14px)
       position: relative
+    &-block-1
+      float: right
+      height: em(22px)
+      width: em(32px)
+    &-block-2
+      float: right
+      height: em(22px)
+      width: em(64px)
     &-username
       font-weight: 500
       color: $gt-color-main

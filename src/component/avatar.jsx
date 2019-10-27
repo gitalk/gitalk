@@ -1,7 +1,7 @@
 import React from 'react'
 
-export default ({ src, className }) => (
+export default ({ src, className, alt }) => (
   <div className={`gt-avatar ${className}`}>
-    <img src={src} alt="头像"/>
+    <img src={src} alt={`@${alt}`}/>
   </div>
 )

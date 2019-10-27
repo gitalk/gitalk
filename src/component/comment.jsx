@@ -62,10 +62,12 @@ export default class Comment extends Component {
         <Avatar
           className="gt-comment-avatar"
           src={comment.user && comment.user.avatar_url}
+          alt={comment.user && comment.user.login}
         />
 
         <div className="gt-comment-content">
           <div className="gt-comment-header">
+            <div className={`gt-comment-block-${user ? '2' : '1'}`} />
             <a
               className="gt-comment-username"
               href={comment.user && comment.user.html_url}
@@ -84,7 +86,7 @@ export default class Comment extends Component {
             </span>
 
             {reactions && (
-              <a className="gt-comment-like" onClick={likeCallback}>
+              <a className="gt-comment-like" title="Like" onClick={likeCallback}>
                 {reactions.viewerHasReacted ? (
                   <Svg
                     className="gt-ico-heart"
@@ -105,12 +107,13 @@ export default class Comment extends Component {
               <a
                 href={comment.html_url}
                 className="gt-comment-edit"
+                title="Edit"
                 target="_blank"
               >
                 <Svg className="gt-ico-edit" name="edit" />
               </a>
             ) : (
-              <a className="gt-comment-reply" onClick={replyCallback}>
+              <a className="gt-comment-reply" title="Reply" onClick={replyCallback}>
                 <Svg className="gt-ico-reply" name="reply" />
               </a>
             )}

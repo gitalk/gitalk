@@ -595,13 +595,15 @@ class GitalkComponent extends Component {
     return (
       <div className="gt-header" key="header">
         {user ?
-          <Avatar className="gt-header-avatar" src={user.avatar_url} /> :
+          <Avatar className="gt-header-avatar" src={user.avatar_url} alt={user.login} /> :
           <a className="gt-avatar-github" onMouseDown={this.handleLogin}>
             <Svg className="gt-ico-github" name="github"/>
           </a>
         }
         <div className="gt-header-comment">
+          <label for="gt-header-textarea" class="gt-header-label">{this.i18n.t('leave-a-comment')}</label>
           <textarea
+            id="gt-header-textarea"
             ref={t => { this.commentEL = t }}
             className={`gt-header-textarea ${isPreview ? 'hide' : ''}`}
             value={comment}
