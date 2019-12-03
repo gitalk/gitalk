@@ -58,7 +58,7 @@ export default class Comment extends Component {
     }
 
     return (
-      <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
+      <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`} id={`${comment.html_url.split('#')[1]}`}>
         <Avatar
           className="gt-comment-avatar"
           src={comment.user && comment.user.avatar_url}
