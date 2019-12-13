@@ -2,6 +2,12 @@
 .DS_Store
 
 .vscode
+.idea
+*.ipr
+*.iws
+*.iml
+.github
+node_modules
 
 npm-debug.log
 node_modules
