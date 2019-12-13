@@ -5,7 +5,8 @@
 Gitalk is a modern comment component based on GitHub Issue and Preact.
 
 ## 分支self-talking特点
-
+- [分支](https://github.com/removeif/gitalk/tree/self-talking)
+- [在线预览](https://removeif.github.io/self-talking/)
 - 非管理员用户只能点赞
 ![](https://cdn.jsdelivr.net/gh/removeif/blog_image/img/2019/20191213091645.png)
 - 管理员用户还是原来的界面
