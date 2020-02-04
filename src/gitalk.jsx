@@ -191,11 +191,11 @@ class GitalkComponent extends Component {
   getIssueById () {
     const { owner, repo, number, accessToken } = this.options
     const getUrl = `/repos/${owner}/${repo}/issues/${number}`
-
+    const token = this.accessToken || accessToken
     return new Promise((resolve, reject) => {
       axiosGithub.get(getUrl, {
         headers: {
-          Authorization: `token ${this.accessToken || accessToken}`
+          Authorization: token ? `token ${token}` : ''
         },
         params: {
           t: Date.now()
@@ -220,10 +220,10 @@ class GitalkComponent extends Component {
   }
   getIssueByLabels () {
     const { owner, repo, id, labels, accessToken } = this.options
-
+    const token = this.accessToken || accessToken
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
       headers: {
-        Authorization: `token ${this.accessToken || accessToken}`
+        Authorization: token ? `token ${token}` : ''
       },
       params: {
         labels: labels.concat(id).join(','),
@@ -284,6 +284,7 @@ class GitalkComponent extends Component {
   getCommentsV3 = issue => {
     const { perPage, accessToken } = this.options
     const { page } = this.state
+    const token = this.accessToken || accessToken
     return this.getIssue()
       .then(issue => {
         if (!issue) return
@@ -291,7 +292,7 @@ class GitalkComponent extends Component {
         return axiosGithub.get(issue.comments_url, {
           headers: {
             Accept: 'application/vnd.github.v3.full+json',
-            Authorization: `token ${this.accessToken || accessToken}`
+            Authorization: token ? `token ${token}` : ''
           },
           params: {
             per_page: perPage,

@@ -6367,13 +6367,14 @@ var GitalkComponent = function (_Component) {
           accessToken = _this$options.accessToken;
       var page = _this.state.page;
 
+      var token = _this.accessToken || accessToken;
       return _this.getIssue().then(function (issue) {
         if (!issue) return;
 
         return _util.axiosGithub.get(issue.comments_url, {
           headers: {
             Accept: 'application/vnd.github.v3.full+json',
-            Authorization: 'token ' + (_this.accessToken || accessToken)
+            Authorization: token ? 'token ' + token : ''
           },
           params: {
             per_page: perPage,
@@ -6700,11 +6701,11 @@ var GitalkComponent = function (_Component) {
           accessToken = _options.accessToken;
 
       var getUrl = '/repos/' + owner + '/' + repo + '/issues/' + number;
-
+      var token = this.accessToken || accessToken;
       return new _promise2.default(function (resolve, reject) {
         _util.axiosGithub.get(getUrl, {
           headers: {
-            Authorization: 'token ' + (_this4.accessToken || accessToken)
+            Authorization: token ? 'token ' + token : ''
           },
           params: {
             t: Date.now()
@@ -6737,10 +6738,10 @@ var GitalkComponent = function (_Component) {
           labels = _options2.labels,
           accessToken = _options2.accessToken;
 
-
+      var token = this.accessToken || accessToken;
       return _util.axiosGithub.get('/repos/' + owner + '/' + repo + '/issues', {
         headers: {
-          Authorization: 'token ' + (this.accessToken || accessToken)
+          Authorization: token ? 'token ' + token : ''
         },
         params: {
           labels: labels.concat(id).join(','),

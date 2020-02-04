@@ -82,10 +82,6 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 
   **Required**. GitHub Application Client Secret.
 
-- **accessToken** `String`
-
-  **Required**. Github Personal Access Token.
-
 - **repo** `String` 
 
   **Required**. GitHub repository.
@@ -97,6 +93,10 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 - **admin** `Array` 
 
   **Required**. GitHub repository owner and collaborators. (Users who having write access to this repository)
+
+- **accessToken** `String`
+
+  **Optional**. Github Personal Access Token. Provide [accessToken](https://github.com/settings/tokens) will get higher rate limit.
 
 - **id** `String` 
   

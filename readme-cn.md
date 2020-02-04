@@ -79,10 +79,6 @@ gitalk.render('gitalk-container')
 
   **必须**. GitHub Application Client Secret.
 
-- **accessToken** `String`
-
-  **必须**. Github Personal Access Token.
-
 - **repo** `String` 
 
   **必须**. GitHub repository.
@@ -94,6 +90,10 @@ gitalk.render('gitalk-container')
 - **admin** `Array` 
 
   **必须**. GitHub repository 的所有者和合作者 (对这个 repository 有写权限的用户)。
+
+- **accessToken** `String`
+
+  **可选**. Github Personal Access Token. 配置 [accessToken](https://github.com/settings/tokens) 可以获得更高的请求限制。
 
 - **id** `String` 
   
