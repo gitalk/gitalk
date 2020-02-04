@@ -57,6 +57,7 @@ Then use the Javascript code below to generate the gitalk plugin:
 const gitalk = new Gitalk({
   clientID: 'GitHub Application Client ID',
   clientSecret: 'GitHub Application Client Secret',
+  accessToken: 'Github Personal Access Token',
   repo: 'GitHub repo',
   owner: 'GitHub repo owner',
   admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
@@ -80,6 +81,10 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 - **clientSecret** `String` 
 
   **Required**. GitHub Application Client Secret.
+
+- **accessToken** `String`
+
+  **Required**. Github Personal Access Token.
 
 - **repo** `String` 
 

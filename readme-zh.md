@@ -57,6 +57,7 @@ import Gitalk from 'gitalk'
 var gitalk = new Gitalk({
   clientID: 'GitHub Application Client ID',
   clientSecret: 'GitHub Application Client Secret',
+  accessToken: 'Github Personal Access Token',
   repo: 'GitHub repo',
   owner: 'GitHub repo owner',
   admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
@@ -78,6 +79,10 @@ gitalk.render('gitalk-container')
 - **clientSecret** `String`
 
   **必須**. GitHub Application Client Secret.
+
+- **accessToken** `String`
+
+  **必须**. Github Personal Access Token.
 
 - **repo** `String`
 

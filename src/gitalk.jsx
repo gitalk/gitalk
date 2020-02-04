@@ -189,14 +189,15 @@ class GitalkComponent extends Component {
     })
   }
   getIssueById () {
-    const { owner, repo, number, clientID, clientSecret } = this.options
+    const { owner, repo, number, accessToken } = this.options
     const getUrl = `/repos/${owner}/${repo}/issues/${number}`
 
     return new Promise((resolve, reject) => {
       axiosGithub.get(getUrl, {
+        headers: {
+          Authorization: `token ${this.accessToken || accessToken}`
+        },
         params: {
-          client_id: clientID,
-          client_secret: clientSecret,
           t: Date.now()
         }
       })
@@ -218,12 +219,13 @@ class GitalkComponent extends Component {
     })
   }
   getIssueByLabels () {
-    const { owner, repo, id, labels, clientID, clientSecret } = this.options
+    const { owner, repo, id, labels, accessToken } = this.options
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+      headers: {
+        Authorization: `token ${this.accessToken || accessToken}`
+      },
       params: {
-        client_id: clientID,
-        client_secret: clientSecret,
         labels: labels.concat(id).join(','),
         t: Date.now()
       }
@@ -280,7 +282,7 @@ class GitalkComponent extends Component {
   }
   // Get comments via v3 api, don't require login, but sorting feature is disable
   getCommentsV3 = issue => {
-    const { clientID, clientSecret, perPage } = this.options
+    const { perPage, accessToken } = this.options
     const { page } = this.state
     return this.getIssue()
       .then(issue => {
@@ -288,11 +290,10 @@ class GitalkComponent extends Component {
 
         return axiosGithub.get(issue.comments_url, {
           headers: {
-            Accept: 'application/vnd.github.v3.full+json'
+            Accept: 'application/vnd.github.v3.full+json',
+            Authorization: `token ${this.accessToken || accessToken}`
           },
           params: {
-            client_id: clientID,
-            client_secret: clientSecret,
             per_page: perPage,
             page
           }
