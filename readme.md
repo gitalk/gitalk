@@ -8,7 +8,7 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 
 - Authentication with github account
 - Serverless, all comments will be stored as github issues
-- Both personal and organization github projects can be used to store comments 
+- Both personal and organization github projects can be used to store comments
 - Localization, support multiple languages [en, zh-CN, zh-TW, es-ES, fr, ru]
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 - Hotkey submit comment (cmd|ctrl + enter)
@@ -57,7 +57,6 @@ Then use the Javascript code below to generate the gitalk plugin:
 const gitalk = new Gitalk({
   clientID: 'GitHub Application Client ID',
   clientSecret: 'GitHub Application Client Secret',
-  accessToken: 'Github Personal Access Token',
   repo: 'GitHub repo',
   owner: 'GitHub repo owner',
   admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
@@ -74,74 +73,70 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 
 ## Options
 
-- **clientID** `String` 
+- **clientID** `String`
 
   **Required**. GitHub Application Client ID.
 
-- **clientSecret** `String` 
+- **clientSecret** `String`
 
   **Required**. GitHub Application Client Secret.
 
-- **repo** `String` 
+- **repo** `String`
 
   **Required**. GitHub repository.
 
-- **owner** `String` 
+- **owner** `String`
 
   **Required**. GitHub repository owner. Can be personal user or organization.
 
-- **admin** `Array` 
+- **admin** `Array`
 
   **Required**. GitHub repository owner and collaborators. (Users who having write access to this repository)
 
-- **accessToken** `String`
+- **id** `String`
 
-  **Optional**. Github Personal Access Token. Provide [accessToken](https://github.com/settings/tokens) will get higher rate limit.
-
-- **id** `String` 
-  
   Default: `location.href`.
 
   The unique id of the page. Length must less than 50.
 
-- **number** `Number` 
-  
+- **number** `Number`
+
   Default: `-1`.
 
   The issue ID of the page, if the `number` attribute is not defined, issue will be located using `id`.
 
-- **labels** `Array` 
-  
+- **labels** `Array`
+
   Default: `['Gitalk']`.
 
   GitHub issue labels.
 
-- **title** `String` 
-  
+- **title** `String`
+
   Default: `document.title`.
 
   GitHub issue title.
 
-- **body** `String` 
-  
+- **body** `String`
+
   Default: `location.href + header.meta[description]`.
 
   GitHub issue body.
 
-- **language** `String` 
-  
+- **language** `String`
+
   Default: `navigator.language || navigator.userLanguage`.
 
   Localization language key, `en`, `zh-CN` and `zh-TW` are currently available.
 
-- **perPage** `Number` 
-  
+- **perPage** `Number`
+
   Default: `10`.
 
   Pagination size, with maximum 100.
 
-- **distractionFreeMode** `Boolean` 
-  
+- **distractionFreeMode** `Boolean`
+
   Default: false.
 
   Facebook-like distraction free mode.
@@ -152,20 +147,20 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 
   Comment sorting direction, available values are `last` and `first`.
 
-- **createIssueManually** `Boolean` 
-  
+- **createIssueManually** `Boolean`
+
   Default: `false`.
 
   By default, Gitalk will create a corresponding github issue for your every single page automatically when the logined user is belong to the `admin` users. You can create it manually by setting this option to `true`.
 
-- **proxy** `String` 
-  
+- **proxy** `String`
+
   Default: `https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token`.
 
   GitHub oauth request reverse proxy for CORS. [Why need this?](https://github.com/isaacs/github/issues/330)
 
-- **flipMoveOptions** `Object` 
-  
+- **flipMoveOptions** `Object`
+
   Default:
   ```js
     {
@@ -178,8 +173,8 @@ A **GitHub Application** is needed for authorization, if you don't have one, [Cl
 
   Comment list animation. [Reference](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
 
-- **enableHotKey** `Boolean` 
-  
+- **enableHotKey** `Boolean`
+
   Default: `true`.
 
   Enable hot key (cmd|ctrl + enter) submit comment.
