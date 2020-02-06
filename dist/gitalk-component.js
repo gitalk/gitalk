@@ -77,7 +77,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 0 */
 /***/ (function(module, exports) {
 
-var core = module.exports = { version: '2.5.7' };
+var core = module.exports = { version: '2.6.11' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 
@@ -492,7 +492,7 @@ module.exports = $export;
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 module.exports = function (it) {
   if (!isObject(it)) throw TypeError(it + ' is not an object!');
   return it;
@@ -508,7 +508,7 @@ var IE8_DOM_DEFINE = __webpack_require__(48);
 var toPrimitive = __webpack_require__(31);
 var dP = Object.defineProperty;
 
-exports.f = __webpack_require__(8) ? Object.defineProperty : function defineProperty(O, P, Attributes) {
+exports.f = __webpack_require__(7) ? Object.defineProperty : function defineProperty(O, P, Attributes) {
   anObject(O);
   P = toPrimitive(P, true);
   anObject(Attributes);
@@ -523,21 +523,21 @@ exports.f = __webpack_require__(8) ? Object.defineProperty : function defineProp
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
-
-module.exports = function (it) {
-  return typeof it === 'object' ? it !== null : typeof it === 'function';
-};
-
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // Thank's IE8 for his funny defineProperty
 module.exports = !__webpack_require__(13)(function () {
   return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
 });
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
+
+module.exports = function (it) {
+  return typeof it === 'object' ? it !== null : typeof it === 'function';
+};
 
 
 /***/ }),
@@ -551,8 +551,8 @@ module.exports = require("react");
 /***/ (function(module, exports, __webpack_require__) {
 
 var dP = __webpack_require__(6);
-var createDesc = __webpack_require__(19);
-module.exports = __webpack_require__(8) ? function (object, key, value) {
+var createDesc = __webpack_require__(20);
+module.exports = __webpack_require__(7) ? function (object, key, value) {
   return dP.f(object, key, createDesc(1, value));
 } : function (object, key, value) {
   object[key] = value;
@@ -630,6 +630,17 @@ module.exports = function (it) {
 
 /***/ }),
 /* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// 7.1.13 ToObject(argument)
+var defined = __webpack_require__(29);
+module.exports = function (it) {
+  return Object(defined(it));
+};
+
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var isDate = __webpack_require__(187)
@@ -955,7 +966,7 @@ module.exports = parse
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -979,14 +990,14 @@ __webpack_require__(47)(String, 'String', function (iterated) {
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 module.exports = true;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = function (bitmap, value) {
@@ -1000,7 +1011,7 @@ module.exports = function (bitmap, value) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
@@ -1013,24 +1024,13 @@ module.exports = Object.keys || function keys(O) {
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports) {
 
 var toString = {}.toString;
 
 module.exports = function (it) {
   return toString.call(it).slice(8, -1);
-};
-
-
-/***/ }),
-/* 22 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// 7.1.13 ToObject(argument)
-var defined = __webpack_require__(29);
-module.exports = function (it) {
-  return Object(defined(it));
 };
 
 
@@ -1127,7 +1127,7 @@ module.exports = function (it) {
 /* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 var document = __webpack_require__(1).document;
 // typeof document.createElement is 'object' in old IE
 var is = isObject(document) && isObject(document.createElement);
@@ -1141,7 +1141,7 @@ module.exports = function (it) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.1.1 ToPrimitive(input [, PreferredType])
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
 // and the second argument - flag - preferred type is a string
 module.exports = function (it, S) {
@@ -1237,8 +1237,8 @@ var store = global[SHARED] || (global[SHARED] = {});
   return store[key] || (store[key] = value !== undefined ? value : {});
 })('versions', []).push({
   version: core.version,
-  mode: __webpack_require__(18) ? 'pure' : 'global',
-  copyright: '© 2018 Denis Pushkarev (zloirock.ru)'
+  mode: __webpack_require__(19) ? 'pure' : 'global',
+  copyright: '© 2019 Denis Pushkarev (zloirock.ru)'
 });
 
 
@@ -1257,7 +1257,7 @@ module.exports = (
 /***/ (function(module, exports, __webpack_require__) {
 
 // getting tag from 19.1.3.6 Object.prototype.toString()
-var cof = __webpack_require__(21);
+var cof = __webpack_require__(22);
 var TAG = __webpack_require__(2)('toStringTag');
 // ES3 wrong here
 var ARG = cof(function () { return arguments; }()) == 'Arguments';
@@ -1340,7 +1340,7 @@ exports.f = __webpack_require__(2);
 
 var global = __webpack_require__(1);
 var core = __webpack_require__(0);
-var LIBRARY = __webpack_require__(18);
+var LIBRARY = __webpack_require__(19);
 var wksExt = __webpack_require__(41);
 var defineProperty = __webpack_require__(6).f;
 module.exports = function (name) {
@@ -1717,7 +1717,7 @@ module.exports = defaults;
 
 "use strict";
 
-var LIBRARY = __webpack_require__(18);
+var LIBRARY = __webpack_require__(19);
 var $export = __webpack_require__(4);
 var redefine = __webpack_require__(49);
 var hide = __webpack_require__(10);
@@ -1791,7 +1791,7 @@ module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = !__webpack_require__(8) && !__webpack_require__(13)(function () {
+module.exports = !__webpack_require__(7) && !__webpack_require__(13)(function () {
   return Object.defineProperty(__webpack_require__(30)('div'), 'a', { get: function () { return 7; } }).a != 7;
 });
 
@@ -1831,7 +1831,7 @@ module.exports = function (object, names) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
-var cof = __webpack_require__(21);
+var cof = __webpack_require__(22);
 // eslint-disable-next-line no-prototype-builtins
 module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
   return cof(it) == 'String' ? it.split('') : Object(it);
@@ -1852,7 +1852,7 @@ module.exports = document && document.documentElement;
 
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 var has = __webpack_require__(11);
-var toObject = __webpack_require__(22);
+var toObject = __webpack_require__(16);
 var IE_PROTO = __webpack_require__(34)('IE_PROTO');
 var ObjectProto = Object.prototype;
 
@@ -1959,7 +1959,7 @@ if (!setTask || !clearTask) {
     delete queue[id];
   };
   // Node.js 0.8-
-  if (__webpack_require__(21)(process) == 'process') {
+  if (__webpack_require__(22)(process) == 'process') {
     defer = function (id) {
       process.nextTick(ctx(run, id, 1));
     };
@@ -2020,7 +2020,7 @@ module.exports = function (exec) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var anObject = __webpack_require__(5);
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 var newPromiseCapability = __webpack_require__(39);
 
 module.exports = function (C, x) {
@@ -2199,14 +2199,14 @@ exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var pIE = __webpack_require__(27);
-var createDesc = __webpack_require__(19);
+var createDesc = __webpack_require__(20);
 var toIObject = __webpack_require__(15);
 var toPrimitive = __webpack_require__(31);
 var has = __webpack_require__(11);
 var IE8_DOM_DEFINE = __webpack_require__(48);
 var gOPD = Object.getOwnPropertyDescriptor;
 
-exports.f = __webpack_require__(8) ? gOPD : function getOwnPropertyDescriptor(O, P) {
+exports.f = __webpack_require__(7) ? gOPD : function getOwnPropertyDescriptor(O, P) {
   O = toIObject(O);
   P = toPrimitive(P, true);
   if (IE8_DOM_DEFINE) try {
@@ -2653,11 +2653,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 exports.default = function (_ref) {
   var src = _ref.src,
-      className = _ref.className;
+      className = _ref.className,
+      alt = _ref.alt;
   return _react2.default.createElement(
-    "div",
-    { className: "gt-avatar " + className },
-    _react2.default.createElement("img", { src: src, alt: "\u5934\u50CF" })
+    'div',
+    { className: 'gt-avatar ' + className },
+    _react2.default.createElement('img', { src: src, alt: '@' + alt })
   );
 };
 
@@ -2815,21 +2816,20 @@ var GitalkComponent = function (_Component) {
 
     _this.getCommentsV3 = function (issue) {
       var _this$options = _this.options,
-          clientID = _this$options.clientID,
-          clientSecret = _this$options.clientSecret,
-          perPage = _this$options.perPage;
+          perPage = _this$options.perPage,
+          accessToken = _this$options.accessToken;
       var page = _this.state.page;
 
+      var token = _this.accessToken || accessToken;
       return _this.getIssue().then(function (issue) {
         if (!issue) return;
 
         return _util.axiosGithub.get(issue.comments_url, {
           headers: {
-            Accept: 'application/vnd.github.v3.full+json'
+            Accept: 'application/vnd.github.v3.full+json',
+            Authorization: token ? 'token ' + token : ''
           },
           params: {
-            client_id: clientID,
-            client_secret: clientSecret,
             per_page: perPage,
             page: page
           }
@@ -3151,16 +3151,16 @@ var GitalkComponent = function (_Component) {
           owner = _options.owner,
           repo = _options.repo,
           number = _options.number,
-          clientID = _options.clientID,
-          clientSecret = _options.clientSecret;
+          accessToken = _options.accessToken;
 
       var getUrl = '/repos/' + owner + '/' + repo + '/issues/' + number;
-
+      var token = this.accessToken || accessToken;
       return new _promise2.default(function (resolve, reject) {
         _util.axiosGithub.get(getUrl, {
+          headers: {
+            Authorization: token ? 'token ' + token : ''
+          },
           params: {
-            client_id: clientID,
-            client_secret: clientSecret,
             t: Date.now()
           }
         }).then(function (res) {
@@ -3189,14 +3189,14 @@ var GitalkComponent = function (_Component) {
           repo = _options2.repo,
           id = _options2.id,
           labels = _options2.labels,
-          clientID = _options2.clientID,
-          clientSecret = _options2.clientSecret;
+          accessToken = _options2.accessToken;
 
-
+      var token = this.accessToken || accessToken;
       return _util.axiosGithub.get('/repos/' + owner + '/' + repo + '/issues', {
+        headers: {
+          Authorization: token ? 'token ' + token : ''
+        },
         params: {
-          client_id: clientID,
-          client_secret: clientSecret,
           labels: labels.concat(id).join(','),
           t: Date.now()
         }
@@ -3472,7 +3472,7 @@ var GitalkComponent = function (_Component) {
       return _react2.default.createElement(
         'div',
         { className: 'gt-header', key: 'header' },
-        user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url }) : _react2.default.createElement(
+        user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url, alt: user.login }) : _react2.default.createElement(
           'a',
           { className: 'gt-avatar-github', onMouseDown: this.handleLogin },
           _react2.default.createElement(_svg2.default, { className: 'gt-ico-github', name: 'github' })
@@ -3729,7 +3729,7 @@ module.exports = { "default": __webpack_require__(80), __esModule: true };
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(46);
-__webpack_require__(17);
+__webpack_require__(18);
 __webpack_require__(26);
 __webpack_require__(89);
 __webpack_require__(97);
@@ -3767,7 +3767,7 @@ module.exports = function (TO_STRING) {
 "use strict";
 
 var create = __webpack_require__(32);
-var descriptor = __webpack_require__(19);
+var descriptor = __webpack_require__(20);
 var setToStringTag = __webpack_require__(25);
 var IteratorPrototype = {};
 
@@ -3786,9 +3786,9 @@ module.exports = function (Constructor, NAME, next) {
 
 var dP = __webpack_require__(6);
 var anObject = __webpack_require__(5);
-var getKeys = __webpack_require__(20);
+var getKeys = __webpack_require__(21);
 
-module.exports = __webpack_require__(8) ? Object.defineProperties : function defineProperties(O, Properties) {
+module.exports = __webpack_require__(7) ? Object.defineProperties : function defineProperties(O, Properties) {
   anObject(O);
   var keys = getKeys(Properties);
   var length = keys.length;
@@ -3904,12 +3904,12 @@ module.exports = function (done, value) {
 
 "use strict";
 
-var LIBRARY = __webpack_require__(18);
+var LIBRARY = __webpack_require__(19);
 var global = __webpack_require__(1);
 var ctx = __webpack_require__(12);
 var classof = __webpack_require__(37);
 var $export = __webpack_require__(4);
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 var aFunction = __webpack_require__(23);
 var anInstance = __webpack_require__(90);
 var forOf = __webpack_require__(91);
@@ -4264,7 +4264,7 @@ var macrotask = __webpack_require__(57).set;
 var Observer = global.MutationObserver || global.WebKitMutationObserver;
 var process = global.process;
 var Promise = global.Promise;
-var isNode = __webpack_require__(21)(process) == 'process';
+var isNode = __webpack_require__(22)(process) == 'process';
 
 module.exports = function () {
   var head, last, notify;
@@ -4362,7 +4362,7 @@ module.exports = function (target, src, safe) {
 var global = __webpack_require__(1);
 var core = __webpack_require__(0);
 var dP = __webpack_require__(6);
-var DESCRIPTORS = __webpack_require__(8);
+var DESCRIPTORS = __webpack_require__(7);
 var SPECIES = __webpack_require__(2)('species');
 
 module.exports = function (KEY) {
@@ -4451,10 +4451,11 @@ $export($export.S + $export.F, 'Object', { assign: __webpack_require__(102) });
 "use strict";
 
 // 19.1.2.1 Object.assign(target, source, ...)
-var getKeys = __webpack_require__(20);
+var DESCRIPTORS = __webpack_require__(7);
+var getKeys = __webpack_require__(21);
 var gOPS = __webpack_require__(40);
 var pIE = __webpack_require__(27);
-var toObject = __webpack_require__(22);
+var toObject = __webpack_require__(16);
 var IObject = __webpack_require__(51);
 var $assign = Object.assign;
 
@@ -4480,7 +4481,10 @@ module.exports = !$assign || __webpack_require__(13)(function () {
     var length = keys.length;
     var j = 0;
     var key;
-    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+    while (length > j) {
+      key = keys[j++];
+      if (!DESCRIPTORS || isEnum.call(S, key)) T[key] = S[key];
+    }
   } return T;
 } : $assign;
 
@@ -4498,7 +4502,7 @@ module.exports = __webpack_require__(0).Object.getPrototypeOf;
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.9 Object.getPrototypeOf(O)
-var toObject = __webpack_require__(22);
+var toObject = __webpack_require__(16);
 var $getPrototypeOf = __webpack_require__(53);
 
 __webpack_require__(62)('getPrototypeOf', function () {
@@ -4531,7 +4535,7 @@ module.exports = function defineProperty(it, key, desc) {
 
 var $export = __webpack_require__(4);
 // 19.1.2.4 / 15.2.3.6 Object.defineProperty(O, P, Attributes)
-$export($export.S + $export.F * !__webpack_require__(8), 'Object', { defineProperty: __webpack_require__(6).f });
+$export($export.S + $export.F * !__webpack_require__(7), 'Object', { defineProperty: __webpack_require__(6).f });
 
 
 /***/ }),
@@ -4544,7 +4548,7 @@ module.exports = { "default": __webpack_require__(109), __esModule: true };
 /* 109 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(17);
+__webpack_require__(18);
 __webpack_require__(26);
 module.exports = __webpack_require__(41).f('iterator');
 
@@ -4575,7 +4579,7 @@ module.exports = __webpack_require__(0).Symbol;
 // ECMAScript 6 symbols shim
 var global = __webpack_require__(1);
 var has = __webpack_require__(11);
-var DESCRIPTORS = __webpack_require__(8);
+var DESCRIPTORS = __webpack_require__(7);
 var $export = __webpack_require__(4);
 var redefine = __webpack_require__(49);
 var META = __webpack_require__(113).KEY;
@@ -4589,15 +4593,17 @@ var wksDefine = __webpack_require__(42);
 var enumKeys = __webpack_require__(114);
 var isArray = __webpack_require__(115);
 var anObject = __webpack_require__(5);
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
+var toObject = __webpack_require__(16);
 var toIObject = __webpack_require__(15);
 var toPrimitive = __webpack_require__(31);
-var createDesc = __webpack_require__(19);
+var createDesc = __webpack_require__(20);
 var _create = __webpack_require__(32);
 var gOPNExt = __webpack_require__(116);
 var $GOPD = __webpack_require__(68);
+var $GOPS = __webpack_require__(40);
 var $DP = __webpack_require__(6);
-var $keys = __webpack_require__(20);
+var $keys = __webpack_require__(21);
 var gOPD = $GOPD.f;
 var dP = $DP.f;
 var gOPN = gOPNExt.f;
@@ -4612,7 +4618,7 @@ var SymbolRegistry = shared('symbol-registry');
 var AllSymbols = shared('symbols');
 var OPSymbols = shared('op-symbols');
 var ObjectProto = Object[PROTOTYPE];
-var USE_NATIVE = typeof $Symbol == 'function';
+var USE_NATIVE = typeof $Symbol == 'function' && !!$GOPS.f;
 var QObject = global.QObject;
 // Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
 var setter = !QObject || !QObject[PROTOTYPE] || !QObject[PROTOTYPE].findChild;
@@ -4722,9 +4728,9 @@ if (!USE_NATIVE) {
   $DP.f = $defineProperty;
   __webpack_require__(67).f = gOPNExt.f = $getOwnPropertyNames;
   __webpack_require__(27).f = $propertyIsEnumerable;
-  __webpack_require__(40).f = $getOwnPropertySymbols;
+  $GOPS.f = $getOwnPropertySymbols;
 
-  if (DESCRIPTORS && !__webpack_require__(18)) {
+  if (DESCRIPTORS && !__webpack_require__(19)) {
     redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
   }
 
@@ -4773,6 +4779,16 @@ $export($export.S + $export.F * !USE_NATIVE, 'Object', {
   getOwnPropertySymbols: $getOwnPropertySymbols
 });
 
+// Chrome 38 and 39 `Object.getOwnPropertySymbols` fails on primitives
+// https://bugs.chromium.org/p/v8/issues/detail?id=3443
+var FAILS_ON_PRIMITIVES = $fails(function () { $GOPS.f(1); });
+
+$export($export.S + $export.F * FAILS_ON_PRIMITIVES, 'Object', {
+  getOwnPropertySymbols: function getOwnPropertySymbols(it) {
+    return $GOPS.f(toObject(it));
+  }
+});
+
 // 24.3.2 JSON.stringify(value [, replacer [, space]])
 $JSON && $export($export.S + $export.F * (!USE_NATIVE || $fails(function () {
   var S = $Symbol();
@@ -4812,7 +4828,7 @@ setToStringTag(global.JSON, 'JSON', true);
 /***/ (function(module, exports, __webpack_require__) {
 
 var META = __webpack_require__(24)('meta');
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 var has = __webpack_require__(11);
 var setDesc = __webpack_require__(6).f;
 var id = 0;
@@ -4871,7 +4887,7 @@ var meta = module.exports = {
 /***/ (function(module, exports, __webpack_require__) {
 
 // all enumerable object keys, includes symbols
-var getKeys = __webpack_require__(20);
+var getKeys = __webpack_require__(21);
 var gOPS = __webpack_require__(40);
 var pIE = __webpack_require__(27);
 module.exports = function (it) {
@@ -4892,7 +4908,7 @@ module.exports = function (it) {
 /***/ (function(module, exports, __webpack_require__) {
 
 // 7.2.2 IsArray(argument)
-var cof = __webpack_require__(21);
+var cof = __webpack_require__(22);
 module.exports = Array.isArray || function isArray(arg) {
   return cof(arg) == 'Array';
 };
@@ -4966,7 +4982,7 @@ $export($export.S, 'Object', { setPrototypeOf: __webpack_require__(122).set });
 
 // Works with __proto__ only. Old v8 can't work with null proto objects.
 /* eslint-disable no-proto */
-var isObject = __webpack_require__(7);
+var isObject = __webpack_require__(8);
 var anObject = __webpack_require__(5);
 var check = function (O, proto) {
   anObject(O);
@@ -7159,7 +7175,7 @@ module.exports = {"init":"Gitalk 載入中…","no-found-related":"未找到相�
 /* 139 */
 /***/ (function(module, exports) {
 
-module.exports = {"init":"Gitalking ...","no-found-related":"Related %{link} not found","please-contact":"Please contact %{user} to initialize the comment","init-issue":"Init Issue","leave-a-comment":"Leave a comment","preview":"Preview","edit":"Edit","comment":"Comment","support-markdown":"Markdown is supported","login-with-github":"Login with GitHub","first-comment-person":"Be the first guy leaving a comment!","commented":"commented","load-more":"Load more","counts":"%{counts} comment |||| %{counts} comments","sort-asc":"Sort by Oldest","sort-desc":"Sort by Latest","logout":"Logout","anonymous":"Anonymous"}
+module.exports = {"init":"Gitalking ...","no-found-related":"Related %{link} not found","please-contact":"Please contact %{user} to initialize the comment","init-issue":"Init Issue","leave-a-comment":"Leave a comment","preview":"Preview","edit":"Edit","comment":"Comment","support-markdown":"Markdown is supported","login-with-github":"Login with GitHub","first-comment-person":"Be the first person to leave a comment!","commented":"commented","load-more":"Load more","counts":"%{counts} comment |||| %{counts} comments","sort-asc":"Sort by Oldest","sort-desc":"Sort by Latest","logout":"Logout","anonymous":"Anonymous"}
 
 /***/ }),
 /* 140 */
@@ -7204,8 +7220,8 @@ module.exports = __webpack_require__(0).Object.keys;
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.14 Object.keys(O)
-var toObject = __webpack_require__(22);
-var $keys = __webpack_require__(20);
+var toObject = __webpack_require__(16);
+var $keys = __webpack_require__(21);
 
 __webpack_require__(62)('keys', function () {
   return function keys(it) {
@@ -7282,7 +7298,7 @@ module.exports = { "default": __webpack_require__(149), __esModule: true };
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(26);
-__webpack_require__(17);
+__webpack_require__(18);
 module.exports = __webpack_require__(150);
 
 
@@ -7313,7 +7329,7 @@ module.exports = { "default": __webpack_require__(152), __esModule: true };
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(26);
-__webpack_require__(17);
+__webpack_require__(18);
 module.exports = __webpack_require__(153);
 
 
@@ -8407,7 +8423,8 @@ var Comment = function (_Component) {
         { className: 'gt-comment ' + (isAdmin ? 'gt-comment-admin' : '') },
         _react2.default.createElement(_avatar2.default, {
           className: 'gt-comment-avatar',
-          src: comment.user && comment.user.avatar_url
+          src: comment.user && comment.user.avatar_url,
+          alt: comment.user && comment.user.login
         }),
         _react2.default.createElement(
           'div',
@@ -8415,6 +8432,7 @@ var Comment = function (_Component) {
           _react2.default.createElement(
             'div',
             { className: 'gt-comment-header' },
+            _react2.default.createElement('div', { className: 'gt-comment-block-' + (user ? '2' : '1') }),
             _react2.default.createElement(
               'a',
               {
@@ -8440,7 +8458,7 @@ var Comment = function (_Component) {
             ),
             reactions && _react2.default.createElement(
               'a',
-              { className: 'gt-comment-like', onClick: likeCallback },
+              { className: 'gt-comment-like', title: 'Like', onClick: likeCallback },
               reactions.viewerHasReacted ? _react2.default.createElement(_svg2.default, {
                 className: 'gt-ico-heart',
                 name: 'heart_on',
@@ -8456,12 +8474,13 @@ var Comment = function (_Component) {
               {
                 href: comment.html_url,
                 className: 'gt-comment-edit',
+                title: 'Edit',
                 target: '_blank'
               },
               _react2.default.createElement(_svg2.default, { className: 'gt-ico-edit', name: 'edit' })
             ) : _react2.default.createElement(
               'a',
-              { className: 'gt-comment-reply', onClick: replyCallback },
+              { className: 'gt-comment-reply', title: 'Reply', onClick: replyCallback },
               _react2.default.createElement(_svg2.default, { className: 'gt-ico-reply', name: 'reply' })
             )
           ),
@@ -8647,7 +8666,7 @@ module.exports = distanceInWordsToNow
 /***/ (function(module, exports, __webpack_require__) {
 
 var compareDesc = __webpack_require__(186)
-var parse = __webpack_require__(16)
+var parse = __webpack_require__(17)
 var differenceInSeconds = __webpack_require__(188)
 var differenceInMonths = __webpack_require__(190)
 var enLocale = __webpack_require__(193)
@@ -8855,7 +8874,7 @@ module.exports = distanceInWords
 /* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parse = __webpack_require__(16)
+var parse = __webpack_require__(17)
 
 /**
  * @category Common Helpers
@@ -8972,7 +8991,7 @@ module.exports = differenceInSeconds
 /* 189 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parse = __webpack_require__(16)
+var parse = __webpack_require__(17)
 
 /**
  * @category Millisecond Helpers
@@ -9007,7 +9026,7 @@ module.exports = differenceInMilliseconds
 /* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parse = __webpack_require__(16)
+var parse = __webpack_require__(17)
 var differenceInCalendarMonths = __webpack_require__(191)
 var compareAsc = __webpack_require__(192)
 
@@ -9051,7 +9070,7 @@ module.exports = differenceInMonths
 /* 191 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parse = __webpack_require__(16)
+var parse = __webpack_require__(17)
 
 /**
  * @category Month Helpers
@@ -9089,7 +9108,7 @@ module.exports = differenceInCalendarMonths
 /* 192 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var parse = __webpack_require__(16)
+var parse = __webpack_require__(17)
 
 /**
  * @category Common Helpers
@@ -10205,7 +10224,7 @@ module.exports = { "default": __webpack_require__(207), __esModule: true };
 /* 207 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(17);
+__webpack_require__(18);
 __webpack_require__(208);
 module.exports = __webpack_require__(0).Array.from;
 
@@ -10218,7 +10237,7 @@ module.exports = __webpack_require__(0).Array.from;
 
 var ctx = __webpack_require__(12);
 var $export = __webpack_require__(4);
-var toObject = __webpack_require__(22);
+var toObject = __webpack_require__(16);
 var call = __webpack_require__(54);
 var isArrayIter = __webpack_require__(55);
 var toLength = __webpack_require__(33);
@@ -10261,7 +10280,7 @@ $export($export.S + $export.F * !__webpack_require__(60)(function (iter) { Array
 "use strict";
 
 var $defineProperty = __webpack_require__(6);
-var createDesc = __webpack_require__(19);
+var createDesc = __webpack_require__(20);
 
 module.exports = function (object, index, value) {
   if (index in object) $defineProperty.f(object, index, createDesc(0, value));

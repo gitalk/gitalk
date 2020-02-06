@@ -56,6 +56,7 @@ import Gitalk from 'gitalk'
 var gitalk = new Gitalk({
   clientID: 'GitHub Application Client ID',
   clientSecret: 'GitHub Application Client Secret',
+  accessToken: 'Github Personal Access Token',
   repo: 'GitHub repo',
   owner: 'GitHub repo owner',
   admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
@@ -89,6 +90,10 @@ gitalk.render('gitalk-container')
 - **admin** `Array` 
 
   **必须**. GitHub repository 的所有者和合作者 (对这个 repository 有写权限的用户)。
+
+- **accessToken** `String`
+
+  **可选**. Github Personal Access Token. 配置 [accessToken](https://github.com/settings/tokens) 可以获得更高的请求限制。
 
 - **id** `String` 
   

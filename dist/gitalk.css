@@ -1145,6 +1145,16 @@
   font-size: 0.875em;
   position: relative;
 }
+.gt-container .gt-comment-block-1 {
+  float: right;
+  height: 1.375em;
+  width: 2em;
+}
+.gt-container .gt-comment-block-2 {
+  float: right;
+  height: 1.375em;
+  width: 4em;
+}
 .gt-container .gt-comment-username {
   font-weight: 500;
   color: #6190e8;
