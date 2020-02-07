@@ -189,13 +189,14 @@ class GitalkComponent extends Component {
     })
   }
   getIssueById () {
-    const { owner, repo, number, accessToken } = this.options
+    const { owner, repo, number, clientID, clientSecret } = this.options
     const getUrl = `/repos/${owner}/${repo}/issues/${number}`
-    const token = this.accessToken || accessToken
+
     return new Promise((resolve, reject) => {
       axiosGithub.get(getUrl, {
-        headers: {
-          Authorization: token ? `token ${token}` : ''
+        auth: {
+          username: clientID,
+          password: clientSecret
         },
         params: {
           t: Date.now()
@@ -219,11 +220,12 @@ class GitalkComponent extends Component {
     })
   }
   getIssueByLabels () {
-    const { owner, repo, id, labels, accessToken } = this.options
-    const token = this.accessToken || accessToken
+    const { owner, repo, id, labels, clientID, clientSecret } = this.options
+
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
-      headers: {
-        Authorization: token ? `token ${token}` : ''
+      auth: {
+        username: clientID,
+        password: clientSecret
       },
       params: {
         labels: labels.concat(id).join(','),
@@ -282,17 +284,20 @@ class GitalkComponent extends Component {
   }
   // Get comments via v3 api, don't require login, but sorting feature is disable
   getCommentsV3 = issue => {
-    const { perPage, accessToken } = this.options
+    const { clientID, clientSecret, perPage } = this.options
     const { page } = this.state
-    const token = this.accessToken || accessToken
+
     return this.getIssue()
       .then(issue => {
         if (!issue) return
 
         return axiosGithub.get(issue.comments_url, {
           headers: {
-            Accept: 'application/vnd.github.v3.full+json',
-            Authorization: token ? `token ${token}` : ''
+            Accept: 'application/vnd.github.v3.full+json'
+          },
+          auth: {
+            username: clientID,
+            password: clientSecret
           },
           params: {
             per_page: perPage,
