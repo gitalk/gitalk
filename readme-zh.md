@@ -1,7 +1,13 @@
 
 # Gitalk
 
-[![NPM][npm-version-image]][npm-version-url] [![CDNJS][cdnjs-version-image]][cdnjs-version-url] [![david-dm][david-dm-image]][david-dm-url] [![travis][travis-image]][travis-url] [![coveralls][coveralls-image]][coveralls-url] [![gzip][gzip-size]][gzip-url]
+[![NPM][npm-version-image]][npm-version-url] 
+[![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
+[![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
+[![david-dm][david-dm-image]][david-dm-url] 
+[![travis][travis-image]][travis-url] 
+[![coveralls][coveralls-image]][coveralls-url] 
+[![gzip-size][gzip-size]][gzip-url]
 
 Gitalk 是一個基於 GitHub Issue 和 Preact 開發的評論插件。
 
@@ -212,5 +218,5 @@ MIT
 [travis-url]: https://travis-ci.org/gitalk/gitalk
 [coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/master.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/github/gitalk/gitalk
-[gzip-size]: http://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
+[gzip-size]: https://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
 [gzip-url]: https://unpkg.com/gitalk/dist/gitalk.min.js
