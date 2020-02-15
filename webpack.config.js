@@ -87,7 +87,7 @@ module.exports = {
   devtool: isDev ? 'cheap-module-source-map' : 'source-map',
 
   devServer: {
-    port: process.env.PORT || 8000,
+    port: process.env.PORT || 8010,
     host: 'localhost',
     // publicPath: '/dist',
     contentBase: './dev',
