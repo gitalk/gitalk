@@ -502,29 +502,28 @@ class GitalkComponent extends Component {
     })
   }
   handleCommentCreate = e => {
-    if (this.state.isCreating) {
-      e && e.preventDefault()
-      return
-    }
-
     if (!this.state.comment.length) {
       e && e.preventDefault()
       this.commentEL.focus()
       return
     }
-    this.setState({ isCreating: true })
-    this.createComment()
-      .then(() => this.setState({
-        isCreating: false,
-        isOccurError: false
-      }))
-      .catch(err => {
-        this.setState({
+    this.setState(state => {
+      if (state.isCreating) return
+
+      this.createComment()
+        .then(() => this.setState({
           isCreating: false,
-          isOccurError: true,
-          errorMsg: formatErrorMsg(err)
+          isOccurError: false
+        }))
+        .catch(err => {
+          this.setState({
+            isCreating: false,
+            isOccurError: true,
+            errorMsg: formatErrorMsg(err)
+          })
         })
-      })
+      return { isCreating: true }
+    })
   }
   handleCommentPreview = e => {
     this.setState({
