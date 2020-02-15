@@ -74,6 +74,24 @@ gitalk.render('gitalk-container')
 
 需要 **GitHub Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
 
+### 在React使用
+
+使用以下代码引入Gitalk组件
+
+```jsx
+import GitalkComponent from "gitalk/dist/gitalk-component";
+```
+
+按以下方式在React中使用Gitalk组件
+
+```jsx
+<GitalkComponent options={{
+  clientID: "...",
+  // ...
+  // 设置项
+}} />
+```
+
 ## 设置
 
 - **clientID** `String` 
@@ -188,6 +206,10 @@ gitalk.render('gitalk-container')
 - **render(String/HTMLElement)**
 
   初始化渲染并挂载插件。
+
+## TypeScript
+
+已经包括了配置项和Gitalk类的类型定义，不包括React组件的类型定义。
 
 ## 贡献
 
