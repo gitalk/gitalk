@@ -158,7 +158,7 @@ class GitalkComponent extends Component {
     this._accessToken = token
   }
   get loginLink () {
-    const githubOauthUrl = 'http://github.com/login/oauth/authorize'
+    const githubOauthUrl = 'https://github.com/login/oauth/authorize'
     const { clientID } = this.options
     const query = {
       client_id: clientID,
@@ -194,9 +194,11 @@ class GitalkComponent extends Component {
 
     return new Promise((resolve, reject) => {
       axiosGithub.get(getUrl, {
+        auth: {
+          username: clientID,
+          password: clientSecret
+        },
         params: {
-          client_id: clientID,
-          client_secret: clientSecret,
           t: Date.now()
         }
       })
@@ -221,9 +223,11 @@ class GitalkComponent extends Component {
     const { owner, repo, id, labels, clientID, clientSecret } = this.options
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+      auth: {
+        username: clientID,
+        password: clientSecret
+      },
       params: {
-        client_id: clientID,
-        client_secret: clientSecret,
         labels: labels.concat(id).join(','),
         t: Date.now()
       }
@@ -282,6 +286,7 @@ class GitalkComponent extends Component {
   getCommentsV3 = issue => {
     const { clientID, clientSecret, perPage } = this.options
     const { page } = this.state
+
     return this.getIssue()
       .then(issue => {
         if (!issue) return
@@ -290,9 +295,11 @@ class GitalkComponent extends Component {
           headers: {
             Accept: 'application/vnd.github.v3.full+json'
           },
+          auth: {
+            username: clientID,
+            password: clientSecret
+          },
           params: {
-            client_id: clientID,
-            client_secret: clientSecret,
             per_page: perPage,
             page
           }
