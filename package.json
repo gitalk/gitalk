@@ -16,7 +16,8 @@
     "build": "rimraf ./dist && cross-env NODE_ENV=production webpack --hide-modules && cross-env NODE_ENV=production webpack --config webpack.config.comp.js && cross-env NODE_ENV=production webpack --config webpack.config.min.js",
     "lint": "eslint src",
     "coverage": "jest --coverage",
-    "test": "jest"
+    "test": "jest",
+    "bump": "standard-version -a"
   },
   "author": "Liucw",
   "license": "MIT",
@@ -46,6 +47,7 @@
     "react-test-renderer": "15.6.1",
     "rimraf": "2.6.1",
     "sinon": "2.3.7",
+    "standard-version": "^7.1.0",
     "style-loader": "0.18.2",
     "stylus": "^0.54.5",
     "stylus-loader": "^3.0.1",
@@ -82,6 +84,13 @@
     ],
     "globals": {
       "VERSION": "1.0.0-test"
+    }
+  },
+  "standard-version": {
+    "releaseCommitMessageFormat": "chore(release): v{{currentTag}} :rocket:",
+    "scripts": {
+      "prerelease": "npm test",
+      "precommit": "npm run-script build > /dev/null && git add ./dist"
     }
   }
 }
