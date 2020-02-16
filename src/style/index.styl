@@ -420,9 +420,28 @@ $gt-size-avatar-mobi := em(32px)
       right: 0
     &-body
       color: $gt-color-comment-txt !important
+      .email-hidden-toggle a
+        display: inline-block;
+        height: 12px;
+        padding: 0 9px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 6px;
+        color: #444d56;
+        text-decoration: none;
+        vertical-align: middle;
+        background: #dfe2e5;
+        border-radius: 1px;
+        &:hover
+          background-color: #c6cbd1;
       .email-hidden-reply
         display: none;
         white-space: pre-wrap
+        .email-signature-reply
+          padding: 0 15px;
+          margin: 15px 0;
+          color: #586069;
+          border-left: 4px solid #dfe2e5;
       .email-hidden-reply.expanded
         display: block
     &-admin
