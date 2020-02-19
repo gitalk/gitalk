@@ -42,6 +42,7 @@ export default class Comment extends Component {
       }, true)
     }
   }
+
   handleImageErrored(obj) {
 	obj.target.src="https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
   }
