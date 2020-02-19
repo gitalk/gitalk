@@ -582,8 +582,7 @@ class GitalkComponent extends Component {
       this.handleCommentCreate()
     }
   }
- 
-  
+
   initing () {
     return <div className="gt-initing">
       <i className="gt-loader"/>
