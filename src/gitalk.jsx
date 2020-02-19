@@ -43,7 +43,7 @@ class GitalkComponent extends Component {
     isPopupVisible: false,
     isInputFocused: false,
     isPreview: false,
-
+	
     isOccurError: false,
     errorMsg: '',
   }
@@ -582,7 +582,8 @@ class GitalkComponent extends Component {
       this.handleCommentCreate()
     }
   }
-
+ 
+  
   initing () {
     return <div className="gt-initing">
       <i className="gt-loader"/>
@@ -607,12 +608,15 @@ class GitalkComponent extends Component {
       </div>
     )
   }
+   handleImageErrored(obj) {
+	obj.target.src="https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
+  }
   header () {
-    const { user, comment, isCreating, previewHtml, isPreview } = this.state
+    const { user, comment, isCreating, previewHtml, isPreview,ImageError } = this.state
     return (
       <div className="gt-header" key="header">
         {user ?
-          <Avatar className="gt-header-avatar" src={user.avatar_url} alt={user.login} /> :
+          <Avatar className="gt-header-avatar" src={user.avatar_url} alt={user.login} onError={this.handleImageErrored.bind(this)} />:
           <a className="gt-avatar-github" onMouseDown={this.handleLogin}>
             <Svg className="gt-ico-github" name="github"/>
           </a>

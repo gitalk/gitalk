@@ -22,5 +22,11 @@ describe('Avatar', function () {
       .find('img').prop('alt')
     ).toEqual(`@${alt}`)
   })
+  it('set props onError', function () {
+    const onError = 'onError'
+    expect(shallow(<Avatar onError={onError} />)
+      .find('img').prop('onError')
+    ).toEqual(onError)
+  })
 })
 
