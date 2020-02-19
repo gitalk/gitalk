@@ -1,0 +1,20 @@
+{
+  "init": "Gitalking ...",
+  "no-found-related": "Link %{link} no encontrado",
+  "please-contact": "Por favor contacta con %{user} para inicializar el comentario",
+  "init-issue": "Iniciar Issue",
+  "leave-a-comment": "Deja un comentario",
+  "preview": "Avance",
+  "edit": "Editar",
+  "comment": "Comentario",
+  "support-markdown": "Markdown es soportado",
+  "login-with-github": "Entrar con GitHub",
+  "first-comment-person": "Sé el primero en dejar un comentario!",
+  "commented": "comentó",
+  "load-more": "Cargar más",
+  "counts": "%{counts} comentario |||| %{counts} comentarios",
+  "sort-asc": "Ordenar por Antiguos",
+  "sort-desc": "Ordenar por Recientes",
+  "logout": "Salir",
+  "anonymous": "Anónimo"
+}

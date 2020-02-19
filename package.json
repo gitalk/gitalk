@@ -1,0 +1,96 @@
+{
+  "name": "gitalk",
+  "version": "1.6.0",
+  "description": "A comment plugin base on GitHub issues",
+  "keywords": [
+    "comment",
+    "plugin",
+    "lib",
+    "GitHub"
+  ],
+  "main": "dist/gitalk.js",
+  "types": "typings/index.d.ts",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --hot --no-info --progress",
+    "build": "rimraf ./dist && cross-env NODE_ENV=production webpack --hide-modules && cross-env NODE_ENV=production webpack --config webpack.config.comp.js && cross-env NODE_ENV=production webpack --config webpack.config.min.js",
+    "lint": "eslint src",
+    "coverage": "jest --coverage",
+    "test": "jest",
+    "bump": "standard-version -a"
+  },
+  "author": "Liucw",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "7.1.2",
+    "babel-core": "6.25.0",
+    "babel-eslint": "7.2.3",
+    "babel-jest": "20.0.3",
+    "babel-loader": "7.1.1",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-preset-es2015": "6.24.1",
+    "babel-preset-react": "6.24.1",
+    "babel-preset-stage-2": "6.24.1",
+    "cross-env": "5.0.1",
+    "css-loader": "0.28.4",
+    "enzyme": "2.9.1",
+    "eslint": "4.19.1",
+    "eslint-config-o2team": "0.1.6",
+    "eslint-plugin-react": "7.1.0",
+    "extract-text-webpack-plugin": "2.1.2",
+    "jest": "20.0.4",
+    "moxios": "0.4.0",
+    "postcss-loader": "2.0.6",
+    "raw-loader": "^0.5.1",
+    "react": "15.6.1",
+    "react-dom": "15.6.1",
+    "react-test-renderer": "15.6.1",
+    "rimraf": "2.6.1",
+    "sinon": "2.3.7",
+    "standard-version": "^7.1.0",
+    "style-loader": "0.18.2",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
+    "url-loader": "0.5.9",
+    "webpack": "3.1.0",
+    "webpack-dev-server": "2.5.1"
+  },
+  "dependencies": {
+    "autosize": "3.0.21",
+    "axios": "0.19.2",
+    "date-fns": "1.28.5",
+    "es6-promise": "4.1.1",
+    "github-markdown-css": "2.8.0",
+    "node-polyglot": "2.2.2",
+    "preact": "8.1.0",
+    "preact-compat": "3.16.0",
+    "react-flip-move": "2.9.14"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "moduleNameMapper": {
+      "\\.(css|less|scss|styl)$": "<rootDir>/src/__mocks__/style.js",
+      "^!!raw-loader": "<rootDir>/src/__mocks__/text.js"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "coveragePathIgnorePatterns": [
+      "src/gitalk.jsx",
+      "src/graphql/getComments.js"
+    ],
+    "globals": {
+      "VERSION": "1.0.0-test"
+    }
+  },
+  "standard-version": {
+    "releaseCommitMessageFormat": "chore(release): v{{currentTag}} :rocket:",
+    "scripts": {
+      "prerelease": "npm test",
+      "precommit": "npm run-script build > /dev/null && git add ./dist"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+*.log
+.DS_Store
+
+.vscode
+
+npm-debug.log
+node_modules
+package-lock.json
+
+dev/config.js
+yarn.lock
+
+coverage
