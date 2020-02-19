@@ -607,8 +607,9 @@ class GitalkComponent extends Component {
       </div>
     )
   }
-   handleImageErrored(obj) {
-	obj.target.src="https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
+
+  handleImageErrored(obj) {
+    obj.target.src="https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
   }
   header () {
     const { user, comment, isCreating, previewHtml, isPreview } = this.state
