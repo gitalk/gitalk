@@ -43,7 +43,7 @@ class GitalkComponent extends Component {
     isPopupVisible: false,
     isInputFocused: false,
     isPreview: false,
-	
+
     isOccurError: false,
     errorMsg: '',
   }
