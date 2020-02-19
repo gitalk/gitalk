@@ -612,7 +612,7 @@ class GitalkComponent extends Component {
 	obj.target.src="https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
   }
   header () {
-    const { user, comment, isCreating, previewHtml, isPreview,ImageError } = this.state
+    const { user, comment, isCreating, previewHtml, isPreview } = this.state
     return (
       <div className="gt-header" key="header">
         {user ?
