@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.2](https://github.com/gitalk/gitalk/compare/v1.6.0...v1.6.2) (2020-02-29)
+
+
+### Bug Fixes
+
+* set default avatar for image load fail ([#357](https://github.com/gitalk/gitalk/issues/357)) ([49e37fd](https://github.com/gitalk/gitalk/commit/49e37fddf6b374ce863f1888d23b0e09a53b3db0))
+
 ### [1.6.1](https://github.com/gitalk/gitalk/compare/v1.6.0...v1.6.1) (2020-02-29)
 
 ## [1.6.0](https://github.com/gitalk/gitalk/compare/v1.5.2...v1.6.0) (2020-02-16)

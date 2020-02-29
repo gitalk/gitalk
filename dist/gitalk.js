@@ -3532,11 +3532,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 exports.default = function (_ref) {
   var src = _ref.src,
       className = _ref.className,
-      alt = _ref.alt;
+      alt = _ref.alt,
+      onError = _ref.onError;
   return _react2.default.createElement(
     'div',
     { className: 'gt-avatar ' + className },
-    _react2.default.createElement('img', { src: src, alt: '@' + alt })
+    _react2.default.createElement('img', { src: src, alt: '@' + alt, onError: onError })
   );
 };
 
@@ -7226,6 +7227,11 @@ var GitalkComponent = function (_Component) {
       );
     }
   }, {
+    key: 'handleImageErrored',
+    value: function handleImageErrored(obj) {
+      obj.target.src = "https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
+    }
+  }, {
     key: 'header',
     value: function header() {
       var _this11 = this;
@@ -7240,7 +7246,7 @@ var GitalkComponent = function (_Component) {
       return _react2.default.createElement(
         'div',
         { className: 'gt-header', key: 'header' },
-        user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url, alt: user.login }) : _react2.default.createElement(
+        user ? _react2.default.createElement(_avatar2.default, { className: 'gt-header-avatar', src: user.avatar_url, alt: user.login, onError: this.handleImageErrored.bind(this) }) : _react2.default.createElement(
           'a',
           { className: 'gt-avatar-github', onMouseDown: this.handleLogin },
           _react2.default.createElement(_svg2.default, { className: 'gt-ico-github', name: 'github' })
@@ -12082,6 +12088,11 @@ var Comment = function (_Component) {
       }
     }
   }, {
+    key: 'handleImageErrored',
+    value: function handleImageErrored(obj) {
+      obj.target.src = "https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _this2 = this;
@@ -12119,7 +12130,8 @@ var Comment = function (_Component) {
         _react2.default.createElement(_avatar2.default, {
           className: 'gt-comment-avatar',
           src: comment.user && comment.user.avatar_url,
-          alt: comment.user && comment.user.login
+          alt: comment.user && comment.user.login,
+          onError: this.handleImageErrored.bind(this)
         }),
         _react2.default.createElement(
           'div',
@@ -13783,7 +13795,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.6.1"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.6.2"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
