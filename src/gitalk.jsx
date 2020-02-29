@@ -617,7 +617,7 @@ class GitalkComponent extends Component {
       <div className="gt-header" key="header">
         {user ?
           <Avatar className="gt-header-avatar" src={user.avatar_url} alt={user.login} onError={this.handleImageErrored.bind(this)} />:
-          <a className="gt-avatar-github" onMouseDown={this.handleLogin}>
+          <a className="gt-avatar-github" onClick={this.handleLogin}>
             <Svg className="gt-ico-github" name="github"/>
           </a>
         }
@@ -643,18 +643,18 @@ class GitalkComponent extends Component {
             {user && <Button
               getRef={this.getRef}
               className="gt-btn-public"
-              onMouseDown={this.handleCommentCreate}
+              onClick={this.handleCommentCreate}
               text={this.i18n.t('comment')}
               isLoading={isCreating}
             />}
 
             <Button
               className="gt-btn-preview"
-              onMouseDown={this.handleCommentPreview}
+              onClick={this.handleCommentPreview}
               text={isPreview ? this.i18n.t('edit') : this.i18n.t('preview')}
               // isLoading={isPreviewing}
             />
-            {!user && <Button className="gt-btn-login" onMouseDown={this.handleLogin} text={this.i18n.t('login-with-github')} />}
+            {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
         </div>
       </div>
@@ -722,7 +722,7 @@ class GitalkComponent extends Component {
             {user ? <Action className={`gt-action-sortdesc${isDesc ? ' is--active' : ''}`} onClick={this.handleSort('last')} text={this.i18n.t('sort-desc')}/> : null }
             {user ?
               <Action className="gt-action-logout" onClick={this.handleLogout} text={this.i18n.t('logout')}/> :
-              <a className="gt-action gt-action-login" onMouseDown={this.handleLogin}>{this.i18n.t('login-with-github')}</a>
+              <a className="gt-action gt-action-login" onClick={this.handleLogin}>{this.i18n.t('login-with-github')}</a>
             }
             <div className="gt-copyright">
               <a className="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>
