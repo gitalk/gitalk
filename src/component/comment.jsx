@@ -43,9 +43,6 @@ export default class Comment extends Component {
     }
   }
 
-  handleImageErrored(obj) {
-    obj.target.src="https://cdn.jsdelivr.net/npm/gitalk@1/src/assets/icon/github.svg";
-  }
   render () {
     const {
       comment,
@@ -81,7 +78,6 @@ export default class Comment extends Component {
           className="gt-comment-avatar"
           src={comment.user && comment.user.avatar_url}
           alt={comment.user && comment.user.login}
-          onError={this.handleImageErrored.bind(this)} 
         />
 
         <div className="gt-comment-content">
