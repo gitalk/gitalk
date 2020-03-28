@@ -50,7 +50,14 @@ import Gitalk from 'gitalk'
 ```
 
 ## Usage
+Firstly, you need choose a public github repository (existed or create a new one) for store comments,
 
+Then create A **GitHub Application** if you don't have one, [Click here to register](https://github.com/settings/applications/new) a new one. 
+**Note:** You must specify the website domain url in the `Authorization callback URL` field.
+
+Lastly, you can choose how to apply to the page as below:
+
+### Method One
 Add a container to your page:
 
 ```html
@@ -63,7 +70,7 @@ Then use the Javascript code below to generate the gitalk plugin:
 const gitalk = new Gitalk({
   clientID: 'GitHub Application Client ID',
   clientSecret: 'GitHub Application Client Secret',
-  repo: 'GitHub repo',
+  repo: 'GitHub repo',      // The repository of store comments,
   owner: 'GitHub repo owner',
   admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
   id: location.pathname,      // Ensure uniqueness and length less than 50
@@ -73,11 +80,7 @@ const gitalk = new Gitalk({
 gitalk.render('gitalk-container')
 ```
 
-A **GitHub Application** is needed for authorization, if you don't have one, [Click here to register](https://github.com/settings/applications/new) a new one.
-
-**Note:** You must specify the website domain url in the `Authorization callback URL` field.
-
-### Use in React
+### Method Two: Use in React
 
 Import the Gitalk with
 
