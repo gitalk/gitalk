@@ -54,7 +54,7 @@ import Gitalk from 'gitalk'
 
 然后需要 **GitHub Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
 
-最后, 您可以选择其中一种方式应用到页面
+最后, 您可以选择如下的其中一种方式应用到页面：
 
 ### 方式1
 
