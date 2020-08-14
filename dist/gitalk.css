@@ -1001,12 +1001,7 @@
   -webkit-box-flex: 1;
       -ms-flex: 1;
           flex: 1;
-  margin-left: 1.25em;
-}
-@media (max-width: 479px) {
-  .gt-container .gt-header-comment {
-    margin-left: 0.875em;
-  }
+  width: 100%;
 }
 .gt-container .gt-header-textarea {
   padding: 0.75em;
