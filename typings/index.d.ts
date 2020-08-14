@@ -163,6 +163,13 @@ declare namespace Gitalk {
          * @default true
          */
         enableHotKey?: boolean;
+
+        /**
+         * github api reverse proxy url
+         *
+         * @default "https://api.github.com"
+         */
+        proxyGithubApi?: string;
     }
 
 }

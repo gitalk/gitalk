@@ -186,6 +186,12 @@ And use the component like
 
   GitHub oauth request reverse proxy for CORS. [Why need this?](https://github.com/isaacs/github/issues/330)
 
+- **proxyGithubApi** `String`
+
+  Default: `https://api.github.com`.
+
+  GitHub api request reverse proxy. May be useful for those who can't access `api.github.com`. 
+
 - **flipMoveOptions** `Object`
 
   Default:

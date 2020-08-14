@@ -181,6 +181,12 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
    GitHub oauth 請求到反向代理，為了支持 CORS。 [為什麼要這樣?](https://github.com/isaacs/github/issues/330)
 
+- **proxyGithubApi** `String`
+
+  Default: `https://api.github.com`.
+
+  Github api請求的反向代理地址. 對於不能訪問 `api.github.com` 的人來說有用。 
+
 - **flipMoveOptions** `Object`
 
   Default:

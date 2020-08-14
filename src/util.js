@@ -29,7 +29,6 @@ export const axiosJSON = axios.create({
 })
 
 export const axiosGithub = axios.create({
-  baseURL: 'https://api.github.com',
   headers: {
     'Accept': 'application/json'
   }

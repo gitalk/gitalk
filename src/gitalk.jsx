@@ -61,6 +61,7 @@ class GitalkComponent extends Component {
       createIssueManually: false,
       distractionFreeMode: false,
       proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
+      proxyGithubApi: "https://api.github.com",
       flipMoveOptions: {
         staggerDelayBy: 150,
         appearAnimation: 'accordionVertical',
@@ -79,6 +80,10 @@ class GitalkComponent extends Component {
 
       updateCountCallback: null
     }, props.options)
+
+
+    // reset axiosGithub baseUrl to reverse proxy url
+    axiosGithub.defaults.baseURL = this.options.proxyGithubApi
 
     this.state.pagerDirection = this.options.pagerDirection
     const storedComment = window.localStorage.getItem(GT_COMMENT)
