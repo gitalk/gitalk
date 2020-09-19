@@ -70,9 +70,9 @@ Then use the Javascript code below to generate the gitalk plugin:
 const gitalk = new Gitalk({
   clientID: 'GitHub Application Client ID',
   clientSecret: 'GitHub Application Client Secret',
-  repo: 'GitHub repo',      // The repository of store comments,
-  owner: 'GitHub repo owner',
-  admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
+  repo: 'GitHub repo',      // The repository of store comments, example: my-example-repo (dont't use URL form, like https://github.com/YourGitHubAccountID/my-example-repo.git)
+  owner: 'GitHub repo owner', // example: 'YourGitHubAccountID'
+  admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'], // Example: ['YourGitHubAccountID']
   id: location.pathname,      // Ensure uniqueness and length less than 50
   distractionFreeMode: false  // Facebook-like distraction free mode
 })
@@ -98,6 +98,47 @@ And use the component like
 }} />
 ```
 
+### For Gatsby powered websites
+
+You need to create a OAuth application as mentioned above. Create one [here](https://github.com/settings/applications/new).
+
+Install the plugin `gatsby-plugin-gitalk` from [here](https://github.com/suziwen/gatsby-plugin-gitalk)
+
+Next, update `gatsby-config.js` and add the plugin.
+
+```
+// gatsby-config.js
+
+module.exports = {
+ ...
+ plugins: [
+   ...
+   {
+     resolve:  'gatsby-plugin-gitalk',
+     options: {
+       // Options
+      }
+    }
+  ]
+}
+```
+
+In your template file, use the component `Gitalk` from `gatsby-plugin-gitalk`, not `GitalkComponent` from `gitalk`.
+
+```jsx
+import Gitalk from 'gatsby-plugin-gitalk';
+
+
+<Gitalk options={{
+  clientID: process.env.GATSBY_GITALK_CLIENT_ID,
+  ...
+  }}
+/>
+```
+
+Also read [this blog post](https://calpa.me/2018/03/10/gitalk-error-validation-failed-442-solution/) if you faced errors due to length of the `id` option.
+
+
 ## Options
 
 - **clientID** `String`
@@ -111,6 +152,8 @@ And use the component like
 - **repo** `String`
 
   **Required**. GitHub repository.
+  
+  **Format** `my-example-repo` (don't use URL form, like `https://github.com/YourGitHubAccountID/my-example-repo.git)`
 
 - **owner** `String`
 
