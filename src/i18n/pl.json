@@ -11,7 +11,7 @@
   "login-with-github": "Zaloguj się poprzez GitHub",
   "first-comment-person": "Skomentuj jako pierwszy!",
   "commented": "skomentowany",
-  "load-more": "Zobacz więcej",
+  "load-more": "Załaduj więcej",
   "counts": "%{counts} komentarz |||| %{counts} komentarze |||| %{counts} komentarzy",
   "sort-asc": "Sortuj od najstarszych",
   "sort-desc": "Sortuj od najnowszych",
