@@ -7,6 +7,7 @@ import buildDistanceInWordsLocaleZHTW from 'date-fns/locale/zh_tw/build_distance
 import buildDistanceInWordsLocaleES from 'date-fns/locale/es/build_distance_in_words_locale/index'
 import buildDistanceInWordsLocaleFR from 'date-fns/locale/fr/build_distance_in_words_locale/index'
 import buildDistanceInWordsLocaleRU from 'date-fns/locale/ru/build_distance_in_words_locale/index'
+import buildDistanceInWordsLocalePL from 'date-fns/locale/pl/build_distance_in_words_locale/index'
 import 'github-markdown-css/github-markdown.css'
 
 const ZHCN = buildDistanceInWordsLocaleZHCN()
@@ -14,6 +15,7 @@ const ZHTW = buildDistanceInWordsLocaleZHTW()
 const ES = buildDistanceInWordsLocaleES()
 const FR = buildDistanceInWordsLocaleFR()
 const RU = buildDistanceInWordsLocaleRU()
+const PL = buildDistanceInWordsLocalePL()
 
 if (typeof window !== `undefined`) {
   window.GT_i18n_distanceInWordsLocaleMap = {
@@ -22,7 +24,8 @@ if (typeof window !== `undefined`) {
     'zh-TW': ZHTW,
     'es-ES': ES,
     fr: FR,
-    ru: RU
+    ru: RU,
+    pl: PL
   }
 }
 

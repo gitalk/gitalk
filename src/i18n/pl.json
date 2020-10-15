@@ -1,0 +1,21 @@
+{
+  "init": "Gitalking ...",
+  "no-found-related": "Nie znaleziono powiązanego zgłoszenia: %{link}",
+  "please-contact": "Skontaktuj się z %{user}, aby umożliwić komentowanie",
+  "init-issue": "Utwórz zgłoszenie (GitHub Issue)",
+  "leave-a-comment": "Skomentuj",
+  "preview": "Podgląd",
+  "edit": "Edytuj",
+  "comment": "Wyślij",
+  "support-markdown": "Możesz użyć składni Markdown",
+  "login-with-github": "Zaloguj się poprzez GitHub",
+  "first-comment-person": "Skomentuj jako pierwszy!",
+  "commented": "skomentowany",
+  "load-more": "Załaduj więcej",
+  "counts": "%{counts} komentarz |||| %{counts} komentarze |||| %{counts} komentarzy",
+  "sort-asc": "Sortuj od najstarszych",
+  "sort-desc": "Sortuj od najnowszych",
+  "logout": "Wyloguj",
+  "anonymous": "Anonimowy"
+}
+
