@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/gitalk/gitalk/compare/v1.6.2...v1.7.0) (2020-10-15)
+
+
+### Features
+
+* add Korean language support ([#407](https://github.com/gitalk/gitalk/issues/407)) ([8d874e0](https://github.com/gitalk/gitalk/commit/8d874e02f12282f6a28ec0958f99685cf92f5fd9))
+* add Polish translations ([#406](https://github.com/gitalk/gitalk/issues/406)) ([6420f31](https://github.com/gitalk/gitalk/commit/6420f315ec92eb9b30e4532cffbb26e862237ef6))
+
+
+### Bug Fixes
+
+* replace onMouseDown to onClick ([873caa8](https://github.com/gitalk/gitalk/commit/873caa8407407476ea682bad8a5b6f60534e3cb4))
+
 ### [1.6.2](https://github.com/gitalk/gitalk/compare/v1.6.0...v1.6.2) (2020-02-29)
 
 
