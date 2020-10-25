@@ -100,6 +100,24 @@ describe('Comment', function () {
     expect(wrapper.find('.gt-comment-date').text()).toEqual(expect.stringContaining('前'))
   })
 
+  it('set props language=ko', function () {
+    const props = {
+      comment,
+      language: 'ko'
+    }
+    const wrapper = shallow(<Comment {...props} />)
+    expect(wrapper.find('.gt-comment-date').text()).toEqual(expect.stringContaining('전'))
+  })
+
+  it('set props language=de', function () {
+    const props = {
+      comment,
+      language: 'de'
+    }
+    const wrapper = shallow(<Comment {...props} />)
+    expect(wrapper.find('.gt-comment-date').text()).toEqual(expect.stringContaining('vor'))
+  })
+
   it('set props comment reactions 10', function () {
     const props = {
       comment: Object.assign({}, comment, {
