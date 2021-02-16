@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import FlipMove from 'react-flip-move'
 import autosize from 'autosize'
 
-import i18n from './i18n'
 import './style/index.styl'
 import {
   queryParse,
@@ -144,7 +143,6 @@ class GitalkComponent extends Component {
         })
     }
 
-    this.i18n = i18n(this.options.language)
   }
   componentDidUpdate () {
     this.commentEL && autosize(this.commentEL)
@@ -711,10 +709,7 @@ class GitalkComponent extends Component {
     return (
       <div className="gt-meta" key="meta" >
         <span className="gt-counts" dangerouslySetInnerHTML={{
-          __html: this.i18n.t('counts', {
-            counts: `<a class="gt-link gt-link-counts" href="${issue && issue.html_url}" target="_blank">${cnt}</a>`,
-            smart_count: cnt
-          })
+          __html: `<a class="gt-link gt-link-counts" href="${issue && issue.html_url}" target="_blank">${cnt}</a> comment(s)`
         }}/>
         {isPopupVisible &&
           <div className="gt-popup">

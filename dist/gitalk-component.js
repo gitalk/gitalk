@@ -684,7 +684,7 @@ module.exports = function (it) {
 /* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var isDate = __webpack_require__(182)
+var isDate = __webpack_require__(179)
 
 var MILLISECONDS_IN_HOUR = 3600000
 var MILLISECONDS_IN_MINUTE = 60000
@@ -2208,15 +2208,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.hasClassInParent = exports.formatErrorMsg = exports.getMetaContent = exports.axiosGithub = exports.axiosJSON = exports.queryStringify = exports.queryParse = undefined;
 
-var _keys = __webpack_require__(141);
+var _keys = __webpack_require__(138);
 
 var _keys2 = _interopRequireDefault(_keys);
 
-var _slicedToArray2 = __webpack_require__(144);
+var _slicedToArray2 = __webpack_require__(141);
 
 var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
 
-var _axios = __webpack_require__(151);
+var _axios = __webpack_require__(148);
 
 var _axios2 = _interopRequireDefault(_axios);
 
@@ -2422,7 +2422,7 @@ module.exports = function isCancel(value) {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(3);
-var normalizeHeaderName = __webpack_require__(157);
+var normalizeHeaderName = __webpack_require__(154);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -2527,11 +2527,11 @@ module.exports = defaults;
 
 
 var utils = __webpack_require__(3);
-var settle = __webpack_require__(158);
+var settle = __webpack_require__(155);
 var buildURL = __webpack_require__(71);
-var buildFullPath = __webpack_require__(160);
-var parseHeaders = __webpack_require__(163);
-var isURLSameOrigin = __webpack_require__(164);
+var buildFullPath = __webpack_require__(157);
+var parseHeaders = __webpack_require__(160);
+var isURLSameOrigin = __webpack_require__(161);
 var createError = __webpack_require__(75);
 
 module.exports = function xhrAdapter(config) {
@@ -2629,7 +2629,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(165);
+      var cookies = __webpack_require__(162);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
@@ -2713,7 +2713,7 @@ module.exports = function xhrAdapter(config) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(159);
+var enhanceError = __webpack_require__(156);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -2894,7 +2894,7 @@ exports.default = function (_ref) {
     "span",
     { className: "gt-ico " + className },
     _react2.default.createElement("span", { className: "gt-svg", dangerouslySetInnerHTML: {
-        __html: __webpack_require__(171)("./" + name + ".svg")
+        __html: __webpack_require__(168)("./" + name + ".svg")
       } }),
     text && _react2.default.createElement(
       "span",
@@ -2951,11 +2951,7 @@ var _autosize = __webpack_require__(136);
 
 var _autosize2 = _interopRequireDefault(_autosize);
 
-var _i18n = __webpack_require__(137);
-
-var _i18n2 = _interopRequireDefault(_i18n);
-
-__webpack_require__(140);
+__webpack_require__(137);
 
 var _util = __webpack_require__(69);
 
@@ -2963,15 +2959,15 @@ var _avatar = __webpack_require__(78);
 
 var _avatar2 = _interopRequireDefault(_avatar);
 
-var _button = __webpack_require__(168);
+var _button = __webpack_require__(165);
 
 var _button2 = _interopRequireDefault(_button);
 
-var _action = __webpack_require__(169);
+var _action = __webpack_require__(166);
 
 var _action2 = _interopRequireDefault(_action);
 
-var _comment = __webpack_require__(170);
+var _comment = __webpack_require__(167);
 
 var _comment2 = _interopRequireDefault(_comment);
 
@@ -2979,9 +2975,9 @@ var _svg = __webpack_require__(79);
 
 var _svg2 = _interopRequireDefault(_svg);
 
-var _const = __webpack_require__(199);
+var _const = __webpack_require__(196);
 
-var _getComments = __webpack_require__(200);
+var _getComments = __webpack_require__(197);
 
 var _getComments2 = _interopRequireDefault(_getComments);
 
@@ -3328,7 +3324,6 @@ var GitalkComponent = function (_Component) {
       });
     }
 
-    _this.i18n = (0, _i18n2.default)(_this.options.language);
     return _this;
   }
 
@@ -3831,10 +3826,7 @@ var GitalkComponent = function (_Component) {
         'div',
         { className: 'gt-meta', key: 'meta' },
         _react2.default.createElement('span', { className: 'gt-counts', dangerouslySetInnerHTML: {
-            __html: this.i18n.t('counts', {
-              counts: '<a class="gt-link gt-link-counts" href="' + (issue && issue.html_url) + '" target="_blank">' + cnt + '</a>',
-              smart_count: cnt
-            })
+            __html: '<a class="gt-link gt-link-counts" href="' + (issue && issue.html_url) + '" target="_blank">' + cnt + '</a> comment(s)'
           } }),
         isPopupVisible && _react2.default.createElement(
           'div',
@@ -7025,372 +7017,26 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 /***/ }),
 /* 137 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-exports.default = function (language) {
-  return new _polyglot2.default({
-    phrases: i18nMap[language] || i18nMap.en,
-    locale: language
-  });
-};
-
-var _polyglot = __webpack_require__(138);
-
-var _polyglot2 = _interopRequireDefault(_polyglot);
-
-var _en = __webpack_require__(139);
-
-var _en2 = _interopRequireDefault(_en);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var i18nMap = {
-  'en': _en2.default
-};
-
-/***/ }),
-/* 138 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     (c) 2012 Airbnb, Inc.
-//
-//     polyglot.js may be freely distributed under the terms of the BSD
-//     license. For all licensing information, details, and documention:
-//     http://airbnb.github.com/polyglot.js
-//
-//
-// Polyglot.js is an I18n helper library written in JavaScript, made to
-// work both in the browser and in Node. It provides a simple solution for
-// interpolation and pluralization, based off of Airbnb's
-// experience adding I18n functionality to its Backbone.js and Node apps.
-//
-// Polylglot is agnostic to your translation backend. It doesn't perform any
-// translation; it simply gives you a way to manage translated phrases from
-// your client- or server-side JavaScript application.
-//
-
-
-(function(root, factory) {
-  if (true) {
-    !(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function() {
-      return factory(root);
-    }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-  } else if (typeof exports === 'object') {
-    module.exports = factory(root);
-  } else {
-    root.Polyglot = factory(root);
-  }
-}(this, function(root) {
-  'use strict';
-
-  // ### Polyglot class constructor
-  function Polyglot(options) {
-    options = options || {};
-    this.phrases = {};
-    this.extend(options.phrases || {});
-    this.currentLocale = options.locale || 'en';
-    this.allowMissing = !!options.allowMissing;
-    this.warn = options.warn || warn;
-  }
-
-  // ### Version
-  Polyglot.VERSION = '0.4.3';
-
-  // ### polyglot.locale([locale])
-  //
-  // Get or set locale. Internally, Polyglot only uses locale for pluralization.
-  Polyglot.prototype.locale = function(newLocale) {
-    if (newLocale) this.currentLocale = newLocale;
-    return this.currentLocale;
-  };
-
-  // ### polyglot.extend(phrases)
-  //
-  // Use `extend` to tell Polyglot how to translate a given key.
-  //
-  //     polyglot.extend({
-  //       "hello": "Hello",
-  //       "hello_name": "Hello, %{name}"
-  //     });
-  //
-  // The key can be any string.  Feel free to call `extend` multiple times;
-  // it will override any phrases with the same key, but leave existing phrases
-  // untouched.
-  //
-  // It is also possible to pass nested phrase objects, which get flattened
-  // into an object with the nested keys concatenated using dot notation.
-  //
-  //     polyglot.extend({
-  //       "nav": {
-  //         "hello": "Hello",
-  //         "hello_name": "Hello, %{name}",
-  //         "sidebar": {
-  //           "welcome": "Welcome"
-  //         }
-  //       }
-  //     });
-  //
-  //     console.log(polyglot.phrases);
-  //     // {
-  //     //   'nav.hello': 'Hello',
-  //     //   'nav.hello_name': 'Hello, %{name}',
-  //     //   'nav.sidebar.welcome': 'Welcome'
-  //     // }
-  //
-  // `extend` accepts an optional second argument, `prefix`, which can be used
-  // to prefix every key in the phrases object with some string, using dot
-  // notation.
-  //
-  //     polyglot.extend({
-  //       "hello": "Hello",
-  //       "hello_name": "Hello, %{name}"
-  //     }, "nav");
-  //
-  //     console.log(polyglot.phrases);
-  //     // {
-  //     //   'nav.hello': 'Hello',
-  //     //   'nav.hello_name': 'Hello, %{name}'
-  //     // }
-  //
-  // This feature is used internally to support nested phrase objects.
-  Polyglot.prototype.extend = function(morePhrases, prefix) {
-    var phrase;
-
-    for (var key in morePhrases) {
-      if (morePhrases.hasOwnProperty(key)) {
-        phrase = morePhrases[key];
-        if (prefix) key = prefix + '.' + key;
-        if (typeof phrase === 'object') {
-          this.extend(phrase, key);
-        } else {
-          this.phrases[key] = phrase;
-        }
-      }
-    }
-  };
-
-  // ### polyglot.clear()
-  //
-  // Clears all phrases. Useful for special cases, such as freeing
-  // up memory if you have lots of phrases but no longer need to
-  // perform any translation. Also used internally by `replace`.
-  Polyglot.prototype.clear = function() {
-    this.phrases = {};
-  };
-
-  // ### polyglot.replace(phrases)
-  //
-  // Completely replace the existing phrases with a new set of phrases.
-  // Normally, just use `extend` to add more phrases, but under certain
-  // circumstances, you may want to make sure no old phrases are lying around.
-  Polyglot.prototype.replace = function(newPhrases) {
-    this.clear();
-    this.extend(newPhrases);
-  };
-
-
-  // ### polyglot.t(key, options)
-  //
-  // The most-used method. Provide a key, and `t` will return the
-  // phrase.
-  //
-  //     polyglot.t("hello");
-  //     => "Hello"
-  //
-  // The phrase value is provided first by a call to `polyglot.extend()` or
-  // `polyglot.replace()`.
-  //
-  // Pass in an object as the second argument to perform interpolation.
-  //
-  //     polyglot.t("hello_name", {name: "Spike"});
-  //     => "Hello, Spike"
-  //
-  // If you like, you can provide a default value in case the phrase is missing.
-  // Use the special option key "_" to specify a default.
-  //
-  //     polyglot.t("i_like_to_write_in_language", {
-  //       _: "I like to write in %{language}.",
-  //       language: "JavaScript"
-  //     });
-  //     => "I like to write in JavaScript."
-  //
-  Polyglot.prototype.t = function(key, options) {
-    var phrase, result;
-    options = options == null ? {} : options;
-    // allow number as a pluralization shortcut
-    if (typeof options === 'number') {
-      options = {smart_count: options};
-    }
-    if (typeof this.phrases[key] === 'string') {
-      phrase = this.phrases[key];
-    } else if (typeof options._ === 'string') {
-      phrase = options._;
-    } else if (this.allowMissing) {
-      phrase = key;
-    } else {
-      this.warn('Missing translation for key: "'+key+'"');
-      result = key;
-    }
-    if (typeof phrase === 'string') {
-      options = clone(options);
-      result = choosePluralForm(phrase, this.currentLocale, options.smart_count);
-      result = interpolate(result, options);
-    }
-    return result;
-  };
-
-
-  // ### polyglot.has(key)
-  //
-  // Check if polyglot has a translation for given key
-  Polyglot.prototype.has = function(key) {
-    return key in this.phrases;
-  };
-
-
-  // #### Pluralization methods
-  // The string that separates the different phrase possibilities.
-  var delimeter = '||||';
-
-  // Mapping from pluralization group plural logic.
-  var pluralTypes = {
-    chinese:   function(n) { return 0; },
-    german:    function(n) { return n !== 1 ? 1 : 0; },
-    french:    function(n) { return n > 1 ? 1 : 0; },
-    russian:   function(n) { return n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2; },
-    czech:     function(n) { return (n === 1) ? 0 : (n >= 2 && n <= 4) ? 1 : 2; },
-    polish:    function(n) { return (n === 1 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? 1 : 2); },
-    icelandic: function(n) { return (n % 10 !== 1 || n % 100 === 11) ? 1 : 0; }
-  };
-
-  // Mapping from pluralization group to individual locales.
-  var pluralTypeToLanguages = {
-    chinese:   ['fa', 'id', 'ja', 'ko', 'lo', 'ms', 'th', 'tr', 'zh'],
-    german:    ['da', 'de', 'en', 'es', 'fi', 'el', 'he', 'hu', 'it', 'nl', 'no', 'pt', 'sv'],
-    french:    ['fr', 'tl', 'pt-br'],
-    russian:   ['hr', 'ru'],
-    czech:     ['cs'],
-    polish:    ['pl'],
-    icelandic: ['is']
-  };
-
-  function langToTypeMap(mapping) {
-    var type, langs, l, ret = {};
-    for (type in mapping) {
-      if (mapping.hasOwnProperty(type)) {
-        langs = mapping[type];
-        for (l in langs) {
-          ret[langs[l]] = type;
-        }
-      }
-    }
-    return ret;
-  }
-
-  // Trim a string.
-  function trim(str){
-    var trimRe = /^\s+|\s+$/g;
-    return str.replace(trimRe, '');
-  }
-
-  // Based on a phrase text that contains `n` plural forms separated
-  // by `delimeter`, a `locale`, and a `count`, choose the correct
-  // plural form, or none if `count` is `null`.
-  function choosePluralForm(text, locale, count){
-    var ret, texts, chosenText;
-    if (count != null && text) {
-      texts = text.split(delimeter);
-      chosenText = texts[pluralTypeIndex(locale, count)] || texts[0];
-      ret = trim(chosenText);
-    } else {
-      ret = text;
-    }
-    return ret;
-  }
-
-  function pluralTypeName(locale) {
-    var langToPluralType = langToTypeMap(pluralTypeToLanguages);
-    return langToPluralType[locale] || langToPluralType.en;
-  }
-
-  function pluralTypeIndex(locale, count) {
-    return pluralTypes[pluralTypeName(locale)](count);
-  }
-
-  // ### interpolate
-  //
-  // Does the dirty work. Creates a `RegExp` object for each
-  // interpolation placeholder.
-  function interpolate(phrase, options) {
-    for (var arg in options) {
-      if (arg !== '_' && options.hasOwnProperty(arg)) {
-        // We create a new `RegExp` each time instead of using a more-efficient
-        // string replace so that the same argument can be replaced multiple times
-        // in the same phrase.
-        phrase = phrase.replace(new RegExp('%\\{'+arg+'\\}', 'g'), options[arg]);
-      }
-    }
-    return phrase;
-  }
-
-  // ### warn
-  //
-  // Provides a warning in the console if a phrase key is missing.
-  function warn(message) {
-    root.console && root.console.warn && root.console.warn('WARNING: ' + message);
-  }
-
-  // ### clone
-  //
-  // Clone an object.
-  function clone(source) {
-    var ret = {};
-    for (var prop in source) {
-      ret[prop] = source[prop];
-    }
-    return ret;
-  }
-
-  return Polyglot;
-}));
-
-
-/***/ }),
-/* 139 */
-/***/ (function(module, exports) {
-
-module.exports = {"counts":"%{counts} comment |||| %{counts} comments"}
-
-/***/ }),
-/* 140 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 141 */
+/* 138 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(142), __esModule: true };
+module.exports = { "default": __webpack_require__(139), __esModule: true };
 
 /***/ }),
-/* 142 */
+/* 139 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(143);
+__webpack_require__(140);
 module.exports = __webpack_require__(0).Object.keys;
 
 
 /***/ }),
-/* 143 */
+/* 140 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 19.1.2.14 Object.keys(O)
@@ -7405,7 +7051,7 @@ __webpack_require__(60)('keys', function () {
 
 
 /***/ }),
-/* 144 */
+/* 141 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7413,11 +7059,11 @@ __webpack_require__(60)('keys', function () {
 
 exports.__esModule = true;
 
-var _isIterable2 = __webpack_require__(145);
+var _isIterable2 = __webpack_require__(142);
 
 var _isIterable3 = _interopRequireDefault(_isIterable2);
 
-var _getIterator2 = __webpack_require__(148);
+var _getIterator2 = __webpack_require__(145);
 
 var _getIterator3 = _interopRequireDefault(_getIterator2);
 
@@ -7462,6 +7108,37 @@ exports.default = function () {
 }();
 
 /***/ }),
+/* 142 */
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = { "default": __webpack_require__(143), __esModule: true };
+
+/***/ }),
+/* 143 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(26);
+__webpack_require__(18);
+module.exports = __webpack_require__(144);
+
+
+/***/ }),
+/* 144 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var classof = __webpack_require__(37);
+var ITERATOR = __webpack_require__(2)('iterator');
+var Iterators = __webpack_require__(14);
+module.exports = __webpack_require__(0).isIterable = function (it) {
+  var O = Object(it);
+  return O[ITERATOR] !== undefined
+    || '@@iterator' in O
+    // eslint-disable-next-line no-prototype-builtins
+    || Iterators.hasOwnProperty(classof(O));
+};
+
+
+/***/ }),
 /* 145 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -7480,37 +7157,6 @@ module.exports = __webpack_require__(147);
 /* 147 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var classof = __webpack_require__(37);
-var ITERATOR = __webpack_require__(2)('iterator');
-var Iterators = __webpack_require__(14);
-module.exports = __webpack_require__(0).isIterable = function (it) {
-  var O = Object(it);
-  return O[ITERATOR] !== undefined
-    || '@@iterator' in O
-    // eslint-disable-next-line no-prototype-builtins
-    || Iterators.hasOwnProperty(classof(O));
-};
-
-
-/***/ }),
-/* 148 */
-/***/ (function(module, exports, __webpack_require__) {
-
-module.exports = { "default": __webpack_require__(149), __esModule: true };
-
-/***/ }),
-/* 149 */
-/***/ (function(module, exports, __webpack_require__) {
-
-__webpack_require__(26);
-__webpack_require__(18);
-module.exports = __webpack_require__(150);
-
-
-/***/ }),
-/* 150 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var anObject = __webpack_require__(5);
 var get = __webpack_require__(38);
 module.exports = __webpack_require__(0).getIterator = function (it) {
@@ -7521,13 +7167,13 @@ module.exports = __webpack_require__(0).getIterator = function (it) {
 
 
 /***/ }),
-/* 151 */
+/* 148 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(152);
+module.exports = __webpack_require__(149);
 
 /***/ }),
-/* 152 */
+/* 149 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7535,7 +7181,7 @@ module.exports = __webpack_require__(152);
 
 var utils = __webpack_require__(3);
 var bind = __webpack_require__(70);
-var Axios = __webpack_require__(153);
+var Axios = __webpack_require__(150);
 var mergeConfig = __webpack_require__(76);
 var defaults = __webpack_require__(73);
 
@@ -7571,14 +7217,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(77);
-axios.CancelToken = __webpack_require__(166);
+axios.CancelToken = __webpack_require__(163);
 axios.isCancel = __webpack_require__(72);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(167);
+axios.spread = __webpack_require__(164);
 
 module.exports = axios;
 
@@ -7587,7 +7233,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 153 */
+/* 150 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7595,8 +7241,8 @@ module.exports.default = axios;
 
 var utils = __webpack_require__(3);
 var buildURL = __webpack_require__(71);
-var InterceptorManager = __webpack_require__(154);
-var dispatchRequest = __webpack_require__(155);
+var InterceptorManager = __webpack_require__(151);
+var dispatchRequest = __webpack_require__(152);
 var mergeConfig = __webpack_require__(76);
 
 /**
@@ -7688,7 +7334,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 154 */
+/* 151 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7747,14 +7393,14 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 155 */
+/* 152 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(3);
-var transformData = __webpack_require__(156);
+var transformData = __webpack_require__(153);
 var isCancel = __webpack_require__(72);
 var defaults = __webpack_require__(73);
 
@@ -7833,7 +7479,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 156 */
+/* 153 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7860,7 +7506,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 157 */
+/* 154 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7879,7 +7525,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 158 */
+/* 155 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7911,7 +7557,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 159 */
+/* 156 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -7960,14 +7606,14 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 160 */
+/* 157 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var isAbsoluteURL = __webpack_require__(161);
-var combineURLs = __webpack_require__(162);
+var isAbsoluteURL = __webpack_require__(158);
+var combineURLs = __webpack_require__(159);
 
 /**
  * Creates a new URL by combining the baseURL with the requestedURL,
@@ -7987,7 +7633,7 @@ module.exports = function buildFullPath(baseURL, requestedURL) {
 
 
 /***/ }),
-/* 161 */
+/* 158 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8008,7 +7654,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 162 */
+/* 159 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8029,7 +7675,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 163 */
+/* 160 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8089,7 +7735,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 164 */
+/* 161 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8164,7 +7810,7 @@ module.exports = (
 
 
 /***/ }),
-/* 165 */
+/* 162 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8224,7 +7870,7 @@ module.exports = (
 
 
 /***/ }),
-/* 166 */
+/* 163 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8288,7 +7934,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 167 */
+/* 164 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8322,7 +7968,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 168 */
+/* 165 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8364,7 +8010,7 @@ exports.default = function (_ref) {
 };
 
 /***/ }),
-/* 169 */
+/* 166 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8396,7 +8042,7 @@ exports.default = function (_ref) {
 };
 
 /***/ }),
-/* 170 */
+/* 167 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -8438,35 +8084,35 @@ var _svg = __webpack_require__(79);
 
 var _svg2 = _interopRequireDefault(_svg);
 
-var _distance_in_words_to_now = __webpack_require__(179);
+var _distance_in_words_to_now = __webpack_require__(176);
 
 var _distance_in_words_to_now2 = _interopRequireDefault(_distance_in_words_to_now);
 
-var _index = __webpack_require__(192);
+var _index = __webpack_require__(189);
 
 var _index2 = _interopRequireDefault(_index);
 
-var _index3 = __webpack_require__(193);
+var _index3 = __webpack_require__(190);
 
 var _index4 = _interopRequireDefault(_index3);
 
-var _index5 = __webpack_require__(194);
+var _index5 = __webpack_require__(191);
 
 var _index6 = _interopRequireDefault(_index5);
 
-var _index7 = __webpack_require__(195);
+var _index7 = __webpack_require__(192);
 
 var _index8 = _interopRequireDefault(_index7);
 
-var _index9 = __webpack_require__(196);
+var _index9 = __webpack_require__(193);
 
 var _index10 = _interopRequireDefault(_index9);
 
-var _index11 = __webpack_require__(197);
+var _index11 = __webpack_require__(194);
 
 var _index12 = _interopRequireDefault(_index11);
 
-__webpack_require__(198);
+__webpack_require__(195);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -8628,17 +8274,17 @@ var Comment = function (_Component) {
 exports.default = Comment;
 
 /***/ }),
-/* 171 */
+/* 168 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var map = {
-	"./arrow_down.svg": 172,
-	"./edit.svg": 173,
-	"./github.svg": 174,
-	"./heart.svg": 175,
-	"./heart_on.svg": 176,
-	"./reply.svg": 177,
-	"./tip.svg": 178
+	"./arrow_down.svg": 169,
+	"./edit.svg": 170,
+	"./github.svg": 171,
+	"./heart.svg": 172,
+	"./heart_on.svg": 173,
+	"./reply.svg": 174,
+	"./tip.svg": 175
 };
 function webpackContext(req) {
 	return __webpack_require__(webpackContextResolve(req));
@@ -8654,55 +8300,55 @@ webpackContext.keys = function webpackContextKeys() {
 };
 webpackContext.resolve = webpackContextResolve;
 module.exports = webpackContext;
-webpackContext.id = 171;
+webpackContext.id = 168;
 
 /***/ }),
-/* 172 */
+/* 169 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 1024 1024\" xmlns=\"http://www.w3.org/2000/svg\" p-id=\"1619\"><path d=\"M511.872 676.8c-0.003 0-0.006 0-0.008 0-9.137 0-17.379-3.829-23.21-9.97l-251.277-265.614c-5.415-5.72-8.743-13.464-8.744-21.984 0-17.678 14.33-32.008 32.008-32.008 9.157 0 17.416 3.845 23.25 10.009l228.045 241.103 228.224-241.088c5.855-6.165 14.113-10.001 23.266-10.001 8.516 0 16.256 3.32 21.998 8.736 12.784 12.145 13.36 32.434 1.264 45.233l-251.52 265.6c-5.844 6.155-14.086 9.984-23.223 9.984-0.025 0-0.051 0-0.076 0z\" p-id=\"1620\"></path></svg>"
 
 /***/ }),
-/* 173 */
+/* 170 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 1024 1024\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M785.333333 85.333333C774.666667 85.333333 763.2 90.133333 754.666667 98.666667L682.666667 170.666667 853.333333 341.333333 925.333333 269.333333C942.4 252.266667 942.4 222.133333 925.333333 209.333333L814.666667 98.666667C806.133333 90.133333 796 85.333333 785.333333 85.333333zM640 217.333333 85.333333 768 85.333333 938.666667 256 938.666667 806.666667 384 640 217.333333z\"></path>\n</svg>\n"
 
 /***/ }),
-/* 174 */
+/* 171 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M64 524C64 719.602 189.356 885.926 364.113 947.017 387.65799 953 384 936.115 384 924.767L384 847.107C248.118 863.007 242.674 773.052 233.5 758.001 215 726.501 171.5 718.501 184.5 703.501 215.5 687.501 247 707.501 283.5 761.501 309.956 800.642 361.366 794.075 387.658 787.497 393.403 763.997 405.637 743.042 422.353 726.638 281.774 701.609 223 615.67 223 513.5 223 464.053 239.322 418.406 271.465 381.627 251.142 320.928 273.421 269.19 276.337 261.415 334.458 256.131 394.888 302.993 399.549 306.685 432.663 297.835 470.341 293 512.5 293 554.924 293 592.81 297.896 626.075 306.853 637.426 298.219 693.46 258.054 747.5 262.966 750.382 270.652 772.185 321.292 753.058 381.083 785.516 417.956 802 463.809 802 513.5 802 615.874 742.99 701.953 601.803 726.786 625.381 750.003 640 782.295 640 818.008L640 930.653C640.752 939.626 640 948.664978 655.086 948.665 832.344 888.962 960 721.389 960 524 960 276.576 759.424 76 512 76 264.577 76 64 276.576 64 524Z\"></path>\n</svg>\n"
 
 /***/ }),
-/* 175 */
+/* 172 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <path d=\"M527.061333 166.528A277.333333 277.333333 0 0 1 1000.618667 362.666667a277.333333 277.333333 0 0 1-81.28 196.138666l-377.173334 377.173334a42.666667 42.666667 0 0 1-60.330666 0l-377.173334-377.173334a277.376 277.376 0 0 1 392.277334-392.277333l15.061333 15.061333 15.061333-15.061333z m286.72 377.173333l45.226667-45.226666a192 192 0 0 0-135.808-327.893334 192 192 0 0 0-135.808 56.32l-45.226667 45.226667a42.666667 42.666667 0 0 1-60.330666 0l-45.226667-45.226667a192.042667 192.042667 0 0 0-271.616 271.573334L512 845.482667l301.781333-301.781334z\"></path>\n</svg>\n"
 
 /***/ }),
-/* 176 */
+/* 173 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg t=\"1512463363724\" viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n  <path d=\"M527.061333 166.528A277.333333 277.333333 0 0 1 1000.618667 362.666667a277.333333 277.333333 0 0 1-81.28 196.138666l-377.173334 377.173334a42.666667 42.666667 0 0 1-60.330666 0l-377.173334-377.173334a277.376 277.376 0 0 1 392.277334-392.277333l15.061333 15.061333 15.061333-15.061333z\"></path>\n</svg>\n"
 
 /***/ }),
-/* 177 */
+/* 174 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 1332 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M529.066665 273.066666 529.066665 0 51.2 477.866666 529.066665 955.733335 529.066665 675.84C870.4 675.84 1109.333335 785.066665 1280 1024 1211.733335 682.666665 1006.933335 341.333334 529.066665 273.066666\"></path>\n</svg>\n"
 
 /***/ }),
-/* 178 */
+/* 175 */
 /***/ (function(module, exports) {
 
 module.exports = "<svg viewBox=\"0 0 1024 1024\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M512 366.949535c-16.065554 0-29.982212 13.405016-29.982212 29.879884l0 359.070251c0 16.167882 13.405016 29.879884 29.982212 29.879884 15.963226 0 29.879884-13.405016 29.879884-29.879884L541.879884 396.829419C541.879884 380.763865 528.474868 366.949535 512 366.949535L512 366.949535z\"\n    p-id=\"3083\"></path>\n  <path d=\"M482.017788 287.645048c0-7.776956 3.274508-15.553912 8.80024-21.181973 5.525732-5.525732 13.302688-8.80024 21.181973-8.80024 7.776956 0 15.553912 3.274508 21.079644 8.80024 5.525732 5.62806 8.80024 13.405016 8.80024 21.181973 0 7.776956-3.274508 15.656241-8.80024 21.181973-5.525732 5.525732-13.405016 8.697911-21.079644 8.697911-7.879285 0-15.656241-3.274508-21.181973-8.697911C485.292295 303.301289 482.017788 295.524333 482.017788 287.645048L482.017788 287.645048z\"\n    p-id=\"3084\"></path>\n  <path d=\"M512 946.844409c-239.8577 0-434.895573-195.037873-434.895573-434.895573 0-239.8577 195.037873-434.895573 434.895573-434.895573 239.755371 0 434.895573 195.037873 434.895573 434.895573C946.895573 751.806535 751.755371 946.844409 512 946.844409zM512 126.17088c-212.740682 0-385.880284 173.037274-385.880284 385.777955 0 212.740682 173.037274 385.777955 385.880284 385.777955 212.740682 0 385.777955-173.037274 385.777955-385.777955C897.777955 299.208154 724.740682 126.17088 512 126.17088z\"\n    p-id=\"3085\"></path>\n</svg>\n"
 
 /***/ }),
-/* 179 */
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var distanceInWords = __webpack_require__(180)
+var distanceInWords = __webpack_require__(177)
 
 /**
  * @category Common Helpers
@@ -8790,14 +8436,14 @@ module.exports = distanceInWordsToNow
 
 
 /***/ }),
-/* 180 */
+/* 177 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var compareDesc = __webpack_require__(181)
+var compareDesc = __webpack_require__(178)
 var parse = __webpack_require__(17)
-var differenceInSeconds = __webpack_require__(183)
-var differenceInMonths = __webpack_require__(185)
-var enLocale = __webpack_require__(188)
+var differenceInSeconds = __webpack_require__(180)
+var differenceInMonths = __webpack_require__(182)
+var enLocale = __webpack_require__(185)
 
 var MINUTES_IN_DAY = 1440
 var MINUTES_IN_ALMOST_TWO_DAYS = 2520
@@ -8999,7 +8645,7 @@ module.exports = distanceInWords
 
 
 /***/ }),
-/* 181 */
+/* 178 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(17)
@@ -9056,7 +8702,7 @@ module.exports = compareDesc
 
 
 /***/ }),
-/* 182 */
+/* 179 */
 /***/ (function(module, exports) {
 
 /**
@@ -9082,10 +8728,10 @@ module.exports = isDate
 
 
 /***/ }),
-/* 183 */
+/* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var differenceInMilliseconds = __webpack_require__(184)
+var differenceInMilliseconds = __webpack_require__(181)
 
 /**
  * @category Second Helpers
@@ -9116,7 +8762,7 @@ module.exports = differenceInSeconds
 
 
 /***/ }),
-/* 184 */
+/* 181 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(17)
@@ -9151,12 +8797,12 @@ module.exports = differenceInMilliseconds
 
 
 /***/ }),
-/* 185 */
+/* 182 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(17)
-var differenceInCalendarMonths = __webpack_require__(186)
-var compareAsc = __webpack_require__(187)
+var differenceInCalendarMonths = __webpack_require__(183)
+var compareAsc = __webpack_require__(184)
 
 /**
  * @category Month Helpers
@@ -9195,7 +8841,7 @@ module.exports = differenceInMonths
 
 
 /***/ }),
-/* 186 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(17)
@@ -9233,7 +8879,7 @@ module.exports = differenceInCalendarMonths
 
 
 /***/ }),
-/* 187 */
+/* 184 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var parse = __webpack_require__(17)
@@ -9290,11 +8936,11 @@ module.exports = compareAsc
 
 
 /***/ }),
-/* 188 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var buildDistanceInWordsLocale = __webpack_require__(189)
-var buildFormatLocale = __webpack_require__(190)
+var buildDistanceInWordsLocale = __webpack_require__(186)
+var buildFormatLocale = __webpack_require__(187)
 
 /**
  * @category Locales
@@ -9307,7 +8953,7 @@ module.exports = {
 
 
 /***/ }),
-/* 189 */
+/* 186 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -9412,10 +9058,10 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 190 */
+/* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var buildFormattingTokensRegExp = __webpack_require__(191)
+var buildFormattingTokensRegExp = __webpack_require__(188)
 
 function buildFormatLocale () {
   // Note: in English, the names of days of the week and months are capitalized.
@@ -9506,7 +9152,7 @@ module.exports = buildFormatLocale
 
 
 /***/ }),
-/* 191 */
+/* 188 */
 /***/ (function(module, exports) {
 
 var commonFormatterKeys = [
@@ -9540,7 +9186,7 @@ module.exports = buildFormattingTokensRegExp
 
 
 /***/ }),
-/* 192 */
+/* 189 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -9645,7 +9291,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 193 */
+/* 190 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -9750,7 +9396,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 194 */
+/* 191 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -9855,7 +9501,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 195 */
+/* 192 */
 /***/ (function(module, exports) {
 
 function buildDistanceInWordsLocale () {
@@ -9960,7 +9606,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 196 */
+/* 193 */
 /***/ (function(module, exports) {
 
 function declension (scheme, count) {
@@ -10200,7 +9846,7 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 197 */
+/* 194 */
 /***/ (function(module, exports) {
 
 function declensionGroup (scheme, count) {
@@ -10371,13 +10017,13 @@ module.exports = buildDistanceInWordsLocale
 
 
 /***/ }),
-/* 198 */
+/* 195 */
 /***/ (function(module, exports) {
 
 // removed by extract-text-webpack-plugin
 
 /***/ }),
-/* 199 */
+/* 196 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10391,7 +10037,7 @@ var GT_VERSION = exports.GT_VERSION = "1.7.0"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
-/* 200 */
+/* 197 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10401,7 +10047,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _toConsumableArray2 = __webpack_require__(201);
+var _toConsumableArray2 = __webpack_require__(198);
 
 var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
 
@@ -10487,7 +10133,7 @@ function getComments(issue) {
 exports.default = getComments;
 
 /***/ }),
-/* 201 */
+/* 198 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10495,7 +10141,7 @@ exports.default = getComments;
 
 exports.__esModule = true;
 
-var _from = __webpack_require__(202);
+var _from = __webpack_require__(199);
 
 var _from2 = _interopRequireDefault(_from);
 
@@ -10514,22 +10160,22 @@ exports.default = function (arr) {
 };
 
 /***/ }),
-/* 202 */
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = { "default": __webpack_require__(203), __esModule: true };
+module.exports = { "default": __webpack_require__(200), __esModule: true };
 
 /***/ }),
-/* 203 */
+/* 200 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(18);
-__webpack_require__(204);
+__webpack_require__(201);
 module.exports = __webpack_require__(0).Array.from;
 
 
 /***/ }),
-/* 204 */
+/* 201 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -10540,7 +10186,7 @@ var toObject = __webpack_require__(16);
 var call = __webpack_require__(52);
 var isArrayIter = __webpack_require__(53);
 var toLength = __webpack_require__(33);
-var createProperty = __webpack_require__(205);
+var createProperty = __webpack_require__(202);
 var getIterFn = __webpack_require__(38);
 
 $export($export.S + $export.F * !__webpack_require__(58)(function (iter) { Array.from(iter); }), 'Array', {
@@ -10573,7 +10219,7 @@ $export($export.S + $export.F * !__webpack_require__(58)(function (iter) { Array
 
 
 /***/ }),
-/* 205 */
+/* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
