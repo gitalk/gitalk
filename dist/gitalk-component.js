@@ -3649,7 +3649,7 @@ var GitalkComponent = function (_Component) {
         _react2.default.createElement(
           'p',
           { className: 'gt-initing-text' },
-          this.i18n.t('init')
+          'Gitalking ...'
         )
       );
     }
@@ -3668,23 +3668,23 @@ var GitalkComponent = function (_Component) {
         'div',
         { className: 'gt-no-init', key: 'no-init' },
         _react2.default.createElement('p', { dangerouslySetInnerHTML: {
-            __html: this.i18n.t('no-found-related', {
-              link: '<a href="https://github.com/' + owner + '/' + repo + '/issues">Issues</a>'
-            })
+            __html: 'Related <a href="https://github.com/' + owner + '/' + repo + '/issues">Issues</a> not found'
           } }),
         _react2.default.createElement(
           'p',
           null,
-          this.i18n.t('please-contact', { user: [].concat(admin).map(function (u) {
-              return '@' + u;
-            }).join(' ') })
+          'Please contact ',
+          [].concat(admin).map(function (u) {
+            return '@' + u;
+          }).join(' '),
+          ' to initialize the comment'
         ),
         this.isAdmin ? _react2.default.createElement(
           'p',
           null,
-          _react2.default.createElement(_button2.default, { onClick: this.handleIssueCreate, isLoading: isIssueCreating, text: this.i18n.t('init-issue') })
+          _react2.default.createElement(_button2.default, { onClick: this.handleIssueCreate, isLoading: isIssueCreating, text: 'Init Issue' })
         ) : null,
-        !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: this.i18n.t('login-with-github') })
+        !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: 'Leave a comment' })
       );
     }
   }, {
@@ -3720,7 +3720,7 @@ var GitalkComponent = function (_Component) {
             onFocus: this.handleCommentFocus,
             onBlur: this.handleCommentBlur,
             onKeyDown: this.handleCommentKeyDown,
-            placeholder: this.i18n.t('leave-a-comment')
+            placeholder: 'Leave a comment'
           }),
           _react2.default.createElement('div', {
             className: 'gt-header-preview markdown-body ' + (isPreview ? '' : 'hide'),
@@ -3732,22 +3732,22 @@ var GitalkComponent = function (_Component) {
             _react2.default.createElement(
               'a',
               { className: 'gt-header-controls-tip', href: 'https://guides.github.com/features/mastering-markdown/', target: '_blank' },
-              _react2.default.createElement(_svg2.default, { className: 'gt-ico-tip', name: 'tip', text: this.i18n.t('support-markdown') })
+              _react2.default.createElement(_svg2.default, { className: 'gt-ico-tip', name: 'tip', text: 'Markdown is supported' })
             ),
             user && _react2.default.createElement(_button2.default, {
               getRef: this.getRef,
               className: 'gt-btn-public',
               onClick: this.handleCommentCreate,
-              text: this.i18n.t('comment'),
+              text: 'Comment',
               isLoading: isCreating
             }),
             _react2.default.createElement(_button2.default, {
               className: 'gt-btn-preview',
               onClick: this.handleCommentPreview,
-              text: isPreview ? this.i18n.t('edit') : this.i18n.t('preview')
+              text: isPreview ? 'Edit' : 'Preview'
               // isLoading={isPreviewing}
             }),
-            !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: this.i18n.t('login-with-github') })
+            !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: 'Login with GitHub' })
           )
         )
       );
@@ -3784,7 +3784,7 @@ var GitalkComponent = function (_Component) {
               key: c.id,
               user: user,
               language: language,
-              commentedText: _this12.i18n.t('commented'),
+              commentedText: 'commented',
               admin: admin,
               replyCallback: _this12.reply(c),
               likeCallback: c.reactions && c.reactions.viewerHasReacted ? _this12.unLike.bind(_this12, c) : _this12.like.bind(_this12, c)
@@ -3794,12 +3794,12 @@ var GitalkComponent = function (_Component) {
         !totalComments.length && _react2.default.createElement(
           'p',
           { className: 'gt-comments-null' },
-          this.i18n.t('first-comment-person')
+          'Be the first person to leave a comment!'
         ),
         !isLoadOver && totalComments.length ? _react2.default.createElement(
           'div',
           { className: 'gt-comments-controls' },
-          _react2.default.createElement(_button2.default, { className: 'gt-btn-loadmore', onClick: this.handleCommentLoad, isLoading: isLoadMore, text: this.i18n.t('load-more') })
+          _react2.default.createElement(_button2.default, { className: 'gt-btn-loadmore', onClick: this.handleCommentLoad, isLoading: isLoadMore, text: 'Load more' })
         ) : null
       );
     }
@@ -3839,12 +3839,12 @@ var GitalkComponent = function (_Component) {
         isPopupVisible && _react2.default.createElement(
           'div',
           { className: 'gt-popup' },
-          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortasc' + (!isDesc ? ' is--active' : ''), onClick: this.handleSort('first'), text: this.i18n.t('sort-asc') }) : null,
-          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortdesc' + (isDesc ? ' is--active' : ''), onClick: this.handleSort('last'), text: this.i18n.t('sort-desc') }) : null,
-          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-logout', onClick: this.handleLogout, text: this.i18n.t('logout') }) : _react2.default.createElement(
+          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortasc' + (!isDesc ? ' is--active' : ''), onClick: this.handleSort('first'), text: 'Sort by Oldest' }) : null,
+          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-sortdesc' + (isDesc ? ' is--active' : ''), onClick: this.handleSort('last'), text: 'Sort by Latest' }) : null,
+          user ? _react2.default.createElement(_action2.default, { className: 'gt-action-logout', onClick: this.handleLogout, text: 'Logout' }) : _react2.default.createElement(
             'a',
             { className: 'gt-action gt-action-login', onClick: this.handleLogin },
-            this.i18n.t('login-with-github')
+            'Login with GitHub'
           ),
           _react2.default.createElement(
             'div',
@@ -3879,7 +3879,7 @@ var GitalkComponent = function (_Component) {
             _react2.default.createElement(
               'span',
               { className: 'gt-user-name' },
-              this.i18n.t('anonymous')
+              'Anonymous'
             ),
             _react2.default.createElement(_svg2.default, { className: 'gt-ico-arrdown', name: 'arrow_down' })
           )
@@ -7052,16 +7052,7 @@ var _en2 = _interopRequireDefault(_en);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var i18nMap = {
-  'zh': ZHCN,
-  'zh-CN': ZHCN,
-  'zh-TW': ZHTW,
-  'en': _en2.default,
-  'es-ES': ES,
-  'fr': FR,
-  'ru': RU,
-  'de': DE,
-  'pl': PL,
-  'ko': KO
+  'en': _en2.default
 };
 
 /***/ }),
@@ -7376,7 +7367,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//     (c) 2012 
 /* 139 */
 /***/ (function(module, exports) {
 
-module.exports = {"init":"Gitalking ...","no-found-related":"Related %{link} not found","please-contact":"Please contact %{user} to initialize the comment","init-issue":"Init Issue","leave-a-comment":"Leave a comment","preview":"Preview","edit":"Edit","comment":"Comment","support-markdown":"Markdown is supported","login-with-github":"Login with GitHub","first-comment-person":"Be the first person to leave a comment!","commented":"commented","load-more":"Load more","counts":"%{counts} comment |||| %{counts} comments","sort-asc":"Sort by Oldest","sort-desc":"Sort by Latest","logout":"Logout","anonymous":"Anonymous"}
+module.exports = {"counts":"%{counts} comment |||| %{counts} comments"}
 
 /***/ }),
 /* 140 */

@@ -591,7 +591,7 @@ class GitalkComponent extends Component {
   initing () {
     return <div className="gt-initing">
       <i className="gt-loader"/>
-      <p className="gt-initing-text">{this.i18n.t('init')}</p>
+      <p className="gt-initing-text">Gitalking ...</p>
     </div>
   }
   noInit () {
@@ -600,15 +600,13 @@ class GitalkComponent extends Component {
     return (
       <div className="gt-no-init" key="no-init">
         <p dangerouslySetInnerHTML={{
-          __html: this.i18n.t('no-found-related', {
-            link: `<a href="https://github.com/${owner}/${repo}/issues">Issues</a>`
-          })
+          __html: `Related <a href="https://github.com/${owner}/${repo}/issues">Issues</a> not found`
         }}/>
-        <p>{this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
+        <p>Please contact {[].concat(admin).map(u => `@${u}`).join(' ') } to initialize the comment</p>
         {this.isAdmin ? <p>
-          <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
+          <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text="Init Issue" />
         </p> : null}
-        {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
+        {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text="Leave a comment" />}
       </div>
     )
   }
@@ -632,7 +630,7 @@ class GitalkComponent extends Component {
             onFocus={this.handleCommentFocus}
             onBlur={this.handleCommentBlur}
             onKeyDown={this.handleCommentKeyDown}
-            placeholder={this.i18n.t('leave-a-comment')}
+            placeholder="Leave a comment"
           />
           <div
             className={`gt-header-preview markdown-body ${isPreview ? '' : 'hide'}`}
@@ -640,23 +638,23 @@ class GitalkComponent extends Component {
           />
           <div className="gt-header-controls">
             <a className="gt-header-controls-tip" href="https://guides.github.com/features/mastering-markdown/" target="_blank">
-              <Svg className="gt-ico-tip" name="tip" text={this.i18n.t('support-markdown')}/>
+              <Svg className="gt-ico-tip" name="tip" text="Markdown is supported"/>
             </a>
             {user && <Button
               getRef={this.getRef}
               className="gt-btn-public"
               onClick={this.handleCommentCreate}
-              text={this.i18n.t('comment')}
+              text="Comment"
               isLoading={isCreating}
             />}
 
             <Button
               className="gt-btn-preview"
               onClick={this.handleCommentPreview}
-              text={isPreview ? this.i18n.t('edit') : this.i18n.t('preview')}
+              text={isPreview ? 'Edit' : 'Preview'}
               // isLoading={isPreviewing}
             />
-            {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
+            {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text="Login with GitHub" />}
           </div>
         </div>
       </div>
@@ -678,16 +676,16 @@ class GitalkComponent extends Component {
               key={c.id}
               user={user}
               language={language}
-              commentedText={this.i18n.t('commented')}
+              commentedText="commented"
               admin={admin}
               replyCallback={this.reply(c)}
               likeCallback={c.reactions && c.reactions.viewerHasReacted ? this.unLike.bind(this, c) : this.like.bind(this, c)}
             />
           ))}
         </FlipMove>
-        {!totalComments.length && <p className="gt-comments-null">{this.i18n.t('first-comment-person')}</p>}
+        {!totalComments.length && <p className="gt-comments-null">Be the first person to leave a comment!</p>}
         {(!isLoadOver && totalComments.length) ? <div className="gt-comments-controls">
-          <Button className="gt-btn-loadmore" onClick={this.handleCommentLoad} isLoading={isLoadMore} text={this.i18n.t('load-more')} />
+          <Button className="gt-btn-loadmore" onClick={this.handleCommentLoad} isLoading={isLoadMore} text="Load more" />
         </div> : null}
       </div>
     )
@@ -720,11 +718,11 @@ class GitalkComponent extends Component {
         }}/>
         {isPopupVisible &&
           <div className="gt-popup">
-            {user ? <Action className={`gt-action-sortasc${!isDesc ? ' is--active' : ''}`} onClick={this.handleSort('first')} text={this.i18n.t('sort-asc')}/> : null }
-            {user ? <Action className={`gt-action-sortdesc${isDesc ? ' is--active' : ''}`} onClick={this.handleSort('last')} text={this.i18n.t('sort-desc')}/> : null }
+            {user ? <Action className={`gt-action-sortasc${!isDesc ? ' is--active' : ''}`} onClick={this.handleSort('first')} text="Sort by Oldest"/> : null }
+            {user ? <Action className={`gt-action-sortdesc${isDesc ? ' is--active' : ''}`} onClick={this.handleSort('last')} text="Sort by Latest"/> : null }
             {user ?
-              <Action className="gt-action-logout" onClick={this.handleLogout} text={this.i18n.t('logout')}/> :
-              <a className="gt-action gt-action-login" onClick={this.handleLogin}>{this.i18n.t('login-with-github')}</a>
+              <Action className="gt-action-logout" onClick={this.handleLogout} text="Logout"/> :
+              <a className="gt-action gt-action-login" onClick={this.handleLogin}>Login with GitHub</a>
             }
             <div className="gt-copyright">
               <a className="gt-link gt-link-project" href="https://github.com/gitalk/gitalk" target="_blank">Gitalk</a>
@@ -739,7 +737,7 @@ class GitalkComponent extends Component {
               <Svg className="gt-ico-arrdown" name="arrow_down"/>
             </div> :
             <div className={isPopupVisible ? 'gt-user-inner is--poping' : 'gt-user-inner'} onClick={this.handlePopup}>
-              <span className="gt-user-name">{this.i18n.t('anonymous')}</span>
+              <span className="gt-user-name">Anonymous</span>
               <Svg className="gt-ico-arrdown" name="arrow_down"/>
             </div>
           }
