@@ -107,24 +107,8 @@ class GitalkComponent extends Component {
 
           this.getInit()
             .then(() => this.setState({ isIniting: false }))
-            .catch(err => {
-              console.log('err:', err)
-              this.setState({
-                isIniting: false,
-                isOccurError: true,
-                errorMsg: formatErrorMsg(err)
-              })
-            })
-        } else {
-          // no access_token
-          console.log('res.data err:', res.data)
-          this.setState({
-            isOccurError: true,
-            errorMsg: formatErrorMsg(new Error('no access token'))
-          })
         }
       }).catch(err => {
-        console.log('err: ', err)
         this.setState({
           isOccurError: true,
           errorMsg: formatErrorMsg(err)
@@ -134,7 +118,6 @@ class GitalkComponent extends Component {
       this.getInit()
         .then(() => this.setState({ isIniting: false }))
         .catch(err => {
-          console.log('err:', err)
           this.setState({
             isIniting: false,
             isOccurError: true,
