@@ -1,7 +1,7 @@
 language: node_js
 node_js:
   - stable
-before_script:
+install:
   # not compatible webpack@3.1.0 and extract-text-webpack-plugin@2.1.2
   - npm install --force
 script:
