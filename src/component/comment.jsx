@@ -127,6 +127,7 @@ export default class Comment extends Component {
                 className="gt-comment-edit"
                 title="Edit"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 <Svg className="gt-ico-edit" name="edit" />
               </a>
