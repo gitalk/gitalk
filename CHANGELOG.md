@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.1](https://github.com/gitalk/gitalk/compare/v1.7.0...v1.7.1) (2021-02-28)
+
+
+### Bug Fixes
+
+* Update comment not work when post like or unlike ([#416](https://github.com/gitalk/gitalk/issues/416)) ([e0ca916](https://github.com/gitalk/gitalk/commit/e0ca91652165c0a1c54a9b214e00168e1f8dbb17))
+
 ## [1.7.0](https://github.com/gitalk/gitalk/compare/v1.6.2...v1.7.0) (2020-10-15)
 
 
