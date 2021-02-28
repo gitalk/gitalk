@@ -398,6 +398,7 @@ class GitalkComponent extends Component {
 
           c.reactions.nodes.push(res.data)
           c.reactions.viewerHasReacted = true
+          return Object.assign({}, c)
         }
         return c
       })
@@ -455,6 +456,7 @@ class GitalkComponent extends Component {
               c.reactions.nodes.splice(index, 1)
             }
             c.reactions.viewerHasReacted = false
+            return Object.assign({}, c)
           }
           return c
         })

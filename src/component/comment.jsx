@@ -20,8 +20,8 @@ if (typeof window !== `undefined`) {
 }
 
 export default class Comment extends Component {
-  shouldComponentUpdate () {
-    return false
+  shouldComponentUpdate ({ comment }) {
+    return comment !== this.props.comment
   }
 
   componentDidMount () {
