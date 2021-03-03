@@ -182,7 +182,7 @@ And use the component like
 
 - **proxy** `String`
 
-  Default: `https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token`.
+  Default: `https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token`.
 
   GitHub oauth request reverse proxy for CORS. [Why need this?](https://github.com/isaacs/github/issues/330)
 

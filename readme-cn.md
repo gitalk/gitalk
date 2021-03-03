@@ -182,7 +182,7 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
 - **proxy** `String` 
 
-  Default: `https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token`.
+  Default: `https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token`.
 
    GitHub oauth 请求到反向代理，为了支持 CORS。 [为什么要这样?](https://github.com/isaacs/github/issues/330)
 
