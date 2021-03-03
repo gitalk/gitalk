@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.2](https://github.com/gitalk/gitalk/compare/v1.7.1...v1.7.2) (2021-03-03)
+
+
+### Bug Fixes
+
+* replace proxy ([68786ee](https://github.com/gitalk/gitalk/commit/68786ee5d28b1e93fc7dcb57edabc70370d80cca))
+
 ### [1.7.1](https://github.com/gitalk/gitalk/compare/v1.7.0...v1.7.1) (2021-02-28)
 
 

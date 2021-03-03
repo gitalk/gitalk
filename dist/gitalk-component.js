@@ -10024,7 +10024,7 @@ var GitalkComponent = function (_Component) {
       pagerDirection: 'last', // last or first
       createIssueManually: false,
       distractionFreeMode: false,
-      proxy: 'https://cors-anywhere.herokuapp.com/https://github.com/login/oauth/access_token',
+      proxy: 'https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token',
       flipMoveOptions: {
         staggerDelayBy: 150,
         appearAnimation: 'accordionVertical',
@@ -58828,7 +58828,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 var GT_ACCESS_TOKEN = exports.GT_ACCESS_TOKEN = 'GT_ACCESS_TOKEN';
-var GT_VERSION = exports.GT_VERSION = "1.7.1"; // eslint-disable-line
+var GT_VERSION = exports.GT_VERSION = "1.7.2"; // eslint-disable-line
 var GT_COMMENT = exports.GT_COMMENT = 'GT_COMMENT';
 
 /***/ }),
