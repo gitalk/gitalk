@@ -77,7 +77,9 @@ class GitalkComponent extends Component {
         url: '',
       },
 
-      updateCountCallback: null
+      updateCountCallback: null,
+
+      labelIncludeId: true
     }, props.options)
 
     this.state.pagerDirection = this.options.pagerDirection
@@ -225,7 +227,7 @@ class GitalkComponent extends Component {
     })
   }
   getIssueByLabels () {
-    const { owner, repo, id, labels, clientID, clientSecret } = this.options
+    const { owner, repo, id, labels, clientID, clientSecret, labelIncludeId } = this.options
 
     return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
       auth: {
@@ -233,7 +235,7 @@ class GitalkComponent extends Component {
         password: clientSecret
       },
       params: {
-        labels: labels.concat(id).join(','),
+        labels: labelIncludeId ? labels.concat(id).join(',') : labels.join(','),
         t: Date.now()
       }
     }).then(res => {
@@ -270,10 +272,10 @@ class GitalkComponent extends Component {
     return this.getIssueByLabels()
   }
   createIssue () {
-    const { owner, repo, title, body, id, labels, url } = this.options
+    const { owner, repo, title, body, id, labels, url, labelIncludeId } = this.options
     return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
       title,
-      labels: labels.concat(id),
+      labels: labelIncludeId ? labels.concat(id) : labels,
       body: body || `${url} \n\n ${
         getMetaContent('description') ||
         getMetaContent('description', 'og:description') || ''
