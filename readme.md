@@ -15,7 +15,7 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 - Authentication with github account
 - Serverless, all comments will be stored as github issues
 - Both personal and organization github projects can be used to store comments
-- Localization, support multiple languages [en, zh-CN, zh-TW, es-ES, fr, ru, de, pl, ko]
+- Localization, support multiple languages [en, zh-CN, zh-TW, es-ES, fr, ru, de, pl, ko, fa]
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 - Hotkey submit comment (cmd|ctrl + enter)
 
@@ -154,7 +154,7 @@ And use the component like
 
   Default: `navigator.language || navigator.userLanguage`.
 
-  Localization language key, `en`, `zh-CN`, `zh-TW`, `es-ES`, `fr`, `ru`, `de`, `pl` and `ko` are currently available.
+  Localization language key, `en`, `zh-CN`, `zh-TW`, `es-ES`, `fr`, `ru`, `de`, `pl`, `ko` and `fa` are currently available.
 
 - **perPage** `Number`
 
