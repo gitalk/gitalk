@@ -51,6 +51,7 @@ class GitalkComponent extends Component {
     super(props)
     this.options = Object.assign({}, {
       id: window.location.href,
+      idFrom: 'labels',  // title or labels
       number: -1,
       labels: ['Gitalk'],
       title: window.document.title,
@@ -225,29 +226,62 @@ class GitalkComponent extends Component {
     })
   }
   getIssueByLabels () {
-    const { owner, repo, id, labels, clientID, clientSecret } = this.options
-
-    return axiosGithub.get(`/repos/${owner}/${repo}/issues`, {
+    const { owner, repo, id, idFrom, labels, clientID, clientSecret } = this.options
+    let term = `[${labels[0]}:${id}]`
+    const q = `"${term}" in:title repo:${owner}/${repo}`;
+    let url = `/repos/${owner}/${repo}/issues`
+    let params = {
+      labels: labels.concat(id).join(','),
+      t: Date.now()
+    }
+    if(idFrom == "title"){
+      url = `/search/issues`
+      params = {
+        q: q
+      }
+    }
+    return axiosGithub.get(url, {
       auth: {
         username: clientID,
         password: clientSecret
       },
-      params: {
-        labels: labels.concat(id).join(','),
-        t: Date.now()
-      }
+      params: params
     }).then(res => {
       const { createIssueManually } = this.options
       let isNoInit = false
       let issue = null
-      if (!(res && res.data && res.data.length)) {
-        if (!createIssueManually && this.isAdmin) {
-          return this.createIssue()
+      if(idFrom == "title"){
+        let valid = (res && res.data.items && res.data.items.length)
+        if(valid){
+          valid = false
+          term = term.toLowerCase()
+          for (const result of res.data.items) {
+            if (result.title.toLowerCase().indexOf(term) !== -1) {
+              valid = true
+              break
+            }
+          }
         }
+        if (!valid) {
+          if (!createIssueManually && this.accessToken) {
+            return this.createIssue()
+          }
 
-        isNoInit = true
-      } else {
-        issue = res.data[0]
+          isNoInit = true
+        } else {
+          issue = res.data.items[0]
+        }
+        
+      }else{
+        if (!(res && res.data && res.data.length)) {
+          if (!createIssueManually && this.isAdmin) {
+            return this.createIssue()
+          }
+
+          isNoInit = true
+        } else {
+          issue = res.data[0]
+        }
       }
       this.setState({ issue, isNoInit })
       return issue
@@ -270,15 +304,20 @@ class GitalkComponent extends Component {
     return this.getIssueByLabels()
   }
   createIssue () {
-    const { owner, repo, title, body, id, labels, url } = this.options
-    return axiosGithub.post(`/repos/${owner}/${repo}/issues`, {
-      title,
-      labels: labels.concat(id),
+    const { owner, repo, title, body, id, idFrom, labels, url } = this.options
+    let content = {
+      title: title,
       body: body || `${url} \n\n ${
         getMetaContent('description') ||
         getMetaContent('description', 'og:description') || ''
       }`
-    }, {
+    }
+    if(idFrom == "title"){
+      content["title"] = `[${labels[0]}:${id}] ${title}`
+    }else{
+      content["labels"] =  labels.concat(id)
+    }
+    return axiosGithub.post(`/repos/${owner}/${repo}/issues`, content, {
       headers: {
         Authorization: `token ${this.accessToken}`
       }
