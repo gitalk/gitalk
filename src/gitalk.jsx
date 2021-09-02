@@ -645,7 +645,7 @@ class GitalkComponent extends Component {
             link: `<a href="https://github.com/${owner}/${repo}/issues">Issues</a>`
           })
         }}/>
-        <p>{this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
+        <p>{this.options.idFrom == "title" ? this.i18n.t('please-login-create') : this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
         {this.isAdmin ? <p>
           <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
         </p> : null}
