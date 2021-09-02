@@ -228,6 +228,9 @@ class GitalkComponent extends Component {
   getIssueByLabels () {
     const { owner, repo, id, idFrom, labels, clientID, clientSecret } = this.options
     let term = `[${labels[0]}:${id}]`
+    if(term.endsWith("index.html]")){
+      term = term.substr(0, term.length - 11) + "]"
+    }
     const q = `"${term}" in:title repo:${owner}/${repo}`;
     let url = `/repos/${owner}/${repo}/issues`
     let params = {
@@ -251,25 +254,27 @@ class GitalkComponent extends Component {
       let isNoInit = false
       let issue = null
       if(idFrom == "title"){
-        let valid = (res && res.data.items && res.data.items.length)
-        if(valid){
-          valid = false
+        let validIdx = (res && res.data.items && res.data.items.length) ? 0 : -1
+        if(validIdx >= 0){
+          validIdx = -1
+          let i = 0
           term = term.toLowerCase()
           for (const result of res.data.items) {
             if (result.title.toLowerCase().indexOf(term) !== -1) {
-              valid = true
+              validIdx = i
               break
             }
+            i++
           }
         }
-        if (!valid) {
+        if (validIdx < 0) {
           if (!createIssueManually && this.accessToken) {
             return this.createIssue()
           }
 
           isNoInit = true
         } else {
-          issue = res.data.items[0]
+          issue = res.data.items[validIdx]
         }
         
       }else{
@@ -313,7 +318,11 @@ class GitalkComponent extends Component {
       }`
     }
     if(idFrom == "title"){
-      content["title"] = `[${labels[0]}:${id}] ${title}`
+      let idFinal = id
+      if(idFinal.endsWith("index.html")){
+        idFinal = idFinal.substr(0, idFinal.length - 10)
+      }
+      content["title"] = `[${labels[0]}:${idFinal}] ${title}`
     }else{
       content["labels"] =  labels.concat(id)
     }
