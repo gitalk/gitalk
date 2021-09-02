@@ -124,7 +124,14 @@ And use the component like
 
   Default: `location.href`.
 
-  The unique id of the page. Length must less than 50.
+  The unique id of the page. Length must be less than 50. If `idFrom` is set to `title`, then [length needs to be less than 256](https://docs.github.com/en/rest/reference/search#limitations-on-query-length)
+
+- **idFrom** `String`
+
+  Default: `labels`.
+
+  The unique identification of the page, you can select `labels` and `title`, selecting `title` will add the unique id to `title` instead of `labels` when creating the `Issue`. The advantage is that the administrator does not need to manually initialize and create the `Issue' `, and the length of the logo can also be longer
+  > It should be noted that because the `Issue` is not created by the administrator, it is created by the user. The user has the right to modify the title of the `Issue`. If the unique id is modified, it may appear that the access page will automatically recreate an issue.
 
 - **number** `Number`
 

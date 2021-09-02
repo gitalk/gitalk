@@ -2,6 +2,7 @@
   "init": "Gitalk 載入中…",
   "no-found-related": "未找到相關的 %{link}",
   "please-contact": "請聯絡 %{user} 初始化評論",
+  "please-login-create": "請登錄 GitHub 以創建 Issue",
   "init-issue": "初始化 Issue",
   "leave-a-comment": "寫點什麼",
   "preview": "預覽",

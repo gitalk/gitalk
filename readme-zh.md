@@ -119,7 +119,14 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   Default: `location.href`.
 
-  頁面的唯一標識。長度必須小於50。
+  頁面的唯一標識。長度必須小於50。如果`idFrom`設置為`title`，則[長度需要小於`256`](https://docs.github.com/en/rest/reference/search#limitations-on-query-length)
+
+- **idFrom** `String`
+
+  Default: `labels`.
+
+  頁面的唯一標識， 可以選擇`labels`和`title`, 選擇`title`會在創建 `Issue`時將標識添加在`title`而不是`labels`，好處是不需要管理員手動初始化創建`Issue`了，而且標識的長度也可以更長
+  > 需要注意的是由於`Issue`不是由管理員創建的，是由用戶創建的， 用戶有權修改`Issue`標題，如果修改了標識，則可能出現訪問頁面會自動重新創建一個`Issue`
 
 - **number** `Number` 
   
