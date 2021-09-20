@@ -4,6 +4,7 @@
   "please-contact": "请联系 %{user} 初始化创建",
   "please-login-create": "请登录 GitHub 以创建 Issue",
   "init-issue": "初始化 Issue",
+  "create-issue": "创建 Issue",
   "leave-a-comment": "说点什么",
   "preview": "预览",
   "edit": "编辑",

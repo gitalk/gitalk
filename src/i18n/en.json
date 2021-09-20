@@ -4,6 +4,7 @@
   "please-contact": "Please contact %{user} to initialize the comment",
   "please-login-create": "Please login GitHub to create issue",
   "init-issue": "Init Issue",
+  "create-issue": "Create Issue",
   "leave-a-comment": "Leave a comment",
   "preview": "Preview",
   "edit": "Edit",

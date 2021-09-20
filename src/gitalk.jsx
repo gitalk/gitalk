@@ -268,7 +268,7 @@ class GitalkComponent extends Component {
           }
         }
         if (validIdx < 0) {
-          if (!createIssueManually && this.accessToken) {
+          if (!createIssueManually && this.isAdmin) {
             return this.createIssue()
           }
 
@@ -654,9 +654,11 @@ class GitalkComponent extends Component {
             link: `<a href="https://github.com/${owner}/${repo}/issues">Issues</a>`
           })
         }}/>
-        <p>{this.options.idFrom == "title" ? this.i18n.t('please-login-create') : this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}</p>
-        {this.isAdmin ? <p>
-          <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.i18n.t('init-issue')} />
+        {this.accessToken ? null : <p>
+            {this.options.idFrom == "title" ? this.i18n.t('please-login-create') : this.i18n.t('please-contact', { user: [].concat(admin).map(u => `@${u}`).join(' ') })}
+          </p>}
+        {this.accessToken ? <p>
+          <Button onClick={this.handleIssueCreate} isLoading={isIssueCreating} text={this.isAdmin ? this.i18n.t('init-issue') : this.i18n.t('create-issue')} />
         </p> : null}
         {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
       </div>
