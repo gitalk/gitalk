@@ -52,6 +52,7 @@ class GitalkComponent extends Component {
     this.options = Object.assign({}, {
       id: window.location.href,
       idFrom: 'labels',  // title or labels
+      adminAutoCreate: false,
       number: -1,
       labels: ['Gitalk'],
       title: window.document.title,
@@ -226,7 +227,7 @@ class GitalkComponent extends Component {
     })
   }
   getIssueByLabels () {
-    const { owner, repo, id, idFrom, labels, clientID, clientSecret } = this.options
+    const { owner, repo, id, idFrom, labels, clientID, clientSecret, adminAutoCreate } = this.options
     let term = `[${labels[0]}:${id}]`
     if(term.endsWith("index.html]")){
       term = term.substr(0, term.length - 11) + "]"
@@ -268,7 +269,7 @@ class GitalkComponent extends Component {
           }
         }
         if (validIdx < 0) {
-          if (!createIssueManually && this.isAdmin) {
+          if (!createIssueManually && adminAutoCreate && this.isAdmin) {
             return this.createIssue()
           }
 
