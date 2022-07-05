@@ -18,7 +18,7 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 - Hotkey submit comment (cmd|ctrl + enter)
 
-[中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
+[中文说明](readme-cn.md)
 [Demo](https://gitalk.github.io)
 
 ## Install
