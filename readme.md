@@ -3,7 +3,6 @@
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
 [![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
-[![david-dm][david-dm-image]][david-dm-url] 
 [![travis][travis-image]][travis-url] 
 [![coveralls][coveralls-image]][coveralls-url] 
 [![gzip-size][gzip-size]][gzip-url]
@@ -206,6 +205,29 @@ And use the component like
 
   Enable hot key (cmd|ctrl + enter) submit comment.
 
+- **upload** `Object` 
+  
+  Default:
+  ```js
+    {
+      enable: false, // default config is disabled
+      url: '', // api url
+      method: 'POST', // request method
+      name: 'file', // the formData's name
+      headers: { // request header
+        'Content-Type': 'multipart/form-data'
+      },
+      responseType: 'json', // response type
+      timeout: 10000, // timeout (ms)
+      fileMaxSize: 1024 * 1024 * 10, // file max size
+      successCode: 0, // success code value (not httpStatusCode)
+      successCodeKey: ['code'], // if file upload successfully, it will find this key (res)=> res.code
+      errorMsgKey: ['msg'], // upload failed （res）=> res.msg
+      errorMsg: '', // default error message. Upload failed
+      successUrlKey: ['data','url'], // if file upload successfully, it will find this url. such as res.data.url
+      proxy: '', // proxy url (cors)，default is https://cors-anywhere.azm.workers.dev/ , the real request url is https://cors-anywhere.azm.workers.dev/APIURL
+    }
+  ```
 
 ## Instance Methods
 

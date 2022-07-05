@@ -11,7 +11,8 @@ import {
   axiosGithub,
   getMetaContent,
   formatErrorMsg,
-  hasClassInParent
+  hasClassInParent,
+  deepObjectMerge
 } from './util'
 import Avatar from './component/avatar'
 import Button from './component/button'
@@ -53,7 +54,7 @@ class GitalkComponent extends Component {
   }
   constructor (props) {
     super(props)
-    this.options = Object.assign({}, {
+    this.options = deepObjectMerge( {
       id: window.location.href,
       number: -1,
       labels: ['Gitalk'],
@@ -99,7 +100,7 @@ class GitalkComponent extends Component {
         errorMsgKey: ['msg'],
         errorMsg: '',
         successUrlKey: ['data','url'],
-        proxy: 'https://cors-anywhere.azm.workers.dev/',
+        proxy: '', // such as https://cors-anywhere.azm.workers.dev/ , the real request url is https://cors-anywhere.azm.workers.dev/APIURL
       }
     }, props.options)
 

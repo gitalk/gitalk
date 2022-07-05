@@ -3,7 +3,6 @@
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
 [![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
-[![david-dm][david-dm-image]][david-dm-url] 
 [![travis][travis-image]][travis-url] 
 [![coveralls][coveralls-image]][coveralls-url] 
 [![gzip-size][gzip-size]][gzip-url]
@@ -206,7 +205,29 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   启用快捷键(cmd|ctrl + enter) 提交评论.
 
-
+- **upload** `Object` 
+  
+  Default:
+  ```js
+    {
+      enable: false, // 默认关闭图片上传功能
+      url: '', // 图片上传的URL
+      method: 'POST', // 请求方式
+      name: 'file', // 上传表单对应的名称
+      headers: { // 请求头
+        'Content-Type': 'multipart/form-data'
+      },
+      responseType: 'json', // 响应格式
+      timeout: 10000, // 超时时间，单位毫秒
+      fileMaxSize: 1024 * 1024 * 10, // 文件限制大小
+      successCode: 0, // 上传成功码
+      successCodeKey: ['code'], // 上传成功对应的字段，数组表示取返回内容（res）=> res.code
+      errorMsgKey: ['msg'], // 上传失败对应的字段 （res）=> res.msg
+      errorMsg: '', // 默认错误信息，不填写则展示“上传失败”
+      successUrlKey: ['data','url'], //上传成功对应的图片URL。例如 res.data.url
+      proxy: '', // 代理地址（便于跨域），可默认填写 https://cors-anywhere.azm.workers.dev/ , 真实请求地址为 https://cors-anywhere.azm.workers.dev/APIURL （其中APIURL指的上面填写的url）
+    }
+  ```
 ## 实例方法
 
 - **render(String/HTMLElement)**
