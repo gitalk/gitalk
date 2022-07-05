@@ -84,7 +84,7 @@ class GitalkComponent extends Component {
       updateCountCallback: null,
 
       upload: {
-        enable: true,
+        enable: false,
         url: '',
         method: 'POST',
         name: 'file',
@@ -95,10 +95,10 @@ class GitalkComponent extends Component {
         timeout: 10000,
         fileMaxSize: 1024 * 1024 * 10, // if fileMaxSize is 0 or fileMaxSize is null, it means no limit
         successCode: 0,
-        successCodeKey: ['data','url'],
+        successCodeKey: ['code'],
         errorMsgKey: ['msg'],
         errorMsg: '',
-        successUrlKey: ['url'],
+        successUrlKey: ['data','url'],
         proxy: 'https://cors-anywhere.azm.workers.dev/',
       }
     }, props.options)
