@@ -13714,8 +13714,6 @@ var GitalkComponent = function (_Component) {
       }
     }, props.options);
 
-    console.log(_this.options);
-
     _this.state.pagerDirection = _this.options.pagerDirection;
     var storedComment = window.localStorage.getItem(_const.GT_COMMENT);
     if (storedComment) {
@@ -21302,6 +21300,8 @@ var _locale = __webpack_require__(439);
 
 __webpack_require__(855);
 
+var _marked = __webpack_require__(195);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 if (typeof window !== 'undefined') {
@@ -21445,7 +21445,7 @@ var Comment = function (_Component) {
           _react2.default.createElement('div', {
             className: 'gt-comment-body markdown-body',
             dangerouslySetInnerHTML: {
-              __html: comment.body_html
+              __html: _marked.marked.parse(comment.body) // instead of github-markdown
             }
           })
         )
@@ -64835,8 +64835,6 @@ var _toConsumableArray3 = _interopRequireDefault(_toConsumableArray2);
 
 var _util = __webpack_require__(123);
 
-var _marked = __webpack_require__(195);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var getQL = function getQL(vars, pagerDirection) {
@@ -64889,7 +64887,7 @@ function getComments(issue) {
           html_url: author.url
         },
         created_at: node.createdAt,
-        body_html: _marked.marked.parse(node.body), // instead of github-markdown
+        body_html: node.bodyHTML,
         body: node.body,
         html_url: 'https://github.com/' + owner + '/' + repo + '/issues/' + issue.number + '#issuecomment-' + node.databaseId,
         reactions: node.reactions

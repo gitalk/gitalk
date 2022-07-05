@@ -104,8 +104,6 @@ class GitalkComponent extends Component {
       }
     }, props.options)
 
-    console.log(this.options)
-
     this.state.pagerDirection = this.options.pagerDirection
     const storedComment = window.localStorage.getItem(GT_COMMENT)
     if (storedComment) {
