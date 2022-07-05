@@ -2,6 +2,8 @@ import {
   axiosGithub
 } from '../util'
 
+import { marked } from 'marked'
+
 const getQL = (vars, pagerDirection) => {
   const cursorDirection = pagerDirection === 'last' ? 'before' : 'after'
   const ql = `
@@ -98,7 +100,7 @@ function getComments (issue) {
           html_url: author.url
         },
         created_at: node.createdAt,
-        body_html: node.bodyHTML,
+        body_html: marked.parse(node.body), // instead of github-markdown
         body: node.body,
         html_url: `https://github.com/${owner}/${repo}/issues/${issue.number}#issuecomment-${node.databaseId}`,
         reactions: node.reactions
