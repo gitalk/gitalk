@@ -48,6 +48,8 @@ class GitalkComponent extends Component {
 
     isOccurError: false,
     errorMsg: '',
+
+    isUploading: false,
   }
   constructor (props) {
     super(props)
@@ -83,15 +85,18 @@ class GitalkComponent extends Component {
 
       upload: {
         enable: true,
-        url: 'https://pic.abeautify.top/upload.php',
+        url: '',
         method: 'POST',
         name: 'file',
-        headers: {},
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
         responseType: 'json',
         timeout: 10000,
+        fileMaxSize: 1024 * 1024 * 10, // if fileMaxSize is 0 or fileMaxSize is null, it means no limit
         successCode: 0,
-        successCodeKey: ['code'],
-        errorMsgKey: ['state'],
+        successCodeKey: ['data','url'],
+        errorMsgKey: ['msg'],
         errorMsg: '',
         successUrlKey: ['url'],
         proxy: 'https://cors-anywhere.azm.workers.dev/',
@@ -612,29 +617,57 @@ class GitalkComponent extends Component {
     }
   }
   handleUpload = e => {
-    let {url,method,headers,timeout,responseType,successUrlKey,successCodeKey,successCode,errorMsgKey,errorMsg,proxy} = this.options.upload
+    if (this.isUploading) return
+    if (e.target.files.length === 0) return
+    let {
+      url,
+      method,
+      headers,
+      timeout,
+      responseType,
+      name,
+      successUrlKey,
+      successCodeKey,
+      successCode,
+      errorMsgKey,
+      errorMsg,
+      proxy,
+      fileMaxSize
+    } = this.options.upload
+    let file = e.target.files[0]
+    if (fileMaxSize && file.size > fileMaxSize) {
+      this.setState({
+        isOccurError: true,
+        errorMsg: this.i18n.t('upload-too-large') ? this.i18n.t('upload-too-large') + `${fileMaxSize / 1024 / 1024}MB` : `${file.name} is too large, please upload a file less than ${fileMaxSize / 1024 / 1024}MB`
+      })
+      return
+    }
+      
+    const formData = new FormData();
+    formData.append(name, file)
+    this.setState({
+      isUploading: true
+    })
     axios.request({
-      url:proxy ? proxy + url: url,
+      url: proxy ? proxy + url : url,
       method,
       headers,
       responseType,
       timeout,
-      data: {
-        file: e.target.files[0]
-      }
+      data: formData
     }).then(res => {
       if (res.status === 200) {
-        const getKeyValue = (data, keys) => { 
+        const getKeyValue = (data, keys) => {
           let v = data
-          for (key of keys) { 
+          for (let key of keys) {
             v = v[key]
           }
           return v
         }
-
-        let filename = ''
+        
+        let filename =  file.name
         let code = getKeyValue(res.data, successCodeKey)
-        if (code === successCode) { 
+        if (code === successCode) {
           let url = getKeyValue(res.data, successUrlKey)
           let newComment = `${this.state.comment}\n![${filename}](${url})`
           this.setState({
@@ -661,7 +694,12 @@ class GitalkComponent extends Component {
         isOccurError: true,
         errorMsg: formatErrorMsg(err)
       })
-    })
+    }).finally(() => { 
+      this.setState({
+        isUploading: false
+      })
+      }
+    )
   }
   initing () {
     return <div className="gt-initing">
@@ -689,7 +727,7 @@ class GitalkComponent extends Component {
   }
 
   header () {
-    const { user, comment, isCreating, previewHtml, isPreview } = this.state
+    const { user, comment, isCreating, previewHtml, isPreview,isUploading } = this.state
     const enableUpload = this.options.upload.enable
     return (
       <div className="gt-header" key="header">
@@ -732,7 +770,15 @@ class GitalkComponent extends Component {
               text={isPreview ? this.i18n.t('edit') : this.i18n.t('preview')}
               // isLoading={isPreviewing}
             />
-            { enableUpload && <input type="file" className="gt-btn-upload" onChange={this.handleUpload} /> }
+            {user && enableUpload && 
+              <button className="gt-btn gt-btn-upload" disabled={isUploading}>
+                {
+                  isUploading && <span className="gt-btn-loading gt-spinner" style="padding-right:10px"/>
+                }
+                <span>{this.i18n.t('upload')}</span>
+                <input id="gt-upload" type="file" title=''  name="file" onChange={this.handleUpload} />
+            </button>
+            }
             {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>
         </div>

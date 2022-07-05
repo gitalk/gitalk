@@ -18,5 +18,6 @@
   "logout": "注销",
   "anonymous": "未登录用户",
   "upload": "上传",
-  "upload-failed": "上传失败"
+  "upload-failed": "上传失败",
+  "upload-too-large": "上传文件过大，文件大小不应超出"
 }
