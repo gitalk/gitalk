@@ -16,5 +16,7 @@
   "sort-asc": "从旧到新排序",
   "sort-desc": "从新到旧排序",
   "logout": "注销",
-  "anonymous": "未登录用户"
+  "anonymous": "未登录用户",
+  "upload": "上传",
+  "upload-failed": "上传失败"
 }

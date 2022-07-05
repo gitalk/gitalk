@@ -61,6 +61,7 @@
     "date-fns": "2.16.1",
     "es6-promise": "4.1.1",
     "github-markdown-css": "2.8.0",
+    "marked": "^4.0.17",
     "node-polyglot": "2.2.2",
     "preact": "8.1.0",
     "preact-compat": "3.16.0",
