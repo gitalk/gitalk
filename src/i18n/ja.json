@@ -16,5 +16,8 @@
   "sort-asc": "投稿順に並び替え",
   "sort-desc": "最新順で並び替え",
   "logout": "ログアウト",
-  "anonymous": "匿名"
+  "anonymous": "匿名",
+  "upload-failed": "アップロードに失敗しました",
+  "upload-too-large": "アップロードファイルが大きすぎます、最大サイズは",
+  "upload": "アップロード"
 }
