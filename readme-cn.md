@@ -225,7 +225,7 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
       errorMsgKey: ['msg'], // 上传失败对应的字段 （res）=> res.msg
       errorMsg: '', // 默认错误信息，不填写则展示“上传失败”
       successUrlKey: ['data','url'], //上传成功对应的图片URL。例如 res.data.url
-      proxy: '', // 代理地址（便于跨域），可默认填写 https://cors-anywhere.azm.workers.dev/ , 真实请求地址为 https://cors-anywhere.azm.workers.dev/APIURL （其中APIURL指的上面填写的url）
+      proxy: '', // 代理地址（便于跨域），可填写 https://cors-anywhere.azm.workers.dev/ , 真实请求地址为 https://cors-anywhere.azm.workers.dev/APIURL （其中APIURL指的上面填写的url）
     }
   ```
 ## 实例方法

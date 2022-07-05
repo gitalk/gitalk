@@ -225,7 +225,7 @@ And use the component like
       errorMsgKey: ['msg'], // upload failed （res）=> res.msg
       errorMsg: '', // default error message. Upload failed
       successUrlKey: ['data','url'], // if file upload successfully, it will find this url. such as res.data.url
-      proxy: '', // proxy url (cors)，default is https://cors-anywhere.azm.workers.dev/ , the real request url is https://cors-anywhere.azm.workers.dev/APIURL
+      proxy: '', // proxy url (cors). You can write https://cors-anywhere.azm.workers.dev/ , the real request url is https://cors-anywhere.azm.workers.dev/APIURL
     }
   ```
 

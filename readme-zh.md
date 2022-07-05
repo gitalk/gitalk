@@ -220,7 +220,7 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
       errorMsgKey: ['msg'], // 上傳失敗對應的字段 （res）=> res.msg
       errorMsg: '', // 默認錯誤信息，不填寫則展示「上傳失敗」
       successUrlKey: ['data','url'], //上傳成功對應的圖片URL。例如 res.data.url
-      proxy: '', // 代理地址（便於跨域），可默認填寫 https://cors-anywhere.azm.workers.dev/ , 真實請求地址為 https://cors-anywhere.azm.workers.dev/APIURL （其中APIURL指的上面填寫的url）
+      proxy: '', // 代理地址（便於跨域），可填寫 https://cors-anywhere.azm.workers.dev/ , 真實請求地址為 https://cors-anywhere.azm.workers.dev/APIURL （其中APIURL指的上面填寫的url）
     }
   ```
 
