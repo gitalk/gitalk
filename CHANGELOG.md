@@ -2,16 +2,7 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [1.8.1](https://github.com/KingCheni/gitalk/compare/v1.8.0...v1.8.1) (2022-07-07)
-
-## [1.8.0](https://github.com/KingCheni/gitalk/compare/v1.7.2...v1.8.0) (2022-07-07)
-
-
-### Features
-
-* **i18n:** add Japanese lang support ([#460](https://github.com/KingCheni/gitalk/issues/460)) ([557a9cf](https://github.com/KingCheni/gitalk/commit/557a9cf205a44b3fdef387a9236a6d85498db890))
-* **i18n:** add persian-fa language ([#450](https://github.com/KingCheni/gitalk/issues/450)) ([dc0bedb](https://github.com/KingCheni/gitalk/commit/dc0bedb2ed69dcad538a95a61e34a873ab3e1475))
-* image upload ([9f3d954](https://github.com/KingCheni/gitalk/commit/9f3d954a71d4540d1ba9ca587bc8780161115120))
+### [1.8.2](https://github.com/KingCheni/gitalk/compare/v1.8.1...v1.8.2) (2022-07-07)
 
 ### [1.7.2](https://github.com/gitalk/gitalk/compare/v1.7.1...v1.7.2) (2021-03-03)
 
