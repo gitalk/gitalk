@@ -16,5 +16,8 @@
   "sort-asc": "오래된 댓글 먼저",
   "sort-desc": "최신 댓글 먼저",
   "logout": "로그아웃",
-  "anonymous": "익명"
+  "anonymous": "익명",
+  "upload": "업로드",
+  "upload-failed": "업로드 실패",
+  "upload-too-large": "업로드 파일이 너무 큽니다. 최대 크기는 다음과 같습니다."
 }

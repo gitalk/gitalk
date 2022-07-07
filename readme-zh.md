@@ -4,7 +4,6 @@
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
 [![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
-[![david-dm][david-dm-image]][david-dm-url] 
 [![travis][travis-image]][travis-url] 
 [![coveralls][coveralls-image]][coveralls-url] 
 [![gzip-size][gzip-size]][gzip-url]
@@ -19,9 +18,11 @@ Gitalk 是一個基於 GitHub Issue 和 Preact 開發的評論插件。
 - 無干擾模式（設置 distractionFreeMode 為 true 開啟）
 - 快捷鍵提交評論 （cmd|ctrl + enter）
 
-[Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
-[在線示例](https://gitalk.github.io)
+[EN](readme.md) | [简体中文](readme-cn.md) | 繁體中文
 
+## 在線示例
+
+[在線示例](https://gitalk.github.io)
 ## 安裝
 
 兩種方式
@@ -48,6 +49,10 @@ npm i --save gitalk
 import 'gitalk/dist/gitalk.css'
 import Gitalk from 'gitalk'
 ```
+
+> **WARNING**  
+> 如果你采取上述方法安裝Gitalk，則無法使用上傳功能（因為不是分發的最新版本，僅有此fork項目有上傳功能）。所以你必須下載 `dist/gitalk.min.js` 和 `dist/gitalk.css`.  
+> 這些文件是最新構建的，然後將他們導入到你的項目中。
 
 ## 使用
 
@@ -201,6 +206,31 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   啟用快捷鍵(cmd|ctrl + enter) 提交評論.
 
+- **upload** `Object` 
+  
+  Default:
+  ```js
+    {
+      enable: false, // 默認關閉上傳功能
+      url: '', // 上傳的URL
+      method: 'POST', // 請求方式
+      name: 'file', // 上傳表單對應的名稱
+      headers: { // 請求頭
+        'Content-Type': 'multipart/form-data'
+      },
+      responseType: 'json', // 響應格式
+      timeout: 10000, // 超時時間，單位毫秒
+      multiple: false, // 檔案上傳是否可以多選
+      accept: 'image/*', // 可接受檔案的類型
+      fileMaxSize: 1024 * 1024 * 10, // 檔案限製大小
+      successCode: 0, // 上傳成功碼
+      successCodeKey: ['code'], // 上傳成功對應的字段，數組表示取返回內容（res）=> res.code
+      errorMsgKey: ['msg'], // 上傳失敗對應的字段 （res）=> res.msg
+      errorMsg: '', // 默認錯誤信息，不填寫則展示「上傳失敗」
+      successUrlKey: ['data','url'], //上傳成功對應的圖片URL。例如 res.data.url
+      proxy: '', // 代理地址（便於跨域），可填寫 https://cors-anywhere.azm.workers.dev/ , 真實請求地址為 https://cors-anywhere.azm.workers.dev/APIURL （其中APIURL指的上面填寫的url）
+    }
+  ```
 
 ## 實例方法
 

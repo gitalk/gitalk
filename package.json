@@ -33,6 +33,7 @@
     "babel-preset-stage-2": "6.24.1",
     "cross-env": "5.0.1",
     "css-loader": "0.28.4",
+    "cz-conventional-changelog": "^3.3.0",
     "enzyme": "2.9.1",
     "eslint": "4.19.1",
     "eslint-config-o2team": "0.1.6",
@@ -57,10 +58,11 @@
   },
   "dependencies": {
     "autosize": "3.0.21",
-    "axios": "0.19.2",
+    "axios": "^0.27.2",
     "date-fns": "2.16.1",
     "es6-promise": "4.1.1",
     "github-markdown-css": "2.8.0",
+    "marked": "^4.0.17",
     "node-polyglot": "2.2.2",
     "preact": "8.1.0",
     "preact-compat": "3.16.0",
@@ -91,6 +93,11 @@
     "scripts": {
       "prerelease": "npm test",
       "precommit": "npm run-script build > /dev/null && git add ./dist"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
     }
   }
 }
