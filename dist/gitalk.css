@@ -883,6 +883,14 @@
   background-color: #f2f2f2;
   border-color: #81a6ed;
 }
+.gt-container .gt-btn-upload {
+  background-color: #fff;
+  color: #6190e8;
+}
+.gt-container .gt-btn-upload:hover {
+  background-color: #f2f2f2;
+  border-color: #81a6ed;
+}
 .gt-container .gt-btn-public:hover {
   background-color: #81a6ed;
   border-color: #81a6ed;
@@ -1226,6 +1234,30 @@
 }
 .gt-container .gt-comment-admin .gt-comment-content {
   background-color: #f6f9fe;
+}
+#gt-upload {
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  text-align: right;
+  font-size: 0;
+  opacity: 0;
+  background: none;
+  cursor: pointer;
+  display: block;
+  position: absolute;
+  z-index: 0;
+}
+#gt-upload:hover {
+  cursor: pointer;
+}
+.gt-btn-upload {
+  position: relative;
+  overflow: hidden;
+}
+.gt-btn-upload span {
+  cursor: pointer;
 }
 @-webkit-keyframes gt-kf-rotate {
   0% {

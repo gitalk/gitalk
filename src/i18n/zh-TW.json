@@ -16,5 +16,8 @@
   "sort-asc": "從舊至新排序",
   "sort-desc": "從新至舊排序",
   "logout": "登出",
-  "anonymous": "訪客"
+  "anonymous": "訪客",
+  "upload": "上傳",
+  "upload-failed": "上傳失敗",
+  "upload-too-large": "上傳的檔案過大，不應超出"
 }

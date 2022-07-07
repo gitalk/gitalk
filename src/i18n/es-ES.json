@@ -16,5 +16,8 @@
   "sort-asc": "Ordenar por Antiguos",
   "sort-desc": "Ordenar por Recientes",
   "logout": "Salir",
-  "anonymous": "Anónimo"
+  "anonymous": "Anónimo",
+  "upload": "Subir",
+  "upload-failed": "Subida fallida",
+  "upload-too-large": "El archivo subido es demasiado grande, el tamaño máximo es"
 }

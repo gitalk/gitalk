@@ -16,5 +16,8 @@
   "sort-asc": "Sort by Oldest",
   "sort-desc": "Sort by Latest",
   "logout": "Logout",
-  "anonymous": "Anonymous"
+  "anonymous": "Anonymous",  
+  "upload": "Upload",
+  "upload-failed": "Upload failed",
+  "upload-too-large": "Upload file is too large, max size is "
 }
