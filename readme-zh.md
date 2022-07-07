@@ -18,9 +18,11 @@ Gitalk 是一個基於 GitHub Issue 和 Preact 開發的評論插件。
 - 無干擾模式（設置 distractionFreeMode 為 true 開啟）
 - 快捷鍵提交評論 （cmd|ctrl + enter）
 
-[Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
-[在線示例](https://gitalk.github.io)
+[EN](readme.md) | [简体中文](readme-cn.md) | 繁體中文
 
+## 在線示例
+
+[在線示例](https://gitalk.github.io)
 ## 安裝
 
 兩種方式
@@ -205,8 +207,8 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
   Default:
   ```js
     {
-      enable: false, // 默認關閉圖片上傳功能
-      url: '', // 圖片上傳的URL
+      enable: false, // 默認關閉上傳功能
+      url: '', // 上傳的URL
       method: 'POST', // 請求方式
       name: 'file', // 上傳表單對應的名稱
       headers: { // 請求頭
@@ -214,7 +216,9 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
       },
       responseType: 'json', // 響應格式
       timeout: 10000, // 超時時間，單位毫秒
-      fileMaxSize: 1024 * 1024 * 10, // 文件限製大小
+      multiple: false, // 檔案上傳是否可以多選
+      accept: 'image/*', // 可接受檔案的類型
+      fileMaxSize: 1024 * 1024 * 10, // 檔案限製大小
       successCode: 0, // 上傳成功碼
       successCodeKey: ['code'], // 上傳成功對應的字段，數組表示取返回內容（res）=> res.code
       errorMsgKey: ['msg'], // 上傳失敗對應的字段 （res）=> res.msg

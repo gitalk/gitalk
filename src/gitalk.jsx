@@ -94,6 +94,8 @@ class GitalkComponent extends Component {
         },
         responseType: 'json',
         timeout: 10000,
+        multiple: false,
+        accept: 'image/*', 
         fileMaxSize: 1024 * 1024 * 10, // if fileMaxSize is 0 or fileMaxSize is null, it means no limit
         successCode: 0,
         successCodeKey: ['code'],
@@ -729,7 +731,7 @@ class GitalkComponent extends Component {
 
   header () {
     const { user, comment, isCreating, previewHtml, isPreview,isUploading } = this.state
-    const enableUpload = this.options.upload.enable
+    const { enable, accpet, multiple } = this.options.upload
     return (
       <div className="gt-header" key="header">
         {user ?
@@ -771,13 +773,13 @@ class GitalkComponent extends Component {
               text={isPreview ? this.i18n.t('edit') : this.i18n.t('preview')}
               // isLoading={isPreviewing}
             />
-            {user && enableUpload && 
+            {user && enable && 
               <button className="gt-btn gt-btn-upload" disabled={isUploading}>
                 {
                   isUploading && <span className="gt-btn-loading gt-spinner" style="padding-right:10px"/>
                 }
                 <span>{this.i18n.t('upload')}</span>
-                <input id="gt-upload" type="file" title=''  name="file" onChange={this.handleUpload} />
+                <input id="gt-upload" type="file" title=''  name="file" multiple={multiple} accept={accpet} onChange={this.handleUpload} />
             </button>
             }
             {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}

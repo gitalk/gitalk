@@ -18,7 +18,10 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 - Hotkey submit comment (cmd|ctrl + enter)
 
-[中文说明](readme-cn.md)
+EN | [简体中文](readme-cn.md) | [繁體中文](readme-zh.md)
+
+## Demo
+
 [Demo](https://gitalk.github.io)
 
 ## Install
@@ -219,13 +222,15 @@ And use the component like
       },
       responseType: 'json', // response type
       timeout: 10000, // timeout (ms)
+      multiple: false, // whether uploading multiple files is permitted
+      accept: 'image/*', // accepted file types
       fileMaxSize: 1024 * 1024 * 10, // file max size
       successCode: 0, // success code value (not httpStatusCode)
-      successCodeKey: ['code'], // if file upload successfully, it will find this key (res)=> res.code
-      errorMsgKey: ['msg'], // upload failed （res）=> res.msg
-      errorMsg: '', // default error message. Upload failed
-      successUrlKey: ['data','url'], // if file upload successfully, it will find this url. such as res.data.url
-      proxy: '', // proxy url (cors). You can write https://cors-anywhere.azm.workers.dev/ , the real request url is https://cors-anywhere.azm.workers.dev/APIURL
+      successCodeKey: ['code'], // If the file is uploaded successfully, it will find this current code (res)=> res.code (res is the response content)
+      errorMsgKey: ['msg'], // upload failed key. such as（res）=> res.msg
+      errorMsg: '', // When the file uploads failed, it will show this message.
+      successUrlKey: ['data','url'], // If the file is uploaded successfully, it will find this current url. such as res.data.url
+      proxy: '', // proxy url (for cors). You can write https://cors-anywhere.azm.workers.dev/ ,so the real request's url is https://cors-anywhere.azm.workers.dev/APIURL
     }
   ```
 
