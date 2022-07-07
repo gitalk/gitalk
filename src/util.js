@@ -79,8 +79,8 @@ export const deepObjectMerge = (target, source) => {
       target[key] =
         target[key] && (typeof target[key] === 'object' && !Array.isArray(target[key]))
           ? deepObjectMerge(target[key], source[key])
-          : (target[key] = source[key]);
+          : (target[key] = source[key])
     }
   }
-  return target;
-};
+  return target
+}
