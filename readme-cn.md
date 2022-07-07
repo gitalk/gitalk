@@ -50,6 +50,10 @@ import 'gitalk/dist/gitalk.css'
 import Gitalk from 'gitalk'
 ```
 
+> **WARNING**  
+> 如果你采取上述方法安装Gitalk，则无法使用上传功能（因为不是分发的最新版本，仅有此fork项目有上传功能）。所以你必须下载 `dist/gitalk.min.js` 和 `dist/gitalk.css`.  
+> 这些文件是最新构建的，然后将他们导入到你的项目中。
+
 ## 使用
 
 首先，您需要选择一个公共github存储库（已存在或创建一个新的github存储库）用于存储评论，
