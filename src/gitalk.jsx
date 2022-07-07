@@ -731,7 +731,7 @@ class GitalkComponent extends Component {
 
   header () {
     const { user, comment, isCreating, previewHtml, isPreview,isUploading } = this.state
-    const { enable, accpet, multiple } = this.options.upload
+    const { enable, accept, multiple } = this.options.upload
     return (
       <div className="gt-header" key="header">
         {user ?
@@ -779,7 +779,7 @@ class GitalkComponent extends Component {
                   isUploading && <span className="gt-btn-loading gt-spinner" style="padding-right:10px"/>
                 }
                 <span>{this.i18n.t('upload')}</span>
-                <input id="gt-upload" type="file" title=''  name="file" multiple={multiple} accept={accpet} onChange={this.handleUpload} />
+                <input id="gt-upload" type="file" title=''  name="file" multiple={multiple} accept={accept} onChange={this.handleUpload} />
             </button>
             }
             {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}

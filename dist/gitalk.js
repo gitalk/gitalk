@@ -17232,7 +17232,7 @@ var GitalkComponent = function (_Component) {
           isUploading = _state3.isUploading;
       var _options$upload = this.options.upload,
           enable = _options$upload.enable,
-          accpet = _options$upload.accpet,
+          accept = _options$upload.accept,
           multiple = _options$upload.multiple;
 
       return _react2.default.createElement(
@@ -17292,7 +17292,7 @@ var GitalkComponent = function (_Component) {
                 null,
                 this.i18n.t('upload')
               ),
-              _react2.default.createElement('input', { id: 'gt-upload', type: 'file', title: '', name: 'file', multiple: multiple, accept: accpet, onChange: this.handleUpload })
+              _react2.default.createElement('input', { id: 'gt-upload', type: 'file', title: '', name: 'file', multiple: multiple, accept: accept, onChange: this.handleUpload })
             ),
             !user && _react2.default.createElement(_button2.default, { className: 'gt-btn-login', onClick: this.handleLogin, text: this.i18n.t('login-with-github') })
           )
