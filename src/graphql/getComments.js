@@ -2,6 +2,7 @@ import {
   axiosGithub
 } from '../util'
 
+
 const getQL = (vars, pagerDirection) => {
   const cursorDirection = pagerDirection === 'last' ? 'before' : 'after'
   const ql = `

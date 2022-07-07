@@ -16,5 +16,8 @@
   "sort-asc": "Trier par plus ancien",
   "sort-desc": "Trier par plus récent",
   "logout": "Déconnexion",
-  "anonymous": "Anonyme"
+  "anonymous": "Anonyme",
+  "upload": "Télécharger",
+  "upload-failed": "Le téléchargement a échoué",
+  "upload-too-large": "Le fichier téléchargé est trop volumineux, la taille maximale est"
 }
