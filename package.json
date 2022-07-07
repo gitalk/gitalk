@@ -33,6 +33,7 @@
     "babel-preset-stage-2": "6.24.1",
     "cross-env": "5.0.1",
     "css-loader": "0.28.4",
+    "cz-conventional-changelog": "^3.3.0",
     "enzyme": "2.9.1",
     "eslint": "4.19.1",
     "eslint-config-o2team": "0.1.6",
@@ -92,6 +93,11 @@
     "scripts": {
       "prerelease": "npm test",
       "precommit": "npm run-script build > /dev/null && git add ./dist"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
     }
   }
 }
