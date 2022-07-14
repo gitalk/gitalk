@@ -50,10 +50,6 @@ import 'gitalk/dist/gitalk.css'
 import Gitalk from 'gitalk'
 ```
 
-> **WARNING**  
-> 如果你采取上述方法安裝Gitalk，則無法使用上傳功能（因為不是分發的最新版本，僅有此fork項目有上傳功能）。所以你必須下載 `dist/gitalk.min.js` 和 `dist/gitalk.css`.  
-> 這些文件是最新構建的，然後將他們導入到你的項目中。
-
 ## 使用
 
 添加壹個容器：

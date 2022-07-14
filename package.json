@@ -60,6 +60,7 @@
     "autosize": "3.0.21",
     "axios": "^0.27.2",
     "date-fns": "2.16.1",
+    "dompurify": "^2.3.9",
     "es6-promise": "4.1.1",
     "github-markdown-css": "2.8.0",
     "marked": "^4.0.17",

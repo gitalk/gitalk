@@ -12,7 +12,8 @@ import {
   getMetaContent,
   formatErrorMsg,
   hasClassInParent,
-  deepObjectMerge
+  deepObjectMerge,
+  markdownParse
 } from './util'
 import Avatar from './component/avatar'
 import Button from './component/button'
@@ -21,7 +22,6 @@ import Comment from './component/comment'
 import Svg from './component/svg'
 import { GT_ACCESS_TOKEN, GT_VERSION, GT_COMMENT } from './const'
 import QLGetComments from './graphql/getComments'
-import {marked} from 'marked'
 import axios from 'axios'
 
 class GitalkComponent extends Component {
@@ -54,7 +54,7 @@ class GitalkComponent extends Component {
   }
   constructor (props) {
     super(props)
-    this.options = deepObjectMerge( {
+    this.options = deepObjectMerge({
       id: window.location.href,
       number: -1,
       labels: ['Gitalk'],
@@ -95,13 +95,13 @@ class GitalkComponent extends Component {
         responseType: 'json',
         timeout: 10000,
         multiple: false,
-        accept: 'image/*', 
+        accept: 'image/*',
         fileMaxSize: 1024 * 1024 * 10, // if fileMaxSize is 0 or fileMaxSize is null, it means no limit
         successCode: 0,
         successCodeKey: ['code'],
         errorMsgKey: ['msg'],
         errorMsg: '',
-        successUrlKey: ['data','url'],
+        successUrlKey: ['data', 'url'],
         proxy: '', // such as https://cors-anywhere.azm.workers.dev/ , the real request url is https://cors-anywhere.azm.workers.dev/APIURL
       }
     }, props.options)
@@ -565,13 +565,11 @@ class GitalkComponent extends Component {
     })
   }
   handleCommentPreview = e => {
-    this.setState({
-      isPreview: !this.state.isPreview
-    })
     // use marked to render previewHtml instead of github-markdown-api
     // this can solve the problem of picture's src not correct
     this.setState({
-      previewHtml: marked.parse(this.state.comment)
+      isPreview: !this.state.isPreview,
+      previewHtml: markdownParse(this.state.comment)
     })
     // axiosGithub.post('/markdown', {
     //   text: this.state.comment
@@ -622,7 +620,7 @@ class GitalkComponent extends Component {
   handleUpload = e => {
     if (this.isUploading) return
     if (e.target.files.length === 0) return
-    let {
+    const {
       url,
       method,
       headers,
@@ -637,16 +635,16 @@ class GitalkComponent extends Component {
       proxy,
       fileMaxSize
     } = this.options.upload
-    let file = e.target.files[0]
+    const file = e.target.files[0]
     if (fileMaxSize && file.size > fileMaxSize) {
+      const str = this.i18n.t('upload-too-large')
       this.setState({
         isOccurError: true,
-        errorMsg: this.i18n.t('upload-too-large') ? this.i18n.t('upload-too-large') + `${fileMaxSize / 1024 / 1024}MB` : `${file.name} is too large, please upload a file less than ${fileMaxSize / 1024 / 1024}MB`
+        errorMsg: str ? `${str}${fileMaxSize / 1024 / 1024}MB` : `${file.name} is too large, please upload a file less than ${fileMaxSize / 1024 / 1024}MB`
       })
       return
     }
-      
-    const formData = new FormData();
+    const formData = new FormData()
     formData.append(name, file)
     this.setState({
       isUploading: true
@@ -662,46 +660,43 @@ class GitalkComponent extends Component {
       if (res.status === 200) {
         const getKeyValue = (data, keys) => {
           let v = data
-          for (let key of keys) {
+          for (const key of keys) {
             v = v[key]
           }
           return v
         }
-        
-        let filename =  file.name
-        let code = getKeyValue(res.data, successCodeKey)
+        const filename = file.name
+        const code = getKeyValue(res.data, successCodeKey)
         if (code === successCode) {
-          let url = getKeyValue(res.data, successUrlKey)
-          let newComment = `${this.state.comment}\n![${filename}](${url})`
+          const url = getKeyValue(res.data, successUrlKey)
+          const newComment = `${this.state.comment}\n![${filename}](${url})`
           this.setState({
             comment: newComment,
-            previewHtml: marked.parse(newComment)
+            previewHtml: markdownParse(newComment)
           })
         } else {
-          let msg = getKeyValue(res.data, errorMsgKey)
+          const msg = getKeyValue(res.data, errorMsgKey)
           this.setState({
             isOccurError: true,
             errorMsg: msg
           })
         }
-        
       } else {
         this.setState({
           isOccurError: true,
           errorMsg: errorMsg || this.i18n.t('upload-failed')
         })
       }
-      
     }).catch(err => {
       this.setState({
         isOccurError: true,
         errorMsg: formatErrorMsg(err)
       })
-    }).finally(() => { 
+    }).finally(() => {
       this.setState({
         isUploading: false
       })
-      }
+    }
     )
   }
   initing () {
@@ -730,7 +725,7 @@ class GitalkComponent extends Component {
   }
 
   header () {
-    const { user, comment, isCreating, previewHtml, isPreview,isUploading } = this.state
+    const { user, comment, isCreating, previewHtml, isPreview, isUploading } = this.state
     const { enable, accept, multiple } = this.options.upload
     return (
       <div className="gt-header" key="header">
@@ -773,14 +768,14 @@ class GitalkComponent extends Component {
               text={isPreview ? this.i18n.t('edit') : this.i18n.t('preview')}
               // isLoading={isPreviewing}
             />
-            {user && enable && 
+            {user && enable &&
               <button className="gt-btn gt-btn-upload" disabled={isUploading}>
                 {
                   isUploading && <span className="gt-btn-loading gt-spinner" style="padding-right:10px"/>
                 }
                 <span>{this.i18n.t('upload')}</span>
-                <input id="gt-upload" type="file" title=''  name="file" multiple={multiple} accept={accept} onChange={this.handleUpload} />
-            </button>
+                <input id="gt-upload" type="file" title='' name="file" multiple={multiple} accept={accept} onChange={this.handleUpload} />
+              </button>
             }
             {!user && <Button className="gt-btn-login" onClick={this.handleLogin} text={this.i18n.t('login-with-github')} />}
           </div>

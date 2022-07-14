@@ -51,9 +51,6 @@ npm i --save gitalk
 import 'gitalk/dist/gitalk.css'
 import Gitalk from 'gitalk'
 ```
-> **WARNING**  
-> If you install gitalk by methods above, you can't use the upload function. So you must download the `dist/gitalk.min.js` and `dist/gitalk.css`.  
-> These files in dist are the newest, then you can import them.
 
 ## Usage
 Firstly, you need choose a public github repository (existed or create a new one) for store comments,

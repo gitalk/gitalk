@@ -1,4 +1,6 @@
 import axios from 'axios'
+import DOMPurify from 'dompurify'
+import { marked } from 'marked'
 
 export const queryParse = (search = window.location.search) => {
   if (!search) return {}
@@ -84,3 +86,6 @@ export const deepObjectMerge = (target, source) => {
   }
   return target
 }
+
+export const markdownParse = markdown => DOMPurify.sanitize(marked.parse(markdown))
+
