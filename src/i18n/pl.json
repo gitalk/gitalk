@@ -16,6 +16,8 @@
   "sort-asc": "Sortuj od najstarszych",
   "sort-desc": "Sortuj od najnowszych",
   "logout": "Wyloguj",
-  "anonymous": "Anonimowy"
+  "anonymous": "Anonimowy",
+  "upload": "Wgrywać",
+  "upload-failed": "Przesyłanie nie powiodło się",
+  "upload-too-large": "Przesłany plik jest za duży, maksymalny rozmiar to"
 }
-

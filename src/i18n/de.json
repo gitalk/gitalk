@@ -16,5 +16,8 @@
   "sort-asc": "Älteste zuerst",
   "sort-desc": "Neuste zuerst",
   "logout": "Abmelden",
-  "anonymous": "Anonym"
+  "anonymous": "Anonym",
+  "upload": "Hochladen",
+  "upload-failed": "Upload fehlgeschlagen",
+  "upload-too-large": "Hochgeladene Datei ist zu groß, maximale Größe ist"
 }

@@ -178,6 +178,12 @@ $gt-size-avatar-mobi := em(32px)
       &:hover
         background-color: darken($gt-color-btn, 5%)
         border-color: lighten($gt-color-main, 20%)
+    &-upload
+      background-color: $gt-color-btn
+      color: $gt-color-main
+      &:hover
+        background-color: darken($gt-color-btn, 5%)
+        border-color: lighten($gt-color-main, 20%)
     &-public
       &:hover
         background-color: lighten($gt-color-main, 20%)
@@ -454,3 +460,25 @@ $gt-size-avatar-mobi := em(32px)
     transform: rotate(0)
   100%
     transform: rotate(360deg)
+
+#gt-upload
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  min-height: 100%;
+  text-align: right;
+  font-size:0;
+  opacity: 0;
+  background: none;
+  cursor: pointer;
+  display: block;
+  position: absolute;
+  z-index : 0;
+  &:hover
+    cursor: pointer;
+
+.gt-btn-upload
+  position: relative;
+  overflow: hidden;
+  span
+    cursor: pointer;

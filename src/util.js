@@ -1,4 +1,6 @@
 import axios from 'axios'
+import DOMPurify from 'dompurify'
+import { marked } from 'marked'
 
 export const queryParse = (search = window.location.search) => {
   if (!search) return {}
@@ -72,3 +74,18 @@ export const hasClassInParent = (element, ...className) => {
   /* istanbul ignore next */
   return element.parentNode && hasClassInParent(element.parentNode, className)
 }
+
+export const deepObjectMerge = (target, source) => {
+  for (const key in source) {
+    if (key.hasOwnProperty) {
+      target[key] =
+        target[key] && (typeof target[key] === 'object' && !Array.isArray(target[key]))
+          ? deepObjectMerge(target[key], source[key])
+          : (target[key] = source[key])
+    }
+  }
+  return target
+}
+
+export const markdownParse = markdown => DOMPurify.sanitize(marked.parse(markdown))
+

@@ -3,7 +3,6 @@
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
 [![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
-[![david-dm][david-dm-image]][david-dm-url] 
 [![travis][travis-image]][travis-url] 
 [![coveralls][coveralls-image]][coveralls-url] 
 [![gzip-size][gzip-size]][gzip-url]
@@ -19,7 +18,10 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 - Hotkey submit comment (cmd|ctrl + enter)
 
-[中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
+EN | [简体中文](readme-cn.md) | [繁體中文](readme-zh.md)
+
+## Demo
+
 [Demo](https://gitalk.github.io)
 
 ## Install
@@ -36,6 +38,7 @@ Two ways.
 
   <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
   <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
 ```
 
 - npm install
@@ -206,6 +209,31 @@ And use the component like
 
   Enable hot key (cmd|ctrl + enter) submit comment.
 
+- **upload** `Object` 
+  
+  Default:
+  ```js
+    {
+      enable: false, // default config is disabled
+      url: '', // api url
+      method: 'POST', // request method
+      name: 'file', // the formData's name
+      headers: { // request header
+        'Content-Type': 'multipart/form-data'
+      },
+      responseType: 'json', // response type
+      timeout: 10000, // timeout (ms)
+      multiple: false, // whether uploading multiple files is permitted
+      accept: 'image/*', // accepted file types
+      fileMaxSize: 1024 * 1024 * 10, // file max size
+      successCode: 0, // success code value (not httpStatusCode)
+      successCodeKey: ['code'], // If the file is uploaded successfully, it will find this current code (res)=> res.code (res is the response content)
+      errorMsgKey: ['msg'], // upload failed key. such as（res）=> res.msg
+      errorMsg: '', // When the file uploads failed, it will show this message.
+      successUrlKey: ['data','url'], // If the file is uploaded successfully, it will find this current url. such as res.data.url
+      proxy: '', // proxy url (for cors). You can write https://cors-anywhere.azm.workers.dev/ ,so the real request's url is https://cors-anywhere.azm.workers.dev/APIURL
+    }
+  ```
 
 ## Instance Methods
 

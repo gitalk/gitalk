@@ -4,6 +4,7 @@ import Svg from './svg'
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { es, ru, fr, zhCN, zhTW, ko, pl, de } from 'date-fns/locale'
 import 'github-markdown-css/github-markdown.css'
+import { markdownParse } from '../util'
 
 if (typeof window !== `undefined`) {
   window.GT_i18n_LocaleMap = {
@@ -11,11 +12,11 @@ if (typeof window !== `undefined`) {
     'zh-CN': zhCN,
     'zh-TW': zhTW,
     'es-ES': es,
-    fr: fr,
-    ru: ru,
-    pl: pl,
-    ko: ko,
-    de: de
+    fr,
+    ru,
+    pl,
+    ko,
+    de
   }
 }
 
@@ -129,7 +130,7 @@ export default class Comment extends Component {
           <div
             className="gt-comment-body markdown-body"
             dangerouslySetInnerHTML={{
-              __html: comment.body_html
+              __html: markdownParse(comment.body) // instead of github-markdown
             }}
           />
         </div>
