@@ -287,15 +287,97 @@ class GitalkComponent extends Component {
       return res.data
     })
   }
+  // Although github v3 doesn't support sort, we still could do the math!
+  getCommentsV3OrderDesc = issue => {
+    const { clientID, clientSecret, perPage } = this.options
+    const { page } = this.state
+
+    const headers = {
+      Accept: 'application/vnd.github.v3.full+json'
+    }
+    const auth = {
+      username: clientID,
+      password: clientSecret
+    }
+    const params = {
+      per_page: perPage,
+      page
+    }
+    const totalCount = issue.comments
+    const totalPage = Math.ceil(totalCount / perPage)
+    const lastPageCount = totalCount % perPage
+    const ascPage = totalPage - page + 1
+    if (
+      totalPage === 1 || // of course...
+      lastPageCount === 0 || // only need to get 1 page
+      page >= totalPage // last page
+    ) {
+      params.page = ascPage
+      if (page >= totalPage) {
+        params.per_page = lastPageCount === 0 ? perPage : lastPageCount
+      }
+      return axiosGithub.get(issue.comments_url, {
+        headers,
+        auth,
+        params,
+      }).then(res => {
+        const { comments, issue } = this.state
+        let isLoadOver = false
+        const cs = comments.concat(res.data.reverse())
+        if (cs.length >= issue.comments || res.data.length < perPage) {
+          isLoadOver = true
+        }
+        this.setState({
+          comments: cs,
+          isLoadOver,
+          page: page + 1
+        })
+        return cs
+      })
+    } else {
+      return Promise.all([
+        axiosGithub.get(issue.comments_url, {
+          headers,
+          auth,
+          params: { ...params, page: ascPage },
+        }),
+        axiosGithub.get(issue.comments_url, {
+          headers,
+          auth,
+          params: { ...params, page: ascPage - 1 },
+        })
+      ]).then(([commentsRes1, commentsRes2]) => {
+        const data = commentsRes1.data.splice(0, lastPageCount).reverse()
+        data.push(
+          ...commentsRes2.data.reverse().splice(0, perPage - lastPageCount)
+        )
+        const { comments, issue } = this.state
+        let isLoadOver = false
+        const cs = comments.concat(data)
+        if (cs.length >= issue.comments || data.length < perPage) {
+          isLoadOver = true
+        }
+        this.setState({
+          comments: cs,
+          isLoadOver,
+          page: page + 1
+        })
+        return cs
+      })
+    }
+  }
   // Get comments via v3 api, don't require login, but sorting feature is disable
   getCommentsV3 = issue => {
-    const { clientID, clientSecret, perPage } = this.options
+    const { clientID, clientSecret, perPage, pagerDirection } = this.options
     const { page } = this.state
 
     return this.getIssue()
       .then(issue => {
         if (!issue) return
 
+        if (pagerDirection === 'last') {
+          return this.getCommentsV3OrderDesc(issue)
+        }
         return axiosGithub.get(issue.comments_url, {
           headers: {
             Accept: 'application/vnd.github.v3.full+json'
