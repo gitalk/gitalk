@@ -542,7 +542,9 @@ class GitalkComponent extends Component {
     this.setState({
       isPreview: !this.state.isPreview
     })
-
+    if(!this.state.isPreview){
+      return;
+    }
     axiosGithub.post('/markdown', {
       text: this.state.comment
     }, {
