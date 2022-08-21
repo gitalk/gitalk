@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.8.0](https://github.com/gitalk/gitalk/compare/v1.7.2...v1.8.0) (2022-08-21)
+
+
+### Features
+
+* **i18n:** add Japanese lang support ([#460](https://github.com/gitalk/gitalk/issues/460)) ([557a9cf](https://github.com/gitalk/gitalk/commit/557a9cf205a44b3fdef387a9236a6d85498db890))
+* **i18n:** add persian-fa language ([#450](https://github.com/gitalk/gitalk/issues/450)) ([dc0bedb](https://github.com/gitalk/gitalk/commit/dc0bedb2ed69dcad538a95a61e34a873ab3e1475))
+
+
+### Bug Fixes
+
+* avoild invoked api /markdown  when edit button clicked ([#508](https://github.com/gitalk/gitalk/issues/508)) ([28cc416](https://github.com/gitalk/gitalk/commit/28cc416739e4266b73748b557c84d7d82e649a94))
+* missing question mark when replace url ([#478](https://github.com/gitalk/gitalk/issues/478)) ([ca06b9f](https://github.com/gitalk/gitalk/commit/ca06b9ff87e2bbc5553b86cd3bc5dcff9b0e8152))
+
 ### [1.7.2](https://github.com/gitalk/gitalk/compare/v1.7.1...v1.7.2) (2021-03-03)
 
 
