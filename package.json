@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "autosize": "3.0.21",
-    "axios": "0.19.2",
+    "axios": "1.6.0",
     "date-fns": "2.16.1",
     "es6-promise": "4.1.1",
     "github-markdown-css": "2.8.0",
