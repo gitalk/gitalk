@@ -126,6 +126,8 @@ And use the component like
 
   The unique id of the page. Length must less than 50.
 
+  Note: You can use regex to extract certain path of the URL as the id. E.g., `location.href.match('/(?<=posts/)(.*)(?=/)/')[1]`
+
 - **number** `Number`
 
   Default: `-1`.
