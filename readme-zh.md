@@ -120,6 +120,8 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
   Default: `location.href`.
 
   頁面的唯一標識。長度必須小於50。
+  
+  提示：可以使用正則從 `URL` 中提取其中一部分作為 `id`。例如：`location.href.match('/(?<=posts/)(.*)(?=/)/')[1]`
 
 - **number** `Number` 
   
