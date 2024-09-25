@@ -125,14 +125,14 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
   Default: `location.href`.
 
   页面的唯一标识。长度必须小于50。
+
+  提示：可以使用正则从 `URL` 中提取其中一部份作为 `id`。例如：`location.href.match('/(?<=posts/)(.*)(?=/)/')[1]`
   
 - **number** `Number` 
   
   Default: `-1`.
 
   页面的 issue ID 标识，若未定义`number`属性则会使用`id`进行定位。
-
-  提示：可以使用正则从 `URL` 中提取其中一部份作为 `id`。例如：`location.href.match('/(?<=posts/)(.*)(?=/)/')[1]`
 
 - **labels** `Array` 
   
