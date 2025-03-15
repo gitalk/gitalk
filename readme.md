@@ -1,5 +1,6 @@
 # Gitalk
 
+[![License][license-version-image]][license-version-url]
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
 [![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
@@ -239,6 +240,8 @@ Definitions for React component usage are not included.
 
 MIT
 
+[license-version-image]: https://img.shields.io/github/license/gitalk/gitalk
+[license-version-url]: https://github.com/gitalk/gitalk/blob/master/LICENSE
 [npm-version-image]: https://img.shields.io/npm/v/gitalk.svg?style=flat-square
 [npm-version-url]: https://www.npmjs.com/package/gitalk
 [cdnjs-version-image]: https://img.shields.io/cdnjs/v/gitalk.svg?style=flat-square
