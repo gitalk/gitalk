@@ -215,6 +215,24 @@ And use the component like
 
   Init render and mount plugin.
 
+## Theme
+
+By default, Gitalk uses light theme. You can choose to use dark theme by setting the `theme` parameter.
+
+```js
+const gitalk = new Gitalk({
+  // ...
+  // options
+}, 'dark')
+```
+
+```jsx
+<GitalkComponent options={{
+  // ...
+  // options
+}} theme="dark"/>
+```
+
 ## TypeScript
 
 TypeScript definitions for options and Gitalk class come with the package and should be automatically detected.

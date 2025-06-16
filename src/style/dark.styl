@@ -1,0 +1,42 @@
+/* variables */
+$gt-color-main := #6190e8
+$gt-color-sub := #a1a1a1
+$gt-color-text := #dddddd
+$gt-color-loader := #999999
+$gt-color-error := #ff3860
+$gt-color-hr :=  #333333
+$gt-color-popover-bg := #111111
+$gt-color-input-border := rgba(0,0,0,0.1)
+$gt-color-input-bg := #262626
+$gt-color-comment-bg := #f9f9f9
+$gt-color-comment-adminbg := #f6f9fe
+$gt-color-comment-txt := #333333
+$gt-color-link-active := #333333
+$gt-color-btn := #ffffff
+$gt-color-popbg := #ffffff
+
+.gt-container.gt-dark
+  .gt-meta
+    border-bottom-color: $gt-color-hr
+    .gt-counts
+      color: $gt-color-text
+    .gt-user svg
+      fill: $gt-color-text
+    .gt-popup
+      background-color: $gt-color-popover-bg
+      border-color: $gt-color-hr
+      .gt-copyright
+        border-top-color: $gt-color-hr
+  .gt-header
+    .gt-avatar-github svg
+      fill: #ffffff
+    .gt-header-comment
+      textarea, .gt-header-preview
+        background-color: $gt-color-input-bg
+        color: $gt-color-text
+  .gt-comments .gt-comment .gt-comment-content
+    background-color: $gt-color-input-bg
+    &:hover
+      box-shadow: none
+    .gt-comment-body
+      color: $gt-color-text

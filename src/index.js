@@ -4,8 +4,9 @@ import 'es6-promise/auto'
 import GitalkComponent from './gitalk'
 
 class Gitalk {
-  constructor (options = {}) {
+  constructor (options = {}, theme = 'light') {
     this.options = options
+    this.theme = theme
   }
 
   render (container, callback) {
@@ -25,7 +26,7 @@ class Gitalk {
       callback = () => {}
     }
 
-    return render(<GitalkComponent options={this.options}/>, node, callback)
+    return render(<GitalkComponent options={this.options} theme={this.theme}/>, node, callback)
   }
 }
 

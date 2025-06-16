@@ -44,6 +44,8 @@ class GitalkComponent extends Component {
     isInputFocused: false,
     isPreview: false,
 
+    theme: 'light',
+
     isOccurError: false,
     errorMsg: '',
   }
@@ -79,6 +81,8 @@ class GitalkComponent extends Component {
 
       updateCountCallback: null
     }, props.options)
+
+    this.state.theme = props.theme
 
     this.state.pagerDirection = this.options.pagerDirection
     const storedComment = window.localStorage.getItem(GT_COMMENT)
@@ -542,8 +546,8 @@ class GitalkComponent extends Component {
     this.setState({
       isPreview: !this.state.isPreview
     })
-    if(!this.state.isPreview){
-      return;
+    if (!this.state.isPreview) {
+      return
     }
     axiosGithub.post('/markdown', {
       text: this.state.comment
@@ -753,9 +757,9 @@ class GitalkComponent extends Component {
   }
 
   render () {
-    const { isIniting, isNoInit, isOccurError, errorMsg, isInputFocused } = this.state
+    const { isIniting, isNoInit, isOccurError, errorMsg, isInputFocused, theme } = this.state
     return (
-      <div className={`gt-container${isInputFocused ? ' gt-input-focused' : ''}`}>
+      <div className={`gt-container${isInputFocused ? ' gt-input-focused' : ''}${theme === 'light' ? ' gt-light' : ' gt-dark'}`}>
         {isIniting && this.initing()}
         {!isIniting && (
           isNoInit ? [

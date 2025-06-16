@@ -18,8 +18,9 @@ declare class Gitalk {
     /**
      * Construct a Gitalk instance.
      * @param options Gitalk options
+     * @param theme Use light or dark theme. (default: light)
      */
-    constructor(options: Gitalk.GitalkOptions);
+    constructor(options: Gitalk.GitalkOptions, theme?: 'light' | 'dark');
 
     /**
      * Init render and mount plugin.

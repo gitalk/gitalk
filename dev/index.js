@@ -11,6 +11,6 @@
  *   pagerDirection: 'last'
  * }
  */
-const gitalk = new Gitalk(window.GT_CONFIG)
+const gitalk = new Gitalk(window.GT_CONFIG, 'dark')
 
 gitalk.render('gitalk-container')
