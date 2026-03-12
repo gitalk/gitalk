@@ -168,4 +168,12 @@ describe('Comment', function () {
     // wrapper.render().find('.email-hidden-toggle > a').simulate('click')
     // expect(wrapper.render().find('.gt-comment-body > .email-hidden-reply.expanded')).toHaveLength(1)
   })
+
+  it('shouldComponentUpdate only when comment object changed', function () {
+    const wrapper = shallow(<Comment comment={comment} />)
+    const instance = wrapper.instance()
+
+    expect(instance.shouldComponentUpdate({ comment })).toBe(false)
+    expect(instance.shouldComponentUpdate({ comment: Object.assign({}, comment) })).toBe(true)
+  })
 })

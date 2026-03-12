@@ -70,5 +70,5 @@ export const hasClassInParent = (element, ...className) => {
   /* istanbul ignore next */
   if (yes) return yes
   /* istanbul ignore next */
-  return element.parentNode && hasClassInParent(element.parentNode, className)
+  return element.parentNode ? hasClassInParent(element.parentNode, ...className) : false
 }

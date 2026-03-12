@@ -79,8 +79,7 @@
       "jsx"
     ],
     "coveragePathIgnorePatterns": [
-      "src/gitalk.jsx",
-      "src/graphql/getComments.js"
+      "src/gitalk.jsx"
     ],
     "globals": {
       "VERSION": "1.0.0-test"
