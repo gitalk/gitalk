@@ -30,6 +30,7 @@
 .gt-container[data-gitalk-theme='dark'] {
   --gt-color-main: #6190e8;
   --gt-color-main-lighter: #81a6ed;
+  --gt-color-text: #c9d1d9;
   --gt-color-sub: #8b949e;
   --gt-color-loader: #8b949e;
   --gt-color-error: #f85149;
@@ -46,6 +47,8 @@
   --gt-color-btn-hover-bg: #21262d;
   --gt-color-popbg: #0d1117;
   --gt-color-mask: #000000;
+  /* 浅色模式沿用 v1 行为：文字继承宿主页面；暗色下必须显式给出文字颜色 */
+  color: var(--gt-color-text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -53,6 +56,7 @@
   .gt-container[data-gitalk-theme='auto'] {
     --gt-color-main: #6190e8;
     --gt-color-main-lighter: #81a6ed;
+    --gt-color-text: #c9d1d9;
     --gt-color-sub: #8b949e;
     --gt-color-loader: #8b949e;
     --gt-color-error: #f85149;
@@ -69,6 +73,7 @@
     --gt-color-btn-hover-bg: #21262d;
     --gt-color-popbg: #0d1117;
     --gt-color-mask: #000000;
+    color: var(--gt-color-text);
   }
 }
 
@@ -127,7 +132,7 @@
   height: 100%;
 }
 .gt-container .gt-ico-github svg {
-  fill: inherit;
+  fill: currentColor;
 }
 
 /* loader */
@@ -188,6 +193,8 @@
   width: 3em;
   height: 3em;
   cursor: pointer;
+  /* 图标 fill 走 currentColor：浅色下与 v1 一致为文字色，暗色下自动变浅 */
+  color: inherit;
 }
 
 /* button */
@@ -307,7 +314,7 @@
   margin: 0 0 0 0.3125em;
 }
 .gt-container .gt-user .gt-ico svg {
-  fill: inherit;
+  fill: currentColor;
 }
 .gt-container .gt-user .is--poping .gt-ico svg {
   fill: var(--gt-color-main);
