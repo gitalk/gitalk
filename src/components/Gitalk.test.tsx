@@ -116,6 +116,68 @@ describe('GitalkComponent', () => {
     expect(container.querySelector('.gt-error')?.textContent).toContain('API rate limit exceeded')
   })
 
+  it('strips ?code= from url/id when auto-creating issue after oauth redirect', async () => {
+    window.history.replaceState(null, '', '/?code=test-oauth-code')
+    let createIssuePayload: { title: string; labels: string[]; body: string } | null = null
+
+    mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+      // OAuth proxy：code 换 token
+      if (!url.includes('api.github.com')) {
+        return jsonResponse({ access_token: 'tok-1' })
+      }
+      if (url.includes('/user')) {
+        return jsonResponse({
+          login: 'o',
+          avatar_url: 'https://avatars.example.com/o',
+          html_url: 'https://github.com/o',
+        })
+      }
+      // 登录态 loadComments 走 GraphQL
+      if (url.endsWith('/graphql')) {
+        return jsonResponse({
+          data: {
+            repository: {
+              issue: {
+                comments: {
+                  totalCount: 0,
+                  pageInfo: { hasPreviousPage: false, startCursor: null },
+                  nodes: [],
+                },
+              },
+            },
+          },
+        })
+      }
+      if (url.includes('/repos/o/r/issues?')) {
+        return jsonResponse([])
+      }
+      if (url.includes('/repos/o/r/issues') && init?.method === 'POST') {
+        createIssuePayload = JSON.parse(init.body as string)
+        return jsonResponse(issueFixture)
+      }
+      throw new Error(`unexpected fetch: ${url}`)
+    })
+
+    render(
+      <GitalkComponent
+        options={{ clientID: 'i', clientSecret: 's', owner: 'o', repo: 'r', admin: 'o' }}
+      />
+    )
+
+    await waitFor(() => expect(createIssuePayload).not.toBeNull())
+
+    // 浏览器地址栏的 code 已被清除
+    expect(window.location.search).not.toContain('code=')
+    // 自动创建的 issue 的 label（id）与 body 都不能带 OAuth code
+    const payload = createIssuePayload!
+    expect(payload.labels.join(',')).not.toContain('code=')
+    expect(payload.labels).toContain('http://localhost:3000/')
+    expect(payload.body).toContain('http://localhost:3000/')
+    expect(payload.body).not.toContain('code=')
+
+    window.history.replaceState(null, '', '/')
+  })
+
   it('toggles sort popup', async () => {
     mockFetch.mockImplementation(async (url: string) => {
       if (url.includes('labels=')) return jsonResponse([issueFixture])

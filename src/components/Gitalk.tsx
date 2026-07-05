@@ -116,7 +116,7 @@ export default function GitalkComponent({ options: rawOptions }: GitalkComponent
   const isAdminUser = (u: GitHubUser | null = userRef.current) =>
     !!u &&
     ([] as string[])
-      .concat(options.admin)
+      .concat(optionsRef.current.admin)
       .map((a) => a.toLowerCase())
       .includes(u.login.toLowerCase())
 
@@ -138,8 +138,11 @@ export default function GitalkComponent({ options: rawOptions }: GitalkComponent
     }
   }
 
+  // 注意：数据流程函数一律从 optionsRef.current 取值，而不是捕获 render 时的 options。
+  // OAuth 回跳后 init effect 会把 url/id 替换为去掉 code 的地址，
+  // 若用闭包捕获的旧对象，创建的 issue 的 label 和 body 会带上 ?code=xxx
   const doCreateIssue = async (): Promise<GitHubIssue> => {
-    const { owner, repo, title, body, id, labels, url } = options
+    const { owner, repo, title, body, id, labels, url } = optionsRef.current
     const created = await createIssue({
       owner,
       repo,
@@ -157,7 +160,7 @@ export default function GitalkComponent({ options: rawOptions }: GitalkComponent
   }
 
   const fetchIssueByLabels = async (): Promise<GitHubIssue | null> => {
-    const { owner, repo, id, labels, createIssueManually } = options
+    const { owner, repo, id, labels, createIssueManually } = optionsRef.current
     const issues = await getIssuesByLabels({
       owner,
       repo,
@@ -185,7 +188,7 @@ export default function GitalkComponent({ options: rawOptions }: GitalkComponent
       return issueRef.current
     }
 
-    const { owner, repo, number } = options
+    const { owner, repo, number } = optionsRef.current
     if (typeof number === 'number' && number > 0) {
       let found: GitHubIssue | null = null
       try {
@@ -205,21 +208,22 @@ export default function GitalkComponent({ options: rawOptions }: GitalkComponent
 
   const loadComments = async (target: GitHubIssue | null): Promise<GitalkComment[]> => {
     if (!target) return []
+    const { owner, repo, perPage, pagerDirection, defaultAuthor } = optionsRef.current
 
     // 登录后走 GraphQL v4（支持排序），未登录走 REST v3
     if (tokenRef.current) {
       const page = await getCommentsPage({
-        owner: options.owner,
-        repo: options.repo,
+        owner,
+        repo,
         issueNumber: target.number,
-        perPage: options.perPage,
-        pagerDirection: options.pagerDirection,
+        perPage,
+        pagerDirection,
         cursor: cursorRef.current,
         token: tokenRef.current,
-        defaultAuthor: options.defaultAuthor,
+        defaultAuthor,
       })
       const cs =
-        options.pagerDirection === 'last'
+        pagerDirection === 'last'
           ? [...page.items, ...commentsRef.current]
           : [...commentsRef.current, ...page.items]
       updateComments(cs)
@@ -230,11 +234,11 @@ export default function GitalkComponent({ options: rawOptions }: GitalkComponent
 
     const items = await getIssueComments(target.comments_url, {
       page: pageRef.current,
-      perPage: options.perPage,
+      perPage,
       token: null,
     })
     const cs = commentsRef.current.concat(items)
-    setIsLoadOver(cs.length >= target.comments || items.length < options.perPage)
+    setIsLoadOver(cs.length >= target.comments || items.length < perPage)
     updateComments(cs)
     pageRef.current += 1
     return cs
