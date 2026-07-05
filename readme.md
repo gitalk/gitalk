@@ -29,8 +29,8 @@ Two ways.
 - links
 
 ```html
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.min.js"></script>
 
   <!-- or -->
 
@@ -85,7 +85,8 @@ gitalk.render('gitalk-container')
 Import the Gitalk with
 
 ```jsx
-import GitalkComponent from "gitalk/dist/gitalk-component";
+import GitalkComponent from 'gitalk/react'
+import 'gitalk/dist/gitalk.css'
 ```
 
 And use the component like
@@ -190,17 +191,7 @@ And use the component like
 
 - **flipMoveOptions** `Object`
 
-  Default:
-  ```js
-    {
-      staggerDelayBy: 150,
-      appearAnimation: 'accordionVertical',
-      enterAnimation: 'accordionVertical',
-      leaveAnimation: 'accordionVertical',
-    }
-  ```
-
-  Comment list animation. [Reference](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
+  **Deprecated since v2**. The comment list animation is now pure CSS (`react-flip-move` has been removed). The option is kept for config compatibility but has no effect. You can customize the animation by overriding the `gt-kf-appear` keyframes / `.gt-comment` animation.
 
 - **enableHotKey** `Boolean`
 
@@ -215,11 +206,34 @@ And use the component like
 
   Init render and mount plugin.
 
+- **destroy()**
+
+  Unmount the component and clean up the container. (since v2)
+
+## Theming (since v2)
+
+All colors are exposed as `--gt-*` CSS custom properties on `.gt-container`, so you can theme Gitalk by overriding them.
+
+A built-in dark theme is available via the `data-gitalk-theme` attribute on the container or any ancestor (e.g. `<html>`):
+
+```html
+<html data-gitalk-theme="dark">   <!-- force dark -->
+<html data-gitalk-theme="auto">   <!-- follow prefers-color-scheme -->
+```
+
 ## TypeScript
 
-TypeScript definitions for options and Gitalk class come with the package and should be automatically detected.
+The package is written in TypeScript. Type definitions for the `Gitalk` class, all options and the React component (`gitalk/react`) are bundled and detected automatically.
 
-Definitions for React component usage are not included.
+## Migrating from v1
+
+v2 is a full rewrite (TypeScript + Preact X + Vite), but the public API is unchanged — for most users upgrading is just bumping the version:
+
+- `new Gitalk(options)`, `render()`, all options, the UMD global `Gitalk`, the `gt-*` class names and localStorage keys are all kept.
+- **React**: `import GitalkComponent from 'gitalk/dist/gitalk-component'` → `import GitalkComponent from 'gitalk/react'`.
+- **flipMoveOptions** no longer has any effect (pure CSS animation now).
+- Anonymous requests no longer send `clientID/clientSecret` as Basic Auth (GitHub removed that authentication mode); the client secret is only used in the OAuth token exchange through the `proxy`.
+- IE is no longer supported (modern evergreen browsers only).
 
 ## Contributing
 

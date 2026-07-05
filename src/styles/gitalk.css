@@ -1,0 +1,661 @@
+/**
+ * Gitalk v2 样式（由 v1 的 index.styl 迁移）
+ * - 颜色抽为 --gt-* 自定义属性（design tokens）
+ * - 暗色主题：在容器或任意祖先节点设置 data-gitalk-theme="dark"，
+ *   或设置 data-gitalk-theme="auto" 跟随系统 prefers-color-scheme
+ */
+
+.gt-container {
+  --gt-color-main: #6190e8;
+  --gt-color-main-lighter: #81a6ed;
+  --gt-color-sub: #a1a1a1;
+  --gt-color-loader: #999999;
+  --gt-color-error: #ff3860;
+  --gt-color-hr: #e9e9e9;
+  --gt-color-input-border: rgba(0, 0, 0, 0.1);
+  --gt-color-input-bg: #f6f6f6;
+  --gt-color-input-bg-lighter: #fbfbfb;
+  --gt-color-comment-bg: #f9f9f9;
+  --gt-color-comment-shadow: #f4f4f4;
+  --gt-color-comment-adminbg: #f6f9fe;
+  --gt-color-comment-txt: #333333;
+  --gt-color-link-active: #333333;
+  --gt-color-btn: #ffffff;
+  --gt-color-btn-hover-bg: #f2f2f2;
+  --gt-color-popbg: #ffffff;
+  --gt-color-mask: #000000;
+}
+
+[data-gitalk-theme='dark'] .gt-container,
+.gt-container[data-gitalk-theme='dark'] {
+  --gt-color-main: #6190e8;
+  --gt-color-main-lighter: #81a6ed;
+  --gt-color-sub: #8b949e;
+  --gt-color-loader: #8b949e;
+  --gt-color-error: #f85149;
+  --gt-color-hr: #30363d;
+  --gt-color-input-border: rgba(255, 255, 255, 0.12);
+  --gt-color-input-bg: #161b22;
+  --gt-color-input-bg-lighter: #1c2129;
+  --gt-color-comment-bg: #161b22;
+  --gt-color-comment-shadow: rgba(0, 0, 0, 0.4);
+  --gt-color-comment-adminbg: #17233a;
+  --gt-color-comment-txt: #c9d1d9;
+  --gt-color-link-active: #c9d1d9;
+  --gt-color-btn: #ffffff;
+  --gt-color-btn-hover-bg: #21262d;
+  --gt-color-popbg: #0d1117;
+  --gt-color-mask: #000000;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-gitalk-theme='auto'] .gt-container,
+  .gt-container[data-gitalk-theme='auto'] {
+    --gt-color-main: #6190e8;
+    --gt-color-main-lighter: #81a6ed;
+    --gt-color-sub: #8b949e;
+    --gt-color-loader: #8b949e;
+    --gt-color-error: #f85149;
+    --gt-color-hr: #30363d;
+    --gt-color-input-border: rgba(255, 255, 255, 0.12);
+    --gt-color-input-bg: #161b22;
+    --gt-color-input-bg-lighter: #1c2129;
+    --gt-color-comment-bg: #161b22;
+    --gt-color-comment-shadow: rgba(0, 0, 0, 0.4);
+    --gt-color-comment-adminbg: #17233a;
+    --gt-color-comment-txt: #c9d1d9;
+    --gt-color-link-active: #c9d1d9;
+    --gt-color-btn: #ffffff;
+    --gt-color-btn-hover-bg: #21262d;
+    --gt-color-popbg: #0d1117;
+    --gt-color-mask: #000000;
+  }
+}
+
+/* 所有样式收在 .gt-container 下，避免污染宿主页面 */
+.gt-container {
+  box-sizing: border-box;
+  font-size: 16px;
+}
+.gt-container * {
+  box-sizing: border-box;
+}
+
+/* common */
+.gt-container a {
+  color: var(--gt-color-main);
+}
+.gt-container a:hover {
+  color: var(--gt-color-main-lighter);
+  border-color: var(--gt-color-main-lighter);
+}
+.gt-container a.is--active {
+  color: var(--gt-color-link-active);
+  cursor: default !important;
+}
+.gt-container a.is--active:hover {
+  color: var(--gt-color-link-active);
+}
+.gt-container .hide {
+  display: none !important;
+}
+
+/* icons */
+.gt-container .gt-svg {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: sub;
+}
+.gt-container .gt-svg svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--gt-color-main);
+}
+.gt-container .gt-ico {
+  display: inline-block;
+}
+.gt-container .gt-ico-text {
+  margin-left: 0.3125em;
+}
+.gt-container .gt-ico-github {
+  width: 100%;
+  height: 100%;
+}
+.gt-container .gt-ico-github .gt-svg {
+  width: 100%;
+  height: 100%;
+}
+.gt-container .gt-ico-github svg {
+  fill: inherit;
+}
+
+/* loader */
+.gt-container .gt-spinner {
+  position: relative;
+}
+.gt-container .gt-spinner::before {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 3px;
+  width: 0.75em;
+  height: 0.75em;
+  margin-top: -0.1875em;
+  margin-left: -0.375em;
+  border-radius: 50%;
+  border: 1px solid var(--gt-color-btn);
+  border-top-color: var(--gt-color-main);
+  animation: gt-kf-rotate 0.6s linear infinite;
+}
+.gt-container .gt-loader {
+  position: relative;
+  border: 1px solid var(--gt-color-loader);
+  animation: ease gt-kf-rotate 1.5s infinite;
+  display: inline-block;
+  font-style: normal;
+  width: 1.75em;
+  height: 1.75em;
+  line-height: 1.75em;
+  border-radius: 50%;
+}
+.gt-container .gt-loader:before {
+  content: '';
+  position: absolute;
+  display: block;
+  top: 0;
+  left: 50%;
+  margin-top: -0.1875em;
+  margin-left: -0.1875em;
+  width: 0.375em;
+  height: 0.375em;
+  background-color: var(--gt-color-loader);
+  border-radius: 50%;
+}
+
+/* avatar */
+.gt-container .gt-avatar {
+  display: inline-block;
+  width: 3.125em;
+  height: 3.125em;
+}
+.gt-container .gt-avatar img {
+  width: 100%;
+  height: auto;
+  border-radius: 3px;
+}
+.gt-container .gt-avatar-github {
+  width: 3em;
+  height: 3em;
+  cursor: pointer;
+}
+
+/* button */
+.gt-container .gt-btn {
+  padding: 0.75em 1.25em;
+  display: inline-block;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid var(--gt-color-main);
+  border-radius: 5px;
+  background-color: var(--gt-color-main);
+  color: var(--gt-color-btn);
+  outline: none;
+  font-size: 0.75em;
+}
+.gt-container .gt-btn-text {
+  font-weight: 400;
+}
+.gt-container .gt-btn-loading {
+  position: relative;
+  margin-left: 0.5em;
+  display: inline-block;
+  width: 0.75em;
+  height: 1em;
+  vertical-align: top;
+}
+.gt-container .gt-btn.is--disable {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.gt-container .gt-btn-login {
+  margin-right: 0;
+}
+.gt-container .gt-btn-preview {
+  background-color: var(--gt-color-popbg);
+  color: var(--gt-color-main);
+}
+.gt-container .gt-btn-preview:hover {
+  background-color: var(--gt-color-btn-hover-bg);
+  border-color: var(--gt-color-main-lighter);
+}
+.gt-container .gt-btn-public:hover {
+  background-color: var(--gt-color-main-lighter);
+  border-color: var(--gt-color-main-lighter);
+}
+
+/* error */
+.gt-container .gt-error {
+  text-align: center;
+  margin: 0.625em;
+  color: var(--gt-color-error);
+}
+
+/* initing */
+.gt-container .gt-initing {
+  padding: 1.25em 0;
+  text-align: center;
+}
+.gt-container .gt-initing-text {
+  margin: 0.625em auto;
+  font-size: 92%;
+}
+
+/* no init */
+.gt-container .gt-no-init {
+  padding: 1.25em 0;
+  text-align: center;
+}
+
+/* link */
+.gt-container .gt-link {
+  border-bottom: 1px dotted var(--gt-color-main);
+}
+.gt-container .gt-link-counts,
+.gt-container .gt-link-project {
+  text-decoration: none;
+}
+
+/* meta */
+.gt-container .gt-meta {
+  margin: 1.25em 0;
+  padding: 1em 0;
+  position: relative;
+  border-bottom: 1px solid var(--gt-color-hr);
+  font-size: 1em;
+  z-index: 10;
+}
+.gt-container .gt-meta::before,
+.gt-container .gt-meta::after {
+  content: ' ';
+  display: table;
+}
+.gt-container .gt-meta::after {
+  clear: both;
+}
+.gt-container .gt-counts {
+  margin: 0 0.625em 0 0;
+}
+.gt-container .gt-user {
+  float: right;
+  margin: 0;
+  font-size: 92%;
+}
+.gt-container .gt-user-pic {
+  width: 16px;
+  height: 16px;
+  vertical-align: top;
+  margin-right: 0.5em;
+}
+.gt-container .gt-user-inner {
+  display: inline-block;
+  cursor: pointer;
+}
+.gt-container .gt-user .gt-ico {
+  margin: 0 0 0 0.3125em;
+}
+.gt-container .gt-user .gt-ico svg {
+  fill: inherit;
+}
+.gt-container .gt-user .is--poping .gt-ico svg {
+  fill: var(--gt-color-main);
+}
+.gt-container .gt-version {
+  color: var(--gt-color-sub);
+  margin-left: 0.375em;
+}
+.gt-container .gt-copyright {
+  margin: 0 0.9375em 0.5em;
+  border-top: 1px solid var(--gt-color-hr);
+  padding-top: 0.5em;
+}
+
+/* popup */
+.gt-container .gt-popup {
+  position: absolute;
+  right: 0;
+  top: 2.375em;
+  background: var(--gt-color-popbg);
+  display: inline-block;
+  border: 1px solid var(--gt-color-hr);
+  padding: 0.625em 0;
+  font-size: 0.875em;
+  letter-spacing: 0.5px;
+}
+.gt-container .gt-popup .gt-action {
+  cursor: pointer;
+  display: block;
+  margin: 0.5em 0;
+  padding: 0 1.125em;
+  position: relative;
+  text-decoration: none;
+}
+.gt-container .gt-popup .gt-action.is--active::before {
+  content: '';
+  width: 0.25em;
+  height: 0.25em;
+  background: var(--gt-color-main);
+  position: absolute;
+  left: 0.5em;
+  top: 0.4375em;
+}
+
+/* header */
+.gt-container .gt-header {
+  position: relative;
+  display: flex;
+}
+.gt-container .gt-header-comment {
+  flex: 1;
+  margin-left: 1.25em;
+}
+.gt-container .gt-header-textarea {
+  padding: 0.75em;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 5.125em;
+  max-height: 15em;
+  border-radius: 5px;
+  border: 1px solid var(--gt-color-input-border);
+  font-size: 0.875em;
+  word-wrap: break-word;
+  resize: vertical;
+  background-color: var(--gt-color-input-bg);
+  color: inherit;
+  outline: none;
+  transition: all 0.25s ease;
+}
+.gt-container .gt-header-textarea:hover {
+  background-color: var(--gt-color-input-bg-lighter);
+}
+.gt-container .gt-header-preview {
+  padding: 0.75em;
+  border-radius: 5px;
+  border: 1px solid var(--gt-color-input-border);
+  background-color: var(--gt-color-input-bg);
+}
+.gt-container .gt-header-controls {
+  position: relative;
+  margin: 0.75em 0 0;
+}
+.gt-container .gt-header-controls::before,
+.gt-container .gt-header-controls::after {
+  content: ' ';
+  display: table;
+}
+.gt-container .gt-header-controls::after {
+  clear: both;
+}
+.gt-container .gt-header-controls-tip {
+  font-size: 0.875em;
+  color: var(--gt-color-main);
+  text-decoration: none;
+  vertical-align: sub;
+}
+.gt-container .gt-header-controls .gt-btn {
+  float: right;
+  margin-left: 1.25em;
+}
+
+/* distraction free mode 遮罩 */
+.gt-container::after {
+  content: '';
+  position: fixed;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  opacity: 0;
+}
+.gt-container.gt-input-focused {
+  position: relative;
+}
+.gt-container.gt-input-focused::after {
+  content: '';
+  position: fixed;
+  bottom: 0%;
+  left: 0;
+  right: 0;
+  top: 0;
+  background: var(--gt-color-mask);
+  opacity: 0.6;
+  transition:
+    opacity 0.3s,
+    bottom 0s;
+  z-index: 9999;
+}
+.gt-container.gt-input-focused .gt-header-comment {
+  z-index: 10000;
+}
+
+/* comments */
+.gt-container .gt-comments {
+  padding-top: 1.25em;
+}
+.gt-container .gt-comments-null {
+  text-align: center;
+}
+.gt-container .gt-comments-controls {
+  margin: 1.25em 0;
+  text-align: center;
+}
+
+/* comment */
+.gt-container .gt-comment {
+  position: relative;
+  padding: 0.625em 0;
+  display: flex;
+  /* 替代 v1 react-flip-move 的入场动画 */
+  animation: gt-kf-appear 0.4s ease both;
+}
+.gt-container .gt-comment-content {
+  flex: 1;
+  margin-left: 1.25em;
+  padding: 0.75em 1em;
+  background-color: var(--gt-color-comment-bg);
+  overflow: auto;
+  transition: all ease 0.25s;
+}
+.gt-container .gt-comment-content:hover {
+  box-shadow: 0 0.625em 3.75em 0 var(--gt-color-comment-shadow);
+}
+.gt-container .gt-comment-header {
+  margin-bottom: 0.5em;
+  font-size: 0.875em;
+  position: relative;
+}
+.gt-container .gt-comment-block-1 {
+  float: right;
+  height: 1.375em;
+  width: 2em;
+}
+.gt-container .gt-comment-block-2 {
+  float: right;
+  height: 1.375em;
+  width: 4em;
+}
+.gt-container .gt-comment-username {
+  font-weight: 500;
+  color: var(--gt-color-main);
+  text-decoration: none;
+}
+.gt-container .gt-comment-username:hover {
+  text-decoration: underline;
+}
+.gt-container .gt-comment-text {
+  margin-left: 0.5em;
+  color: var(--gt-color-sub);
+}
+.gt-container .gt-comment-date {
+  margin-left: 0.5em;
+  color: var(--gt-color-sub);
+}
+.gt-container .gt-comment-like,
+.gt-container .gt-comment-edit,
+.gt-container .gt-comment-reply {
+  position: absolute;
+  height: 1.375em;
+}
+.gt-container .gt-comment-like:hover,
+.gt-container .gt-comment-edit:hover,
+.gt-container .gt-comment-reply:hover {
+  cursor: pointer;
+}
+.gt-container .gt-comment-like {
+  top: 0;
+  right: 2em;
+}
+.gt-container .gt-comment-edit,
+.gt-container .gt-comment-reply {
+  top: 0;
+  right: 0;
+}
+.gt-container .gt-comment-body {
+  color: var(--gt-color-comment-txt) !important;
+}
+.gt-container .gt-comment-body .email-hidden-toggle a {
+  display: inline-block;
+  height: 12px;
+  padding: 0 9px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 6px;
+  color: #444d56;
+  text-decoration: none;
+  vertical-align: middle;
+  background: #dfe2e5;
+  border-radius: 1px;
+}
+.gt-container .gt-comment-body .email-hidden-toggle a:hover {
+  background-color: #c6cbd1;
+}
+.gt-container .gt-comment-body .email-hidden-reply {
+  display: none;
+  white-space: pre-wrap;
+}
+.gt-container .gt-comment-body .email-hidden-reply .email-signature-reply {
+  padding: 0 15px;
+  margin: 15px 0;
+  color: #586069;
+  border-left: 4px solid #dfe2e5;
+}
+.gt-container .gt-comment-body .email-hidden-reply.expanded {
+  display: block;
+}
+.gt-container .gt-comment-admin .gt-comment-content {
+  background-color: var(--gt-color-comment-adminbg);
+}
+
+/* markdown-body 适配：还原 v1（gmc 2.x）不带背景/字体设置的表现 */
+.gt-container .markdown-body {
+  background-color: transparent;
+  font-family: inherit;
+  font-size: 100%;
+}
+
+/* 暗色下 markdown 内容的基础适配（正文颜色随 --gt-color-comment-txt） */
+[data-gitalk-theme='dark'] .gt-container .markdown-body,
+.gt-container[data-gitalk-theme='dark'] .markdown-body {
+  color-scheme: dark;
+  color: var(--gt-color-comment-txt);
+}
+[data-gitalk-theme='dark'] .gt-container .markdown-body pre,
+.gt-container[data-gitalk-theme='dark'] .markdown-body pre,
+[data-gitalk-theme='dark'] .gt-container .markdown-body code,
+.gt-container[data-gitalk-theme='dark'] .markdown-body code {
+  background-color: rgba(110, 118, 129, 0.25);
+  color: inherit;
+}
+[data-gitalk-theme='dark'] .gt-container .markdown-body blockquote,
+.gt-container[data-gitalk-theme='dark'] .markdown-body blockquote {
+  color: var(--gt-color-sub);
+  border-left-color: var(--gt-color-hr);
+}
+@media (prefers-color-scheme: dark) {
+  [data-gitalk-theme='auto'] .gt-container .markdown-body,
+  .gt-container[data-gitalk-theme='auto'] .markdown-body {
+    color-scheme: dark;
+    color: var(--gt-color-comment-txt);
+  }
+  [data-gitalk-theme='auto'] .gt-container .markdown-body pre,
+  .gt-container[data-gitalk-theme='auto'] .markdown-body pre,
+  [data-gitalk-theme='auto'] .gt-container .markdown-body code,
+  .gt-container[data-gitalk-theme='auto'] .markdown-body code {
+    background-color: rgba(110, 118, 129, 0.25);
+    color: inherit;
+  }
+  [data-gitalk-theme='auto'] .gt-container .markdown-body blockquote,
+  .gt-container[data-gitalk-theme='auto'] .markdown-body blockquote {
+    color: var(--gt-color-sub);
+    border-left-color: var(--gt-color-hr);
+  }
+}
+
+/* mobile */
+@media (max-width: 479px) {
+  .gt-container .gt-avatar {
+    width: 2em;
+    height: 2em;
+  }
+  .gt-container .gt-avatar-github {
+    width: 1.875em;
+    height: 1.875em;
+  }
+  .gt-container .gt-header-comment {
+    margin-left: 0.875em;
+  }
+  .gt-container .gt-header-controls {
+    margin: 0;
+  }
+  .gt-container .gt-header-controls-tip {
+    display: none;
+  }
+  .gt-container .gt-header-controls .gt-btn {
+    float: none;
+    width: 100%;
+    margin: 0.75em 0 0;
+  }
+  .gt-container .gt-comment-content {
+    margin-left: 0.875em;
+    padding: 0.625em 0.75em;
+  }
+}
+
+@keyframes gt-kf-rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gt-kf-appear {
+  from {
+    opacity: 0;
+    transform: translateY(0.5em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-container .gt-comment {
+    animation: none;
+  }
+}

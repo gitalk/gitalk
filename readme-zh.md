@@ -29,8 +29,8 @@ Gitalk 是一個基於 GitHub Issue 和 Preact 開發的評論插件。
 - 直接引入
 
 ```html
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.min.js"></script>
 
   <!-- or -->
 
@@ -80,7 +80,8 @@ gitalk.render('gitalk-container')
 使用以下代碼引入Gitalk組件
 
 ```jsx
-import GitalkComponent from "gitalk/dist/gitalk-component";
+import GitalkComponent from 'gitalk/react'
+import 'gitalk/dist/gitalk.css'
 ```
 
 按以下方式在React中使用Gitalk組件
@@ -185,17 +186,7 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
 - **flipMoveOptions** `Object`
 
-  Default:
-  ```js
-    {
-      staggerDelayBy: 150,
-      appearAnimation: 'accordionVertical',
-      enterAnimation: 'accordionVertical',
-      leaveAnimation: 'accordionVertical',
-    }
-  ```
-
-  評論列表的動畫。 [參考](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
+  **v2 起已廢棄**。評論列表動畫已改為純 CSS 實現（`react-flip-move` 已移除），該欄位僅為相容 v1 配置而保留，不再生效。可透過覆蓋 `gt-kf-appear` keyframes / `.gt-comment` 的 animation 自訂動畫。
 
 - **enableHotKey** `Boolean`
 
@@ -210,9 +201,34 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   初始化渲染並掛載插件。
 
+- **destroy()**
+
+  卸載組件並清空容器。（v2 新增）
+
+## 主題定制（v2 新增）
+
+所有顏色都以 `--gt-*` CSS 自定義屬性暴露在 `.gt-container` 上，覆蓋它們即可定制主題。
+
+內置暗色主題通過容器或任意祖先節點（如 `<html>`）上的 `data-gitalk-theme` 屬性啟用：
+
+```html
+<html data-gitalk-theme="dark">   <!-- 強制暗色 -->
+<html data-gitalk-theme="auto">   <!-- 跟隨系統 prefers-color-scheme -->
+```
+
 ## TypeScript
 
-已經包括了配置項和Gitalk類的類型定義，不包括React組件的類型定義。
+項目已使用 TypeScript 重寫。`Gitalk` 類、全部配置項以及 React 組件（`gitalk/react`）的類型定義隨包發布、自動生效。
+
+## 從 v1 遷移
+
+v2 是一次徹底重寫（TypeScript + Preact X + Vite），但對外 API 保持不變，多數用戶升級只需更新版本號：
+
+- `new Gitalk(options)`、`render()`、全部配置項、UMD 全局變量 `Gitalk`、`gt-*` 類名與 localStorage key 全部保留。
+- **React**：`import GitalkComponent from 'gitalk/dist/gitalk-component'` → `import GitalkComponent from 'gitalk/react'`。
+- **flipMoveOptions** 不再生效（動畫改為純 CSS）。
+- 未登錄請求不再以 Basic Auth 發送 `clientID/clientSecret`（GitHub 已移除該認證方式）；client secret 僅在經 `proxy` 交換 OAuth token 時使用。
+- 不再支持 IE（僅支持現代瀏覽器）。
 
 ## 貢獻
 

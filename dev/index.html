@@ -1,25 +1,40 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Gitalk description">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Gitalk description" />
     <title>Gitalk</title>
-    <style type="text/css">
+    <style>
       body {
-        margin: 0
+        margin: 0;
       }
       #gitalk-container {
         margin: 0 auto;
         padding: 20px;
         max-width: 700px;
       }
+      .theme-switch {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+      }
+      html[data-gitalk-theme='dark'] {
+        background: #0d1117;
+      }
     </style>
   </head>
   <body>
+    <button class="theme-switch" onclick="toggleTheme()">🌗 theme</button>
     <div id="gitalk-container"></div>
-    <script src="/dist/gitalk.js"></script>
-    <script src="./config.js"></script>
-    <script src="./index.js"></script>
+    <script>
+      function toggleTheme() {
+        const html = document.documentElement
+        html.dataset.gitalkTheme = html.dataset.gitalkTheme === 'dark' ? '' : 'dark'
+      }
+    </script>
+    <!-- 本地配置（gitignored）：window.GT_CONFIG = { clientID, clientSecret, owner, repo, admin, ... } -->
+    <script src="/config.js"></script>
+    <script type="module" src="/main.ts"></script>
   </body>
 </html>

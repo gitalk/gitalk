@@ -28,8 +28,8 @@ Gitalk 是一个基于 GitHub Issue 和 Preact 开发的评论插件。
 - 直接引入
 
 ```html
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
+  <script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.min.js"></script>
 
   <!-- or -->
 
@@ -85,7 +85,8 @@ gitalk.render('gitalk-container')
 使用以下代码引入Gitalk组件
 
 ```jsx
-import GitalkComponent from "gitalk/dist/gitalk-component";
+import GitalkComponent from 'gitalk/react'
+import 'gitalk/dist/gitalk.css'
 ```
 
 按以下方式在React中使用Gitalk组件
@@ -188,19 +189,9 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
    GitHub oauth 请求到反向代理，为了支持 CORS。 [为什么要这样?](https://github.com/isaacs/github/issues/330)
 
-- **flipMoveOptions** `Object` 
-  
-  Default:
-  ```js
-    {
-      staggerDelayBy: 150,
-      appearAnimation: 'accordionVertical',
-      enterAnimation: 'accordionVertical',
-      leaveAnimation: 'accordionVertical',
-    }
-  ```
+- **flipMoveOptions** `Object`
 
-  评论列表的动画。 [参考](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
+  **v2 起已废弃**。评论列表动画已改为纯 CSS 实现（`react-flip-move` 已移除），该字段仅为兼容 v1 配置而保留，不再生效。可通过覆盖 `gt-kf-appear` keyframes / `.gt-comment` 的 animation 自定义动画。
 
 - **enableHotKey** `Boolean` 
   
@@ -215,9 +206,34 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   初始化渲染并挂载插件。
 
+- **destroy()**
+
+  卸载组件并清空容器。（v2 新增）
+
+## 主题定制（v2 新增）
+
+所有颜色都以 `--gt-*` CSS 自定义属性暴露在 `.gt-container` 上，覆盖它们即可定制主题。
+
+内置暗色主题通过容器或任意祖先节点（如 `<html>`）上的 `data-gitalk-theme` 属性启用：
+
+```html
+<html data-gitalk-theme="dark">   <!-- 强制暗色 -->
+<html data-gitalk-theme="auto">   <!-- 跟随系统 prefers-color-scheme -->
+```
+
 ## TypeScript
 
-已经包括了配置项和Gitalk类的类型定义，不包括React组件的类型定义。
+项目已使用 TypeScript 重写。`Gitalk` 类、全部配置项以及 React 组件（`gitalk/react`）的类型定义随包发布、自动生效。
+
+## 从 v1 迁移
+
+v2 是一次彻底重写（TypeScript + Preact X + Vite），但对外 API 保持不变，多数用户升级只需更新版本号：
+
+- `new Gitalk(options)`、`render()`、全部配置项、UMD 全局变量 `Gitalk`、`gt-*` 类名与 localStorage key 全部保留。
+- **React**：`import GitalkComponent from 'gitalk/dist/gitalk-component'` → `import GitalkComponent from 'gitalk/react'`。
+- **flipMoveOptions** 不再生效（动画改为纯 CSS）。
+- 未登录请求不再以 Basic Auth 发送 `clientID/clientSecret`（GitHub 已移除该认证方式）；client secret 仅在经 `proxy` 交换 OAuth token 时使用。
+- 不再支持 IE（仅支持现代浏览器）。
 
 ## 贡献
 

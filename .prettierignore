@@ -1,0 +1,7 @@
+dist
+coverage
+node_modules
+CHANGELOG.md
+package-lock.json
+*.md
+src/assets
