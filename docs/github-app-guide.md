@@ -62,9 +62,9 @@ Worker 只在 `/oauth/callback` 上处理授权码。根路径 `/` 是个健康�
 → 填 `<你的 Worker 地址>/oauth/callback`，例如
 `https://gitalk-proxy.aispin-abf.workers.dev/oauth/callback`
 
-> 这里有个**代码侧的坑**：前台 `auth.ts` 的 `loginUrl()` 目前发的是 proxy 根路径，少了
-> `/oauth/callback`。表单填得再对，不改代码登录也会停在一个 JSON 页面上。修法见附录 C.1。
-> 因为你能提前知道 Worker 地址（名字由你定），所以**第 1 步就能把这个字段填对**，不必等第 3 步。
+> 前台**不自己拼** GitHub 的授权 URL：它跳转到 `<proxy>/oauth/authorize`，由 Worker 负责
+> 拼 `redirect_uri` 和 `state`。这样回调地址只有 Worker 一个来源，前后端不可能对不上。
+> 你能提前知道 Worker 地址（名字由你定），所以**第 1 步就能把这个字段填对**，不必等第 3 步。
 
 ### 坑 3 · 取消勾选 "Expire user authorization tokens"
 
@@ -290,7 +290,7 @@ Worker 走自定义域名或 route（workers.dev 被视为 Free website，面向
 - [ ] `curl <proxy>/` 返回 `{"ok":true,...}`
 - [ ] **匿名状态能拉到全部评论与回复**
       —— 对比 v1 基准 `gitalk/gitalk#475`，应有 **2 条顶层 + 4 条回复**
-- [ ] 点击登录能走完 OAuth 并回到原页面（需先修附录 C.1）
+- [ ] 点击登录能走完 OAuth 并回到原页面，且地址栏里没有残留 `gitalk_session`
 
 最后一条是真正的端到端验证，可以这样跑：
 
@@ -326,9 +326,30 @@ npx wrangler tail --format pretty
 > Request forbidden by administrative rules`。Workers 运行时不会自带 `User-Agent`，
 > 而从 Node/curl 调用会自带，所以本地怎么试都正常——这个差异极具迷惑性。
 
-## 登录后停在一个 JSON 页面
+## 登录后回到页面上，但仍是未登录状态
 
-`auth.ts` 的 `loginUrl()` 把授权码发回了 proxy 根路径。见附录 C.1。
+三条链路都要通，逐个查：
+
+1. **Redirect URI 与 Worker 地址不一致** → GitHub 会停在授权错误页，或者授权码发到了
+   不处理 `code` 的地方。确认 App 设置里的 Redirect URI 精确等于 `<proxy>/oauth/callback`
+   （组织拥有的 App 只能在网页上改，`PATCH /app` 会返回 404）。
+2. **回调地址没在 App 里注册** → `redirect_uri` 校验失败。
+3. **`/oauth/token` 返回 401** → 会话已失效或密钥不对。看 Worker 日志：
+   `npx wrangler tail --format pretty`。
+
+正常情况下回调会带 `?gitalk_session=…` 回到原页面，前端把它换成 token 后**立即从地址栏抹掉**
+（避免留在历史记录/分享链接里）。若地址栏还留着这个参数，说明前端没跑到那一步。
+
+## `Session expired; sign in again`（401）
+
+Worker 判定会话里的访问令牌已过期、且**无法续期**。两种成因：
+
+- App 勾选了 "Expire user authorization tokens"，但会话里没有 `refresh_token`
+  （可能是设置变更前登录的）→ 让访客重新登录一次即可
+- `refresh_token` 本身也过期了（GitHub 给 6 个月）→ 同上，重新登录
+
+只要 App 开启了过期且登录时会下发 `refresh_token`，Worker 就会**自动续期**，访客无感。
+续期时 GitHub 会轮换 `refresh_token`，Worker 随新会话一起下发，前端自动替换。
 
 ## 浏览器报 CORS 错误
 
@@ -453,37 +474,66 @@ curl -s -H "Authorization: Bearer $APP_JWT" \
 
 ---
 
-# 附录 C · 已知代码缺口
+# 附录 C · 登录流程内部实现
 
-## C.1 🔴 登录回调路径不匹配（阻塞登录）
+这一节解释登录是怎么走通的，改动相关代码前值得先读一遍。
 
-- **位置**：`packages/core/src/auth.ts` 的 `loginUrl()`，`redirect_uri: this.proxy`
-- **问题**：发出去的是 proxy 根路径，而 Worker 只在 `/oauth/callback` 处理 `code`，
-  根路径返回 JSON
-- **两种修法**（选一）：
-  - **(a) 让前台直接走 Worker 的授权入口**（推荐，最贴合 Worker 现有设计）：
-    `window.location.href = \`${proxy}/oauth/authorize?return_to=${encodeURIComponent(location.href)}\``
-    —— Worker 的 `handleAuthorize` 已负责拼正确的 `redirect_uri` 和 `state`，前台不必自己拼
-  - **(b) 保留前台拼 URL，只把 `redirect_uri` 改成 `${this.proxy}/oauth/callback`**，
-    并确认 `state` 能带回原页面
+## 三个组件，各管一段
 
-## C.2 🟡 `scope=public_repo` 对 GitHub App 无意义
+```
+浏览器                  Worker                      GitHub
+  │                       │                           │
+  ├─ 跳转 /oauth/authorize ─►                          │
+  │                       ├─ 302，拼 redirect_uri ────►│  授权页
+  │                       │     和 state（不含 scope） │
+  │◄────────── 回到 /oauth/callback?code=…&state=… ────┤
+  │                       ├─ 用 code + client_secret ─►│
+  │                       │◄──── access_token ─────────┤
+  │                       │      (+ refresh_token)     │
+  │◄─ 302 回原页面，带 ?gitalk_session=<密文> ──────────┤
+  ├─ 前端取出 session、POST /oauth/token ─►            │
+  │                       ├─ 解封会话；过期则续期 ────►│
+  │◄──── { access_token, session? } ───────────────────┤
+  ├─ 存 token；把 gitalk_session 从地址栏抹掉           │
+```
 
-`auth.ts` 的 `SCOPES` 和 Worker `handleAuthorize` 里的 `scope` 都是 **OAuth App 的概念**。
-GitHub App 的权限由 App 注册信息决定，授权 URL 上的 `scope` 会被忽略。
+**为什么前台不自己拼 GitHub 的授权 URL**：`redirect_uri` 必须与 App 注册值完全一致，
+`state` 必须能带回原页面。这两件事只有 Worker 同时知道（它知道自己的公开 origin，
+也持有 secret）。放在前台就会有两份实现，一旦漂移就是「填对了也登不上」这类难查的故障。
 
-目前无害，但会误导后续维护者。建议删掉或加注释。
+**为什么 session 而不是 token 会被持久化**：token 会过期，session 才是能换出新 token 的东西。
+前端把 session 存进 localStorage，token 过期时静默续期，访客无感。
 
-## C.3 🟡 没有 refresh_token 支持
+**为什么 session 一落地就从地址栏删掉**：URL 会进入历史记录、被复制分享、通过 Referer 外泄。
+session 没有服务端密钥解不开，但也没有理由留着它。
 
-与[坑 3](#坑-3--取消勾选-expire-user-authorization-tokens) 是同一件事的两面。
-会话只存 `accessToken` + `issuedAt`。若 GitHub 强制开启 token 过期：
+## 令牌过期与自动续期
 
-1. `exchangeCode` 的返回体会多出 `refresh_token` / `expires_in`
-2. `handleCallback` 需要把 `refreshToken` 一并 `sealSession`
-3. 新增刷新端点（或在 `/oauth/token` 里按 `expiresAt` 判断后刷新）
+| 情况 | 行为 |
+| --- | --- |
+| App 未开启 "Expire user authorization tokens" | 无 `expires_in`，令牌永不过期，会话一直可用 |
+| 已开启，令牌仍有效 | 直接返回，不打扰 GitHub |
+| 已开启，令牌过期 | 用 `refresh_token` 静默续期，**返回新会话** |
+| 续期成功但 GitHub 未返回新 `refresh_token` | 沿用旧的（它仍然有效），避免丢掉续期能力 |
+| `refresh_token` 也过期（GitHub 给 6 个月） | 返回 `401 Session expired; sign in again`，前端退回未登录态 |
 
-## C.4 🟡 落地页 demo 指着老的 OAuth App
+前端侧对应的行为：
 
-`apps/landing/src/app.tsx` 里的 `clientID` 还是老 OAuth App 的值，且没配 `proxy`，
-导致 demo 上登录入口不可用。需改成新的 GitHub App client id 并补上 `proxy`。
+- `getToken()` 对**已过期**的令牌返回 `null`，而不是把死令牌发出去换来一堆 401。
+  宁可回退到匿名读（仍有 5000/hr），也好过整页报错。
+- 页面加载时若「有会话但令牌已过期」，在发起任何请求前先静默续期。
+- 续期失败若是因为**网络**（而非 401），保留会话——一次网络抖动不该让人重新登录。
+
+> 目前 App 的 "Expire user authorization tokens" 是**未勾选**状态，所以续期路径不会触发。
+> 它是为了让将来开启该选项（或 GitHub 强制开启）时无需再改代码。
+
+## 相关测试
+
+- `packages/core/src/auth.test.ts` —— 过期判定、会话存储与轮换、失败处理
+- `packages/proxy-worker/src/oauth.test.ts` —— 用打桩的 GitHub 跑通
+  authorize → callback → token 全流程，含过期续期与各种失败分支
+
+## 没有 `scope` 参数是故意的
+
+GitHub App 的权限由 App 注册信息决定，授权 URL 上的 `scope` 会被**忽略**。
+`scope=public_repo` 是 OAuth App 时代的概念，留着只会误导后来人，所以前台和 Worker 都不再发它。

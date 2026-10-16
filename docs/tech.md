@@ -304,6 +304,35 @@ workers.dev 子域与账号绑定，迁移账号或子域被回收都会让已�
 
 详细操作清单见 [docs/github-app-guide.md](./github-app-guide.md) §5.3。
 
+### 3.7 浏览器里存的是会话，不是令牌
+
+OAuth 往返结束后，Worker 不把 GitHub 的 access token 交给页面，而是给一个
+**AES-GCM 封存的会话**（`?gitalk_session=…`）。前端拿它换 token，并且**只持久化会话**。
+
+这个区分不是洁癖，是续期的前提：
+
+- **token 会过期**（App 开启 "Expire user authorization tokens" 后为 8 小时）
+- **会话里有 `refresh_token`**，能在令牌失效后静默换新的，访客无感
+
+若前端只存 token（2.0 早期就是这样），令牌一过期就只剩「重新登录」一条路。
+现在 `/oauth/token` 会在令牌过期时自动续期，并把**轮换后的新会话**一并返回，
+前端替换掉旧的——GitHub 每次续期都轮换 `refresh_token`，不换就等于下次续期失败。
+
+几个刻意的选择：
+
+| 选择 | 理由 |
+| --- | --- |
+| 前端跳 `<proxy>/oauth/authorize`，不自己拼 GitHub URL | `redirect_uri` 与 `state` 只有 Worker 同时知道（它知道自己的公开 origin），放两份实现必然漂移 |
+| `getToken()` 对已过期令牌返回 `null` | 发死令牌只会换来 401；返回 `null` 可回退到匿名读（仍有 5000/hr） |
+| session 一落地就从地址栏 `replaceState` 抹掉 | URL 会进历史记录、被分享、经 Referer 外泄 |
+| 续期因**网络**失败时保留会话，仅 401 时丢弃 | 一次网络抖动不该让人重新登录 |
+| 授权 URL 不发 `scope` | GitHub App 的权限由注册信息决定，`scope` 会被忽略，留着误导人 |
+
+> 当前 App 未勾选 "Expire user authorization tokens"，所以续期路径不会触发。
+> 它的意义是让将来开启该选项（或 GitHub 强制开启）时**不必再改代码**。
+
+详细流程与测试见 [docs/github-app-guide.md](./github-app-guide.md) 附录 C。
+
 ---
 
 ## 4. Markdown 渲染
