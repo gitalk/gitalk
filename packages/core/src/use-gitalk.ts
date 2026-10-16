@@ -16,6 +16,12 @@ interface GitalkState {
   rateLimited: boolean
   /** True when the thread does not exist yet (never initialised). */
   missingThread: boolean
+  /**
+   * True while an admin's thread is being created automatically. Keeps the
+   * "not initialized" block — and its button — off screen until the attempt
+   * has actually failed.
+   */
+  creatingThread: boolean
   thread: ThreadInfo | null
   comments: Comment[]
   user: { login: string; avatarUrl: string } | null
@@ -32,7 +38,12 @@ const DEFAULTS = {
   labels: ['Gitalk'],
   backend: 'discussions' as BackendKind,
   enableHotKey: true,
-  distractionFreeMode: false
+  distractionFreeMode: false,
+  /**
+   * Manual by default. v1 treated an omitted `createIssueManually` as
+   * "auto-create"; 2.0 inverts that on purpose (see `GitalkOptions`).
+   */
+  createIssueManually: true
 }
 
 function normalizeOptions(raw: GitalkOptions) {
@@ -46,7 +57,7 @@ function normalizeOptions(raw: GitalkOptions) {
     title: raw.title ?? document.title,
     body: raw.body ?? `${window.location.href}\n\n${metaDescription()}`,
     category: raw.category,
-    createManually: raw.createManually ?? false,
+    createIssueManually: raw.createIssueManually ?? raw.createManually ?? DEFAULTS.createIssueManually,
     enableHotKey: raw.enableHotKey ?? DEFAULTS.enableHotKey,
     distractionFreeMode: raw.distractionFreeMode ?? DEFAULTS.distractionFreeMode,
     admin: raw.admin ?? [],
@@ -76,6 +87,7 @@ export function useGitalk(options: GitalkOptions) {
     error: null,
     rateLimited: false,
     missingThread: false,
+    creatingThread: false,
     thread: null,
     comments: [],
     user: null,
@@ -95,6 +107,42 @@ export function useGitalk(options: GitalkOptions) {
     () => new HttpClient(() => auth.getToken()),
     [auth]
   )
+
+  /**
+   * Login of the signed-in viewer, resolved at most once.
+   *
+   * `undefined` means "not looked up yet", `null` means "anonymous". The
+   * cached value keeps the post-load identity call from repeating the
+   * `/user` request that the missing-thread path already made.
+   */
+  const viewerRef = useRef<string | null | undefined>(undefined)
+
+  const resolveViewer = useCallback(async (): Promise<string | null> => {
+    if (viewerRef.current !== undefined) return viewerRef.current
+    if (!auth.getToken()) {
+      viewerRef.current = null
+      return null
+    }
+    const me = await http.get<{ login: string; avatar_url: string }>('/user')
+    viewerRef.current = me.login
+    patch({ user: { login: me.login, avatarUrl: me.avatar_url } })
+    return me.login
+  }, [auth, http, patch])
+
+  /**
+   * `resolveViewer` for the "no thread on this page yet" branch, where a
+   * token that cannot identify the viewer (expired, revoked, flaky network)
+   * must not replace the "not initialized" notice with an error page. Read
+   * paths already degrade to anonymous in that situation; identity does too.
+   */
+  const resolveViewerSafely = useCallback(async (): Promise<string | null> => {
+    try {
+      return await resolveViewer()
+    } catch (err) {
+      console.warn('gitalk: could not resolve the signed-in user', err)
+      return null
+    }
+  }, [resolveViewer])
 
   const threadRef = useRef<ThreadInfo | null>(null)
   const commentsRef = useRef<GitalkComment[]>([])
@@ -158,6 +206,48 @@ export function useGitalk(options: GitalkOptions) {
     [backend, opts.perPage, opts.updateCountCallback]
   )
 
+  const createThread = useCallback(async () => {
+    patch({ loading: true })
+    try {
+      const thread = await backend.createThread()
+      threadRef.current = thread
+      patch({ thread, missingThread: false })
+      await load()
+    } catch (err) {
+      // Never swallowed: a failed creation leaves the "not initialized"
+      // notice (and the retry button) in place and puts the reason on screen.
+      reportFailure(patch, err)
+    }
+  }, [backend, load, patch])
+
+  /**
+   * Auto-create the thread on behalf of an admin, at most once per widget.
+   *
+   * "Once" is guaranteed by `autoCreateRef`, not by state: a ref is written
+   * synchronously, so any second entry into this path — a duplicated effect
+   * under React StrictMode, a re-render, a retry — sees the flag *before* the
+   * first `createThread()` call has started. A state flag could not do that,
+   * because its write would sit behind an `await` and both runs could get
+   * past the check.
+   */
+  const autoCreateRef = useRef(false)
+  const autoCreateThread = useCallback(async () => {
+    if (autoCreateRef.current) return
+    autoCreateRef.current = true
+
+    // Do not announce "not initialized" only to replace it a tick later:
+    // stay in the initializing state (loading) with the no-init block
+    // suppressed by `creatingThread`, so the flash and its button never
+    // render. `missingThread` is still set, so a failure below lands back on
+    // the normal not-initialized UI.
+    patch({ missingThread: true, creatingThread: true, ready: false, loading: true, error: null })
+    try {
+      await createThread()
+    } finally {
+      patch({ creatingThread: false })
+    }
+  }, [createThread, patch])
+
   const init = useCallback(async () => {
     patch({ loading: true, error: null, rateLimited: false })
     try {
@@ -176,7 +266,16 @@ export function useGitalk(options: GitalkOptions) {
       threadRef.current = thread
 
       if (!thread) {
-        patch({ missingThread: true, loading: false, ready: true })
+        // No thread yet. Creating one is admin-only (the same boundary v1
+        // enforced), and so is the manual "init" button, so the viewer has to
+        // be identified even though there is nothing to load. Anonymous
+        // visitors get `null` here and can therefore never create.
+        const viewer = await resolveViewerSafely()
+        if (opts.createIssueManually === false && isAdminLogin(opts.admin, viewer)) {
+          await autoCreateThread()
+        } else {
+          patch({ missingThread: true, creatingThread: false, loading: false, ready: true })
+        }
         return
       }
 
@@ -187,16 +286,36 @@ export function useGitalk(options: GitalkOptions) {
       const draft = consumeReturnedDraft()
       if (draft) patch({ draft })
 
-      if (auth.getToken()) {
-        const me = await http.get<{ login: string; avatar_url: string }>('/user')
-        patch({ user: { login: me.login, avatarUrl: me.avatar_url } })
-      }
+      await resolveViewer()
     } catch (err) {
       reportFailure(patch, err)
     }
-  }, [backend, opts.id, opts.number, auth, http, load, patch])
+  }, [
+    backend,
+    opts.id,
+    opts.number,
+    opts.admin,
+    opts.createIssueManually,
+    auth,
+    load,
+    patch,
+    resolveViewer,
+    resolveViewerSafely,
+    autoCreateThread
+  ])
 
+  /**
+   * One init per widget instance.
+   *
+   * The empty dependency array already limits the effect, but React's
+   * StrictMode deliberately runs effects twice on mount; the ref makes a
+   * second pass a no-op instead of a second thread lookup racing the
+   * auto-create.
+   */
+  const startedRef = useRef(false)
   useEffect(() => {
+    if (startedRef.current) return
+    startedRef.current = true
     void init()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -297,11 +416,10 @@ export function useGitalk(options: GitalkOptions) {
     }
   }, [load, patch])
 
-  const isAdmin = useMemo(() => {
-    if (!state.user) return false
-    const login = state.user.login.toLowerCase()
-    return opts.admin.some((a) => a.toLowerCase() === login)
-  }, [state.user, opts.admin])
+  const isAdmin = useMemo(
+    () => isAdminLogin(opts.admin, state.user?.login ?? null),
+    [state.user, opts.admin]
+  )
 
   return {
     state,
@@ -315,17 +433,7 @@ export function useGitalk(options: GitalkOptions) {
       replyTo,
       toggleReaction,
       loadMore,
-      createThread: async () => {
-        patch({ loading: true })
-        try {
-          const thread = await backend.createThread()
-          threadRef.current = thread
-          patch({ thread, missingThread: false })
-          await load()
-        } catch (err) {
-          reportFailure(patch, err)
-        }
-      }
+      createThread
     },
     meta: {
       owner: opts.owner,
@@ -338,6 +446,13 @@ export function useGitalk(options: GitalkOptions) {
       proxy: auth.proxy
     }
   }
+}
+
+/** Case-insensitive membership test against the configured `admin` list. */
+function isAdminLogin(admins: string[], login: string | null): boolean {
+  if (!login) return false
+  const lower = login.toLowerCase()
+  return admins.some((a) => a.toLowerCase() === lower)
 }
 
 function updateCount(cb: ((n: number) => void) | undefined, count: number): void {

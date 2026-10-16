@@ -2,7 +2,7 @@
 
 Gitalk 是一个评论组件：**评论存在你 GitHub 仓库的 Discussions 里**，不需要买服务器、不需要数据库。
 
-这篇文档带你从零把它挂到自己的博客或文档站上。照着做一遍大约 15 分钟。
+这篇文档带你从零把它挂到自己的博客或文档站上。照着做一遍大约 15 分钟（选 C 方案部署到国内的话，域名备案和证书要另外花时间）。
 
 **你需要的**：一个 GitHub 账号、一个用来存评论的仓库、一个能放网页的地方（GitHub Pages、Vercel、自己的服务器都行）。
 
@@ -14,7 +14,7 @@ Gitalk 是一个评论组件：**评论存在你 GitHub 仓库的 Discussions �
 | --- | --- | --- | --- |
 | **1** | 创建一个 GitHub App | github.com | 5 分钟 |
 | **2** | 把它安装到你的评论仓库 | github.com | 1 分钟 |
-| **3** | 部署「令牌服务」 | 你选一个平台 | 5 分钟 |
+| **3** | 部署「令牌服务」 | 你选一个平台 | 5 分钟（选 C 还要额外准备域名和证书） |
 | **4** | 把 Gitalk 代码贴进你的网站 | 你的项目 | 3 分钟 |
 
 顺序不要颠倒：第 1 步拿到的 Client ID 要给第 3、第 4 步用，第 3 步拿到的地址要给第 4 步用。
@@ -59,6 +59,8 @@ https://gitalk-proxy.你的子域.workers.dev/oauth/callback
 ```
 
 > 拿不准的话也没关系——第 3 步部署完会打印出确切地址，到时候回来补填。
+>
+> 选 C（腾讯云 CloudBase）的话同理，只是域名换成你自己的，例如 `https://gitalk.你的域名/oauth/callback`——**同样不要带任何路径前缀**。
 
 ### 坑 3 · 取消勾选「Expire user authorization tokens」
 
@@ -170,7 +172,7 @@ https://github.com/apps/<你的后缀>/installations/new
 3. 确认那个仓库**已经开启 Discussions**（仓库 Settings → Features → Discussions）
 4. 在里面建一个分类（category），默认用 `General` 就行
 
-装好后可以这样确认（把 `<App ID>` 换成你的）：返回值是空数组 `[]` 就说明还没装上——不过一般情况下，页面上能看到安装记录就是成功了。
+装好后想核对一下：打开 GitHub 的 Applications 设置页（个人账号是 <https://github.com/settings/installations>；装在组织上就在该组织的 Settings → GitHub Apps 里看）。能看到这个 App、并且列出的正是你存评论的那个仓库，就说明装上了。
 
 ---
 
@@ -182,7 +184,7 @@ https://github.com/apps/<你的后缀>/installations/new
 | --- | --- | --- | --- |
 | **A · 用官方提供的** | 只想先试试、本地开发 | 免费 | 不用做任何事 |
 | **B · Cloudflare Workers** | 读者主要在海外 | 免费额度足够 | 一条命令 |
-| **C · 腾讯云 CloudBase** | 读者主要在中国大陆 | 有免费体验版 | 一条命令（但需要一个已备案的域名） |
+| **C · 腾讯云 CloudBase** | 读者主要在中国大陆 | 有免费体验版 | 一条命令 + 一个已备案的域名 + 一张自己准备的证书 |
 | **D · 容器** | 有自己的服务器 / 懂 Docker | 取决于你的服务器 | 一条命令 + Docker |
 
 > **为什么不能直接用官方的？** 官方那个是给大家**体验和测试**用的，没有可用性承诺，访问量大时会限速。正式站点请选 B / C / D 之一。
@@ -207,7 +209,11 @@ cp packages/proxy-worker/.env.example packages/proxy-worker/.env
 | `GITALK_ALLOWED_ORIGINS` | 你的网站地址，如 `https://your.blog`（多个用逗号分隔） |
 | `GITHUB_APP_PRIVATE_KEY` | **留空**——见下 |
 | `CLOUDFLARE_API_TOKEN` | 只在选 B 时需要 |
-| `CLOUDBASE_*` | 只在选 C 时需要 |
+| `CLOUDBASE_ENV_ID` | 只在选 C 时需要：CloudBase 环境 ID |
+| `CLOUDBASE_SECRET_ID` / `CLOUDBASE_SECRET_KEY` | 只在选 C 时需要：腾讯云子账号密钥 |
+| `PUBLIC_ORIGIN` | 只在选 C 时需要：令牌服务的正式地址，如 `https://gitalk.你的域名`（要带 `https://`，末尾别加斜杠） |
+
+> 选 C 的话，示例文件里没有 `CLOUDBASE_*` 和 `PUBLIC_ORIGIN` 这几行，自己在 `.env` 末尾补上就行。
 
 ### 私钥怎么处理？最简单：别管它
 
@@ -235,16 +241,40 @@ pnpm --filter @gitalk/proxy-worker deploy
 
 ## C · 部署到腾讯云 CloudBase
 
-1. 在[腾讯云访问管理](https://console.cloud.tencent.com/cam)创建一个**子账号**，关联 `QcloudAccessForTCBRole` 策略（⚠️ 不要用主账号密钥）
+读者主要在中国大陆时选这条。它比 Cloudflare 多两件事：**一个已经 ICP 备案的域名**，和**一张自己准备的证书**。部署那一条命令照旧，域名和证书都在 CloudBase 控制台里点。
+
+### 1. 先把服务部署上去
+
+1. 在[腾讯云访问管理](https://console.cloud.tencent.com/cam)创建一个**子账号**，关联两个策略：`QcloudAccessForTCBRole`（部署用）和 `QcloudSSLFullAccess`（后面上传证书用）。⚠️ 不要用主账号密钥
 2. 在 [CloudBase 控制台](https://console.cloud.tencent.com/tcb)创建一个环境，记下环境 ID
-3. 把子账号的 `SecretId` / `SecretKey` 和环境 ID 填进 `.env`
+3. 把子账号的 `SecretId` / `SecretKey`、环境 ID、`PUBLIC_ORIGIN` 填进 `.env`
 4. 执行：
 
 ```bash
 pnpm --filter @gitalk/proxy-cloudbase deploy
 ```
 
-> ⚠️ **这一步还需要一个已备案的域名。** CloudBase 的默认域名只能用于开发测试，正式对外访问必须绑定自定义域名，而绑定自定义域名要求域名**已完成 ICP 备案**。如果你还没有备案域名，可以先跳过这一步。
+做完会得到一个 `*.tcloudbase.com` 的默认地址。**它只能用来测试**（限速、功能不全），正式对外必须绑自己的域名。
+
+### 2. 绑一个自己的域名
+
+前提：域名**已经完成 ICP 备案**。没有备案域名的话，这一步怎么弄都不会成功，可以先跳过，等备案下来再做。
+
+1. **域名归属校验**：第一次添加域名时，CloudBase 会要求你先去 DNS 加一条 TXT 记录（主机记录是 `_cloudbase-challenge.你的子域`，值填环境 ID）。加完回到控制台再点一次。
+2. **准备证书**：CloudBase 体验版**不支持托管证书**，得自己出一张。可行做法是用 Let's Encrypt 申请（域名 DNS 在阿里云时，走阿里云 DNS-01 验证最省事），然后在控制台把证书传上去，得到一个证书 ID。
+3. **绑定域名**：在 CloudBase 控制台把域名和刚拿到的证书绑上。首次是「添加域名」，以后只是换证书就用「更新证书」，不要重复添加。
+4. 绑定成功后，控制台会给出一个 CNAME 值，拿去你的 DNS 服务商加一条 CNAME 解析。
+
+### 3. 让域名指向函数（触发路径）
+
+域名绑好还不够，还要告诉 CloudBase「这个域名来的请求交给谁」：
+
+- 在控制台给这条域名加一条**触发路径**（有的界面叫「路由」）：路径填 `/`，指向 `gitalk-proxy` 这个函数。
+- ⚠️ **「路径透传」要关掉（选「不透传」）。** 开着的话，函数收到的地址会多带一段前缀，它认不出来，只会返回 404。
+
+做完之后，浏览器打开 `https://你的域名`，能看到 `{"ok":true,"service":"gitalk-proxy"}` 就说明通了。比如现在跑通的那个就是 `https://gitalk.xsin.work`。
+
+> ⚠️ **第 4 步填 `proxy` 时只写到域名，不要带路径。** 例如 `https://你的域名` ✅、`https://你的域名/gitalk` ❌（会 404）。回调地址同理，是 `https://你的域名/oauth/callback`。
 
 ## D · 用容器部署
 
@@ -303,9 +333,9 @@ pnpm add @aifire/gitalk-vue      # Vue
     clientID: 'Iv23li…',        // 第 1 步的 Client ID
     owner: '你的用户名',         // 存放评论的仓库
     repo: 'blog-comments',
-    admin: ['你的用户名'],       // 谁可以在第一次访问时创建讨论
+    admin: ['你的用户名'],       // 谁可以创建讨论，见「关于 admin」
     number: 42,                 // 这一页对应的讨论编号
-    proxy: 'https://…'          // 第 3 步拿到的地址；用官方的就删掉这行
+    proxy: 'https://…'          // 第 3 步拿到的地址，只写到域名；用官方的就删掉这行
   })
   gitalk.render('gitalk-container')
 </script>
@@ -326,7 +356,7 @@ export function Comments() {
         repo: 'blog-comments',
         admin: ['你的用户名'],
         number: 42,
-        proxy: 'https://…'
+        proxy: 'https://…'   // 只写到域名，不要带路径
       }}
     />
   )
@@ -346,7 +376,7 @@ const options = {
   repo: 'blog-comments',
   admin: ['你的用户名'],
   number: 42,
-  proxy: 'https://…'
+  proxy: 'https://…'   // 只写到域名，不要带路径
 }
 </script>
 
@@ -361,14 +391,24 @@ const options = {
 | --- | --- | --- |
 | `clientID` | — | 你的 GitHub App Client ID |
 | `owner` / `repo` | — | 存放评论的仓库 |
-| `admin` | `[]` | 允许创建讨论的用户 |
+| `admin` | `[]` | 可以创建讨论的用户名单，见下 |
 | `number` | — | 讨论编号。**推荐填**，省一次查找 |
 | `id` | 当前网址路径 | 没填 `number` 时用来自动匹配页面的标识 |
 | `backend` | `'discussions'` | 1.x 老用户改成 `'issues'` 可继续用 Issues |
 | `category` | — | 创建讨论时用的分类 |
-| `perPage` | `10` | 每页显示多少条 |
-| `proxy` | 官方地址 | 你的令牌服务地址 |
+| `perPage` | `10` | 每页显示多少条（回复也算在内） |
+| `pageSize` | — | 和 `perPage` 是同一个东西的两种写法；两个都写时以 `pageSize` 为准 |
+| `proxy` | 官方地址 | 你的令牌服务地址。**只写到域名，不要带路径** |
 | `language` | 浏览器语言 | 支持 11 种语言 |
+
+### 关于 `admin`：为什么页面写着「请联系 @xxx 初始化创建」
+
+`admin` 填的是 GitHub 用户名，决定**谁能把这一页的讨论建出来**。
+
+- 页面上**没有对应的讨论时，它不会自动创建**。这是故意的——否则访客一进页面，就会在你的仓库里建出一堆讨论。
+- 普通访客（包括已经用 GitHub 登录的普通读者）看到的是「**请联系 @你的用户名 初始化创建**」。这不是报错，是在等你把这条讨论建出来。
+- 只有写进 `admin`、并且已经登录的人，才会多看到一个「初始化 Issue」按钮。
+- ⚠️ 用默认的 Discussions 时，这个按钮目前**还建不出讨论**；最稳的做法是照下面「关于 `number`」的最后一段手动建一条。
 
 ### 关于 `number`：怎么知道讨论编号
 
@@ -379,9 +419,19 @@ https://github.com/你的用户名/blog-comments/discussions/42
                                                       ↑ 这就是 number
 ```
 
-**第一次还没有讨论怎么办？** 先不填 `number`，把 `id` 填成能唯一标识这一页的字符串（默认用网址路径）。第一次访问时由 `admin` 列表里的人创建讨论，之后就会自动匹配上了。
+`number` 是**推荐填**的：填了它，组件直接打开对应的那条讨论，不用再去猜，加载也更快。
 
-> 想一次搞定：直接在仓库里手动建一条 Discussion，标题随意（`id` 是什么就写什么），然后把它的编号填进 `number`。
+**第一次还没有讨论怎么办？** 这条讨论不会自己出现，需要你建一次（见上一节）。建好之后有两种用法：
+
+- **推荐**：把它的编号填进 `number`，完事。
+- 或者干脆不填 `number`，但要保证**讨论标题和 `id` 长得一模一样**（`id` 没填时，默认就是这一页的网址路径）。组件会去讨论列表里按标题把它找出来。
+
+### 评论数是怎么算的
+
+- GitHub 讨论列表里显示的数字 = **顶层评论 + 所有回复**。
+- 组件顶部的计数用的是同一个口径，**回复也算在内**；它显示的是**当前已经加载出来的条数**，点「加载更多」之后数字会变大。
+- 回复是**嵌在父评论下面**显示的，不和顶层评论平铺在一起。
+- 「每页 10 条」数的也是这个总数：一条顶层评论带 3 条回复，一页里就占掉 4 个名额。
 
 ---
 
@@ -391,6 +441,8 @@ https://github.com/你的用户名/blog-comments/discussions/42
 - [ ] App 已安装到评论仓库，且该仓库开启了 Discussions
 - [ ] 回调地址是 `<令牌服务地址>/oauth/callback`
 - [ ] 令牌服务部署成功，访问它的地址能看到 `{"ok":true,"service":"gitalk-proxy"}`
+- [ ] （选 C 时）自己的域名能打开，并且加过触发路径、「路径透传」是关的
+- [ ] `proxy` 填的是纯域名，后面没有跟任何路径
 - [ ] 打开你的网页，能看到评论区
 - [ ] 点「登录」能走完 GitHub 授权并回到原页面
 - [ ] 登录后能发评论
@@ -399,7 +451,11 @@ https://github.com/你的用户名/blog-comments/discussions/42
 
 # 常见问题
 
-## 评论区显示「没有找到相关的 Issues」或一直转圈
+## 评论区显示「未找到相关的 … 进行评论」
+
+这**不是报错**，意思是这一页还没有对应的讨论。普通访客看到的就是「请联系 @xxx 初始化创建」，只有 `admin` 里的人登录后才会多出「初始化 Issue」按钮。照上面「关于 `admin`」那一节把讨论建出来就正常了。
+
+## 评论区一直转圈、不显示内容
 
 多半是 App 没安装，或者评论仓库没开 Discussions。回到[第 2 步](#第-2-步--安装-app)检查。
 
@@ -430,11 +486,11 @@ GITALK_ALLOWED_ORIGINS=https://your.blog,http://127.0.0.1:4181
 
 ## 评论只显示了一部分
 
-默认每页 10 条，点「加载更多」看剩下的。如果你填了 `number`，确认编号对得上。
+默认每页 10 条（回复也算在 10 条里面），点「加载更多」看剩下的。如果你填了 `number`，确认编号对得上。
 
 ## 中国大陆的读者打不开评论区
 
-如果你用的是 Cloudflare 且地址以 `workers.dev` 结尾——**这个域名在中国大陆是访问不了的**。绑一个自己的域名即可。
+如果你用的是 Cloudflare 且地址以 `workers.dev` 结尾——**这个域名在中国大陆是访问不了的**。绑一个自己的域名即可；或者改用上面的 C 方案（腾讯云 CloudBase）。
 
 ---
 

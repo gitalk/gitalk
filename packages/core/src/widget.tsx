@@ -52,7 +52,13 @@ export function GitalkWidget({ options, className }: GitalkProps) {
 
       {state.loading ? <div className="gt-initing">{t('init')}</div> : null}
 
-      {state.ready && state.missingThread ? (
+      {/*
+        Admin auto-creation (createIssueManually: false) keeps `creatingThread`
+        set while the thread is being made, so this block — and the button in
+        it — only appears once there really is nothing to show. The
+        "initializing" line above covers that window instead.
+      */}
+      {state.ready && state.missingThread && !state.creatingThread ? (
         <div className="gt-no-init">
           <p>{t('no-found-related', { link: threadLink(meta.owner, meta.repo) })}</p>
           <p>{t('please-contact', { user: options.admin.map((a) => `@${a}`).join(' ') })}</p>

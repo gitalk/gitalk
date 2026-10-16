@@ -117,7 +117,40 @@ export interface GitalkOptions {
    */
   pageSize?: number
   sortDirection?: SortDirection
-  /** Require an admin to click "init" instead of auto-creating the thread. */
+  /**
+   * Whether an admin has to create the thread by hand. v1-compatible name.
+   *
+   * | value                | behaviour                                            |
+   * | -------------------- | ---------------------------------------------------- |
+   * | `false`              | v1 semantics: an admin visiting a page with no        |
+   * |                      | thread creates it automatically.                      |
+   * | `true`               | the admin sees the "Initialize" button and clicks it. |
+   * | *omitted* (default)  | **manual** — identical to `true`.                     |
+   *
+   * DELIBERATE DIFFERENCE FROM v1: v1's check was
+   * `if (!createIssueManually && this.isAdmin) return this.createIssue()`, so
+   * an *omitted* option behaved like `false` and auto-created. 2.0 inverts
+   * that: the default is manual. Auto-creating turns every admin page view
+   * into a new, empty thread, so it now has to be opted into explicitly —
+   * pass `createIssueManually: false` to get the v1 behaviour back.
+   *
+   * Security boundary (unchanged from v1): only an authenticated viewer whose
+   * login appears in `admin` may ever create a thread. Anonymous visitors are
+   * shown the "not initialized" notice whatever this option says.
+   *
+   * Backend note: `createThread()` only has a REST implementation for
+   * `backend: 'issues'`. With `backend: 'discussions'` an auto-create attempt
+   * fails with an actionable error (GitHub has no REST discussion-create API)
+   * rather than silently doing nothing.
+   */
+  createIssueManually?: boolean
+  /**
+   * @deprecated Earlier 2.x spelling of {@link GitalkOptions.createIssueManually},
+   * kept so existing configs still typecheck. Honoured only when
+   * `createIssueManually` is absent, and it means the same thing there: an
+   * explicit `false` opts into automatic creation, an explicit `true` (or
+   * omitting both) leaves the admin a button to click.
+   */
   createManually?: boolean
   /**
    * Token-exchange endpoint. Point this at your own deployed edge function
