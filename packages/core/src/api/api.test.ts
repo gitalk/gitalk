@@ -19,6 +19,7 @@ function makeCtx(overrides: Partial<BackendContext> = {}): BackendContext {
     repo: 'gitalk',
     getThread: () => THREAD,
     term: () => 'page-id',
+    graphql: (<T>() => Promise.resolve({} as T)) as BackendContext['graphql'],
     ...overrides
   }
 }

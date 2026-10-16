@@ -2,39 +2,37 @@ import { GitalkError } from './api/client'
 
 const STORAGE_KEY = 'GT_ACCESS_TOKEN'
 const DRAFT_KEY = 'GT_COMMENT'
-const SCOPES = 'public_repo'
 
-export interface TokenResponse {
-  access_token: string
-  error?: string
-  error_description?: string
-}
+/**
+ * Default token-exchange endpoint.
+ *
+ * v1 shipped the OAuth `client_secret` into the page and posted it to a
+ * third-party CORS proxy (`cors-anywhere.azm.workers.dev`) so the browser could
+ * complete the exchange. That leaked both the secret and every visitor's code
+ * to an unrelated server.
+ *
+ * There is no way around a server here: `github.com/login/oauth/access_token`
+ * sends no `Access-Control-Allow-Origin`, and neither does the device-flow
+ * endpoint (verified — `api.github.com` returns `ACAO: *` under identical
+ * conditions, so it is a real header difference, not a measurement artifact).
+ *
+ * So 2.0 points at a worker this project runs. Users who would rather not
+ * trust it can deploy `packages/proxy-worker` themselves and override `proxy`.
+ * See docs/tech.md §3.
+ */
+export const DEFAULT_PROXY = 'https://gitalk-proxy.gitalk.workers.dev'
+
+/** Scope needed to read and write discussions on public repositories. */
+const SCOPES = 'public_repo'
 
 const AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
 
-/**
- * Authentication for Gitalk 2.0.
- *
- * ## Why this looks different from v1
- *
- * v1 shipped `clientID` + `clientSecret` into the page and posted them to a
- * third-party CORS proxy so the browser could complete the OAuth code
- * exchange. That design leaked both secrets and every visitor's OAuth code to
- * an unrelated server.
- *
- * Neither Rescue works as-is:
- *  - **Redirect flow**: `github.com/login/oauth/access_token` sends no
- *    `Access-Control-Allow-Origin`, so a browser cannot read the exchange.
- *  - **Device flow**: verified to genuinely require NO client_secret — but the
- *    same missing CORS headers block it. (Measured: `api.github.com` returns
- *    `access-control-allow-origin: *` under identical conditions, so this is a
- *    real header difference, not a measurement artifact.)
- *
- * Hence there is no way for a purely static page to mint a token. 2.0 keeps
- * the secret *out of the browser* by delegating the exchange to an edge
- * function the site owner deploys themselves: {@link TokenProxy}.
- * See docs/tech.md §3.
- */
+export interface AuthOptions {
+  clientID: string
+  /** Override the token-exchange endpoint (e.g. a self-hosted worker). */
+  proxy?: string
+}
+
 export class Auth {
   private token: string | null = null
 
@@ -51,25 +49,34 @@ export class Auth {
   }
 
   /**
+   * Whether signing in can actually be attempted.
+   *
+   * The UI uses this to hide the login affordance instead of throwing at click
+   * time: a misconfigured widget should degrade quietly, not blow up the page.
+   */
+  canLogin(): boolean {
+    return Boolean(this.options.clientID)
+  }
+
+  get proxy(): string {
+    return this.options.proxy || DEFAULT_PROXY
+  }
+
+  /**
    * Build the GitHub authorize URL. The redirect target is the token proxy,
    * which completes the exchange away from the browser.
    */
   loginUrl(redirectTo: string): string {
-    if (!this.options.proxy) {
-      throw new GitalkError(
-        'No `proxy` configured. Deploy packages/proxy-worker to your own ' +
-          'Cloudflare/Vercel/Netlify account and pass its URL — the OAuth ' +
-          'exchange cannot run in a browser (github.com sends no CORS headers).'
-      )
-    }
-
     if (!this.options.clientID) {
-      throw new GitalkError('`clientID` is required to sign in')
+      throw new GitalkError(
+        '`clientID` is required to sign in. Create a GitHub OAuth Application ' +
+          'and pass its client id in the gitalk options.'
+      )
     }
 
     const params = new URLSearchParams({
       client_id: this.options.clientID,
-      redirect_uri: this.options.proxy,
+      redirect_uri: this.proxy,
       scope: SCOPES,
       state: redirectTo
     })
@@ -84,6 +91,7 @@ export class Auth {
 
   takeDraft(): string {
     try {
+      if (typeof localStorage === 'undefined') return ''
       const raw = localStorage.getItem(DRAFT_KEY)
       if (!raw) return ''
       localStorage.removeItem(DRAFT_KEY)
@@ -97,20 +105,6 @@ export class Auth {
     this.token = null
     trySafe(() => localStorage.removeItem(STORAGE_KEY))
   }
-}
-
-export interface AuthOptions {
-  clientID: string
-  proxy?: string
-}
-
-export interface TokenProxy {
-  exchange(params: {
-    endpoint: string
-    clientID: string
-    clientSecret: string
-    code: string
-  }): Promise<string>
 }
 
 function readStoredToken(): string | null {

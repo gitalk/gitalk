@@ -44,7 +44,7 @@ export function Comment({
         {comment.replies.length ? (
           <div className="gt-comment-replies">
             {comment.replies.map((reply) => (
-              <div className="gt-comment gt-comment-reply" key={reply.id}>
+              <div className="gt-comment gt-comment-reply-item" key={reply.id}>
                 <Avatar
                   className="gt-comment-avatar"
                   src={reply.user.avatarUrl}

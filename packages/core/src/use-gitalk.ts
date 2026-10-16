@@ -5,7 +5,7 @@ import type { BackendContext } from './api/backend'
 import { DiscussionsBackend } from './api/discussions'
 import { IssuesBackend } from './api/issues'
 import { Auth } from './auth'
-import { GitalkError, HttpClient } from './api/client'
+import { API_VERSION, GITHUB_API, GitalkError, HttpClient, RateLimitError, extractMessage } from './api/client'
 import { createTranslator } from './i18n'
 import type { BackendKind, GitalkComment, GitalkComment as Comment, GitalkOptions, ThreadInfo } from './types'
 
@@ -99,6 +99,7 @@ export function useGitalk(options: GitalkOptions) {
   const threadRef = useRef<ThreadInfo | null>(null)
   const commentsRef = useRef<GitalkComment[]>([])
   commentsRef.current = state.comments
+  const pageRef = useRef(1)
   const backend = useMemo<Backend>(() => {
     const ctx: BackendContext = {
       http,
@@ -106,7 +107,8 @@ export function useGitalk(options: GitalkOptions) {
       owner: opts.owner,
       repo: opts.repo,
       getThread: () => threadRef.current,
-      term: () => opts.id
+      term: () => opts.id,
+      graphql: (body) => sendGraphql(body, auth)
     }
     return opts.backend === 'issues'
       ? new IssuesBackend(ctx, {
@@ -126,26 +128,31 @@ export function useGitalk(options: GitalkOptions) {
 
   const load = useCallback(
     async (append = false) => {
-      // Read the cursor from a ref rather than `state`: the closure would
-      // otherwise capture the snapshot from when this callback was created and
-      // overwrite updates applied while the request was in flight.
-      const cursor = append ? (commentsRef.current.at(-1)?.id.toString() ?? null) : null
+      // Read the page counter from a ref rather than `state`: the closure
+      // would otherwise capture the snapshot from when this callback was
+      // created and overwrite updates applied while a request was in flight.
+      const nextPage = append ? pageRef.current + 1 : 1
 
       const result = await backend.getComments({
         first: opts.perPage,
         direction: 'last',
-        after: cursor
+        page: nextPage
       })
+
+      // A page that comes back empty means we have drained the thread; stop
+      // advertising "load more" instead of letting the user spin forever.
+      const drained = result.comments.length === 0 && append
 
       setState((prev) => ({
         ...prev,
-        comments: append ? [...prev.comments, ...result.comments] : result.comments,
-        hasMore: result.hasNextPage,
+        comments: drained ? prev.comments : append ? [...prev.comments, ...result.comments] : result.comments,
+        hasMore: drained ? false : result.hasNextPage,
         loading: false,
         ready: true,
         error: null,
         rateLimited: false
       }))
+      if (!drained) pageRef.current = nextPage
       updateCount(opts.updateCountCallback, result.comments.length)
     },
     [backend, opts.perPage, opts.updateCountCallback]
@@ -184,9 +191,16 @@ export function useGitalk(options: GitalkOptions) {
   }, [])
 
   const login = useCallback(() => {
+    if (!auth.canLogin()) {
+      // Already hidden in the UI; keep this as a hard stop for direct callers.
+      patch({
+        error: 'Sign-in is unavailable: no `clientID` configured.'
+      })
+      return
+    }
     auth.saveDraft(state.draft)
     window.location.href = auth.loginUrl(window.location.href)
-  }, [auth, state.draft])
+  }, [auth, state.draft, patch])
 
   const logout = useCallback(() => {
     auth.logout()
@@ -307,7 +321,10 @@ export function useGitalk(options: GitalkOptions) {
       repo: opts.repo,
       isAdmin,
       supportsPreview: true,
-      authenticated: Boolean(auth.getToken())
+      authenticated: Boolean(auth.getToken()),
+      /** False when no clientID is configured: the UI hides login affordances. */
+      canLogin: auth.canLogin(),
+      proxy: auth.proxy
     }
   }
 }
@@ -356,4 +373,42 @@ function reportFailure(
     rateLimited: err instanceof GitalkError && err.rateLimited,
     ...extra
   })
+}
+
+/**
+ * Issue a GraphQL request, preferring the configured proxy.
+ *
+ * Rationale: GraphQL is unreachable anonymously (its unauthenticated limit is
+ * literally 0), so without a proxy the widget would be limited to REST's
+ * 60/hr-per-IP for reads. The proxy can attach a GitHub App installation token
+ * instead, lifting that to 5,000/hr. See docs/tech.md §2.1.
+ *
+ * Falls back to api.github.com when no proxy is configured, so self-hosters and
+ * tests keep working without one.
+ */
+async function sendGraphql<T>(
+  body: { query: string; variables: Record<string, unknown> },
+  auth: Auth
+): Promise<T> {
+  const token = auth.getToken()
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': API_VERSION
+  }
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const target = auth.proxy
+    ? `${auth.proxy.replace(/\/$/, '')}/graphql`
+    : `${GITHUB_API}/graphql`
+
+  const response = await fetch(target, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  })
+
+  if (response.status === 429) throw new RateLimitError()
+  if (!response.ok) throw new GitalkError(await extractMessage(response), response.status)
+  return (await response.json()) as T
 }

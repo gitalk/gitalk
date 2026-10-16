@@ -56,7 +56,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
               {t('init-issue')}
             </Button>
           ) : null}
-          {!meta.authenticated ? (
+          {!meta.authenticated && meta.canLogin ? (
             <Button className="gt-btn-login" onClick={actions.login}>
               {t('login-with-github')}
             </Button>
@@ -69,10 +69,21 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           <div className="gt-header">
             {state.user ? (
               <Avatar className="gt-header-avatar" src={state.user.avatarUrl} alt={state.user.login} />
-            ) : (
-              <a className="gt-avatar-github" href="#" onClick={(e) => { e.preventDefault(); actions.login() }}>
+            ) : meta.canLogin ? (
+              <a
+                className="gt-avatar-github"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  actions.login()
+                }}
+              >
                 <Icon className="gt-ico-github" name="github" />
               </a>
+            ) : (
+              <span className="gt-avatar-github gt-avatar-github-idle">
+                <Icon className="gt-ico-github" name="github" />
+              </span>
             )}
 
             <div className="gt-header-comment">
@@ -111,7 +122,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   {state.previewing ? t('edit') : t('preview')}
                 </Button>
 
-                {!meta.authenticated ? (
+                {!meta.authenticated && meta.canLogin ? (
                   <Button className="gt-btn-login" onClick={actions.login}>
                     {t('login-with-github')}
                   </Button>

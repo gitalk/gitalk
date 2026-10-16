@@ -28,7 +28,10 @@ export interface ResolveOptions {
 }
 
 export interface PageOptions {
+  /** Page size. REST caps this at 100. */
   first: number
+  /** Offset page for REST transports. 1-based; ignored by cursor-based ones. */
+  page?: number
   after?: string | null
   before?: string | null
   direction?: 'first' | 'last'
@@ -48,6 +51,18 @@ export interface BackendContext {
   getThread: () => ThreadInfo | null
   /** Page identifier used for label/title addressing. */
   term: () => string
+  /**
+   * Issue a GraphQL request.
+   *
+   * Routed through the configured proxy when one is set, because GraphQL
+   * rejects anonymous callers outright (`x-ratelimit-limit: 0`). The proxy can
+   * then attach a GitHub App installation token, which raises the anonymous
+   * read limit from 60/hr-per-IP to 5,000/hr. See docs/tech.md §2.1, §3.
+   */
+  graphql: <T>(body: {
+    query: string
+    variables: Record<string, unknown>
+  }) => Promise<T>
 }
 
 export const GHOST_USER: GitalkUser = {

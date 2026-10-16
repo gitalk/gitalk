@@ -1359,3 +1359,44 @@
   border-bottom-color: #eee;
 }
 
+
+/*
+ * Reply container.
+ *
+ * Deliberately NOT `.gt-comment-reply`: that class is the absolutely-positioned
+ * reply *button* inherited from Gitalk 1.x, so reusing it here would take each
+ * reply out of the document flow and make it invisible.
+ */
+.gt-container .gt-comment-replies {
+  margin-top: 12px;
+  border-left: 2px solid var(--gt-color-hr);
+  padding-left: 12px;
+}
+
+.gt-container .gt-comment-reply-item {
+  padding: 8px 0;
+}
+
+.gt-container .gt-comment-reply-item + .gt-comment-reply-item {
+  border-top: 1px solid var(--gt-color-hr);
+}
+
+.gt-container .gt-comment-reply-item .gt-comment-avatar {
+  width: 2em;
+  height: 2em;
+}
+
+@media (max-width: 479px) {
+  .gt-container .gt-comment-replies {
+    padding-left: 8px;
+  }
+}
+
+/*
+ * Shown when no clientID is configured, so the header still has a GitHub mark
+ * but nothing is clickable and no error is thrown.
+ */
+.gt-container .gt-avatar-github-idle {
+  cursor: default;
+  opacity: 0.55;
+}

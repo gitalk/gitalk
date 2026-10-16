@@ -64,6 +64,8 @@ export interface ThreadPage {
   hasPreviousPage: boolean
   endCursor: string | null
   startCursor: string | null
+  /** The page this batch came from, for offset-based transports. */
+  page?: number
 }
 
 /**

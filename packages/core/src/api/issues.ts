@@ -108,14 +108,16 @@ export class IssuesBackend extends BaseBackend {
     return this.toThreadInfo(issue)
   }
 
-  async getComments({ first, direction }: PageOptions): Promise<ThreadPage> {
+  async getComments({ first, direction, page }: PageOptions): Promise<ThreadPage> {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
     const order = direction === 'first' ? 'asc' : 'desc'
+    const perPage = Math.min(Math.max(first, 1), 100)
+    const currentPage = Math.max(page ?? 1, 1)
     const raw = await this.ctx.http.get<RawComment[]>(
       `/repos/${this.ctx.owner}/${this.ctx.repo}/issues/${thread.number}` +
-        `/comments?per_page=${Math.min(first, 100)}&direction=${order}`
+        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`
     )
 
     const comments: GitalkComment[] = raw.map((item) => ({
@@ -138,10 +140,11 @@ export class IssuesBackend extends BaseBackend {
     return {
       comments,
       totalCount: comments.length,
-      hasNextPage: raw.length >= Math.min(first, 100),
-      hasPreviousPage: false,
+      hasNextPage: raw.length >= perPage,
+      hasPreviousPage: currentPage > 1,
       endCursor: head ? String(head.id) : null,
-      startCursor: head ? String(head.id) : null
+      startCursor: head ? String(head.id) : null,
+      page: currentPage
     }
   }
 

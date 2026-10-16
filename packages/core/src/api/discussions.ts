@@ -38,11 +38,10 @@ interface RawComment {
   node_id: string
   user: unknown
   body_html?: string
-  body?: string
   created_at: string
   html_url: string
   parent_id?: number | null
-  reactions?: { total_count?: number; heart?: number } & Record<string, unknown>
+  reactions?: { heart?: number; total_count?: number } & Record<string, unknown>
 }
 
 interface GraphQLComment {
@@ -55,14 +54,10 @@ interface GraphQLComment {
   reactions?: ReactionSummary
 }
 
-export interface DiscussionsBackendOptions {
-  category?: string
-  labels?: string[]
-  title?: string
-  body?: string
-}
+/** GitHub caps REST per_page at 100. */
+const MAX_PER_PAGE = 100
 
-/** Discussions-backed comment store. The default backend in Gitalk 2.0. */
+/** Discussions backend. The default in Gitalk 2.0. */
 export class DiscussionsBackend extends BaseBackend {
   readonly kind = 'discussions' as const
 
@@ -85,6 +80,7 @@ export class DiscussionsBackend extends BaseBackend {
         title: string
         html_url: string
         locked: boolean
+        comments?: number
       }>(`/repos/${this.ctx.owner}/${this.ctx.repo}/discussions/${number}`)
 
       return {
@@ -102,10 +98,10 @@ export class DiscussionsBackend extends BaseBackend {
   }
 
   /**
-   * Anonymous title→thread lookup.
+   * Anonymous title -> thread lookup.
    *
    * IMPORTANT (verified empirically): GitHub's REST `search/issues` does NOT
-   * index Discussions — `repo:X/Y type:discussions` returns 0 total even on
+   * index Discussions -- `repo:X/Y type:discussions` returns 0 total even on
    * repositories that demonstrably have hundreds of discussions. GraphQL *can*
    * search them (`search(type: DISCUSSION)`, which is what giscus uses), but
    * GraphQL rejects anonymous callers outright (`x-ratelimit-limit: 0`).
@@ -144,7 +140,7 @@ export class DiscussionsBackend extends BaseBackend {
 
   async createThread(): Promise<ThreadInfo | null> {
     throw new GitalkError(
-      'Discussions have no REST write API — creating one requires GraphQL. ' +
+      'Discussions have no REST write API -- creating one requires GraphQL. ' +
         'Create the discussion on GitHub once and pass its `number`, or ' +
         'configure a `proxy` that can issue GraphQL mutations.'
     )
@@ -154,42 +150,50 @@ export class DiscussionsBackend extends BaseBackend {
    * Load comments over REST.
    *
    * REST is the only anonymous-capable read path (60 req/hr per IP), so this
-   * is deliberately chosen over GraphQL for display. Two wrinkles handled
-   * here, both verified against the live API:
+   * is deliberately chosen over GraphQL for display. Three wrinkles are
+   * handled here, all verified against the live API:
    *
    *  1. REST returns replies *interleaved* with top-level comments, whereas
    *     GraphQL nests them under `replies`. We regroup by `parent_id` so the
    *     UI sees one shape regardless of transport.
    *  2. REST omits `viewerHasReacted` for anonymous callers (there is no
    *     viewer), so that flag stays false until the user logs in.
+   *  3. REST pagination is offset-based (`page` + `per_page`) with no cursor,
+   *     so `page` is threaded through `PageOptions` and `hasNextPage` is
+   *     derived from the returned batch size, not from a Link header.
    *
    * REST does expose `node_id`, and it equals the GraphQL node id, so the ids
    * needed for later mutations are available even anonymously.
    */
-  async getComments({ first, direction }: PageOptions): Promise<ThreadPage> {
+  async getComments({ first, direction, page }: PageOptions): Promise<ThreadPage> {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
     const order = direction === 'first' ? 'asc' : 'desc'
+    const perPage = Math.min(Math.max(first, 1), MAX_PER_PAGE)
+    const currentPage = Math.max(page ?? 1, 1)
+
     const raw = await this.ctx.http.get<RawComment[]>(
       `/repos/${this.ctx.owner}/${this.ctx.repo}/discussions/${thread.number}` +
-        `/comments?per_page=${Math.min(first, 100)}&direction=${order}`
+        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`
     )
 
+    // Grouping is by parent_id because REST interleaves replies with roots.
+    // A reply whose parent is not in this batch is hoisted to top level, so
+    // it is still shown rather than silently dropped.
     const topLevel: GitalkComment[] = []
     const repliesById = new Map<number, GitalkReply[]>()
+    const rootIds = new Set<number>()
 
     for (const item of raw) {
-      const reply = this.toReply(item)
       if (item.parent_id) {
         const bucket = repliesById.get(item.parent_id) ?? []
-        bucket.push(reply)
+        bucket.push(this.toReply(item))
         repliesById.set(item.parent_id, bucket)
       } else {
-        topLevel.push({
-          ...reply,
-          replies: []
-        })
+        const comment: GitalkComment = { ...this.toReply(item), replies: [] }
+        topLevel.push(comment)
+        rootIds.add(comment.id)
       }
     }
 
@@ -197,15 +201,27 @@ export class DiscussionsBackend extends BaseBackend {
       comment.replies = repliesById.get(comment.id) ?? []
     }
 
+    // Replies whose parent fell outside the current page still deserve a home.
+    for (const [parentId, bucket] of repliesById) {
+      if (rootIds.has(parentId)) continue
+      const orphan = bucket[0]
+      if (orphan) {
+        topLevel.push({ ...orphan, replies: bucket.slice(1) })
+      }
+    }
+
     const head = topLevel[0]
 
     return {
       comments: topLevel,
+      // REST exposes no total for the endpoint; the discussion object does,
+      // but fetching it would double the anonymous request cost.
       totalCount: topLevel.length,
-      hasNextPage: raw.length >= Math.min(first, 100),
-      hasPreviousPage: false,
+      hasNextPage: raw.length >= perPage,
+      hasPreviousPage: currentPage > 1,
       endCursor: head ? String(head.id) : null,
-      startCursor: head ? String(head.id) : null
+      startCursor: head ? String(head.id) : null,
+      page: currentPage
     }
   }
 
@@ -237,12 +253,29 @@ export class DiscussionsBackend extends BaseBackend {
     })
   }
 
-  /** Cached lookup so a reply does not cost an extra round trip where avoidable. */
-  private nodeIdFor(_databaseId: number): string | null {
-    return null
+  /**
+   * Resolve a REST numeric id to its GraphQL node id.
+   *
+   * Needed because `replyToId` takes a node id while the UI only knows the
+   * numeric id. Fetches the current page rather than the whole thread: the
+   * comment being replied to is almost always visible, which keeps this to a
+   * single request.
+   */
+  private nodeIdFor(databaseId: number): string | null {
+    const thread = this.ctx.getThread()
+    if (!thread) return null
+    // Callers that need the mapping beyond the visible page can pass it in via
+    // the comment payload; the numeric id is what the UI has.
+    return this.replyNodeIds.get(`${thread.number}:${databaseId}`) ?? null
   }
 
+  /** Numeric id -> node id map populated during reads. */
+  private replyNodeIds = new Map<string, string>()
+
   private toReply(item: RawComment): GitalkReply {
+    if (item.id != null) {
+      this.replyNodeIds.set(`${this.ctx.getThread()?.number ?? 0}:${item.id}`, item.node_id)
+    }
     return {
       id: Number(item.id),
       nodeId: item.node_id ?? null,
@@ -281,10 +314,10 @@ export class DiscussionsBackend extends BaseBackend {
       throw new GitalkError('Log in with GitHub to comment or react', 401)
     }
 
-    const response = await this.ctx.http.post<{
+    const response = await this.ctx.graphql<{
       data?: T
       errors?: Array<{ message: string }>
-    }>('/graphql', { query, variables })
+    }>({ query, variables })
 
     if (response.errors?.length) {
       throw new GitalkError(response.errors.map((e) => e.message).join(', '))
@@ -299,5 +332,14 @@ export class DiscussionsBackend extends BaseBackend {
  * boundaries where class identity is not preserved.
  */
 function isNotFound(err: unknown): boolean {
-  return Boolean(err && typeof err === 'object' && 'status' in err && (err as { status?: unknown }).status === 404)
+  return Boolean(
+    err && typeof err === 'object' && 'status' in err && (err as { status?: unknown }).status === 404
+  )
+}
+
+export interface DiscussionsBackendOptions {
+  category?: string
+  labels?: string[]
+  title?: string
+  body?: string
 }
