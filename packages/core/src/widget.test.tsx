@@ -1,0 +1,183 @@
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { render } from 'preact'
+import { mount } from './mount'
+import { GitalkWidget } from './widget'
+import type { GitalkOptions } from './types'
+import { formatRelativeTime } from './time'
+import { createTranslator } from './i18n'
+
+const OPTIONS: GitalkOptions = {
+  clientID: 'client-id',
+  repo: 'gitalk',
+  owner: 'gitalk',
+  admin: ['booxood'],
+  id: 'page-id',
+  number: 442
+}
+
+/**
+ * Shaped exactly like the live REST response for `/discussions/{n}/comments`:
+ * snake_case fields, `body_html`, and replies interleaved with top-level rows
+ * via `parent_id` (see docs/tech.md §2.3).
+ */
+const REST_COMMENTS = [
+  {
+    id: 523955,
+    node_id: 'MDE3OkRpc2N1c3Npb25Db21tZW50NTIzOTU1',
+    user: { login: 'booxood', avatar_url: 'https://avatars.test/1', html_url: 'https://github.com/booxood' },
+    body_html: '<p>配置贴出来看下？</p>',
+    created_at: new Date(Date.now() - 60_000).toISOString(),
+    html_url: 'https://github.com/gitalk/gitalk/discussions/442#discussioncomment-523955',
+    parent_id: null,
+    child_comment_count: 1,
+    reactions: { total_count: 2, heart: 2 }
+  },
+  {
+    id: 3485634,
+    node_id: 'MDE3OkRpc2N1c3Npb25Db21tZW50MzQ4NTYzNA==',
+    user: { login: 'sisyphus1212', avatar_url: 'https://avatars.test/3', html_url: 'https://github.com/sisyphus1212' },
+    body_html: '<p>a reply</p>',
+    created_at: new Date(Date.now() - 30_000).toISOString(),
+    html_url: 'https://github.com/gitalk/gitalk/discussions/442#discussioncomment-3485634',
+    parent_id: 523955,
+    child_comment_count: 0,
+    reactions: { total_count: 0, heart: 0 }
+  }
+]
+
+function stubFetch(handler: (url: string) => unknown) {
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : String(input)
+    const body = handler(url)
+    return new Response(JSON.stringify(body ?? {}), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }) as typeof fetch
+}
+
+describe('GitalkWidget', () => {
+  let host: HTMLElement
+  const originalFetch = globalThis.fetch
+
+  beforeEach(() => {
+    host = document.createElement('div')
+    document.body.appendChild(host)
+  })
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch
+    render(null, host)
+    host.remove()
+  })
+
+  it('renders comment bodies and nested replies', async () => {
+    stubFetch((url) => {
+      if (url.includes('/graphql')) return {}
+      if (url.includes('/user')) return { login: 'booxood', avatar_url: 'https://avatars.test/1' }
+      if (url.includes('/comments')) return REST_COMMENTS
+      if (url.includes('/discussions/442')) {
+        return { number: 442, node_id: 'D_442', title: 'demo', html_url: 'https://github.com/x', locked: false }
+      }
+      return {}
+    })
+
+    mount(host, OPTIONS)
+    await waitForComment(host)
+
+    expect(host.querySelector('.gt-container')).toBeTruthy()
+    expect(host.querySelectorAll('.gt-comment').length).toBeGreaterThanOrEqual(2)
+    // Body HTML is injected as-is; GitHub already sanitised it upstream.
+    expect(host.querySelector('.gt-comment-body')?.innerHTML).toContain('配置贴出来看下？')
+    expect(host.textContent).toContain('sisyphus1212')
+    expect(host.querySelector('.gt-comment-replies')).toBeTruthy()
+  })
+
+  it('shows the empty state instead of a blank box when there are no comments', async () => {
+    stubFetch((url) => {
+      if (url.includes('/comments')) return []
+      if (url.includes('/discussions/442')) {
+        return { number: 442, node_id: 'D_442', title: 'demo', html_url: 'https://github.com/x', locked: false }
+      }
+      return {}
+    })
+
+    mount(host, OPTIONS)
+    await waitFor(host)
+
+    expect(host.querySelector('.gt-comments-null')).toBeTruthy()
+    expect(host.querySelectorAll('.gt-comment').length).toBe(0)
+  })
+
+  it('surfaces the rate limit hint when GitHub returns 429', async () => {
+    globalThis.fetch = vi.fn(async () => new Response('{}', { status: 429 })) as typeof fetch
+
+    mount(host, OPTIONS)
+    await waitFor(host)
+
+    expect(host.querySelector('.gt-error')).toBeTruthy()
+    expect(host.textContent).toContain('60/hour')
+  })
+
+  it('mounts and unmounts cleanly for React/Vue parity', async () => {
+    stubFetch((url) => (url.includes('/comments') ? [] : {}))
+    const instance = mount(host, OPTIONS)
+    await waitFor(host)
+    expect(host.querySelector('.gt-container')).toBeTruthy()
+
+    instance.unmount()
+    await tick()
+    expect(host.querySelector('.gt-container')).toBeNull()
+  })
+})
+
+describe('formatRelativeTime', () => {
+  it('describes recent timestamps in the past tense', () => {
+    const ago = new Date(Date.now() - 5 * 60_000).toISOString()
+    expect(formatRelativeTime(ago, 'en')).toMatch(/ago|minutes?/i)
+  })
+
+  it('accepts the zh-CN locale without throwing', () => {
+    const ago = new Date(Date.now() - 60_000).toISOString()
+    expect(() => formatRelativeTime(ago, 'zh-CN')).not.toThrow()
+  })
+
+  it('does not render "NaN" for an unparseable date', () => {
+    expect(formatRelativeTime('not-a-date')).not.toContain('NaN')
+  })
+})
+
+describe('translator', () => {
+  it('interpolates %{key} placeholders like v1 did', () => {
+    const t = createTranslator('en')
+    expect(t('please-contact', { user: '@alice' })).toContain('@alice')
+  })
+
+  it('falls back to English for an unknown or partial locale', () => {
+    expect(createTranslator('xx-YY')('comment')).toBe('Comment')
+    expect(createTranslator('zh')('comment')).toBe('评论')
+  })
+})
+
+function tick(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0))
+}
+
+/** Wait until the widget has actually produced DOM, rather than guessing ticks. */
+async function waitForComment(host: HTMLElement, timeoutMs = 1000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (host.querySelector('.gt-comment-body')) return
+    await tick()
+  }
+  throw new Error(`no comments rendered:\n${host.innerHTML.slice(0, 400)}`)
+}
+
+async function waitFor(host: HTMLElement, timeoutMs = 1000): Promise<void> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if (host.querySelector('.gt-comments, .gt-comments-null, .gt-no-init, .gt-error')) return
+    await tick()
+  }
+  throw new Error(`widget never rendered:\n${host.innerHTML.slice(0, 400)}`)
+}

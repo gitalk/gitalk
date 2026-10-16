@@ -1,0 +1,33 @@
+{
+  "name": "@gitalk/core",
+  "version": "2.0.0",
+  "description": "Gitalk 2.0 core: framework-agnostic comment widget backed by GitHub Discussions (default) or Issues.",
+  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "./dist/core.css"
+  },
+  "scripts": {
+    "build": "vite build && vite build --config vite.iife.config.ts",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "preact": "11.0.1"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "2.10.6",
+    "typescript": "7.0.2",
+    "vite": "8.3.4"
+  }
+}

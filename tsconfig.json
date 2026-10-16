@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": [
+      "vitest/globals",
+      "node"
+    ],
+    "paths": {
+      "@gitalk/core": [
+        "./packages/core/src/index.ts"
+      ],
+      "@gitalk/core/*": [
+        "./packages/core/src/*"
+      ]
+    }
+  },
+  "include": [
+    "packages/core/src/**/*",
+    "packages/vue/src/**/*",
+    "packages/proxy-worker/src/**/*",
+    "vitest.config.ts"
+  ],
+  "exclude": [
+    "packages/react"
+  ]
+}

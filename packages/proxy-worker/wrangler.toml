@@ -1,0 +1,13 @@
+name = "gitalk-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# Set via `wrangler secret put GITALK_CLIENT_ID` / `GITALK_CLIENT_SECRET`.
+# GITALK_ALLOWED_ORIGINS is a comma-separated origin allowlist.
+[vars]
+GITALK_ALLOWED_ORIGINS = "*"
+
+# Only used by local development; production reads them from secrets.
+# [env.dev.vars]
+# GITALK_CLIENT_ID = "Iv1.xxxxxxxx"
+# GITALK_CLIENT_SECRET = "xxxxxxxx"

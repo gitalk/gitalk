@@ -1,0 +1,21 @@
+{
+  "name": "@gitalk/proxy-worker",
+  "version": "2.0.0",
+  "description": "Token-exchange worker for Gitalk 2.0. Deploy to your own account so no secret reaches the browser.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist",
+    "wrangler.toml"
+  ],
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261015.1",
+    "typescript": "7.0.2",
+    "wrangler": "4.151.0"
+  }
+}
