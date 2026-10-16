@@ -1,23 +1,28 @@
 name: Deploy landing page
 
-# Publishes apps/landing to the `gh-pages` branch of gitalk/gitalk.github.io,
-# which is what https://gitalk.github.io serves.
+# Publishes apps/landing to THIS repository's `gh-pages` branch, which GitHub
+# Pages serves at https://gitalk.github.io/gitalk/.
 #
-# NOTE (S2): the user-page repo gitalk/gitalk.github.io takes precedence over a
-# project repo's Pages branch, so building into *this* repo's gh-pages branch
-# would never be reachable at https://gitalk.github.io. See docs/tech.md §8.
+# No extra secret is required: the default GITHUB_TOKEN already has
+# `contents: write` on this repo.
 #
-# Required repository secret:
-#   GH_PAGES_TOKEN — a PAT with `public_repo` (or `repo`) scope on
-#                   gitalk/gitalk.github.io.
+# To move the site to the bare domain later (https://gitalk.github.io without
+# the /gitalk suffix), switch `github_token` to a PAT via `personal_token` +
+# `external_repository: gitalk/gitalk.github.io`. That variant needs a secret
+# because the default token cannot push across repositories — see
+# docs/tech.md §8 for why the user-page repo wins over a project Pages branch.
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'apps/landing/**'
+      - 'packages/core/**'
+      - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: gh-pages
@@ -45,30 +50,13 @@ jobs:
       - name: Build landing
         run: pnpm build:landing
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: landing-dist
-          path: apps/landing/dist
-          retention-days: 1
-
-  deploy:
-    name: Push to gh-pages branch
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: landing-dist
-          path: dist
-
-      - name: Publish to gitalk/gitalk.github.io (gh-pages branch)
+      - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.GH_PAGES_TOKEN }}
-          external_repository: gitalk/gitalk.github.io
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./dist
+          publish_dir: ./apps/landing/dist
           force_orphan: true
           user_name: gitalk-bot
           user_email: bot@gitalk.github.io
-          commit_message: "deploy: ${{ github.sha }}"
+          commit_message: 'deploy: ${{ github.sha }}'

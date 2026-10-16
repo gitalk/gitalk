@@ -11,7 +11,9 @@ const CORE_SRC = resolve(import.meta.dirname, '../../packages/core/src')
  */
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/',
+  // Relative base so the same build works under /gitalk/ (project Pages)
+  // and at the site root (gitalk/gitalk.github.io).
+  base: './',
   build: {
     outDir: 'dist',
     emptyOutDir: true

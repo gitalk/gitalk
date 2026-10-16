@@ -420,16 +420,31 @@ gitalk/
 
 ## 8. 分支与部署策略
 
-⚠️ **现状勘误**：`gitalk/gitalk` 仓库**并未启用 GitHub Pages**。
-当前 `https://gitalk.github.io` 指向独立仓库 **`gitalk/gitalk.github.io`**
+⚠️ **现状勘误**：`gitalk/gitalk` 仓库原本**未启用 GitHub Pages**，
+而 `https://gitalk.github.io` 指向独立仓库 **`gitalk/gitalk.github.io`**
 （默认分支 `master`，legacy build，内容仅 `index.html` + `favicon.ico`，最后提交 2020-02-06）。
 
-| 方式 | 说明 | 影响 |
+| 方式 | 说明 | 站点 URL |
 |---|---|---|
-| **S1**：在 `gitalk` 仓库建 `gh-pages` 分支并启用 Pages | 落地页与源码同仓库 | `gitalk.github.io` 是 org/user page，优先级**低于** `gitalk.github.io` 仓库，会被后者覆盖 |
-| **S2**：重写 `gitalk.github.io` 仓库，落其 `gh-pages` 分支 | 由 CI 把 `apps/landing/dist` 同步过去 | 直接生效，无优先级冲突 |
+| **S1（已采用）**：`gitalk` 仓库建 `gh-pages` 分支并启用 Pages | 落地页与源码同仓库，CI 直接推送，**无需额外 secret** | `https://gitalk.github.io/gitalk/` |
+| **S2**：改为推送到 `gitalk/gitalk.github.io` 的 `gh-pages` 分支 | 需要 PAT secret（默认 `GITHUB_TOKEN` 不能跨仓库推送） | `https://gitalk.github.io/`（裸域名） |
 
-**推荐 S2。** 若坚持 S1，需先迁移/停用 `gitalk.github.io` 仓库，否则新页面不会生效。
+**最终采用 S1。** 落地页构建产物已发布到 `gh-pages` 分支，
+`.github/workflows/deploy-pages.yml` 在每次 push 到 `main` 时自动更新。
+
+选 S1 而非 S2 的理由：
+
+- S1 不需要额外 PAT，降低凭据暴露面；
+- 源码与产物同仓库，`gh-pages` 的内容来源清晰可追溯；
+- 代价是 URL 带 `/gitalk` 子路径，因此 `apps/landing/vite.config.ts` 使用
+  相对 `base: './'`，同一份构建在子路径和裸域名下都能工作。
+
+若将来要迁到裸域名，把 workflow 里的 `github_token` 换成
+`personal_token` + `external_repository: gitalk/gitalk.github.io` 即可，
+落地页无需改动。
+
+> 另需注意：仓库默认分支已从 `master` 切换为 `main`，
+> 否则 release-please 会去 `master` 上找 manifest 而失败（已实测复现）。
 
 > 安全提示：现有 `index.html` 中硬编码了
 > `clientSecret: 'd1a0b627f9b76d21bd3080d1777d0aa0ad55dd83'`。
@@ -444,7 +459,7 @@ gitalk/
 3. 实现 `packages/proxy-worker`（三种目标平台）
 4. `packages/react`、`packages/vue` 包装器
 5. `apps/landing` + Tailwind v4 全新落地页
-6. `.github/workflows`：CI + release-please + gh-pages 部署（按 §8 的 S2）
+6. `.github/workflows`：CI + release-please + gh-pages 部署（按 §8 的 S1）
 7. Vitest 单测 + README 重写
 
 ---
