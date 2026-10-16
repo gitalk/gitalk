@@ -12,8 +12,20 @@ import type { ThreadInfo } from '../types'
  */
 
 function makeCtx(overrides: Partial<BackendContext> = {}): BackendContext {
+  const get = vi.fn()
   return {
-    http: { get: vi.fn(), post: vi.fn(), request: vi.fn() } as unknown as HttpClient,
+    // `getWithLinks` delegates to the same `get` spy so a test that stubs the
+    // body (`mockResolvedValue`) keeps working; tests that care about the
+    // pagination `Link` header stub `getWithLinks` directly.
+    http: {
+      get,
+      getWithLinks: vi.fn(async (path: string, init?: unknown) => ({
+        data: await get(path, init),
+        links: { first: null, prev: null, next: null, last: null }
+      })),
+      post: vi.fn(),
+      request: vi.fn()
+    } as unknown as HttpClient,
     getToken: () => null,
     owner: 'gitalk',
     repo: 'gitalk',
@@ -30,10 +42,29 @@ const THREAD: ThreadInfo = {
   title: 'demo',
   url: 'https://github.com/gitalk/gitalk/discussions/442',
   nodeId: 'D_kwDO',
-  locked: false
+  locked: false,
+  // Reported by the REST discussion object; the newest-first read uses it to
+  // find the last offset page without an extra request.
+  commentCount: 3
 }
 
-/** Mirrors the live REST shape: replies are interleaved with top-level. */
+/** The `page` query parameter of every request a mocked transport saw. */
+function pageParams(mock: { mock: { calls: unknown[][] } }): Array<string | null> {
+  return mock.mock.calls.map((call) => new URL(String(call[0]), 'http://x').searchParams.get('page'))
+}
+
+/** A `ctx.graphql` stub that records every document and its variables. */
+function graphqlMock(...responses: unknown[]) {
+  const calls: Array<{ query: string; variables: Record<string, unknown> }> = []
+  let index = 0
+  const fn = (<T,>(body: { query: string; variables: Record<string, unknown> }) => {
+    calls.push({ query: body.query, variables: body.variables })
+    return Promise.resolve(responses[Math.min(index++, responses.length - 1)] as T)
+  }) as BackendContext['graphql']
+  return { fn, calls }
+}
+
+/** Mirrors the live REST shape: replies are interleaved with top-level, ascending. */
 const REST_COMMENTS = [
   {
     id: 523955,
@@ -44,7 +75,7 @@ const REST_COMMENTS = [
     html_url: 'https://github.com/gitalk/gitalk/discussions/442#discussioncomment-523955',
     parent_id: null,
     child_comment_count: 1,
-    reactions: { total_count: 0, heart: 0 }
+    reactions: { total_count: 0, '+1': 0, heart: 0 }
   },
   {
     id: 913250,
@@ -55,7 +86,7 @@ const REST_COMMENTS = [
     html_url: 'https://github.com/gitalk/gitalk/discussions/442#discussioncomment-913250',
     parent_id: null,
     child_comment_count: 0,
-    reactions: { total_count: 3, heart: 2 }
+    reactions: { total_count: 4, '+1': 1, laugh: 0, heart: 2, rocket: 1 }
   },
   {
     id: 3485634,
@@ -66,7 +97,7 @@ const REST_COMMENTS = [
     html_url: 'https://github.com/gitalk/gitalk/discussions/442#discussioncomment-3485634',
     parent_id: 523955,
     child_comment_count: 0,
-    reactions: { total_count: 0, heart: 0 }
+    reactions: { total_count: 0, '+1': 0, heart: 0 }
   }
 ]
 
@@ -79,10 +110,13 @@ describe('DiscussionsBackend.getComments', () => {
     const page = await backend.getComments({ first: 100 })
 
     expect(page.comments).toHaveLength(2)
-    const first = page.comments[0]!
-    expect(first.id).toBe(523955)
-    expect(first.replies).toHaveLength(1)
-    expect(first.replies[0]!.id).toBe(3485634)
+    // Newest top-level first (913250 is a month after 523955), regardless of
+    // the ascending payload the endpoint actually returned.
+    const [newest, oldest] = page.comments
+    expect(newest!.id).toBe(913250)
+    expect(oldest!.id).toBe(523955)
+    expect(oldest!.replies).toHaveLength(1)
+    expect(oldest!.replies[0]!.id).toBe(3485634)
 
     const flat = [...page.comments, ...page.comments.flatMap((c) => c.replies)]
     expect(flat.map((c) => c.id).sort((a, b) => a - b)).toEqual([523955, 913250, 3485634])
@@ -99,12 +133,162 @@ describe('DiscussionsBackend.getComments', () => {
     }
   })
 
-  it('prefers the heart count over the aggregate reaction total', async () => {
+  it('keeps every per-type reaction count and an aggregate that matches them', async () => {
+    // The picker shows all eight types, so the whole REST breakdown has to
+    // survive normalisation — an older version of this code threw away
+    // everything except `heart`.
     const ctx = makeCtx()
     vi.mocked(ctx.http.get).mockResolvedValue(REST_COMMENTS)
     const backend = new DiscussionsBackend(ctx)
     const page = await backend.getComments({ first: 100 })
-    expect(page.comments[1]!.reactions.totalCount).toBe(2)
+
+    const reacted = page.comments.find((c) => c.id === 913250)!
+    expect(reacted.reactions.counts).toEqual({ THUMBS_UP: 1, HEART: 2, ROCKET: 1 })
+    expect(reacted.reactions.totalCount).toBe(4)
+    // No viewer on an anonymous read, so nothing may claim the visitor reacted.
+    expect(reacted.reactions.viewerReactions).toEqual({})
+    expect(reacted.reactions.viewerHasReacted).toBe(false)
+  })
+
+  it('shows the newest comment first even though the endpoint returns ascending rows', async () => {
+    // Regression for the reported "comments are in time order (oldest first)"
+    // bug. Root cause: GitHub's REST comment endpoints ignore `direction`
+    // (measured: asc, desc and omitting it return identical ascending data),
+    // so the old code's `direction=desc` was a no-op and the payload was
+    // rendered in the order it arrived.
+    const ctx = makeCtx()
+    vi.mocked(ctx.http.get).mockResolvedValue(REST_COMMENTS)
+    const backend = new DiscussionsBackend(ctx)
+    const page = await backend.getComments({ first: 100, direction: 'last' })
+
+    const times = page.comments.map((c) => Date.parse(c.createdAt))
+    expect(times).toEqual([...times].sort((a, b) => b - a))
+    expect(page.comments[0]!.id).toBe(913250)
+
+    // ...and the opposite direction is still available (GitalkOptions.sortDirection).
+    const ascending = await backend.getComments({ first: 100, direction: 'first' })
+    expect(ascending.comments.map((c) => c.id)).toEqual([523955, 913250])
+  })
+
+  it('keeps replies in reading order under their parent whichever way the thread is sorted', async () => {
+    const ctx = makeCtx()
+    vi.mocked(ctx.http.get).mockResolvedValue([
+      ...REST_COMMENTS,
+      { ...REST_COMMENTS[2]!, id: 4000000, created_at: '2022-03-01T00:00:00Z' }
+    ])
+    const backend = new DiscussionsBackend(ctx)
+    const page = await backend.getComments({ first: 100, direction: 'last' })
+    const parent = page.comments.find((c) => c.id === 523955)!
+    expect(parent.replies.map((r) => r.id)).toEqual([3485634, 4000000])
+  })
+
+  it('reads the newest window from the last offset page, because direction is ignored', async () => {
+    const getWithLinks = vi.fn(async (path: string) => ({
+      // Page 3 of 3 at per_page=10 holds the three newest of thirty comments.
+      data: [
+        { ...REST_COMMENTS[1]!, id: 30, created_at: '2021-09-01T00:00:00Z' },
+        { ...REST_COMMENTS[1]!, id: 29, created_at: '2021-08-01T00:00:00Z' },
+        { ...REST_COMMENTS[1]!, id: 28, created_at: '2021-07-01T00:00:00Z' }
+      ],
+      links: { first: 1, prev: 2, next: null, last: 3 }
+    }))
+    const backend = new DiscussionsBackend(
+      makeCtx({
+        getThread: () => ({ ...THREAD, commentCount: 30 }),
+        http: { getWithLinks } as unknown as HttpClient
+      })
+    )
+
+    const page = await backend.getComments({ first: 10, direction: 'last', page: 1 })
+
+    expect(getWithLinks.mock.calls[0]![0]).toContain('page=3')
+    expect(page.comments.map((c) => c.id)).toEqual([30, 29, 28])
+    expect(page.hasNextPage).toBe(true)
+
+    // Logical page 2 walks one block further back in time, not forward.
+    await backend.getComments({ first: 10, direction: 'last', page: 2 })
+    expect(getWithLinks.mock.calls[1]![0]).toContain('page=2')
+    expect(getWithLinks.mock.calls[1]![0]).not.toContain('direction=')
+  })
+
+  it('re-probes the end after a write instead of trusting the stale page cache', async () => {
+    // A thread with two pages of ten. The second read is the one that follows
+    // posting a comment: the cached page number and the thread's comment count
+    // both predate it, so answering from either would show the *previous* last
+    // page and make the newest comments vanish.
+    const page = (ids: number[], last: number, next: number | null = null, prev: number | null = null) => ({
+      data: ids.map((id) => ({ ...REST_COMMENTS[1]!, id })),
+      links: { first: 1, prev, next, last }
+    })
+    const getWithLinks = vi
+      .fn()
+      .mockResolvedValueOnce(page([20, 19, 18], 2, null, 1)) // page 2, before the post
+      .mockResolvedValueOnce(page([10, 9, 8], 3, 2, null)) // probe: page 1 now says last=3
+      .mockResolvedValueOnce(page([33, 32, 31], 3, null, 2)) // the real newest page
+
+    const backend = new DiscussionsBackend(
+      makeCtx({
+        getThread: () => ({ ...THREAD, commentCount: 20 }),
+        http: { getWithLinks } as unknown as HttpClient
+      })
+    )
+
+    const before = await backend.getComments({ first: 10, direction: 'last' })
+    expect(before.comments.map((c) => c.id)).toEqual([20, 19, 18])
+
+    const after = await backend.getComments({ first: 10, direction: 'last', fresh: true })
+    expect(pageParams(getWithLinks)).toEqual(['2', '1', '3'])
+    expect(getWithLinks.mock.calls[1]![1]).toMatchObject({ cache: 'reload' })
+    expect(after.comments.map((c) => c.id)).toEqual([33, 32, 31])
+    expect(after.hasNextPage).toBe(true)
+  })
+
+  it('steps back one page when the newest window is empty', async () => {
+    // Someone deleted comments between the thread lookup and this read, so the
+    // page the count pointed at no longer exists.
+    const getWithLinks = vi
+      .fn()
+      .mockResolvedValueOnce({ data: [], links: { first: 1, prev: 1, next: null, last: 2 } })
+      .mockResolvedValueOnce({
+        data: [{ ...REST_COMMENTS[1]!, id: 77 }],
+        links: { first: 1, prev: null, next: 2, last: 2 }
+      })
+    const backend = new DiscussionsBackend(
+      makeCtx({
+        getThread: () => ({ ...THREAD, commentCount: 21 }),
+        http: { getWithLinks } as unknown as HttpClient
+      })
+    )
+
+    const result = await backend.getComments({ first: 10, direction: 'last' })
+    expect(pageParams(getWithLinks)).toEqual(['3', '2'])
+    expect(result.comments.map((c) => c.id)).toEqual([77])
+  })
+
+  it('probes the Link header once when the thread reports no comment count', async () => {
+    const getWithLinks = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [REST_COMMENTS[0]!],
+        links: { first: 1, prev: null, next: 2, last: 2 }
+      })
+      .mockResolvedValueOnce({
+        data: [{ ...REST_COMMENTS[1]!, id: 99 }],
+        links: { first: 1, prev: 1, next: null, last: 2 }
+      })
+    const backend = new DiscussionsBackend(
+      makeCtx({
+        getThread: () => ({ ...THREAD, commentCount: undefined }),
+        http: { getWithLinks } as unknown as HttpClient
+      })
+    )
+
+    const page = await backend.getComments({ first: 1, direction: 'last' })
+
+    expect(getWithLinks.mock.calls[0]![0]).toContain('page=1')
+    expect(getWithLinks.mock.calls[1]![0]).toContain('page=2')
+    expect(page.comments.map((c) => c.id)).toEqual([99])
+    expect(page.hasNextPage).toBe(true)
   })
 
   it('caps per_page at 100 even if the caller asks for more', async () => {
@@ -192,17 +376,6 @@ describe('DiscussionsBackend.createThread', () => {
         locked: false
       }
     }
-  }
-
-  /** A `ctx.graphql` stub that records every document and its variables. */
-  function graphqlMock(...responses: unknown[]) {
-    const calls: Array<{ query: string; variables: Record<string, unknown> }> = []
-    let index = 0
-    const fn = (<T,>(body: { query: string; variables: Record<string, unknown> }) => {
-      calls.push({ query: body.query, variables: body.variables })
-      return Promise.resolve(responses[Math.min(index++, responses.length - 1)] as T)
-    }) as BackendContext['graphql']
-    return { fn, calls }
   }
 
   it('sends the documented createDiscussion mutation and returns a usable thread', async () => {
@@ -416,6 +589,142 @@ describe('DiscussionsBackend.createThread', () => {
   })
 })
 
+describe('reaction state hydration', () => {
+  it('answers per-type counts and viewer flags for a batch of node ids', async () => {
+    const { fn, calls } = graphqlMock({
+      data: {
+        nodes: [
+          {
+            id: 'n900',
+            reactionGroups: [
+              { content: 'HEART', viewerHasReacted: true, reactors: { totalCount: 3 } },
+              { content: 'THUMBS_UP', viewerHasReacted: false, reactors: { totalCount: 0 } },
+              { content: 'ROCKET', viewerHasReacted: false, reactors: { totalCount: 2 } }
+            ]
+          },
+          { id: 'n901' }
+        ]
+      }
+    })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }))
+
+    const states = await backend.getReactionStates(['n900', 'n901'])
+
+    expect(calls[0]!.query).toContain('nodes(ids: $ids)')
+    expect(calls[0]!.query).toContain('... on Reactable')
+    expect(calls[0]!.query).toContain('reactors(first: 0) { totalCount }')
+    expect(calls[0]!.variables).toEqual({ ids: ['n900', 'n901'] })
+
+    // Zero-count types are dropped: they are not chips.
+    expect(states.get('n900')).toEqual({
+      counts: { HEART: 3, ROCKET: 2 },
+      viewerReactions: { HEART: true }
+    })
+    // A node that does not implement Reactable simply reports nothing.
+    expect(states.get('n901')).toEqual({ counts: {}, viewerReactions: {} })
+  })
+
+  it('does not spend an anonymous request and caps the batch at 100 ids', async () => {
+    const anonymous = graphqlMock()
+    const anon = new DiscussionsBackend(makeCtx({ graphql: anonymous.fn }))
+    await expect(anon.getReactionStates(['n1'])).resolves.toHaveProperty('size', 0)
+    expect(anonymous.calls).toHaveLength(0)
+
+    const { fn, calls } = graphqlMock({ data: { nodes: [] } })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }))
+    const many = Array.from({ length: 150 }, (_, i) => `n${i}`)
+    await backend.getReactionStates(many)
+    expect((calls[0]!.variables.ids as string[]).length).toBe(100)
+  })
+
+  it('works for the Issues backend too, where reactions also exist', async () => {
+    const { fn, calls } = graphqlMock({
+      data: {
+        nodes: [
+          {
+            id: 'IC_1',
+            reactionGroups: [{ content: 'EYES', viewerHasReacted: true, reactors: { totalCount: 1 } }]
+          }
+        ]
+      }
+    })
+    const backend = new IssuesBackend(
+      makeCtx({
+        getToken: () => 'tok',
+        graphql: fn,
+        getThread: () => ({ ...THREAD, kind: 'issues' })
+      }),
+      { labels: ['Gitalk'], title: 't', body: 'b' }
+    )
+
+    const states = await backend.getReactionStates(['IC_1'])
+    expect(states.get('IC_1')?.viewerReactions).toEqual({ EYES: true })
+    expect(calls[0]!.query).toContain('gitalkReactionStates')
+  })
+})
+
+describe('DiscussionsBackend upvotes', () => {
+  it('reads upvoteCount / viewerHasUpvoted from the Discussion node', async () => {
+    const { fn, calls } = graphqlMock({ data: { node: { upvoteCount: 7, viewerHasUpvoted: true } } })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }))
+
+    await expect(backend.getUpvote()).resolves.toEqual({ count: 7, viewerHasUpvoted: true })
+    expect(calls[0]!.query).toContain('upvoteCount')
+    expect(calls[0]!.query).toContain('viewerHasUpvoted')
+    expect(calls[0]!.query).toContain('... on Discussion')
+    expect(calls[0]!.variables).toEqual({ id: 'D_kwDO' })
+  })
+
+  it('does not spend an anonymous GraphQL request, which would only 403', async () => {
+    const { fn, calls } = graphqlMock()
+    const backend = new DiscussionsBackend(makeCtx({ graphql: fn }))
+    await expect(backend.getUpvote()).resolves.toBeNull()
+    expect(calls).toHaveLength(0)
+  })
+
+  it('sends addUpvote / removeUpvote on the discussion node id', async () => {
+    const { fn, calls } = graphqlMock({ data: {} }, { data: {} })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }))
+
+    await backend.setUpvote(true)
+    expect(calls[0]!.query).toContain('addUpvote')
+    expect(calls[0]!.variables).toEqual({ subjectId: 'D_kwDO' })
+
+    await backend.setUpvote(false)
+    expect(calls[1]!.query).toContain('removeUpvote')
+  })
+})
+
+describe('IssuesBackend degradation', () => {
+  const ISSUE_THREAD: ThreadInfo = { ...THREAD, kind: 'issues', nodeId: 'I_1' }
+
+  it('declares no upvote support, so the UI never renders the control', () => {
+    const backend = new IssuesBackend(makeCtx({ getThread: () => ISSUE_THREAD }), {
+      labels: ['Gitalk'],
+      title: 't',
+      body: 'b'
+    })
+    expect(backend.supportsUpvote).toBe(false)
+  })
+
+  it('answers getUpvote with null and refuses setUpvote with an explanation', async () => {
+    const backend = new IssuesBackend(makeCtx({ getThread: () => ISSUE_THREAD }), {
+      labels: ['Gitalk'],
+      title: 't',
+      body: 'b'
+    })
+    await expect(backend.getUpvote()).resolves.toBeNull()
+    await expect(backend.setUpvote(true)).rejects.toThrow(/only available for GitHub Discussions/)
+  })
+
+  it('refuses a threaded reply instead of silently posting a top-level comment', async () => {
+    const c = makeCtx({ getThread: () => ISSUE_THREAD })
+    const backend = new IssuesBackend(c, { labels: ['Gitalk'], title: 't', body: 'b' })
+    await expect(backend.addComment('hi', 12)).rejects.toThrow(/no threaded replies/)
+    expect(vi.mocked(c.http.post)).not.toHaveBeenCalled()
+  })
+})
+
 describe('IssuesBackend', () => {
   const ISSUE_THREAD: ThreadInfo = { ...THREAD, kind: 'issues' }
 
@@ -499,9 +808,18 @@ describe('HttpClient', () => {
   })
 
   it('asks for a network read when fresh is set', async () => {
-    const http = { get: vi.fn().mockResolvedValue([]), post: vi.fn(), request: vi.fn() }
+    const get = vi.fn().mockResolvedValue([])
+    const http = {
+      get,
+      getWithLinks: vi.fn(async (path: string, init?: unknown) => ({
+        data: await get(path, init),
+        links: { first: null, prev: null, next: null, last: null }
+      })),
+      post: vi.fn(),
+      request: vi.fn()
+    }
     const backend = new DiscussionsBackend(makeCtx({ http: http as unknown as HttpClient }))
-    const cacheOf = (call: number) => (http.get.mock.calls[call]?.[1] as { cache?: string } | undefined)?.cache
+    const cacheOf = (call: number) => (get.mock.calls[call]?.[1] as { cache?: string } | undefined)?.cache
 
     // GitHub serves this endpoint with `cache-control: public, max-age=60`, so a
     // reload right after posting can be answered from the browser's copy and show

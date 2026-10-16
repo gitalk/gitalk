@@ -71,33 +71,65 @@ describe('comment loading completeness', () => {
     }
   })
 
-  it('requests page 1 first and page 2 when loading more', async () => {
+  it('opens on the newest block and pages backwards, because the API ignores direction', async () => {
+    // Eight top-level comments, one hour apart, in the ascending order the
+    // REST endpoint always returns (it ignores `direction`).
+    const EIGHT = Array.from({ length: 8 }, (_, i) => ({
+      id: 200 + i,
+      node_id: `n${200 + i}`,
+      user: { login: 'alice', avatar_url: 'a', html_url: 'u' },
+      body_html: `<p>NUMBER ${i}</p>`,
+      created_at: new Date(Date.UTC(2024, 0, 1) + i * 3_600_000).toISOString(),
+      html_url: 'h',
+      parent_id: null,
+      child_comment_count: 0,
+      reactions: { total_count: 0, heart: 0 }
+    }))
+    const thread = { number: 442, node_id: 'D442', title: 'demo', html_url: 'u', locked: false, comments: 8 }
+
     const calls: string[] = []
     globalThis.fetch = vi.fn(async (input: any) => {
       const url = String(input)
       calls.push(url)
       if (url.includes('/comments')) {
-        // first page full, second page empty => "load more" appears then drains
-        const p = Number(new URL(url, 'http://x').searchParams.get('page') ?? '1')
-        return new Response(JSON.stringify(p === 1 ? REST : []), { status: 200, headers: { 'Content-Type': 'application/json' } })
+        const params = new URL(url, 'http://x').searchParams
+        const p = Number(params.get('page') ?? '1')
+        const slice = p === 1 ? EIGHT.slice(0, 4) : EIGHT.slice(4)
+        const link =
+          p === 1
+            ? '<https://api.github.com/x?per_page=4&page=2>; rel="next", <https://api.github.com/x?per_page=4&page=2>; rel="last"'
+            : '<https://api.github.com/x?per_page=4&page=1>; rel="prev", <https://api.github.com/x?per_page=4&page=2>; rel="last"'
+        return new Response(JSON.stringify(slice), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', Link: link }
+        })
       }
       return new Response(JSON.stringify(thread), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }) as any
 
     mount(host, { clientID: 'c', owner: 'gitalk', repo: 'gitalk', admin: [], number: 442, id: 'p', perPage: 4 } as GitalkOptions)
-    await waitFor(() => host.querySelector('.gt-comment-replies'))
+    await waitFor(() => host.querySelector('.gt-comment-body'))
 
-    const first = calls.find(c => c.includes('/comments'))!
-    expect(first).toContain('page=1')
+    // The first screen is the LAST server page: newest comment on top.
+    const first = calls.find((c) => c.includes('/comments'))!
+    expect(first).toContain('page=2')
     expect(first).toContain('per_page=4')
+    expect(host.textContent).toContain('NUMBER 7')
+    const rendered = [...host.querySelectorAll('.gt-comment-body')].map((el) => el.textContent)
+    expect(rendered[0]).toContain('NUMBER 7')
+    expect(rendered[1]).toContain('NUMBER 6')
 
-    // click load more
+    // "Load more" walks back in time: the older block is server page 1.
     const btn = host.querySelector('.gt-btn-loadmore') as HTMLButtonElement | null
     expect(btn).toBeTruthy()
     btn!.click()
-    await new Promise(r => setTimeout(r, 60))
-    const second = calls.filter(c => c.includes('/comments')).at(-1)!
-    expect(second).toContain('page=2')
+    await new Promise((r) => setTimeout(r, 60))
+    const second = calls.filter((c) => c.includes('/comments')).at(-1)!
+    expect(second).toContain('page=1')
+    // ...and the older comments land *below* the newer ones.
+    expect(host.textContent).toContain('NUMBER 0')
+    const after = [...host.querySelectorAll('.gt-comment-body')].map((el) => el.textContent)
+    expect(after.indexOf('NUMBER 7')).toBeLessThan(after.indexOf('NUMBER 0'))
   })
 })
 

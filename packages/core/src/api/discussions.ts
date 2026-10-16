@@ -1,6 +1,20 @@
-import type { PageOptions, ReactionTarget } from './backend'
-import { BaseBackend } from './backend'
-import type { GitalkComment, GitalkReply, Reaction, ThreadInfo, ThreadPage } from '../types'
+import type { PageOptions, ReactionState, ReactionTarget } from './backend'
+import {
+  BaseBackend,
+  fetchReactionStates,
+  reactionsFromGroups,
+  reactionsFromRest,
+  sortComments
+} from './backend'
+import type { ReactionStateNode } from './backend'
+import type {
+  GitalkComment,
+  GitalkReply,
+  Reaction,
+  ThreadInfo,
+  ThreadPage,
+  UpvoteState
+} from '../types'
 import { GitalkError } from './client'
 
 const ADD_COMMENT = `
@@ -13,9 +27,37 @@ mutation addDiscussionComment($body: String!, $discussionId: ID!, $replyToId: ID
       createdAt
       url
       bodyHTML
-      reactions(first: 1) { totalCount viewerHasReacted }
+      reactionGroups { content viewerHasReacted reactors(first: 0) { totalCount } }
     }
   }
+}`
+
+/**
+ * Thread-level upvote state.
+ *
+ * `upvoteCount` / `viewerHasUpvoted` live on the GraphQL `Discussion` type
+ * only — the REST discussion object reports reactions but says nothing about
+ * upvotes — so this is fetched separately and only for signed-in viewers
+ * (GraphQL's anonymous quota is literally zero).
+ */
+const DISCUSSION_UPVOTE = `
+query gitalkDiscussionUpvote($id: ID!) {
+  node(id: $id) {
+    ... on Discussion {
+      upvoteCount
+      viewerHasUpvoted
+    }
+  }
+}`
+
+const ADD_UPVOTE = `
+mutation gitalkAddUpvote($subjectId: ID!) {
+  addUpvote(input: { subjectId: $subjectId }) { clientMutationId }
+}`
+
+const REMOVE_UPVOTE = `
+mutation gitalkRemoveUpvote($subjectId: ID!) {
+  removeUpvote(input: { subjectId: $subjectId }) { clientMutationId }
 }`
 
 /**
@@ -77,11 +119,6 @@ mutation ($subjectId: ID!, $content: ReactionContent!) {
   removeReaction(input: { subjectId: $subjectId, content: $content }) { clientMutationId }
 }`
 
-interface ReactionSummary {
-  totalCount: number
-  viewerHasReacted: boolean
-}
-
 interface RawComment {
   id?: number
   node_id: string
@@ -90,7 +127,20 @@ interface RawComment {
   created_at: string
   html_url: string
   parent_id?: number | null
-  reactions?: { heart?: number; total_count?: number } & Record<string, unknown>
+  reactions?: Record<string, unknown>
+}
+
+/**
+ * One entry of a GraphQL `ReactionGroup`.
+ *
+ * `reactors(first: 0)` is how the group reports its size: `ReactionGroup` has
+ * no `totalCount` of its own, and asking for zero reactors keeps the response
+ * to a number instead of a list of users.
+ */
+interface GraphQLReactionGroup {
+  content: Reaction
+  viewerHasReacted: boolean
+  reactors?: { totalCount?: number } | null
 }
 
 interface GraphQLComment {
@@ -100,7 +150,7 @@ interface GraphQLComment {
   createdAt: string
   url: string
   bodyHTML: string
-  reactions?: ReactionSummary
+  reactionGroups?: GraphQLReactionGroup[] | null
 }
 
 /** A row of `Repository.discussionCategories`. */
@@ -148,6 +198,9 @@ const MAX_PER_PAGE = 100
 export class DiscussionsBackend extends BaseBackend {
   readonly kind = 'discussions' as const
 
+  /** GraphQL upvotes exist on Discussions (and nowhere else in this widget). */
+  override readonly supportsUpvote = true
+
   constructor(ctx: ConstructorParameters<typeof BaseBackend>[0], private readonly opts: DiscussionsBackendOptions = {}) {
     super(ctx)
   }
@@ -176,7 +229,8 @@ export class DiscussionsBackend extends BaseBackend {
         title: d.title,
         url: d.html_url,
         nodeId: d.node_id,
-        locked: d.locked ?? false
+        locked: d.locked ?? false,
+        commentCount: d.comments
       }
     } catch (err) {
       if (isNotFound(err)) return null
@@ -212,7 +266,14 @@ export class DiscussionsBackend extends BaseBackend {
     const MAX_PAGES = 5
     for (let page = 1; page <= MAX_PAGES; page++) {
       const list = await this.ctx.http.get<
-        Array<{ number: number; node_id: string; title: string; html_url: string; locked: boolean }>
+        Array<{
+          number: number
+          node_id: string
+          title: string
+          html_url: string
+          locked: boolean
+          comments?: number
+        }>
       >(`/repos/${this.ctx.owner}/${this.ctx.repo}/discussions?per_page=100&page=${page}`)
 
       if (!list.length) return null
@@ -225,7 +286,8 @@ export class DiscussionsBackend extends BaseBackend {
           title: hit.title,
           url: hit.html_url,
           nodeId: hit.node_id,
-          locked: hit.locked ?? false
+          locked: hit.locked ?? false,
+          commentCount: hit.comments
         }
       }
       if (list.length < 100) return null
@@ -409,17 +471,22 @@ export class DiscussionsBackend extends BaseBackend {
    * Load comments over REST.
    *
    * REST is the only anonymous-capable read path (60 req/hr per IP), so this
-   * is deliberately chosen over GraphQL for display. Three wrinkles are
+   * is deliberately chosen over GraphQL for display. Four wrinkles are
    * handled here, all verified against the live API:
    *
    *  1. REST returns replies *interleaved* with top-level comments, whereas
    *     GraphQL nests them under `replies`. We regroup by `parent_id` so the
    *     UI sees one shape regardless of transport.
-   *  2. REST omits `viewerHasReacted` for anonymous callers (there is no
-   *     viewer), so that flag stays false until the user logs in.
+   *  2. REST omits viewer reaction state for anonymous callers (there is no
+   *     viewer), so `viewerReactions` stays empty until the user interacts.
    *  3. REST pagination is offset-based (`page` + `per_page`) with no cursor,
-   *     so `page` is threaded through `PageOptions` and `hasNextPage` is
-   *     derived from the returned batch size, not from a Link header.
+   *     so `page` is threaded through `PageOptions`.
+   *  4. **REST ignores `direction`.** Measured on api.github.com:
+   *     `/discussions/442/comments` returns the identical ascending payload
+   *     for `direction=asc`, `direction=desc`, and no parameter at all. The
+   *     order is therefore derived here ({@link sortComments}) and the
+   *     newest-first window is read from the *end* of the feed
+   *     ({@link BaseBackend.readCommentPage}).
    *
    * REST does expose `node_id`, and it equals the GraphQL node id, so the ids
    * needed for later mutations are available even anonymously.
@@ -428,15 +495,18 @@ export class DiscussionsBackend extends BaseBackend {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
-    const order = direction === 'first' ? 'asc' : 'desc'
     const perPage = Math.min(Math.max(first, 1), MAX_PER_PAGE)
     const currentPage = Math.max(page ?? 1, 1)
+    const order = direction === 'first' ? 'first' : 'last'
 
-    const raw = await this.ctx.http.get<RawComment[]>(
-      `/repos/${this.ctx.owner}/${this.ctx.repo}/discussions/${thread.number}` +
-        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`,
-      { cache: fresh ? 'reload' : undefined }
-    )
+    const { items: raw, hasNextPage, hasPreviousPage } = await this.readCommentPage<RawComment>({
+      path: `/repos/${this.ctx.owner}/${this.ctx.repo}/discussions/${thread.number}/comments`,
+      perPage,
+      direction: order,
+      page: currentPage,
+      fresh,
+      totalCount: thread.commentCount
+    })
 
     // Grouping is by parent_id because REST interleaves replies with roots.
     // A reply whose parent is not in this batch is hoisted to top level, so
@@ -470,15 +540,17 @@ export class DiscussionsBackend extends BaseBackend {
       }
     }
 
-    const head = topLevel[0]
+    // Sorting after regrouping keeps each parent's replies attached, and
+    // reversing the batch is not enough on its own: an out-of-order or
+    // interleaved payload would still come out wrong.
+    const comments = sortComments(topLevel, order)
+    const head = comments[0]
 
     return {
-      comments: topLevel,
-      // REST exposes no total for the endpoint; the discussion object does,
-      // but fetching it would double the anonymous request cost.
-      totalCount: topLevel.length,
-      hasNextPage: raw.length >= perPage,
-      hasPreviousPage: currentPage > 1,
+      comments,
+      totalCount: thread.commentCount ?? comments.length,
+      hasNextPage,
+      hasPreviousPage,
       endCursor: head ? String(head.id) : null,
       startCursor: head ? String(head.id) : null,
       page: currentPage
@@ -489,12 +561,25 @@ export class DiscussionsBackend extends BaseBackend {
     const thread = this.ctx.getThread()
     if (!thread?.nodeId) throw new GitalkError('Discussion node id is required to comment')
 
+    // Reply ids resolve through the map filled during reads. Failing loudly
+    // beats the alternative the old code took: passing `null` and quietly
+    // posting the reply as a brand-new top-level comment.
+    let replyToId: string | null = null
+    if (replyTo != null) {
+      replyToId = this.nodeIdFor(replyTo)
+      if (!replyToId) {
+        throw new GitalkError(
+          'Cannot reply: the comment being replied to is not part of the loaded page'
+        )
+      }
+    }
+
     const payload = await this.graphql<{ addDiscussionComment: { comment: GraphQLComment } }>(
       ADD_COMMENT,
       {
         body,
         discussionId: thread.nodeId,
-        replyToId: replyTo ? this.nodeIdFor(replyTo) : null
+        replyToId
       }
     )
 
@@ -514,12 +599,55 @@ export class DiscussionsBackend extends BaseBackend {
   }
 
   /**
+   * Upvote state of the discussion itself.
+   *
+   * `upvoteCount` / `viewerHasUpvoted` are GraphQL-only fields, and GraphQL
+   * refuses anonymous callers, so an anonymous visitor gets `null` rather than
+   * a failed request. The UI renders the control without a count in that case
+   * and asks the visitor to sign in when they use it.
+   */
+  override async getUpvote(): Promise<UpvoteState | null> {    const thread = this.ctx.getThread()
+    if (!thread?.nodeId || !this.ctx.getToken()) return null
+
+    const data = await this.graphql<{
+      node: { upvoteCount?: number; viewerHasUpvoted?: boolean } | null
+    }>(DISCUSSION_UPVOTE, { id: thread.nodeId })
+
+    if (!data.node) return null
+    return {
+      count: data.node.upvoteCount ?? 0,
+      viewerHasUpvoted: Boolean(data.node.viewerHasUpvoted)
+    }
+  }
+
+  /** Add or remove the viewer's upvote on the discussion. */
+  override async setUpvote(on: boolean): Promise<void> {
+    const thread = this.ctx.getThread()
+    if (!thread?.nodeId) throw new GitalkError('Cannot upvote: the discussion has no GraphQL node id')
+    await this.graphql(on ? ADD_UPVOTE : REMOVE_UPVOTE, { subjectId: thread.nodeId })
+  }
+
+  /**
+   * Ask GraphQL whether the signed-in viewer reacted with each comment.
+   *
+   * The REST read cannot answer this, so without it the picker would forget
+   * the viewer's own reactions on every reload. One request covers a whole
+   * page; anonymous viewers get an empty map (their viewer state is
+   * unknowable, and GraphQL would refuse the request anyway).
+   */
+  override async getReactionStates(nodeIds: string[]): Promise<Map<string, ReactionState>> {
+    return fetchReactionStates(this.ctx, nodeIds, (query, variables) =>
+      this.graphql<{ nodes?: ReactionStateNode[] | null }>(query, variables)
+    )
+  }
+
+  /**
    * Resolve a REST numeric id to its GraphQL node id.
    *
    * Needed because `replyToId` takes a node id while the UI only knows the
-   * numeric id. Fetches the current page rather than the whole thread: the
-   * comment being replied to is almost always visible, which keeps this to a
-   * single request.
+   * numeric id. The map is filled by every read and by every comment this
+   * widget creates, so replying to a comment on screen resolves without an
+   * extra request.
    */
   private nodeIdFor(databaseId: number): string | null {
     const thread = this.ctx.getThread()
@@ -543,15 +671,30 @@ export class DiscussionsBackend extends BaseBackend {
       bodyHtml: item.body_html ?? '',
       createdAt: item.created_at,
       htmlUrl: item.html_url,
-      reactions: {
-        totalCount: item.reactions?.heart ?? item.reactions?.total_count ?? 0,
-        viewerHasReacted: false
-      },
+      // REST reports every type under its own key (`+1`, `-1`, `laugh`, ...),
+      // which is what lets the picker show real counts without GraphQL.
+      reactions: reactionsFromRest(item.reactions),
       isAuthor: false
     }
   }
 
+  /**
+   * Turn a freshly created comment's `reactionGroups` into the shared shape.
+   *
+   * GraphQL is the only transport that answers "did *this viewer* react?", so
+   * this is where `viewerReactions` gets its first real value; later toggles
+   * are merged in locally by the widget.
+   */
   private fromGraphQL(node: GraphQLComment): GitalkReply {
+    // Remember the id pair so a reply to this brand-new comment resolves too.
+    this.replyNodeIds.set(
+      `${this.ctx.getThread()?.number ?? 0}:${node.databaseId}`,
+      node.id
+    )
+
+    const { counts, viewerReactions } = reactionsFromGroups(node.reactionGroups)
+    const totalCount = Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0)
+
     return {
       id: node.databaseId,
       nodeId: node.id,
@@ -560,8 +703,10 @@ export class DiscussionsBackend extends BaseBackend {
       createdAt: node.createdAt,
       htmlUrl: node.url,
       reactions: {
-        totalCount: node.reactions?.totalCount ?? 0,
-        viewerHasReacted: node.reactions?.viewerHasReacted ?? false
+        totalCount,
+        viewerHasReacted: Object.keys(viewerReactions).length > 0,
+        counts,
+        viewerReactions
       },
       isAuthor: true
     }

@@ -39,6 +39,44 @@ interface RequestInitLike {
 }
 
 /**
+ * The page numbers GitHub reports in its `Link` header, already parsed.
+ *
+ * `last` is the one that matters for display: GitHub's comment endpoints
+ * ignore `direction`, so the newest-first list is built by reading the *last*
+ * page of the ascending feed. `Link` is the only way to learn that page
+ * without another request.
+ */
+export interface PageLinks {
+  first: number | null
+  prev: number | null
+  next: number | null
+  last: number | null
+}
+
+const NO_LINKS: PageLinks = { first: null, prev: null, next: null, last: null }
+
+/**
+ * Parse a `Link: <url?page=2>; rel="next", <url?page=9>; rel="last"` header.
+ *
+ * Returns all-null for a missing/empty header, which is exactly what a
+ * single-page result (no `Link` at all) looks like.
+ */
+export function parsePageLinks(header: string | null): PageLinks {
+  if (!header) return { ...NO_LINKS }
+
+  const links: PageLinks = { ...NO_LINKS }
+  for (const part of header.split(',')) {
+    const rel = part.match(/rel\s*=\s*"?([a-z]+)"?/i)?.[1]?.toLowerCase()
+    const page = part.match(/[?&]page=(\d+)/)?.[1]
+    if (!rel || !page) continue
+    if (rel === 'first' || rel === 'prev' || rel === 'next' || rel === 'last') {
+      links[rel] = Number(page)
+    }
+  }
+  return links
+}
+
+/**
  * Thin fetch wrapper over the GitHub REST API.
  *
  * Anonymous requests are legitimate here: REST discussions/issue reads are
@@ -52,6 +90,20 @@ export class HttpClient {
   ) {}
 
   async request<T>(path: string, init: RequestInitLike = {}): Promise<T> {
+    return (await this.requestWithLinks<T>(path, init)).data
+  }
+
+  /**
+   * `request`, plus the parsed pagination `Link` header.
+   *
+   * Separated rather than merged into `request` so the common case keeps its
+   * old signature: callers that only want the body should not have to unpack
+   * a tuple.
+   */
+  async requestWithLinks<T>(
+    path: string,
+    init: RequestInitLike = {}
+  ): Promise<{ data: T; links: PageLinks }> {
     const headers: Record<string, string> = {
       Accept: HTML_MEDIA_TYPE,
       'X-GitHub-Api-Version': API_VERSION,
@@ -80,11 +132,18 @@ export class HttpClient {
       throw new GitalkError(await extractMessage(response), response.status)
     }
 
-    return (await response.json()) as T
+    return {
+      data: (await response.json()) as T,
+      links: parsePageLinks(response.headers.get('Link'))
+    }
   }
 
   get<T>(path: string, init?: RequestInitLike) {
     return this.request<T>(path, { ...init, method: 'GET' })
+  }
+
+  getWithLinks<T>(path: string, init?: RequestInitLike) {
+    return this.requestWithLinks<T>(path, { ...init, method: 'GET' })
   }
 
   post<T>(path: string, body: unknown, init?: RequestInitLike) {

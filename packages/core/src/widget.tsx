@@ -1,10 +1,15 @@
-import type { TargetedKeyboardEvent } from 'preact'
+import { useMemo } from 'preact/hooks'
 import type { GitalkOptions } from './types'
 import { useGitalk } from './use-gitalk'
+import { collectParticipants } from './mentions'
 import { Avatar } from './components/avatar'
 import { Button } from './components/button'
 import { Comment } from './components/comment'
+import type { CommentLabels } from './components/comment'
 import { Icon } from './components/icon'
+import { MentionTextarea } from './components/mention-textarea'
+import { PendingCommentRow } from './components/pending-comment'
+import { Upvote } from './components/upvote'
 import { VERSION } from './version'
 
 export interface GitalkProps {
@@ -23,18 +28,38 @@ export function GitalkWidget({ options, className }: GitalkProps) {
     .filter(Boolean)
     .join(' ')
 
-  const handleKeyDown = (e: TargetedKeyboardEvent<HTMLTextAreaElement>) => {
-    const opts = options.enableHotKey ?? true
-    if (opts && (e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault()
-      void actions.submit()
-    }
-  }
-
   // Replies are nested inside their parent, so the top-level array length is
   // not the number of comments on the page — a thread showing three comments
   // read as two.
   const loadedCount = state.comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0)
+
+  // Who the `@` popup may offer: everyone who has written in the loaded thread,
+  // minus the viewer. Computed from the confirmed comments only — a pending
+  // comment is not a participant yet.
+  const candidates = useMemo(
+    () => (meta.showMentions ? collectParticipants(state.comments, state.user?.login ?? null) : []),
+    [meta.showMentions, state.comments, state.user]
+  )
+
+  const labels: CommentLabels = useMemo(
+    () => ({
+      commented: t('commented'),
+      reply: t('reply'),
+      cancel: t('cancel'),
+      submit: t('comment'),
+      reactions: t('reactions-label'),
+      addReaction: t('add-reaction'),
+      mentionLabel: t('mention-label'),
+      replyTo: (login: string) => t('reply-to', { user: login }),
+      sending: t('sending'),
+      failed: t('not-posted'),
+      retry: t('retry'),
+      discard: t('discard')
+    }),
+    [t]
+  )
+
+  const topLevelPending = state.pending.filter((p) => p.parentId == null)
 
   return (
     <div className={shellClass}>
@@ -47,6 +72,30 @@ export function GitalkWidget({ options, className }: GitalkProps) {
               Anonymous requests are limited to 60/hour per IP. Sign in to raise the limit.
             </span>
           ) : null}
+        </div>
+      ) : null}
+
+      {/*
+        An anonymous click on a write control lands here: a visible, dismissible
+        answer with the sign-in button next to it, instead of a click that
+        silently does nothing.
+      */}
+      {state.notice ? (
+        <div className="gt-notice" role="status">
+          <span className="gt-notice-text">{state.notice}</span>
+          {!meta.authenticated && meta.canLogin ? (
+            <Button className="gt-btn-login gt-btn-notice-login" onClick={actions.login}>
+              {t('login-with-github')}
+            </Button>
+          ) : null}
+          <button
+            type="button"
+            className="gt-notice-close"
+            aria-label={t('dismiss')}
+            onClick={actions.dismissNotice}
+          >
+            ×
+          </button>
         </div>
       ) : null}
 
@@ -95,12 +144,23 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                 )
               }}
             />
-            <div className="gt-user">
-              {meta.authenticated ? (
-                <span className="gt-user-name">{state.user?.login ?? t('anonymous')}</span>
-              ) : (
-                <span className="gt-user-name">{t('anonymous')}</span>
-              )}
+            <div className="gt-meta-right">
+              {meta.canUpvote ? (
+                <Upvote
+                  upvote={state.upvote}
+                  authenticated={meta.authenticated}
+                  label={t('upvote')}
+                  onToggle={(next) => void actions.setUpvote(next)}
+                  onLoginRequired={() => actions.requireLogin('upvote')}
+                />
+              ) : null}
+              <div className="gt-user">
+                {meta.authenticated ? (
+                  <span className="gt-user-name">{state.user?.login ?? t('anonymous')}</span>
+                ) : (
+                  <span className="gt-user-name">{t('anonymous')}</span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -125,12 +185,17 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             )}
 
             <div className="gt-header-comment">
-              <textarea
+              <MentionTextarea
                 className={`gt-header-textarea ${state.previewing ? 'hide' : ''}`}
                 value={state.draft}
+                candidates={candidates}
                 placeholder={t('leave-a-comment')}
-                onInput={(e) => actions.setDraft(e.currentTarget.value)}
-                onKeyDown={handleKeyDown}
+                ariaLabel={t('leave-a-comment')}
+                listLabel={t('mention-label')}
+                onSubmit={
+                  (options.enableHotKey ?? true) ? () => void actions.submit() : undefined
+                }
+                onInput={actions.setDraft}
               />
 
               {state.previewing ? (
@@ -170,18 +235,53 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           </div>
 
           <div className="gt-comments">
-            {state.comments.length ? (
+            {/*
+              Optimistic rows go on top: they are the newest comments, which is
+              where the newest-first list would put them anyway.
+            */}
+            {topLevelPending.map((entry) => (
+              <PendingCommentRow
+                key={entry.key}
+                pending={entry}
+                locale={options.language ?? navigator.language}
+                commentedText={t('commented')}
+                sendingText={t('sending')}
+                failedText={t('not-posted')}
+                retryText={t('retry')}
+                discardText={t('discard')}
+                onRetry={() => void actions.retryPending(entry.key)}
+                onDiscard={() => actions.dismissPending(entry.key)}
+              />
+            ))}
+
+            {state.comments.length || topLevelPending.length ? (
               state.comments.map((comment) => (
                 <Comment
                   key={comment.id}
                   comment={comment}
                   locale={options.language ?? navigator.language}
-                  commentedText={t('commented')}
-                  replyText={t('reply')}
+                  labels={labels}
                   isAdmin={options.admin.some((a) => a.toLowerCase() === comment.user.login.toLowerCase())}
-                  canReact={meta.authenticated}
-                  onReply={meta.authenticated ? actions.replyTo : undefined}
-                  onToggleReaction={meta.authenticated ? actions.toggleReaction : undefined}
+                  replying={state.replyTarget?.id === comment.id}
+                  replyDraft={state.replyDraft}
+                  replySubmitting={state.replySubmitting}
+                  candidates={candidates}
+                  showReactions={meta.showReactions}
+                  authenticated={meta.authenticated}
+                  canReply={meta.canReply}
+                  pending={state.pending.filter((p) => p.parentId === comment.id)}
+                  onReply={
+                    meta.authenticated
+                      ? actions.replyTo
+                      : () => actions.requireLogin('reply')
+                  }
+                  onReplyInput={actions.setReplyDraft}
+                  onReplySubmit={() => void actions.submitReply()}
+                  onReplyCancel={actions.cancelReply}
+                  onToggleReaction={actions.toggleReaction}
+                  onLoginRequired={() => actions.requireLogin('react')}
+                  onRetryPending={(key) => void actions.retryPending(key)}
+                  onDiscardPending={actions.dismissPending}
                 />
               ))
             ) : (

@@ -1,13 +1,26 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Backend } from './api/backend'
-import type { PageOptions } from './api/backend'
+import type { ReactionState } from './api/backend'
 import type { BackendContext } from './api/backend'
 import { DiscussionsBackend } from './api/discussions'
 import { IssuesBackend } from './api/issues'
 import { Auth } from './auth'
 import { API_VERSION, GITHUB_API, GitalkError, HttpClient, RateLimitError, extractMessage } from './api/client'
 import { createTranslator } from './i18n'
-import type { BackendKind, GitalkComment, GitalkComment as Comment, GitalkOptions, ThreadInfo } from './types'
+import type {
+  BackendKind,
+  GitalkComment,
+  GitalkComment as Comment,
+  GitalkOptions,
+  GitalkReply,
+  PendingComment,
+  Reaction,
+  ThreadInfo,
+  UpvoteState
+} from './types'
+
+/** Why the visitor is being told to sign in. */
+export type LoginReason = 'comment' | 'reply' | 'react' | 'upvote'
 
 interface GitalkState {
   loading: boolean
@@ -31,6 +44,20 @@ interface GitalkState {
   submitting: boolean
   loadingMore: boolean
   hasMore: boolean
+  /** The comment whose inline reply box is open. At most one at a time. */
+  replyTarget: { id: number; login: string } | null
+  replyDraft: string
+  replySubmitting: boolean
+  /** Comments submitted but not yet confirmed by GitHub. */
+  pending: PendingComment[]
+  /** Discussion-level upvote, when the backend has one. */
+  upvote: UpvoteState | null
+  /**
+   * A short, dismissible message shown above the composer — currently used to
+   * answer an anonymous click on a write control with "sign in", instead of
+   * letting the click do nothing.
+   */
+  notice: string | null
 }
 
 const DEFAULTS = {
@@ -39,6 +66,9 @@ const DEFAULTS = {
   backend: 'discussions' as BackendKind,
   enableHotKey: true,
   distractionFreeMode: false,
+  mentions: true,
+  reactions: true,
+  upvote: true,
   /**
    * Manual by default. v1 treated an omitted `createIssueManually` as
    * "auto-create"; 2.0 inverts that on purpose (see `GitalkOptions`).
@@ -60,6 +90,12 @@ function normalizeOptions(raw: GitalkOptions) {
     createIssueManually: raw.createIssueManually ?? raw.createManually ?? DEFAULTS.createIssueManually,
     enableHotKey: raw.enableHotKey ?? DEFAULTS.enableHotKey,
     distractionFreeMode: raw.distractionFreeMode ?? DEFAULTS.distractionFreeMode,
+    mentions: raw.mentions ?? DEFAULTS.mentions,
+    reactions: raw.reactions ?? DEFAULTS.reactions,
+    upvote: raw.upvote ?? DEFAULTS.upvote,
+    // v1's `sortDirection` was documented but never wired up. `'last'` (newest
+    // first) is both the v1 default and what people expect from a comment box.
+    sortDirection: raw.sortDirection === 'first' ? ('first' as const) : ('last' as const),
     admin: raw.admin ?? [],
     updateCountCallback: raw.updateCountCallback,
     proxy: raw.proxy,
@@ -96,7 +132,13 @@ export function useGitalk(options: GitalkOptions) {
     previewHtml: '',
     submitting: false,
     loadingMore: false,
-    hasMore: false
+    hasMore: false,
+    replyTarget: null,
+    replyDraft: '',
+    replySubmitting: false,
+    pending: [],
+    upvote: null,
+    notice: null
   })
 
   const patch = useCallback((next: Partial<GitalkState>) => {
@@ -174,6 +216,44 @@ export function useGitalk(options: GitalkOptions) {
 
   const t = useMemo(() => createTranslator(options.language ?? navigator.language), [options.language])
 
+  /**
+   * Fill in per-type reaction state for the comments just loaded.
+   *
+   * REST reports counts but never "did *you* react", so without this the
+   * picker would forget the viewer's own reactions on every reload. It is a
+   * single GraphQL request per page and purely cosmetic: a failure is logged
+   * and the counts from REST stand.
+   */
+  const hydrateReactions = useCallback(
+    async (comments: GitalkComment[]) => {
+      if (!auth.getToken()) return
+      const ids = comments.flatMap((c) => [
+        c.nodeId,
+        ...(c.replies ?? []).map((r) => r.nodeId)
+      ])
+      const nodeIds = ids.filter((id): id is string => Boolean(id))
+      if (!nodeIds.length) return
+
+      let states: Map<string, ReactionState>
+      try {
+        states = await backend.getReactionStates(nodeIds)
+      } catch (err) {
+        console.warn('gitalk: could not read per-type reaction state', err)
+        return
+      }
+      if (!states.size) return
+
+      setState((prev) => ({
+        ...prev,
+        comments: prev.comments.map((c) => {
+          const withReplies = (c.replies ?? []).map((r) => mergeReactionState(r, states))
+          return mergeReactionState({ ...c, replies: withReplies }, states)
+        })
+      }))
+    },
+    [auth, backend]
+  )
+
   const load = useCallback(
     async (append = false, fresh = false) => {
       // Read the page counter from a ref rather than `state`: the closure
@@ -183,11 +263,13 @@ export function useGitalk(options: GitalkOptions) {
 
       const result = await backend.getComments({
         first: opts.perPage,
-        direction: 'last',
+        // GitHub ignores `direction` on the comments endpoints, so the
+        // backends order the rows and pick the window themselves. It is still
+        // passed so a transport that *does* honour it behaves the same way.
+        direction: opts.sortDirection,
         page: nextPage,
         fresh
       })
-
       // A page that comes back empty means we have drained the thread; stop
       // advertising "load more" instead of letting the user spin forever.
       const drained = result.comments.length === 0 && append
@@ -218,9 +300,32 @@ export function useGitalk(options: GitalkOptions) {
       }))
       if (!drained) pageRef.current = nextPage
       updateCount(opts.updateCountCallback, countLoadedComments(nextComments))
+
+      // Deliberately not awaited: the comment list is already on screen, and
+      // this only sharpens the reaction chips.
+      void hydrateReactions(nextComments)
     },
-    [backend, opts.perPage, opts.updateCountCallback]
+    [backend, hydrateReactions, opts.perPage, opts.sortDirection, opts.updateCountCallback]
   )
+
+  /**
+   * Fetch the discussion-level upvote state.
+   *
+   * Only ever called for a signed-in viewer on a backend that has upvotes:
+   * the fields live behind GraphQL, whose anonymous quota is zero, so asking
+   * while signed out would be a guaranteed 403 dressed up as an error box.
+   * A failure here is cosmetic — the control still renders — so it is logged
+   * rather than reported as a page-level error.
+   */
+  const loadUpvote = useCallback(async () => {
+    if (!opts.upvote || !backend.supportsUpvote) return
+    try {
+      const upvote = await backend.getUpvote()
+      if (upvote) patch({ upvote })
+    } catch (err) {
+      console.warn('gitalk: could not read the upvote count', err)
+    }
+  }, [backend, opts.upvote, patch])
 
   const createThread = useCallback(async () => {
     patch({ loading: true })
@@ -303,6 +408,9 @@ export function useGitalk(options: GitalkOptions) {
       if (draft) patch({ draft })
 
       await resolveViewer()
+
+      // Signed-in visitors can also see how the discussion itself is doing.
+      await loadUpvote()
     } catch (err) {
       reportFailure(patch, err)
     }
@@ -314,6 +422,7 @@ export function useGitalk(options: GitalkOptions) {
     opts.createIssueManually,
     auth,
     load,
+    loadUpvote,
     patch,
     resolveViewer,
     resolveViewerSafely,
@@ -355,19 +464,133 @@ export function useGitalk(options: GitalkOptions) {
 
   const setDraft = useCallback((draft: string) => patch({ draft }), [patch])
 
+  /** Anonymous clicks on a write control answer with a way to sign in. */
+  const requireLogin = useCallback(
+    (reason: LoginReason) => {
+      const message =
+        reason === 'reply'
+          ? t('login-to-reply')
+          : reason === 'react'
+            ? t('login-to-react')
+            : reason === 'upvote'
+              ? t('login-to-upvote')
+              : t('login-to-comment')
+      patch({ notice: message })
+    },
+    [patch, t]
+  )
+
+  const dismissNotice = useCallback(() => patch({ notice: null }), [patch])
+
+  const pendingSeq = useRef(0)
+
+  /**
+   * Place a comment the server just returned.
+   *
+   * `load(false, true)` normally already contains it, but the fresh read is a
+   * network round trip with its own pagination, and a row that arrived a
+   * moment too late must not cost the author their comment.
+   */
+  const placeCreated = useCallback(
+    (created: GitalkComment | GitalkReply, parentId: number | null) => {
+      setState((prev) => {
+        const already = prev.comments.some(
+          (c) => c.id === created.id || c.replies?.some((r) => r.id === created.id)
+        )
+        if (already) return prev
+        if (parentId == null) {
+          return { ...prev, comments: [{ ...(created as GitalkComment) }, ...prev.comments] }
+        }
+        return {
+          ...prev,
+          comments: prev.comments.map((c) =>
+            c.id === parentId
+              ? { ...c, replies: [...c.replies, created as GitalkReply] }
+              : c
+          )
+        }
+      })
+    },
+    []
+  )
+
+  const dropPending = useCallback((key: string) => {
+    setState((prev) => ({ ...prev, pending: prev.pending.filter((p) => p.key !== key) }))
+  }, [])
+
+  /**
+   * Post a comment optimistically.
+   *
+   * The row appears immediately under a client-only key, then the server's row
+   * *replaces* it: the same key can never appear twice, because the pending
+   * entry is only dropped once the authoritative list has been read (or the
+   * comment placed by hand if that read missed it).
+   *
+   * A failure keeps the entry, marked `failed`, so the author can see exactly
+   * which comment did not go through; it is not a comment, it is a retryable
+   * draft, and `retryPending`/`dismissPending` are the two ways out.
+   */
+  const postComment = useCallback(
+    async (body: string, parentId: number | null) => {
+      const key = `pending:${++pendingSeq.current}`
+      const entry: PendingComment = {
+        key,
+        body,
+        parentId,
+        createdAt: new Date().toISOString(),
+        user: {
+          login: state.user?.login ?? t('anonymous'),
+          avatarUrl: state.user?.avatarUrl ?? '',
+          htmlUrl: '#'
+        },
+        status: 'sending'
+      }
+
+      setState((prev) => ({ ...prev, pending: [...prev.pending, entry] }))
+
+      try {
+        const created = await backend.addComment(body, parentId ?? undefined)
+        // The count the thread was resolved with predates this comment. Bump it
+        // so the *next* "load more" still maps its page onto the right offset
+        // (the immediate read below re-probes the end and does not rely on it).
+        const thread = threadRef.current
+        if (thread && typeof thread.commentCount === 'number') {
+          threadRef.current = { ...thread, commentCount: thread.commentCount + 1 }
+        }
+        // A plain reload can be answered from the browser's copy of the
+        // comments response, which still predates this comment.
+        await load(false, true)
+        placeCreated(created, parentId)
+        dropPending(key)
+        return true
+      } catch (err) {
+        const message =
+          err instanceof GitalkError ? err.message : err instanceof Error ? err.message : String(err)
+        setState((prev) => ({
+          ...prev,
+          pending: prev.pending.map((p) =>
+            p.key === key ? { ...p, status: 'failed' as const, error: message } : p
+          )
+        }))
+        return false
+      }
+    },
+    [backend, dropPending, load, placeCreated, state.user, t]
+  )
+
   const submit = useCallback(async () => {
-    if (!state.draft.trim()) return
-    patch({ submitting: true })
-    try {
-      await backend.addComment(state.draft)
-      patch({ draft: '', submitting: false, previewing: false, previewHtml: '' })
-      // A plain reload can be answered from the browser's copy of the
-      // comments response, which still predates this comment.
-      await load(false, true)
-    } catch (err) {
-      reportFailure(patch, err, { submitting: false })
+    const body = state.draft.trim()
+    if (!body) return
+    if (!auth.getToken()) {
+      requireLogin('comment')
+      return
     }
-  }, [backend, load, patch, state.draft])
+    // The composer clears straight away: the optimistic row is the feedback,
+    // and leaving the text behind would invite a double post.
+    patch({ draft: '', submitting: true, previewing: false, previewHtml: '' })
+    await postComment(body, null)
+    patch({ submitting: false })
+  }, [auth, patch, postComment, requireLogin, state.draft])
 
   const togglePreview = useCallback(async () => {
     if (state.previewing) {
@@ -382,47 +605,158 @@ export function useGitalk(options: GitalkOptions) {
     }
   }, [backend, patch, state.draft, state.previewing])
 
+  /**
+   * Open the inline reply box for one comment.
+   *
+   * There is deliberately only ever one: `replyTarget` is a single slot, so
+   * opening a second reply closes the first instead of stacking editors down
+   * the page. Replies go to the comment they were opened on, never to the top
+   * composer.
+   */
   const replyTo = useCallback((comment: GitalkComment) => {
-    const quoted = comment.bodyHtml
-      .replace(/<[^>]+>/g, '')
-      .split('\n')
-      .map((line) => `> ${line}`)
-      .join('\n')
-    setState((prev) => ({
-      ...prev,
-      draft: `${prev.draft}${prev.draft ? '\n' : ''}@${comment.user.login}\n${quoted}\n\n`
-    }))
+    setState((prev) => {
+      // Clicking the button of the already-open box closes it (a toggle), which
+      // is what the design reference does.
+      if (prev.replyTarget?.id === comment.id) {
+        return { ...prev, replyTarget: null, replyDraft: '' }
+      }
+      return {
+        ...prev,
+        replyTarget: { id: comment.id, login: comment.user.login },
+        replyDraft: ''
+      }
+    })
   }, [])
 
+  const cancelReply = useCallback(() => {
+    setState((prev) => ({ ...prev, replyTarget: null, replyDraft: '' }))
+  }, [])
+
+  const setReplyDraft = useCallback((replyDraft: string) => patch({ replyDraft }), [patch])
+
+  const submitReply = useCallback(async () => {
+    const target = state.replyTarget
+    const body = state.replyDraft.trim()
+    if (!target || !body) return
+    if (!auth.getToken()) {
+      requireLogin('reply')
+      return
+    }
+    patch({ replyTarget: null, replyDraft: '', replySubmitting: true })
+    await postComment(body, target.id)
+    patch({ replySubmitting: false })
+  }, [auth, patch, postComment, requireLogin, state.replyDraft, state.replyTarget])
+
+  const retryPending = useCallback(
+    async (key: string) => {
+      const entry = state.pending.find((p) => p.key === key)
+      if (!entry || entry.status === 'sending') return
+      setState((prev) => ({
+        ...prev,
+        pending: prev.pending.map((p) =>
+          p.key === key ? { ...p, status: 'sending' as const, error: undefined } : p
+        )
+      }))
+      try {
+        const created = await backend.addComment(entry.body, entry.parentId ?? undefined)
+        await load(false, true)
+        placeCreated(created, entry.parentId)
+        dropPending(key)
+      } catch (err) {
+        const message =
+          err instanceof GitalkError ? err.message : err instanceof Error ? err.message : String(err)
+        setState((prev) => ({
+          ...prev,
+          pending: prev.pending.map((p) =>
+            p.key === key ? { ...p, status: 'failed' as const, error: message } : p
+          )
+        }))
+      }
+    },
+    [backend, dropPending, load, placeCreated, state.pending]
+  )
+
+  const dismissPending = useCallback((key: string) => dropPending(key), [dropPending])
+
+  /**
+   * Toggle one reaction type on one comment.
+   *
+   * `viewerReactions` is per-type — a viewer may hold all eight at once — so
+   * the flag passed to the backend describes *this* content, not the comment.
+   * The count and the flag move together, optimistically, and both are put
+   * back if GitHub refuses.
+   */
+  const applyReaction = useCallback(
+    (commentId: number, content: Reaction, delta: number, viewerHasReacted: boolean) => {
+      setState((prev) => ({
+        ...prev,
+        comments: prev.comments.map((c) => {
+          if (c.id === commentId) return updateReaction(c, content, delta, viewerHasReacted)
+          if (c.replies?.some((r) => r.id === commentId)) {
+            return {
+              ...c,
+              replies: c.replies.map((r) =>
+                r.id === commentId ? updateReaction(r, content, delta, viewerHasReacted) : r
+              )
+            }
+          }
+          return c
+        })
+      }))
+    },
+    []
+  )
+
   const toggleReaction = useCallback(
-    async (comment: GitalkComment) => {
+    async (comment: GitalkComment | GitalkReply, content: Reaction) => {
+      if (!auth.getToken()) {
+        requireLogin('react')
+        return
+      }
+      const reacted = Boolean(comment.reactions.viewerReactions?.[content])
+      applyReaction(comment.id, content, reacted ? -1 : 1, !reacted)
       try {
         await backend.toggleReaction(
-          {
-            commentId: comment.id,
-            nodeId: comment.nodeId,
-            viewerHasReacted: comment.reactions.viewerHasReacted
-          },
-          'HEART'
+          { commentId: comment.id, nodeId: comment.nodeId, viewerHasReacted: reacted },
+          content
         )
-        patch({
-          comments: state.comments.map((c) =>
-            c.id === comment.id
-              ? {
-                  ...c,
-                  reactions: {
-                    totalCount: c.reactions.totalCount + (c.reactions.viewerHasReacted ? -1 : 1),
-                    viewerHasReacted: !c.reactions.viewerHasReacted
-                  }
-                }
-              : c
-          )
-        })
       } catch (err) {
+        // Roll the optimistic count back before showing why.
+        applyReaction(comment.id, content, reacted ? 1 : -1, reacted)
         reportFailure(patch, err)
       }
     },
-    [backend, patch, state.comments]
+    [applyReaction, auth, backend, patch, requireLogin]
+  )
+
+  /**
+   * Toggle the discussion upvote.
+   *
+   * Optimistic like reactions, and gated the same way: an anonymous click is
+   * answered with the sign-in notice rather than a rejected request.
+   */
+  const setUpvote = useCallback(
+    async (next: boolean) => {
+      if (!backend.supportsUpvote) return
+      if (!auth.getToken()) {
+        requireLogin('upvote')
+        return
+      }
+      const previous = state.upvote ?? { count: 0, viewerHasUpvoted: false }
+      patch({
+        upvote: {
+          count: Math.max(0, previous.count + (next ? 1 : -1)),
+          viewerHasUpvoted: next
+        }
+      })
+      try {
+        await backend.setUpvote(next)
+      } catch (err) {
+        patch({ upvote: previous })
+        reportFailure(patch, err)
+      }
+    },
+    [auth, backend, patch, requireLogin, state.upvote]
   )
 
   const loadMore = useCallback(async () => {
@@ -449,7 +783,15 @@ export function useGitalk(options: GitalkOptions) {
       submit,
       togglePreview,
       replyTo,
+      cancelReply,
+      setReplyDraft,
+      submitReply,
       toggleReaction,
+      setUpvote,
+      retryPending,
+      dismissPending,
+      dismissNotice,
+      requireLogin,
       loadMore,
       createThread
     },
@@ -461,7 +803,72 @@ export function useGitalk(options: GitalkOptions) {
       authenticated: Boolean(auth.getToken()),
       /** False when no clientID is configured: the UI hides login affordances. */
       canLogin: auth.canLogin(),
+      /** Discussions have threaded replies; issues do not. */
+      canReply: backend.kind === 'discussions',
+      /** Upvotes exist on Discussions only — never render the control otherwise. */
+      canUpvote: backend.supportsUpvote && opts.upvote,
+      showMentions: opts.mentions,
+      showReactions: opts.reactions,
+      sortDirection: opts.sortDirection,
       proxy: auth.proxy
+    }
+  }
+}
+
+/**
+ * Fold server-reported reaction state into one comment.
+ *
+ * The server is authoritative for both the per-type counts and the viewer
+ * flags here, because this is the only transport that knows about the viewer.
+ */
+function mergeReactionState<T extends GitalkComment | GitalkReply>(
+  item: T,
+  states: Map<string, ReactionState>
+): T {
+  const state = item.nodeId ? states.get(item.nodeId) : undefined
+  if (!state) return item
+
+  const counts = state.counts
+  return {
+    ...item,
+    reactions: {
+      ...item.reactions,
+      counts,
+      viewerReactions: state.viewerReactions,
+      totalCount: Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0),
+      viewerHasReacted: Object.keys(state.viewerReactions).length > 0
+    }
+  }
+}
+
+/**
+ * Move one reaction's count and viewer flag on one comment, in place.
+ *
+ * Replies are matched too: they live in the same tree and the same server
+ * mutation applies to them.
+ */
+function updateReaction<T extends GitalkComment | GitalkReply>(
+  item: T,
+  content: Reaction,
+  delta: number,
+  viewerHasReacted: boolean
+): T {
+  const counts = { ...(item.reactions.counts ?? {}) }
+  const viewer = { ...(item.reactions.viewerReactions ?? {}) }
+  const nextCount = Math.max(0, (counts[content] ?? 0) + delta)
+  if (nextCount > 0) counts[content] = nextCount
+  else delete counts[content]
+  if (viewerHasReacted) viewer[content] = true
+  else delete viewer[content]
+
+  return {
+    ...item,
+    reactions: {
+      ...item.reactions,
+      totalCount: Math.max(0, item.reactions.totalCount + delta),
+      viewerHasReacted,
+      counts,
+      viewerReactions: viewer
     }
   }
 }

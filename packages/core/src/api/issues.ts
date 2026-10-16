@@ -1,5 +1,6 @@
-import type { PageOptions, ReactionTarget } from './backend'
-import { BaseBackend } from './backend'
+import type { PageOptions, ReactionState, ReactionTarget } from './backend'
+import type { ReactionStateNode } from './backend'
+import { BaseBackend, fetchReactionStates, reactionsFromRest, sortComments } from './backend'
 import type { GitalkComment, GitalkReply, Reaction, ThreadInfo, ThreadPage } from '../types'
 import { GitalkError } from './client'
 
@@ -10,6 +11,7 @@ interface RawIssue {
   html_url: string
   locked: boolean
   labels: Array<{ name: string }>
+  comments?: number
 }
 
 interface RawComment {
@@ -19,7 +21,7 @@ interface RawComment {
   body_html?: string
   created_at: string
   html_url: string
-  reactions?: { heart?: number; total_count?: number }
+  reactions?: Record<string, unknown>
 }
 
 const CREATE_ISSUE_COMMENT = `
@@ -112,14 +114,21 @@ export class IssuesBackend extends BaseBackend {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
-    const order = direction === 'first' ? 'asc' : 'desc'
     const perPage = Math.min(Math.max(first, 1), 100)
     const currentPage = Math.max(page ?? 1, 1)
-    const raw = await this.ctx.http.get<RawComment[]>(
-      `/repos/${this.ctx.owner}/${this.ctx.repo}/issues/${thread.number}` +
-        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`,
-      { cache: fresh ? 'reload' : undefined }
-    )
+    const order = direction === 'first' ? 'first' : 'last'
+
+    // Same story as the Discussions backend: `direction` is ignored by the
+    // endpoint (verified against api.github.com), so the order is applied
+    // client-side and the newest-first window comes from the last page.
+    const { items: raw, hasNextPage, hasPreviousPage } = await this.readCommentPage<RawComment>({
+      path: `/repos/${this.ctx.owner}/${this.ctx.repo}/issues/${thread.number}/comments`,
+      perPage,
+      direction: order,
+      page: currentPage,
+      fresh,
+      totalCount: thread.commentCount
+    })
 
     const comments: GitalkComment[] = raw.map((item) => ({
       id: item.id,
@@ -128,30 +137,39 @@ export class IssuesBackend extends BaseBackend {
       bodyHtml: item.body_html ?? '',
       createdAt: item.created_at,
       htmlUrl: item.html_url,
-      reactions: {
-        totalCount: item.reactions?.heart ?? 0,
-        viewerHasReacted: false
-      },
+      reactions: reactionsFromRest(item.reactions),
       isAuthor: false,
       // Issues have no threading, so replies are always empty.
       replies: []
     }))
 
-    const head = comments[0]
+    const ordered = sortComments(comments, order)
+    const head = ordered[0]
     return {
-      comments,
-      totalCount: comments.length,
-      hasNextPage: raw.length >= perPage,
-      hasPreviousPage: currentPage > 1,
+      comments: ordered,
+      totalCount: thread.commentCount ?? ordered.length,
+      hasNextPage,
+      hasPreviousPage,
       endCursor: head ? String(head.id) : null,
       startCursor: head ? String(head.id) : null,
       page: currentPage
     }
   }
 
-  async addComment(body: string): Promise<GitalkComment | GitalkReply> {
+  /**
+   * Post a comment.
+   *
+   * `replyTo` is accepted for interface parity but deliberately ignored:
+   * Issues have no threading model, so there is no parent to attach to. The
+   * UI hides the reply control on this backend; this guard is only here so a
+   * direct caller cannot silently end up with a mis-nested list.
+   */
+  async addComment(body: string, replyTo?: number): Promise<GitalkComment | GitalkReply> {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
+    if (replyTo != null) {
+      throw new GitalkError('Issues have no threaded replies; post a top-level comment instead')
+    }
 
     const created = await this.ctx.http.post<RawComment>(
       `/repos/${this.ctx.owner}/${this.ctx.repo}/issues/${thread.number}/comments`,
@@ -165,7 +183,7 @@ export class IssuesBackend extends BaseBackend {
       bodyHtml: created.body_html ?? '',
       createdAt: created.created_at,
       htmlUrl: created.html_url,
-      reactions: { totalCount: 0, viewerHasReacted: false },
+      reactions: reactionsFromRest(created.reactions),
       isAuthor: true,
       replies: []
     }
@@ -188,6 +206,28 @@ export class IssuesBackend extends BaseBackend {
     }
   }
 
+  /**
+   * Per-type reaction state, same GraphQL document the Discussions backend
+   * uses (`Reactable` is implemented by both comment types).
+   *
+   * Issues have no upvotes, but they do have reactions — and the REST read
+   * cannot report which ones belong to the viewer, so this is the only way the
+   * picker can highlight them after a reload.
+   */
+  override async getReactionStates(nodeIds: string[]): Promise<Map<string, ReactionState>> {
+    return fetchReactionStates(this.ctx, nodeIds, async (query, variables) => {
+      const response = await this.ctx.graphql<{
+        data?: { nodes?: ReactionStateNode[] | null }
+        errors?: Array<{ message: string }>
+      }>({ query, variables })
+
+      if (response.errors?.length) {
+        throw new GitalkError(response.errors.map((e) => e.message).join(', '))
+      }
+      return response.data ?? {}
+    })
+  }
+
   private toThreadInfo(issue: RawIssue): ThreadInfo {
     return {
       kind: 'issues',
@@ -195,7 +235,8 @@ export class IssuesBackend extends BaseBackend {
       title: issue.title,
       url: issue.html_url,
       nodeId: issue.node_id ?? null,
-      locked: issue.locked ?? false
+      locked: issue.locked ?? false,
+      commentCount: issue.comments
     }
   }
 }

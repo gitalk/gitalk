@@ -64,7 +64,21 @@ describe('redesigned stylesheet', () => {
       '.gt-meta',
       '.gt-user',
       '.gt-copyright',
-      '.gt-comment-actions'
+      '.gt-comment-actions',
+      // v2.3 additions: @ mentions, reaction picker, upvote, inline reply,
+      // optimistic rows. Same contract — hosts style against these.
+      '.gt-editor',
+      '.gt-mention-list',
+      '.gt-mention-item',
+      '.gt-reaction-chip',
+      '.gt-reaction-picker',
+      '.gt-comment-reactions',
+      '.gt-upvote',
+      '.gt-notice',
+      '.gt-reply-box',
+      '.gt-comment--pending',
+      '.gt-pending-failure',
+      '.gt-pending-body'
     ]
     for (const cls of contract) expect(CSS, `${cls} is missing`).toContain(cls)
   })
@@ -169,11 +183,15 @@ describe('redesigned comment DOM', () => {
   it('puts the action row under the body and the replies inside the content column', async () => {
     globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input)
-      const body = url.includes('/comments')
-        ? REST
-        : url.includes('/user')
-          ? { login: 'alice', avatar_url: 'a' }
-          : { number: 442, node_id: 'D442', title: 't', html_url: 'u', locked: false }
+      const body = url.includes('/graphql')
+        ? // Cosmetic reads (upvote, per-type reaction state): answer them so the
+          // run stays free of handled-failure noise.
+          { data: { nodes: [], node: null } }
+        : url.includes('/comments')
+          ? REST
+          : url.includes('/user')
+            ? { login: 'alice', avatar_url: 'a' }
+            : { number: 442, node_id: 'D442', title: 't', html_url: 'u', locked: false }
       return new Response(JSON.stringify(body), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }

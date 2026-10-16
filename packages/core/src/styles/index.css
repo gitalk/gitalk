@@ -1825,3 +1825,416 @@
 :is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-mb {
   color: var(--gt-color-text);
 }
+
+/* =====================================================================
+ * v2.3 additions: @ mentions, the eight-reaction picker, discussion
+ * upvotes, inline replies, and optimistic (pending) comments.
+ *
+ * Everything below uses the existing token set, so both themes and any
+ * host override keep working without a second stylesheet.
+ * ===================================================================== */
+
+/* ---- editor wrapper ------------------------------------------------- */
+/* The `@` popup anchors to the textarea, not to the whole composer. */
+.gt-container .gt-editor {
+  position: relative;
+}
+
+.gt-container .gt-reply-textarea {
+  padding: 10px 12px;
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  max-height: 12em;
+  border-radius: var(--gt-radius-control);
+  border: 1px solid var(--gt-color-border);
+  font-family: inherit;
+  font-size: 0.84375em;
+  line-height: 1.55;
+  color: var(--gt-color-text);
+  resize: vertical;
+  background-color: var(--gt-color-surface);
+  outline: none;
+  transition: border-color 0.16s, box-shadow 0.16s;
+}
+
+.gt-container .gt-reply-textarea::placeholder {
+  color: var(--gt-color-text-3);
+}
+
+.gt-container .gt-reply-textarea:focus {
+  border-color: var(--gt-color-main);
+  box-shadow: var(--gt-shadow-focus);
+}
+
+/* ---- @ mention popup ------------------------------------------------ */
+.gt-container .gt-mention-list {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 14em;
+  max-height: 13em;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background-color: var(--gt-color-surface);
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-control);
+  box-shadow: var(--gt-shadow-card);
+}
+
+.gt-container .gt-mention-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--gt-radius-pill);
+  font-size: 0.8125em;
+  color: var(--gt-color-text);
+  cursor: pointer;
+}
+
+.gt-container .gt-mention-item.is--active,
+.gt-container .gt-mention-item:hover {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-mention-avatar img,
+.gt-container .gt-mention-avatar {
+  width: 20px;
+  height: 20px;
+}
+
+.gt-container .gt-mention-login {
+  font-weight: 600;
+}
+
+/* ---- reactions ------------------------------------------------------ */
+.gt-container .gt-comment-reactions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.gt-container .gt-reaction-chip,
+.gt-container .gt-reaction-trigger {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: auto;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--gt-radius-pill);
+  background: none;
+  font: inherit;
+  font-size: 0.78125em;
+  line-height: 1;
+  color: var(--gt-color-text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.16s, color 0.16s, border-color 0.16s;
+}
+
+.gt-container .gt-reaction-chip:hover,
+.gt-container .gt-reaction-trigger:hover {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-reaction-chip:focus-visible,
+.gt-container .gt-reaction-trigger:focus-visible,
+.gt-container .gt-upvote:focus-visible,
+.gt-container .gt-notice-close:focus-visible,
+.gt-container .gt-btn-link:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
+}
+
+.gt-container .gt-reaction-chip.is--active {
+  color: var(--gt-color-accent);
+  font-weight: 600;
+  background-color: var(--gt-color-main-soft);
+  border-color: var(--gt-color-main-border);
+}
+
+.gt-container .gt-reaction-glyph {
+  font-size: 1em;
+  line-height: 1;
+}
+
+.gt-container .gt-reaction-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.gt-container .gt-reaction-add {
+  position: relative;
+  display: inline-flex;
+}
+
+.gt-container .gt-reaction-picker {
+  position: absolute;
+  z-index: 30;
+  /* Drops below the trigger by default; `.is--up` flips it when there is no
+     room underneath (see ReactionPicker). */
+  top: calc(100% + 6px);
+  left: 0;
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  background-color: var(--gt-color-surface);
+  border: 1px solid var(--gt-color-border);
+  border-radius: 999px;
+  box-shadow: var(--gt-shadow-card);
+}
+
+.gt-container .gt-reaction-picker.is--up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.gt-container .gt-reaction-option {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: none;
+  font-size: 1.05em;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.16s, border-color 0.16s, transform 0.16s;
+}
+
+.gt-container .gt-reaction-option:hover {
+  background-color: var(--gt-color-main-soft);
+  transform: scale(1.08);
+}
+
+.gt-container .gt-reaction-option:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
+}
+
+.gt-container .gt-reaction-option.is--active {
+  background-color: var(--gt-color-main-soft);
+  border-color: var(--gt-color-main-border);
+}
+
+.gt-container .gt-comment-reply.is--active {
+  color: var(--gt-color-accent);
+  background-color: var(--gt-color-main-soft);
+}
+
+/* ---- discussion upvote ---------------------------------------------- */
+.gt-container .gt-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.gt-container .gt-upvote {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border: 1px solid var(--gt-color-border);
+  border-radius: 999px;
+  background-color: var(--gt-color-surface);
+  font: inherit;
+  font-size: 0.75em;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--gt-color-text-2);
+  cursor: pointer;
+  transition: background-color 0.16s, color 0.16s, border-color 0.16s;
+}
+
+.gt-container .gt-upvote:hover {
+  border-color: var(--gt-color-main-border);
+  color: var(--gt-color-accent);
+}
+
+/* Filled brand pill when the viewer has upvoted: white on #1E4FFF is 5.8:1. */
+.gt-container .gt-upvote.is--active {
+  background-color: var(--gt-color-main);
+  border-color: var(--gt-color-main);
+  color: #fff;
+}
+
+.gt-container .gt-upvote-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- sign-in notice ------------------------------------------------- */
+.gt-container .gt-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  background-color: var(--gt-color-main-soft);
+  border: 1px solid var(--gt-color-main-border);
+  border-radius: var(--gt-radius-control);
+  font-size: 0.8125em;
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-notice-text {
+  margin-right: auto;
+}
+
+.gt-container .gt-notice .gt-btn {
+  padding: 4px 10px;
+  font-size: 0.75em;
+}
+
+.gt-container .gt-notice-close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font-size: 1em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gt-container .gt-notice-close:hover {
+  background-color: var(--gt-color-main-border);
+}
+
+/* ---- inline reply box ----------------------------------------------- */
+.gt-container .gt-reply-box {
+  margin: 10px 0 6px;
+}
+
+.gt-container .gt-reply-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.gt-container .gt-reply-actions .gt-btn {
+  padding: 5px 12px;
+  font-size: 0.75em;
+}
+
+.gt-container .gt-btn-cancel-reply {
+  background-color: transparent;
+  border-color: var(--gt-color-border);
+  color: var(--gt-color-text-2);
+}
+
+.gt-container .gt-btn-cancel-reply:hover {
+  color: var(--gt-color-text);
+}
+
+/* ---- optimistic comments -------------------------------------------- */
+@keyframes gt-kf-breathe {
+  0%,
+  100% {
+    background-color: color-mix(in srgb, var(--gt-color-accent) 4%, transparent);
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--gt-color-accent) 14%, transparent);
+  }
+}
+
+.gt-container .gt-comment--pending {
+  border-radius: var(--gt-radius-control);
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+.gt-container .gt-comment--pending.is--sending {
+  animation: gt-kf-breathe 1.6s ease-in-out infinite;
+}
+
+.gt-container .gt-pending-status {
+  margin-left: auto;
+  font-size: 0.6875em;
+}
+
+.gt-container .gt-pending-status.is--sending {
+  color: var(--gt-color-text-3);
+}
+
+.gt-container .gt-pending-status.is--failed {
+  color: var(--gt-color-error);
+  font-weight: 600;
+}
+
+/* The failed row is outlined, not hidden: it is how the author knows which
+   comment did not go through. */
+.gt-container .gt-comment--pending.is--failed {
+  border: 1px solid var(--gt-color-error-border);
+  background-color: var(--gt-color-error-soft);
+  padding: 10px 12px;
+  margin: 6px 0;
+}
+
+.gt-container .gt-pending-body {
+  white-space: pre-wrap;
+}
+
+.gt-container .gt-pending-failure {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+  font-size: 0.75em;
+  color: var(--gt-color-error);
+}
+
+.gt-container .gt-pending-error {
+  margin-right: auto;
+  word-break: break-word;
+}
+
+.gt-container .gt-btn-link {
+  padding: 2px 8px;
+  border: 1px solid var(--gt-color-error-border);
+  border-radius: var(--gt-radius-pill);
+  background: none;
+  font: inherit;
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--gt-color-error);
+  cursor: pointer;
+}
+
+.gt-container .gt-btn-link:hover {
+  background-color: var(--gt-color-error-soft);
+}
+
+/* ---- reduced motion -------------------------------------------------- */
+/* The breathing cue exists to point at where a comment landed; readers who
+   asked their system not to animate things still get the row, just still. */
+@media (prefers-reduced-motion: reduce) {
+  .gt-container .gt-comment--pending.is--sending {
+    animation: none;
+    background-color: var(--gt-color-main-soft);
+  }
+
+  .gt-container .gt-reaction-option {
+    transition: none;
+  }
+
+  .gt-container .gt-reaction-option:hover {
+    transform: none;
+  }
+}

@@ -1,6 +1,55 @@
 export type Reaction = 'HEART' | 'THUMBS_UP' | 'THUMBS_DOWN' | 'LAUGH' | 'HOORAY' | 'CONFUSED' | 'ROCKET' | 'EYES'
 
 /**
+ * The eight reaction types GitHub accepts, in the order its own picker shows
+ * them. Kept here (rather than in the component) so backends and the UI agree
+ * on one list.
+ */
+export const REACTIONS: readonly Reaction[] = [
+  'THUMBS_UP',
+  'THUMBS_DOWN',
+  'LAUGH',
+  'HOORAY',
+  'CONFUSED',
+  'HEART',
+  'ROCKET',
+  'EYES'
+]
+
+/** Per-type counts, keyed by {@link Reaction}. */
+export type ReactionCounts = Partial<Record<Reaction, number>>
+
+/** Per-type "the viewer used this one" flags, keyed by {@link Reaction}. */
+export type ReactionFlags = Partial<Record<Reaction, boolean>>
+
+/**
+ * Reactions attached to one comment.
+ *
+ * GitHub exposes two different shapes and the widget normalises both into
+ * this one:
+ *
+ *  - REST (`full+json`) reports a per-type breakdown but no viewer state, so
+ *    `counts` is filled and `viewerReactions` stays empty until the visitor
+ *    interacts locally.
+ *  - GraphQL reports a single aggregate plus `viewerHasReacted` for one type,
+ *    so `viewerReactions` carries that flag and `counts` may be absent.
+ */
+export interface GitalkReactions {
+  /** Aggregate across every type. */
+  totalCount: number
+  /**
+   * Whether the viewer reacted with the comment's *primary* type
+   * (`THUMBS_UP`, or `HEART` for the 1.x-era heart rendering). Prefer
+   * {@link GitalkReactions.viewerReactions} when you need per-type state.
+   */
+  viewerHasReacted: boolean
+  /** Per-type counts, when the transport reports a breakdown. */
+  counts?: ReactionCounts
+  /** Per-type viewer state, when the transport reports it (GraphQL only). */
+  viewerReactions?: ReactionFlags
+}
+
+/**
  * Backend selection. Gitalk 2.0 defaults to `discussions`.
  *
  * `issues` is retained for backwards compatibility with existing Gitalk
@@ -34,10 +83,7 @@ export interface GitalkComment {
   bodyHtml: string
   createdAt: string
   htmlUrl: string
-  reactions: {
-    totalCount: number
-    viewerHasReacted: boolean
-  }
+  reactions: GitalkReactions
   isAuthor: boolean
   replies: GitalkReply[]
 }
@@ -50,13 +96,35 @@ export interface GitalkReply {
   bodyHtml: string
   createdAt: string
   htmlUrl: string
-  reactions: {
-    totalCount: number
-    viewerHasReacted: boolean
-  }
+  reactions: GitalkReactions
   isAuthor: boolean
 }
 
+/**
+ * A comment the visitor just submitted, rendered before the server has
+ * confirmed it. `key` is a client-only identifier: the server's row replaces
+ * the entry carrying the same key, so the optimistic copy never doubles up.
+ */
+export interface PendingComment {
+  /** Client-only stable id (`pending:<n>`). */
+  key: string
+  body: string
+  /** Numeric id of the parent comment, or null for a top-level comment. */
+  parentId: number | null
+  createdAt: string
+  user: GitalkUser
+  status: 'sending' | 'failed'
+  /** Human-readable reason, set once `status` becomes `failed`. */
+  error?: string
+}
+
+/** Discussion-level upvote state. */
+export interface UpvoteState {
+  count: number
+  viewerHasUpvoted: boolean
+}
+
+/** One page of the thread's comments. */
 export interface ThreadPage {
   comments: GitalkComment[]
   totalCount: number
@@ -81,6 +149,14 @@ export interface ThreadInfo {
   /** GraphQL node id, required to write a comment. */
   nodeId: string | null
   locked: boolean
+  /**
+   * How many comments the thread holds, when the transport reports it.
+   *
+   * GitHub's comments endpoints ignore `direction`, so the newest-first view
+   * has to be assembled from the *last* page of an ascending list; this count
+   * is how that page is found without an extra request.
+   */
+  commentCount?: number
 }
 
 export interface GitalkOptions {
@@ -123,6 +199,19 @@ export interface GitalkOptions {
    * `pageSize` wins when both are set.
    */
   pageSize?: number
+  /**
+   * Which end of the thread to show first.
+   *
+   * | value            | behaviour                                        |
+   * | ---------------- | ------------------------------------------------ |
+   * | `'last'` (*default*, and what v1 users expect) | newest comment on top, "load more" walks back in time |
+   * | `'first'`        | oldest comment on top, "load more" walks forward  |
+   *
+   * GitHub's REST comment endpoints **ignore** the `direction` query
+   * parameter (verified against api.github.com: `asc`, `desc` and omitting it
+   * all return the same ascending payload), so this ordering is applied
+   * client-side by the backends rather than trusted from the server.
+   */
   sortDirection?: SortDirection
   /**
    * Whether an admin has to create the thread by hand. v1-compatible name.
@@ -168,5 +257,27 @@ export interface GitalkOptions {
   proxy?: string
   enableHotKey?: boolean
   distractionFreeMode?: boolean
+  /**
+   * Offer the `@` participant autocomplete in the comment and reply editors.
+   * Defaults to `true`.
+   *
+   * Candidates are the de-duplicated authors/repliers already loaded in the
+   * thread, so the list never advertises someone the visitor cannot see.
+   */
+  mentions?: boolean
+  /**
+   * Render the per-comment reaction control (the eight GitHub reaction types,
+   * with per-type counts). Defaults to `true`. Set to `false` to leave the
+   * action row to the reply button alone.
+   */
+  reactions?: boolean
+  /**
+   * Render the discussion-level upvote control. Defaults to `true`.
+   *
+   * Upvotes are a Discussions-only concept — GitHub exposes no equivalent for
+   * Issues — so the control is never rendered on the `issues` backend, and no
+   * request is made for it either.
+   */
+  upvote?: boolean
   updateCountCallback?: (count: number) => void
 }
