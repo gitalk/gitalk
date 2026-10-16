@@ -188,5 +188,11 @@ jobs:
               continue
             fi
             echo "→ $name@$version"
-            (cd "$dir" && npm publish --access public)
+            # 失败时把 npm 的调试日志打出来：ENEEDAUTH 可能是没尝试 OIDC 交换，
+            # 也可能是交换被拒，两者排查方向完全不同。
+            (cd "$dir" && npm publish --access public --loglevel verbose) || {
+              echo "--- npm 调试日志（OIDC / auth 相关）---"
+              grep -iE "oidc|auth|token|403|401|404|trusted" "$HOME"/.npm/_logs/*-debug-0.log 2>/dev/null | tail -40
+              exit 1
+            }
           done
