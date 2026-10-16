@@ -176,9 +176,13 @@ jobs:
       - name: Publish to npm
         run: |
           set -euo pipefail
-          version=$(node -p "require('./packages/core/package.json').version")
           for dir in packages/core packages/react packages/vue; do
             name=$(node -p "require('./$dir/package.json').name")
+            # Per package, not core's: the three version independently, so a
+            # release that only bumps core would otherwise check react@<core
+            # version>, find nothing, then republish react's existing version
+            # and die on EPUBLISHCONFLICT.
+            version=$(node -p "require('./$dir/package.json').version")
             # 已发过的版本直接跳过：一个 job 里发三个包，可能只成功了一部分
             # （比如 core 发出去、react 失败）；重跑时 core 会因「版本已存在」
             # 报 EPUBLISHCONFLICT 把整个 job 卡死，永远轮不到 react。
