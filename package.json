@@ -2,6 +2,7 @@
   "name": "gitalk",
   "version": "1.8.1",
   "description": "A comment plugin base on GitHub issues",
+  "homepage": "https://gitalk.github.io",
   "keywords": [
     "comment",
     "plugin",

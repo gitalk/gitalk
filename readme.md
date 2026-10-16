@@ -1,5 +1,14 @@
 # Gitalk
 
+> **⚠️ End of life — Gitalk 1.x is no longer maintained.**
+>
+> `1.8.1` is the final 1.x release: no further bug fixes, security updates or support will be provided for this line.
+>
+> **Please migrate to Gitalk 2.x**, a rewrite built on GitHub Discussions:
+> **https://gitalk.github.io** · npm [`@aifire/gitalk`](https://www.npmjs.com/package/@aifire/gitalk) · source [`main`](https://github.com/gitalk/gitalk/tree/main)
+>
+> The 1.x demo stays online at https://gitalk.github.io/gitalk/ for reference.
+
 [![License][license-version-image]][license-version-url]
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
@@ -21,7 +30,8 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 - Hotkey submit comment (cmd|ctrl + enter)
 
 [中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
-[Demo](https://gitalk.github.io)
+[Demo (1.x)](https://gitalk.github.io/gitalk/)
+[Gitalk 2.x](https://gitalk.github.io)
 
 ## Install
 

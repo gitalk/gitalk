@@ -1,5 +1,14 @@
 # Gitalk
 
+> **⚠️ 已停止维护 —— Gitalk 1.x 不再更新。**
+>
+> `1.8.1` 是 1.x 的最后一个版本：不再提供修复、安全更新或支持。
+>
+> **请迁移到 Gitalk 2.x**（基于 GitHub Discussions 的重写版）：
+> **https://gitalk.github.io** · npm [`@aifire/gitalk`](https://www.npmjs.com/package/@aifire/gitalk) · 源码 [`main` 分支](https://github.com/gitalk/gitalk/tree/main)
+>
+> 1.x 的演示页保留在 https://gitalk.github.io/gitalk/ 供参考。
+
 [![NPM][npm-version-image]][npm-version-url] 
 [![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
 [![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
@@ -19,7 +28,8 @@ Gitalk 是一个基于 GitHub Issue 和 Preact 开发的评论插件。
 - 快捷键提交评论 （cmd|ctrl + enter）
 
 [Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
-[在线示例](https://gitalk.github.io)
+[在线示例（1.x）](https://gitalk.github.io/gitalk/)
+[Gitalk 2.x](https://gitalk.github.io)
 
 ## 安装
 

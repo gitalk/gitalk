@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file. See [standa
 ### [1.8.1](https://github.com/gitalk/gitalk/compare/v1.7.2...v1.8.1) (2026-10-16)
 
 
+> **End of life.** `1.8.1` is the final Gitalk 1.x release; this line is no longer maintained.
+> Please migrate to **Gitalk 2.x** — <https://gitalk.github.io>, package [`@aifire/gitalk`](https://www.npmjs.com/package/@aifire/gitalk),
+> source on the [`main` branch](https://github.com/gitalk/gitalk/tree/main).
+
+
 ### Features
 
 * add a `theme` option (and `theme` prop) with a dark theme ([#587](https://github.com/gitalk/gitalk/pull/587))
