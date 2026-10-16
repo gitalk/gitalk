@@ -240,4 +240,24 @@ describe('/graphql', () => {
     expect(sent[0]?.auth).toBe('Bearer gho_visitor')
     expect(sent[0]?.body).toEqual(body)
   })
+
+  it('refuses anonymous GraphQL instead of borrowing the installation token', async () => {
+    let called = false
+    vi.stubGlobal('fetch', async () => {
+      called = true
+      return json({ data: {} })
+    })
+
+    const response = await call('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: 'mutation { addDiscussionComment(input: {}) { clientMutationId } }' })
+    })
+
+    expect(response.status).toBe(401)
+    // The installation token carries the App's write access, so falling back
+    // to it would let any caller mutate as the App. Nothing may reach GitHub.
+    expect(called).toBe(false)
+  })
+
 })

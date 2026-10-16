@@ -88,8 +88,8 @@ GraphQL comments(first:10)                → totalCount = 2（只算顶层）�
 （giscus 的 `addDiscussionReply.ts` 也只是这个 mutation 的别名）。表情用 `reactionGroups`，
 `ReactionContent` 共 8 种。
 
-⚠️ **`createDiscussion` 目前未实现**：`DiscussionsBackend.createThread()` 无条件抛错，
-默认后端下管理员点「初始化」必然失败。待办见 [handsoff.md](./handsoff.md) 未决事项。
+创建讨论走 GraphQL `createDiscussion`（经 proxy 转发，需要 `discussions: write`）。
+`categoryId` 是必填，未配 `category` 时回退到仓库的第一个分类。
 
 ### 2.7 OAuth 写权限（实测）
 

@@ -272,10 +272,19 @@ async function handleGraphql(
 ): Promise<Response> {
   const body = await request.text()
 
-  const userToken = bearerFrom(request)
-  const token = userToken ?? (await installationToken(env, ctx))
+  // No anonymous fallback to the installation token.
+  //
+  // That token carries the App's write access, so falling back to it let
+  // anyone who could reach this endpoint run arbitrary GraphQL — mutations
+  // included — as the App, with no GitHub account. Anonymous reads never come
+  // through here: the widget reads straight from api.github.com, so the only
+  // callers of /graphql are signed-in ones. Rejecting the rest costs nothing
+  // legitimate and closes the endpoint to drive-by writes.
+  const token = bearerFrom(request)
 
-  if (!token) return json({ error: 'No usable GitHub credential' }, { status: 503, headers: cors })
+  if (!token) {
+    return json({ error: 'Sign in with GitHub to perform this request' }, { status: 401, headers: cors })
+  }
 
   const upstream = await fetch(`${GITHUB_API}/graphql`, {
     method: 'POST',

@@ -46,24 +46,14 @@ node scripts/check-publishable.mjs
 
 ## 二、未决事项
 
-> 1–3 以**已发布的 v2.3.0** 为准。
-
-1. **`createIssueManually` 选项未补回**。v1 有这个选项（默认 `false` = 管理员访问即自动建楼），
-   v2.3.0 固化为「管理员点按钮」，选项本身没实现。是否补回需决策。
-2. **页面无 thread 时普通登录访客能否创建**：v1 不允许，当前也不允许（只有 `admin` 看到按钮）。
-3. **Discussions 后端根本没有创建路径**（已核对代码）：`DiscussionsBackend.createThread()`
-   无条件抛错，只有 Issues 后端会真的 `POST /issues`。所以默认后端下管理员点「初始化」必然失败。
-   要么补 `createDiscussion` mutation，要么在 discussions 下隐藏按钮。
-4. **发布 workflow 的版本门禁与包版本不匹配**（未修，下一次发版会踩）：`publish.yml` 用 **core 的
-   版本**做「是否已发布」判断，却按各包自己的 `package.json` 发布。下次只有 core 递增时
-   （react/vue 停在 2.2.1），门禁查不到 `react@2.3.x` 就重发 2.2.1 → `EPUBLISHCONFLICT` → job 失败。
-   修法：各自读各自 `package.json` 的 version。
-5. **x.certbot 交付未落地**。文件在 `.x-certbot-delivery/`（已 gitignore），落地命令见其 README。
-   落地前**必须修正**：目标仓库已配好 **Environment `PROD`** 下的凭据，而交付的 workflow 既没写
-   `environment: PROD`，用的也是另一套名字。正确的一组：
-   - secrets：`ALIYUN_SECRET_KEY_DNS`、`CLOUDBASE_SECRET_KEY`
-   - variables：`CLOUDBASE_SECRET_ID`、`ALIYUN_SECRET_ID_DNS`
-   - job 需声明 `environment: PROD`，引用分别用 `secrets.X` / `vars.X`
+1. **i18n 复数只支持两形态**：`t()` 只取 `forms[0]`/`forms[1]`，而波兰语字典是三形态
+   （`1 |||| 2–4 |||| 5+`），第 5 条以上会退化。影响面很小，但属于已知缺陷。
+2. **`createManually`**：已作为 `@deprecated` 别名保留（仅在 `createIssueManually` 缺省时生效）。
+   将来可以删掉。
+3. **installation token 机制当前无人调用**：`/graphql` 现在要求访客令牌，所以
+   `signAppJwt` → `resolveInstallationId` → `installationToken` 这条链暂时没有调用者。
+   保留是因为设计上考虑过「由端点代发匿名读」，但那会让端点凭 App 写权限代任何人操作，
+   重新启用前必须想清授权边界。
 
 ## 三、关键陷阱
 
