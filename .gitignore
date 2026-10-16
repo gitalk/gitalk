@@ -16,3 +16,4 @@ coverage/
 *.pem
 packages/proxy-cloudbase/.env
 packages/proxy-cloudbase/functions/*/server.js
+.x-certbot-delivery/

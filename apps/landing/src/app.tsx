@@ -78,10 +78,25 @@ export function App() {
   )
 }
 
+/**
+ * The two token endpoints the demo can talk to.
+ *
+ * Both stay deployed on purpose: the Cloudflare worker is the default every
+ * widget uses, and the CloudBase function exists because `*.workers.dev` is
+ * unreachable from mainland China. Letting visitors switch shows what that
+ * difference actually buys instead of only describing it.
+ */
+const DEMO_ENDPOINTS = [
+  { id: 'cloudflare', label: 'Cloudflare', proxy: 'https://gitalk-proxy.aispin-abf.workers.dev' },
+  { id: 'cloudbase', label: '腾讯云 CloudBase', proxy: 'https://gitalk.xsin.work/gitalk' }
+] as const
+
 function GitalkDemo() {
+  const [endpoint, setEndpoint] = useState<(typeof DEMO_ENDPOINTS)[number]>(DEMO_ENDPOINTS[0])
+
   const options = {
     clientID: 'Iv23liM54pLB6TIqnqb6',
-    proxy: 'https://gitalk-proxy.aispin-abf.workers.dev',
+    proxy: endpoint.proxy,
     owner: 'gitalk',
     repo: 'gitalk',
     admin: ['booxood'],
@@ -91,7 +106,26 @@ function GitalkDemo() {
     perPage: 10
   }
 
-  return <Gitalk options={options} className="demo-widget" />
+  return (
+    <>
+      <div className="demo-endpoints" role="group" aria-label="令牌端点">
+        {DEMO_ENDPOINTS.map((candidate) => (
+          <button
+            key={candidate.id}
+            type="button"
+            className={candidate.id === endpoint.id ? 'is-active' : ''}
+            aria-pressed={candidate.id === endpoint.id}
+            onClick={() => setEndpoint(candidate)}
+          >
+            {candidate.label}
+          </button>
+        ))}
+      </div>
+      {/* Keyed on the endpoint: changing `options` alone would not re-initialise
+          the widget, so the switch would appear to do nothing. */}
+      <Gitalk key={endpoint.proxy} options={options} className="demo-widget" />
+    </>
+  )
 }
 
 function prefersDark(): boolean {

@@ -360,6 +360,41 @@ a {
   background: var(--bg);
 }
 
+/* Segmented control for picking the token endpoint. Deliberately small and
+   quiet: it is a demo affordance, not a feature of the widget. */
+.demo-endpoints {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--code-bg);
+}
+
+.demo-endpoints button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.demo-endpoints button:hover {
+  color: var(--accent);
+}
+
+.demo-endpoints button.is-active {
+  background: var(--bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ---------- footer ---------- */
 .footer {
   padding: 32px 0 0;
