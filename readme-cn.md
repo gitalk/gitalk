@@ -215,6 +215,24 @@ import GitalkComponent from "gitalk/dist/gitalk-component";
 
   初始化渲染并挂载插件。
 
+## 主题
+
+Gitalk默认使用浅色主题，你可以通过`theme`参数来启用深色主题。
+
+```js
+const gitalk = new Gitalk({
+  // ...
+  // 设置项
+}, 'dark')
+```
+
+```jsx
+<GitalkComponent options={{
+  // ...
+  // 设置项
+}} theme="dark"/>
+```
+
 ## TypeScript
 
 已经包括了配置项和Gitalk类的类型定义，不包括React组件的类型定义。
