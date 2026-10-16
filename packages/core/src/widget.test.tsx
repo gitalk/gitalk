@@ -129,6 +129,27 @@ describe('GitalkWidget', () => {
     await tick()
     expect(host.querySelector('.gt-container')).toBeNull()
   })
+  it('counts replies in the total and never renders the plural separator', async () => {
+    stubFetch((url) => {
+      if (url.includes('/comments')) return REST_COMMENTS
+      if (url.includes('/discussions/442')) {
+        return { number: 442, node_id: 'D_442', title: 'demo', html_url: 'https://github.com/x', locked: false }
+      }
+      return {}
+    })
+    mount(host, OPTIONS)
+    await waitForComment(host)
+
+    // REST_COMMENTS holds one top-level comment and one reply. Counting only
+    // the top-level array — which is what the widget used to do — reported 1,
+    // so 2 is the value that proves replies are included.
+    const counts = host.querySelector('.gt-counts')
+    expect(counts?.textContent).toContain('2')
+    // The dictionary migrated v1's `singular |||| plural` pair; the separator
+    // used to reach the page verbatim.
+    expect(counts?.textContent).not.toContain('||||')
+  })
+
 })
 
 describe('formatRelativeTime', () => {

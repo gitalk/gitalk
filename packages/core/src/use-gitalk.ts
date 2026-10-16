@@ -40,7 +40,7 @@ function normalizeOptions(raw: GitalkOptions) {
   return {
     id,
     number: raw.number,
-    perPage: raw.perPage ?? DEFAULTS.perPage,
+    perPage: raw.pageSize ?? raw.perPage ?? DEFAULTS.perPage,
     labels: raw.labels ?? DEFAULTS.labels,
     backend: raw.backend ?? DEFAULTS.backend,
     title: raw.title ?? document.title,

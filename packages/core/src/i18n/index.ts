@@ -1,5 +1,6 @@
 // Migrated verbatim from Gitalk 1.x (src/i18n/*.json).
-// `counts` uses %{counts} placeholders, deliberately not ICU plural syntax.
+// Values keep v1's `singular |||| plural` pair where a locale has one; `t`
+// picks the form before interpolation. Not ICU plural syntax.
 
 export interface Messages {
   init: string
@@ -78,8 +79,18 @@ export function createTranslator(locale?: string) {
   const key = resolveLocale(locale)
   const bundle = bundles[key]
 
-  return function t(name: keyof Messages, vars: Record<string, string> = {}): string {
+  return function t(name: keyof Messages, vars: Record<string, string> = {}, pluralCount?: number): string {
     let text = bundle[name] ?? bundles.en[name] ?? String(name)
+
+    // Locales that carry the `||||` pair need the form chosen before the
+    // placeholders are filled — the count is not a number at that point, it is
+    // an HTML link. The existing comment claimed the pairs were dropped; they
+    // were not, which is why `||||` used to reach the page verbatim.
+    if (text.includes('||||')) {
+      const forms = text.split('||||').map((form) => form.trim())
+      text = (pluralCount ?? 0) === 1 ? forms[0]! : (forms[1] ?? forms[0]!)
+    }
+
     for (const [k, v] of Object.entries(vars)) {
       text = text.split(`%{${k}}`).join(v)
     }

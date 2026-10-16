@@ -111,6 +111,11 @@ export interface GitalkOptions {
   body?: string
   language?: string
   perPage?: number
+  /**
+   * Alias for `perPage`, matching the name people already used in v1 configs.
+   * `pageSize` wins when both are set.
+   */
+  pageSize?: number
   sortDirection?: SortDirection
   /** Require an admin to click "init" instead of auto-creating the thread. */
   createManually?: boolean

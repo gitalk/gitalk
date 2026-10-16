@@ -31,6 +31,11 @@ export function GitalkWidget({ options, className }: GitalkProps) {
     }
   }
 
+  // Replies are nested inside their parent, so the top-level array length is
+  // not the number of comments on the page — a thread showing three comments
+  // read as two.
+  const loadedCount = state.comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0)
+
   return (
     <div className={shellClass}>
       {state.error ? (
@@ -162,9 +167,13 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             <span
               className="gt-counts"
               dangerouslySetInnerHTML={{
-                __html: t('counts', {
-                  counts: `<a class="gt-link gt-link-counts" href="${state.thread?.url ?? '#'}" target="_blank" rel="noopener noreferrer">${state.comments.length}</a>`
-                })
+                __html: t(
+                  'counts',
+                  {
+                    counts: `<a class="gt-link gt-link-counts" href="${state.thread?.url ?? '#'}" target="_blank" rel="noopener noreferrer">${loadedCount}</a>`
+                  },
+                  loadedCount
+                )
               }}
             />
             <div className="gt-user">
