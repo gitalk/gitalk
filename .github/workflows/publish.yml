@@ -1,26 +1,34 @@
-# 发布：release-please 算版本 → 合并 Release PR → 打 tag、建 GitHub Release、npm publish
+# 发布：Actions → Release → Run workflow（**仅手动触发**）
+#   → 算出一个版本号 → 三个包共用 → 校验 → 构建 → npm publish（OIDC Trusted Publishing）
 #
-# 推 main（带 feat/fix 等）→ release-please 开/更新一个 Release PR（里面已改好各包
-#   package.json 的 version、CHANGELOG.md、.release-please-manifest.json）
-# → **你合并这个 PR** → 本次 workflow 在合并后的推送里完成 tag + Release + npm 发布
-#   docs:/chore:/ci:/style:/refactor: 不触发发版。
-#   版本规则：feat: → minor ｜ fix: → patch ｜ feat!: 或 body 里写 BREAKING CHANGE: → major
+# 版本号由**发布流程**拥有，不从 git 历史推导：
+#   packages/*/package.json 里的 `2.0.0-beta.0` 是**长期基线**，只在仓库里钉一次，
+#   发布时不改仓库里的文件，只改 runner 的工作副本。真正发出去的是 2.0.0-beta.N，
+#   N 由 scripts/next-beta-version.mjs 从 npm 上同基线（2.0.0-beta.N）已发布的版本
+#   算出来：取最大 N 加一；一个都没发过就是基线本身。脚本查不到 registry 或返回
+#   没法解析时**非 0 退出**，绝不退回基线 —— 发错版本比构建失败难收拾得多。
 #
-# 本仓库是 monorepo，三个包共享同一个 component 与同一个 `vX.Y.Z` tag：
-#   packages/core → @aifire/gitalk
-#   packages/react → @aifire/gitalk-react
-#   packages/vue → @aifire/gitalk-vue
-# 一次 Release PR 把三者一起升版，由下面的 publish job 依次发出。
-# （packages/proxy-worker 是 private，不发布。）
+# ⚠️ 三个包**共用同一个 N**，一次运行只算一个：
+#   逐包各算会发散 —— 用假 registry 实测过：vue 已有 beta.0 而 core/react 没有时，
+#   按包算得到 core=beta.0、vue=beta.1，core 再发 beta.0 直接 EPUBLISHCONFLICT。
+#   口径：对参与发布的**每个**包都查一次已发布版本，取同基线的最大 N 再加一，
+#   三包共用。core 是锚点（react/vue 都依赖 @aifire/gitalk，必须先落定），
+#   另外两个包对 core 的依赖指向**本次 core 实际发布的版本**，不是基线。
+#   计数取三包最大值、而不是只看 core：core 先发通常让它最高，但历史状态（某个包
+#   曾经单独领先）或人工补发会让别的包更高，只看 core 就会重发它已有的版本号。
 #
-# ⚠️ 为什么保留「合并」这一次人工点击 —— 两条全自动路线都实测被 GitHub 挡住：
-#   1) 挂 GitHub 原生 auto-merge：仓库没有分支保护规则，直接报
-#      "Protected branch rules not configured for this branch"。
-#   2) 由 workflow 用 GITHUB_TOKEN 合并：这种 push 不触发下游 workflow（防递归），
-#      而 Release/Tag 也建不出来（403 Resource not accessible by integration）。
-#   注：`skip-github-pull-request: true` 也不行 —— 那个模式只负责「收尾已合并的
-#   Release PR」，不会从裸提交直接发版。
-#   想连这一次点击都省掉：给仓库配一个 PAT 或 GitHub App token 来合并（长期凭证，谨慎）。
+# ⚠️ 为什么仅手动触发（workflow_dispatch，没有 push）：
+#   版本号每次运行必然递增 —— 一次运行 = 一个新 beta。挂在 push 上等于每次推 main
+#   都发版；而且 release-please 已移除（见下），没有「先开 PR 再合并」那一步来兜住
+#   节奏。发布是有人按下的动作。
+#
+# ⚠️ 为什么不再用 release-please（googleapis/release-please-action）：
+#   它和「版本号由发布流程递增」是两套机制管同一件事 —— 它会开一个提议
+#   2.0.1-beta.0（甚至把版本线漂到 2.1.0-beta.N）的 Release PR，一旦被合并，
+#   这里钉的基线当场失效。该 job 已移除。
+#   随之失效的还有 release-please-config.json 与 .release-please-manifest.json
+#   （死配置，去留待定）；也不再自动打 tag、建 GitHub Release、维护 CHANGELOG。
+#   要恢复 tag/Release 得另加步骤（需要 contents: write）。
 #
 # 认证：优先 npm Trusted Publishing（OIDC），仓库里不存任何 npm 令牌，provenance 自动生成。
 #   引导期例外：包在 npm 上**还不存在**时，没有 Settings 页可以绑 Trusted Publisher，
@@ -40,24 +48,19 @@
 #   产物里也搜不到 ACTIONS_ID_TOKEN_REQUEST_URL），拿不到临时凭证。
 #   所以打包交给 pnpm（它会正确替换掉 workspace:*），发布交给 npm CLI。
 #
-# 手动补发（tag 建好了但 npm 发布失败）：Actions → Release → Run workflow，
-#   勾上 publish_current_version，会按各包 package.json 当前版本重新构建并发布。
+# 补发（上一次只发出去一部分）：再点一次 Run workflow。
+#   预发布：算出更大的 N，三个包重新一起发，不会撞 EPUBLISHCONFLICT。
+#   正式版：版本号固定，已发出去的直接跳过，重跑能收敛。
 
 name: Release
 
 on:
-  push:
-    branches: [main]
+  # 只有手动触发。发布是有人按下的动作，不是每次 push 都发生。
   workflow_dispatch:
-    inputs:
-      publish_current_version:
-        description: '跳过版本判定，直接按各包 package.json 当前版本构建并发布（补发用）'
-        type: boolean
-        default: false
 
 permissions:
-  contents: write        # 打 tag、建 GitHub Release
-  pull-requests: write   # 开/更新 Release PR
+  contents: read         # checkout 用。不再打 tag / 建 Release，所以不需要 write。
+  # pull-requests 也不再需要：Release PR 没了。
   id-token: write        # OIDC：Trusted Publishing 的必需品
 
 concurrency:
@@ -65,30 +68,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    outputs:
-      publish: ${{ steps.flag.outputs.publish }}
-    steps:
-      # 合并 Release PR 的那次运行会返回 releases_created=true。
-      # 这里是多包（一次发三个），所以看 releases_created 而不是单个 release_created。
-      - uses: googleapis/release-please-action@v5
-        id: release
-        with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-      - id: flag
-        name: Decide whether to publish
-        run: |
-          set -euo pipefail
-          publish="${{ steps.release.outputs.releases_created == 'true' || inputs.publish_current_version == true }}"
-          echo "publish=$publish" >> "$GITHUB_OUTPUT"
-          echo "releases_created=${{ steps.release.outputs.releases_created }} / forced=${{ inputs.publish_current_version }} → publish=$publish"
-
   publish:
-    needs: release
-    if: needs.release.outputs.publish == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -127,6 +107,7 @@ jobs:
       # npm 不认 workspace:*，pnpm 又不支持 OIDC，所以自己把依赖换成真实版本号，
       # 再交给 npm 在**包目录里**发布 —— 与 textural 验证过的做法一致。
       # （用 tarball 发布，即 npm publish <file.tgz>，走不通 Trusted Publishing。）
+      # 预发布时这里换成的是 core 的**基线**版本，下面 Publish 步骤再改成实际发布版本。
       - name: Resolve workspace dependency versions
         run: |
           set -euo pipefail
@@ -173,34 +154,98 @@ jobs:
           echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+present}"
           echo "npm: $(npm -v)   node: $(node -v)"
 
+      # 版本号：预发布基线 2.0.0-beta.0 写在各包 package.json 里**不动**，发布时由
+      # scripts/next-beta-version.mjs **一次**算出**一个** N，三个包共用；
+      # 计数取三包同基线的最大 N 加一（口径的完整说明见文件头）。
+      #
+      # ⚠️ 跳过逻辑的取舍（别把预发布那条加回来）：
+      #   预发布：算出来的版本号每次运行都必然比上一次新，所以「已发布则跳过」永远不
+      #     成立 —— 一次运行就会产生一个新 beta，重跑会再产生一个。这是递增的必然结果，
+      #     不是 bug。代价是「部分失败后重跑」不再收敛到同一版本；换来的是版本号永不
+      #     撞车：上一次哪怕只发出去一半，重跑也不会因 EPUBLISHCONFLICT 卡死。
+      #     真要重发同一个 beta，得先在 npm 上 unpublish（或 deprecate）那个版本。
+      #   正式版（package.json 的 version 不含 "-"）：保留原有幂等语义 —— 已发过的
+      #     版本直接跳过，部分失败后重跑能收敛，因为版本号是固定的。
       - name: Publish to npm
         run: |
           set -euo pipefail
-          for dir in packages/core packages/react packages/vue; do
-            name=$(node -p "require('./$dir/package.json').name")
-            # Per package, not core's: the three version independently, so a
-            # release that only bumps core would otherwise check react@<core
-            # version>, find nothing, then republish react's existing version
-            # and die on EPUBLISHCONFLICT.
-            version=$(node -p "require('./$dir/package.json').version")
-            # 已发过的版本直接跳过：一个 job 里发三个包，可能只成功了一部分
-            # （比如 core 发出去、react 失败）；重跑时 core 会因「版本已存在」
-            # 报 EPUBLISHCONFLICT 把整个 job 卡死，永远轮不到 react。
-            # 让这一步幂等，重跑就总能收敛。
-            if npm view "$name@$version" version >/dev/null 2>&1; then
-              echo "↷ $name@$version 已发布，跳过"
-              continue
+          dirs=(packages/core packages/react packages/vue)
+
+          core_base=$(node -p "require('./packages/core/package.json').version")
+          case "$core_base" in
+            *-*) mode=prerelease ;;
+            *)   mode=release ;;
+          esac
+
+          # 共用同一个 N 的前提是三个包在同一条版本线上：哪个漂了（比如 core 还是
+          # 预发布、react 已经改成正式版），共用版本号就无从谈起，直接失败。
+          for dir in "${dirs[@]}"; do
+            base=$(node -p "require('./$dir/package.json').version")
+            kind=release
+            case "$base" in *-*) kind=prerelease ;; esac
+            if [ "$kind" != "$mode" ]; then
+              echo "✗ $dir 是 $base，core 是 $core_base：三个包必须在同一条版本线上（预发布 / 正式版不能混）。"
+              exit 1
             fi
-            echo "→ $name@$version"
-            # 预发布版不能打 latest：npm 会以「pre-release 必须显式指定 tag」直接拒绝，
-            # 而 2.0.0-beta 正是这种情况。给预发布版打 beta 标签，正式版维持现状。
-            publish_args=(--access public)
-            case "$version" in
-              *-*) publish_args+=(--tag beta) ;;
-            esac
+          done
+
+          pending=()
+          publish_args=(--access public)
+
+          if [ "$mode" = prerelease ]; then
+            # 一次运行只算一个 N，三个包共用。脚本查不到 npm 或结果没法解析时会非 0
+            # 退出（set -e 会拦下这一步），不会退回基线版本号 —— 发错版本比构建失败
+            # 难收拾得多。
+            version=$(node scripts/next-beta-version.mjs \
+              --dir packages/core --dir packages/react --dir packages/vue)
+            echo "· 基线 $core_base → 本次发布 $version（三个包共用）"
+            # 预发布版不能打 latest：npm 会以「pre-release 必须显式指定 tag」直接
+            # 拒绝，而 2.0.0-beta 正是这种情况。正式版维持现状。
+            publish_args+=(--tag beta)
+            for dir in "${dirs[@]}"; do
+              # 只改 runner 工作副本，**不提交回仓库**：package.json 里的
+              # 2.0.0-beta.0 是长期基线，不随每次发布往后挪。
+              (cd "$dir" && npm pkg set version="$version")
+              if [ "$dir" != packages/core ]; then
+                # 依赖联动：上面「Resolve workspace dependency versions」把 react/vue
+                # 依赖的 @aifire/gitalk 换成了 core 的**基线**版本；core 本轮发的就是
+                # 这个共用的 $version，所以把它改成 $version，否则装了 gitalk-react 的
+                # 人会被钉在 core 的 beta.0 上，两个包版本错位。
+                (cd "$dir" && npm pkg set "dependencies.@aifire/gitalk=$version")
+              fi
+              pending+=("$dir")
+            done
+          else
+            # 正式版沿用旧行为：版本号是各包 package.json 里的固定值，已发过的直接跳过。
+            # 一个 job 里发三个包，可能只成功了一部分（比如 core 发出去、react 失败）；
+            # 重跑时 core 会因「版本已存在」报 EPUBLISHCONFLICT 把整个 job 卡死，
+            # 永远轮不到 react。让这一步幂等，重跑就总能收敛。
+            echo "· 正式版线：按各包 package.json 当前版本发布，已发过的跳过"
+            for dir in "${dirs[@]}"; do
+              name=$(node -p "require('./$dir/package.json').name")
+              version=$(node -p "require('./$dir/package.json').version")
+              if npm view "$name@$version" version >/dev/null 2>&1; then
+                echo "↷ $name@$version 已发布，跳过"
+                continue
+              fi
+              pending+=("$dir")
+            done
+          fi
+
+          if [ ${#pending[@]} -eq 0 ]; then
+            echo "· 没有需要发布的包，结束。"
+            exit 0
+          fi
+
+          for dir in "${pending[@]}"; do
+            # 按目录里**最终**的 package.json 打日志：发布的就是这两个值。
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            echo "→ 发布 $name@$version"
             # 失败时把 npm 的调试日志打出来：ENEEDAUTH 可能是没尝试 OIDC 交换，
             # 也可能是交换被拒，两者排查方向完全不同。
             (cd "$dir" && npm publish "${publish_args[@]}" --loglevel verbose) || {
+              echo "✗ $name@$version 发布失败"
               echo "--- npm 调试日志（OIDC / auth 相关）---"
               grep -iE "oidc|auth|token|403|401|404|trusted" "$HOME"/.npm/_logs/*-debug-0.log 2>/dev/null | tail -40
               exit 1
