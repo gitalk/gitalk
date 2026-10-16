@@ -1,22 +1,6 @@
 # Changelog
 
-## [2.2.1](https://github.com/gitalk/gitalk/compare/v2.2.0...v2.2.1) (2026-10-16)
+2.0 仍在开发中，以**预发布版**发布：版本号为 `2.0.0-beta.N`，每次发布自动递增。
 
-
-### Bug Fixes
-
-* resolve the packages from CommonJS as well ([777e8b4](https://github.com/gitalk/gitalk/commit/777e8b41f73407ec986582adf4cc00076ff13084))
-
-## [2.2.0](https://github.com/gitalk/gitalk/compare/v2.1.0...v2.2.0) (2026-10-16)
-
-
-### Features
-
-* publish as @aifire/gitalk, and fix what would have shipped broken ([17b77c0](https://github.com/gitalk/gitalk/commit/17b77c0753164d93a2942c40a5cf57ce4728e757))
-
-## [2.1.0](https://github.com/gitalk/gitalk/compare/v2.0.0...v2.1.0) (2026-10-16)
-
-
-### Features
-
-* Gitalk 2.0 rewrite (core, react, vue, landing) ([d635715](https://github.com/gitalk/gitalk/commit/d635715cab12e5494bce7ef07af40e0435c70bcb))
+早先的 2.1.0 – 2.3.0 是配置发布流程期间误发的版本，已从 npm 与 GitHub Releases 中移除，
+对应的 tag 也已删除。那些改动仍在 git 历史里可查。
