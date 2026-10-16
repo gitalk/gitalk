@@ -18,7 +18,7 @@
     "./style.css": "./dist/core.css"
   },
   "scripts": {
-    "build": "vite build && vite build --config vite.iife.config.ts",
+    "build": "vite build && vite build --config vite.iife.config.ts && tsc -p tsconfig.types.json",
     "dev": "vite build --watch",
     "typecheck": "tsc --noEmit"
   },
@@ -28,6 +28,7 @@
   "devDependencies": {
     "@preact/preset-vite": "2.10.6",
     "typescript": "7.0.2",
-    "vite": "8.3.4"
+    "vite": "8.3.4",
+    "vite-plugin-dts": "5.1.2"
   }
 }

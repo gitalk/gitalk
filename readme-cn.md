@@ -1,249 +1,126 @@
-# Gitalk
+# Gitalk 2.0 中文文档
 
-[![NPM][npm-version-image]][npm-version-url] 
-[![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
-[![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
-[![david-dm][david-dm-image]][david-dm-url] 
-[![travis][travis-image]][travis-url] 
-[![coveralls][coveralls-image]][coveralls-url] 
-[![gzip-size][gzip-size]][gzip-url]
+基于 **GitHub Discussions**（默认）或 GitHub Issues 的评论组件。
+无后端、无数据库、不经过任何第三方代理。
 
-Gitalk 是一个基于 GitHub Issue 和 Preact 开发的评论插件。
+[English](readme.md) · [在线 Demo](https://gitalk.github.io) · [讨论区](https://github.com/gitalk/gitalk/discussions)
 
-## 特性
+## 相比 1.x 的变化
 
-- 使用 GitHub 登录
-- 支持多语言 [en, zh-CN, zh-TW, es-ES, fr, ru, de, pl, ko, fa, ja]
-- 支持个人或组织
-- 无干扰模式（设置 distractionFreeMode 为 true 开启）
-- 快捷键提交评论 （cmd|ctrl + enter）
+| | 1.x | 2.0 |
+|---|---|---|
+| 存储 | GitHub Issues | **GitHub Discussions**（Issues 可选） |
+| 工具链 | webpack 3 · Babel 6 · Preact 8 | Vite 8 · TypeScript 7 · Preact 11 |
+| 鉴权 | `clientSecret` 写进页面 + 第三方 CORS 代理 | 自部署 edge function，**浏览器不含密钥** |
+| 发版 | standard-version | release-please |
+| 产物 | 仅 UMD | ESM + IIFE + React + Vue |
 
-[Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
-[在线示例](https://gitalk.github.io)
+所有 API 行为结论均有实测记录，详见 [docs/tech.md](docs/tech.md)。
 
 ## 安装
 
-两种方式
-
-- 直接引入
-
-```html
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
-
-  <!-- or -->
-
-  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
-  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+```sh
+pnpm add @gitalk/core       # 无框架
+pnpm add @gitalk/react      # React
+pnpm add @gitalk/vue        # Vue
 ```
 
-- npm 安装
+## 用法
+
+### 无框架
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.js"></script>
+
+<div id="gitalk-container"></div>
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'Iv1.xxxxxxxx',
+    owner: 'you',
+    repo: 'comments',
+    admin: ['you'],
+    number: 42,              // discussion 编号，推荐显式指定
+    backend: 'discussions'
+  })
+  gitalk.render('gitalk-container')
+</script>
+```
+
+### React
+
+```tsx
+import { Gitalk } from '@gitalk/react'
+import '@gitalk/core/style.css'
+
+<Gitalk options={{ clientID: 'Iv1.xxxxxxxx', owner: 'you', repo: 'comments', admin: ['you'], number: 42 }} />
+```
+
+### Vue
+
+```vue
+<script setup lang="ts">
+import { Gitalk } from '@gitalk/vue'
+import '@gitalk/core/style.css'
+
+const options = { clientID: 'Iv1.xxxxxxxx', owner: 'you', repo: 'comments', admin: ['you'], number: 42 }
+</script>
+
+<template>
+  <Gitalk :options="options" />
+</template>
+```
+
+## 配置项
+
+| 选项 | 默认值 | 说明 |
+|---|---|---|
+| `clientID` | — | OAuth Application 的 client id |
+| `owner`、`repo` | — | 承载评论的仓库 |
+| `admin` | `[]` | 允许初始化评论的用户 |
+| `backend` | `'discussions'` | 老站点可填 `'issues'` |
+| `number` | — | Discussion 编号，**推荐**，可省去标题扫描 |
+| `id` | `location.pathname` | 未指定 `number` 时使用的页面标识 |
+| `category` | — | 创建 discussion 时使用的分类 |
+| `perPage` | `10` | 每页条数 |
+| `proxy` | — | 你自己部署的 token 交换端点 |
+| `language` | `navigator.language` | 沿用 1.x 的 11 种语言 |
+
+## 部署准备
+
+1. 在仓库开启 **Discussions**，并建一个分类（默认 `General`）。
+2. 注册 **OAuth Application**，记下 client id。**不要把 client secret 写进页面。**
+3. 部署 [`packages/proxy-worker`](packages/proxy-worker) 到
+   Cloudflare Workers / Vercel / Netlify，配置
+   `GITALK_CLIENT_ID`、`GITALK_CLIENT_SECRET`、`GITALK_ALLOWED_ORIGINS`。
+4. 把部署后的地址填到 `proxy`。
+
+### 为什么需要代理？
+
+`github.com/login/oauth/access_token` 不返回 `Access-Control-Allow-Origin`，
+浏览器无法自行完成 token 交换。Device Flow 我们同样实测过：它不需要
+`client_secret`，但也被同样的 CORS 限制挡住。因此纯静态页面没有任何办法
+自行获取 token，详见 [docs/tech.md §3.2](docs/tech.md)。
+
+代理让密钥只存在于你自己的部署环境里。
+
+## 匿名阅读
+
+未登录访客通过 REST API 读取评论（60 次/小时/IP）。配合
+`ETag` / `If-None-Match`，未变更的响应不计入限额。已登录用户走
+GraphQL（5000 点/小时）——写操作必须走 GraphQL，因为 GitHub 没有
+Discussions 的 REST 写接口。
+
+## 本地开发
 
 ```sh
-npm i --save gitalk
+pnpm install
+pnpm dev            # 落地页 + 实时评论组件
+pnpm test           # 28 项测试
+pnpm build          # 构建所有包
+pnpm typecheck
 ```
-
-```js
-import 'gitalk/dist/gitalk.css'
-import Gitalk from 'gitalk'
-```
-
-## 使用
-
-首先，您需要选择一个公共github存储库（已存在或创建一个新的github存储库）用于存储评论，
-
-然后需要创建 **GitHub Application**，如果没有 [点击这里申请](https://github.com/settings/applications/new)，`Authorization callback URL` 填写当前使用插件页面的域名。
-
-最后, 您可以选择如下的其中一种方式应用到页面：
-
-### 方式1
-
-添加一个容器：
-
-```html
-<div id="gitalk-container"></div>
-```
-
-用下面的 Javascript 代码来生成 gitalk 插件：
-
-```js
-var gitalk = new Gitalk({
-  clientID: 'GitHub Application Client ID',
-  clientSecret: 'GitHub Application Client Secret',
-  repo: 'GitHub repo',
-  owner: 'GitHub repo owner',
-  admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
-  id: location.pathname,      // Ensure uniqueness and length less than 50
-  distractionFreeMode: false  // Facebook-like distraction free mode
-})
-
-gitalk.render('gitalk-container')
-```
-
-### 方式2：在React使用
-
-使用以下代码引入Gitalk组件
-
-```jsx
-import GitalkComponent from "gitalk/dist/gitalk-component";
-```
-
-按以下方式在React中使用Gitalk组件
-
-```jsx
-<GitalkComponent options={{
-  clientID: "...",
-  // ...
-  // 设置项
-}} />
-```
-
-## 设置
-
-- **clientID** `String` 
-
-  **必须**. GitHub Application Client ID.
-
-- **clientSecret** `String` 
-
-  **必须**. GitHub Application Client Secret.
-
-- **repo** `String` 
-
-  **必须**. GitHub repository.
-
-- **owner** `String` 
-
-  **必须**. GitHub repository 所有者，可以是个人或者组织。
-
-- **admin** `Array` 
-
-  **必须**. GitHub repository 的所有者和合作者 (对这个 repository 有写权限的用户)。
-
-- **id** `String` 
-  
-  Default: `location.href`.
-
-  页面的唯一标识。长度必须小于50。
-  
-- **number** `Number` 
-  
-  Default: `-1`.
-
-  页面的 issue ID 标识，若未定义`number`属性则会使用`id`进行定位。
-
-- **labels** `Array` 
-  
-  Default: `['Gitalk']`.
-
-  GitHub issue 的标签。
-
-- **title** `String` 
-  
-  Default: `document.title`.
-
-  GitHub issue 的标题。
-
-- **body** `String` 
-  
-  Default: `location.href + header.meta[description]`.
-
-  GitHub issue 的内容。
-
-- **language** `String` 
-  
-  Default: `navigator.language || navigator.userLanguage`.
-
-  设置语言，支持 [en, zh-CN, zh-TW, es-ES, fr, ru, de, pl, ko, fa, ja]。
-
-- **perPage** `Number` 
-  
-  Default: `10`.
-
-  每次加载的数据大小，最多 100。
-
-- **distractionFreeMode** `Boolean` 
-  
-  Default: false。
-
-  类似Facebook评论框的全屏遮罩效果.
-
-- **pagerDirection** `String`
-
-  Default: 'last'
-
-  评论排序方式， `last`为按评论创建时间倒叙，`first`为按创建时间正序。
-
-- **createIssueManually** `Boolean` 
-  
-  Default: `false`.
-
-  如果当前页面没有相应的 isssue 且登录的用户属于 admin，则会自动创建 issue。如果设置为 `true`，则显示一个初始化页面，创建 issue 需要点击 `init` 按钮。
-
-- **proxy** `String` 
-
-  Default: `https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token`.
-
-   GitHub oauth 请求到反向代理，为了支持 CORS。 [为什么要这样?](https://github.com/isaacs/github/issues/330)
-
-- **flipMoveOptions** `Object` 
-  
-  Default:
-  ```js
-    {
-      staggerDelayBy: 150,
-      appearAnimation: 'accordionVertical',
-      enterAnimation: 'accordionVertical',
-      leaveAnimation: 'accordionVertical',
-    }
-  ```
-
-  评论列表的动画。 [参考](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
-
-- **enableHotKey** `Boolean` 
-  
-  Default: `true`.
-
-  启用快捷键(cmd|ctrl + enter) 提交评论.
-
-
-## 实例方法
-
-- **render(String/HTMLElement)**
-
-  初始化渲染并挂载插件。
-
-## TypeScript
-
-已经包括了配置项和Gitalk类的类型定义，不包括React组件的类型定义。
-
-## 贡献
-
-1. [Fork 代码仓库](https://github.com/gitalk/gitalk/fork) 并从 master 创建你的分支
-2. 如果你添加的代码需要测试，请添加测试！
-3. 如果你修改了 API，请更新文档。
-4. 确保单元测试通过 (npm test).
-5. 确保代码风格一致 (npm run lint).
-6. 提交你的代码 (git commit) [提交信息格式参考](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines)
-
-## 类似项目
-
-- [gitment](https://github.com/imsun/gitment)
-- [vssue](https://vssue.js.org/zh)
 
 ## 许可
 
 MIT
-
-[npm-version-image]: https://img.shields.io/npm/v/gitalk.svg?style=flat-square
-[npm-version-url]: https://www.npmjs.com/package/gitalk
-[cdnjs-version-image]: https://img.shields.io/cdnjs/v/gitalk.svg?style=flat-square
-[cdnjs-version-url]: https://cdnjs.com/libraries/gitalk
-[david-dm-image]: https://david-dm.org/gitalk/gitalk.svg?style=flat-square
-[david-dm-url]: https://david-dm.org/gitalk/gitalk
-[travis-image]: https://img.shields.io/travis/gitalk/gitalk/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/gitalk/gitalk
-[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/master.svg?style=flat-square
-[coveralls-url]: https://coveralls.io/github/gitalk/gitalk
-[gzip-size]: https://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
-[gzip-url]: https://unpkg.com/gitalk/dist/gitalk.min.js

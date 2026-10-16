@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "packages/core": {
+      "release-type": "node",
+      "package-name": "gitalk",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false
+    },
+    "packages/react": {
+      "release-type": "node",
+      "package-name": "@gitalk/react",
+      "include-component-in-tag": false
+    },
+    "packages/vue": {
+      "release-type": "node",
+      "package-name": "@gitalk/vue",
+      "include-component-in-tag": false
+    }
+  },
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "docs", "section": "Documentation" },
+    { "type": "refactor", "section": "Refactors" },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "chore", "section": "Miscellaneous", "hidden": true }
+  ],
+  "commit-search-depth": 200,
+  "release-search-depth": 400,
+  "separate-pull-requests": true,
+  "bump-minor-pre-major": true,
+  "include-v-in-tag": true,
+  "pull-request-title-pattern": "chore(release): ${version} :rocket:",
+  "pull-request-header": ":robot: Release PR — merges on approval."
+}

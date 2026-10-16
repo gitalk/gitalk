@@ -1,251 +1,128 @@
-# Gitalk
+# Gitalk 2.0
 
-[![NPM][npm-version-image]][npm-version-url] 
-[![CDNJS][cdnjs-version-image]][cdnjs-version-url] 
-[![jsdelivr](https://data.jsdelivr.com/v1/package/npm/gitalk/badge)](https://www.jsdelivr.com/package/npm/gitalk)
-[![david-dm][david-dm-image]][david-dm-url] 
-[![travis][travis-image]][travis-url] 
-[![coveralls][coveralls-image]][coveralls-url] 
-[![gzip-size][gzip-size]][gzip-url]
+A comment component backed by **GitHub Discussions** (default) or GitHub Issues.
+No backend, no database, no third-party proxy.
 
-Gitalk is a modern comment component based on GitHub Issue and Preact.
+[中文文档](readme-cn.md) · [Demo](https://gitalk.github.io) · [Discussions](https://github.com/gitalk/gitalk/discussions)
 
-## Features
+## What changed from 1.x
 
-- Authentication with github account
-- Serverless, all comments will be stored as github issues
-- Both personal and organization github projects can be used to store comments
-- Localization, support multiple languages [en, zh-CN, zh-TW, es-ES, fr, ru, de, pl, ko, fa, ja]
-- Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
-- Hotkey submit comment (cmd|ctrl + enter)
+| | 1.x | 2.0 |
+|---|---|---|
+| Storage | GitHub Issues | **GitHub Discussions** (Issues optional) |
+| Toolchain | webpack 3 · Babel 6 · Preact 8 | Vite 8 · TypeScript 7 · Preact 11 |
+| Auth | `clientSecret` in the page + third-party CORS proxy | your own edge function, **no secret in the browser** |
+| Versioning | standard-version | release-please |
+| Builds | UMD only | ESM + IIFE + React + Vue |
 
-[中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
-[Demo](https://gitalk.github.io)
+Full rationale, including every measured API behaviour, is in [docs/tech.md](docs/tech.md).
 
 ## Install
 
-Two ways.
-
-- links
-
-```html
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
-  <script src="https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
-
-  <!-- or -->
-
-  <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
-  <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
-```
-
-- npm install
-
 ```sh
-npm i --save gitalk
-```
-
-```js
-import 'gitalk/dist/gitalk.css'
-import Gitalk from 'gitalk'
+pnpm add @gitalk/core       # framework-free
+pnpm add @gitalk/react      # React
+pnpm add @gitalk/vue        # Vue
 ```
 
 ## Usage
-Firstly, you need choose a public github repository (existed or create a new one) for store comments,
 
-Then create A **GitHub Application** if you don't have one, [Click here to register](https://github.com/settings/applications/new) a new one. 
-**Note:** You must specify the website domain url in the `Authorization callback URL` field.
-
-Lastly, you can choose how to apply to the page as below:
-
-### Method One
-Add a container to your page:
+### No framework
 
 ```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.js"></script>
+
 <div id="gitalk-container"></div>
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'Iv1.xxxxxxxx',
+    owner: 'you',
+    repo: 'comments',
+    admin: ['you'],
+    number: 42,              // discussion number; recommended
+    backend: 'discussions'
+  })
+  gitalk.render('gitalk-container')
+</script>
 ```
 
-Then use the Javascript code below to generate the gitalk plugin:
+### React
 
-```js
-const gitalk = new Gitalk({
-  clientID: 'GitHub Application Client ID',
-  clientSecret: 'GitHub Application Client Secret',
-  repo: 'GitHub repo',      // The repository of store comments,
-  owner: 'GitHub repo owner',
-  admin: ['GitHub repo owner and collaborators, only these guys can initialize github issues'],
-  id: location.pathname,      // Ensure uniqueness and length less than 50
-  distractionFreeMode: false  // Facebook-like distraction free mode
-})
+```tsx
+import { Gitalk } from '@gitalk/react'
+import '@gitalk/core/style.css'
 
-gitalk.render('gitalk-container')
+<Gitalk options={{ clientID: 'Iv1.xxxxxxxx', owner: 'you', repo: 'comments', admin: ['you'], number: 42 }} />
 ```
 
-### Method Two: Use in React
+### Vue
 
-Import the Gitalk with
+```vue
+<script setup lang="ts">
+import { Gitalk } from '@gitalk/vue'
+import '@gitalk/core/style.css'
 
-```jsx
-import GitalkComponent from "gitalk/dist/gitalk-component";
-```
+const options = { clientID: 'Iv1.xxxxxxxx', owner: 'you', repo: 'comments', admin: ['you'], number: 42 }
+</script>
 
-And use the component like
-
-```jsx
-<GitalkComponent options={{
-  clientID: "...",
-  // ...
-  // options below
-}} />
+<template>
+  <Gitalk :options="options" />
+</template>
 ```
 
 ## Options
 
-- **clientID** `String`
+| Option | Default | Notes |
+|---|---|---|
+| `clientID` | — | OAuth Application client id |
+| `owner`, `repo` | — | Repository hosting the discussions |
+| `admin` | `[]` | Users who may create the thread |
+| `backend` | `'discussions'` | or `'issues'` for existing 1.x installs |
+| `number` | — | Discussion number. **Recommended**: avoids a title scan |
+| `id` | `location.pathname` | Page identifier used when no `number` is given |
+| `category` | — | Discussions category slug/name used when creating |
+| `perPage` | `10` | Page size |
+| `proxy` | — | Your deployed token-exchange endpoint |
+| `language` | `navigator.language` | 11 locales carried over from 1.x |
 
-  **Required**. GitHub Application Client ID.
+## Setup
 
-- **clientSecret** `String`
+1. **Enable Discussions** on the repository, then create a category (default: `General`).
+2. **Register an OAuth Application** and note the client id. Do not put the
+   client secret in your page.
+3. **Deploy the token proxy** from [`packages/proxy-worker`](packages/proxy-worker)
+   to Cloudflare Workers, Vercel or Netlify, and set
+   `GITALK_CLIENT_ID` / `GITALK_CLIENT_SECRET` / `GITALK_ALLOWED_ORIGINS`.
+4. Pass its URL as `proxy`.
 
-  **Required**. GitHub Application Client Secret.
+### Why a proxy?
 
-- **repo** `String`
+`github.com/login/oauth/access_token` returns no `Access-Control-Allow-Origin`
+header, so a browser cannot complete the OAuth exchange itself. We measured
+this for the device flow as well — it needs no `client_secret`, but it is
+CORS-blocked too. There is therefore no way for a purely static page to obtain
+a token; see [docs/tech.md §3.2](docs/tech.md).
 
-  **Required**. GitHub repository.
+The proxy keeps the secret out of your bundle and off any third-party server.
 
-- **owner** `String`
+## Anonymous reading
 
-  **Required**. GitHub repository owner. Can be personal user or organization.
+Anonymous visitors read comments over the REST API (60 requests/hour per IP).
+With `ETag`/`If-None-Match`, unchanged responses are not counted. Logged-in
+users go through GraphQL (5000 points/hour), which is required for writing —
+GitHub exposes no REST write API for discussions.
 
-- **admin** `Array`
+## Development
 
-  **Required**. GitHub repository owner and collaborators. (Users who having write access to this repository)
+```sh
+pnpm install
+pnpm dev            # landing page with live widget
+pnpm test           # 28 tests
+pnpm build          # all packages
+pnpm typecheck
+```
 
-- **id** `String`
-
-  Default: `location.href`.
-
-  The unique id of the page. Length must less than 50.
-
-- **number** `Number`
-
-  Default: `-1`.
-
-  The issue ID of the page, if the `number` attribute is not defined, issue will be located using `id`.
-
-- **labels** `Array`
-
-  Default: `['Gitalk']`.
-
-  GitHub issue labels.
-
-- **title** `String`
-
-  Default: `document.title`.
-
-  GitHub issue title.
-
-- **body** `String`
-
-  Default: `location.href + header.meta[description]`.
-
-  GitHub issue body.
-
-- **language** `String`
-
-  Default: `navigator.language || navigator.userLanguage`.
-
-  Localization language key, support [`en`, `zh-CN`, `zh-TW`, `es-ES`, `fr`, `ru`, `de`, `pl`, `ko`, `fa`, `ja`].
-
-- **perPage** `Number`
-
-  Default: `10`.
-
-  Pagination size, with maximum 100.
-
-- **distractionFreeMode** `Boolean`
-
-  Default: false.
-
-  Facebook-like distraction free mode.
-
-- **pagerDirection** `String`
-
-  Default: 'last'
-
-  Comment sorting direction, available values are `last` and `first`.
-
-- **createIssueManually** `Boolean`
-
-  Default: `false`.
-
-  By default, Gitalk will create a corresponding github issue for your every single page automatically when the logined user is belong to the `admin` users. You can create it manually by setting this option to `true`.
-
-- **proxy** `String`
-
-  Default: `https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token`.
-
-  GitHub oauth request reverse proxy for CORS. [Why need this?](https://github.com/isaacs/github/issues/330)
-
-- **flipMoveOptions** `Object`
-
-  Default:
-  ```js
-    {
-      staggerDelayBy: 150,
-      appearAnimation: 'accordionVertical',
-      enterAnimation: 'accordionVertical',
-      leaveAnimation: 'accordionVertical',
-    }
-  ```
-
-  Comment list animation. [Reference](https://github.com/joshwcomeau/react-flip-move/blob/master/documentation/enter_leave_animations.md)
-
-- **enableHotKey** `Boolean`
-
-  Default: `true`.
-
-  Enable hot key (cmd|ctrl + enter) submit comment.
-
-
-## Instance Methods
-
-- **render(String/HTMLElement)**
-
-  Init render and mount plugin.
-
-## TypeScript
-
-TypeScript definitions for options and Gitalk class come with the package and should be automatically detected.
-
-Definitions for React component usage are not included.
-
-## Contributing
-
-1. [Fork the repository](https://github.com/gitalk/gitalk/fork) and create your branch from master
-2. If you've added code that should be tested, add tests!
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes (npm test).
-5. Make sure your code lints (npm run lint).
-6. Commit your changes (git commit) [Commit Message Format Reference](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md#-git-commit-guidelines)
-
-## Similar Projects
-
-- [gitment](https://github.com/imsun/gitment)
-- [vssue](https://vssue.js.org)
-
-## LICENSE
+## License
 
 MIT
-
-[npm-version-image]: https://img.shields.io/npm/v/gitalk.svg?style=flat-square
-[npm-version-url]: https://www.npmjs.com/package/gitalk
-[cdnjs-version-image]: https://img.shields.io/cdnjs/v/gitalk.svg?style=flat-square
-[cdnjs-version-url]: https://cdnjs.com/libraries/gitalk
-[david-dm-image]: https://david-dm.org/gitalk/gitalk.svg?style=flat-square
-[david-dm-url]: https://david-dm.org/gitalk/gitalk
-[travis-image]: https://img.shields.io/travis/gitalk/gitalk/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/gitalk/gitalk
-[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/master.svg?style=flat-square
-[coveralls-url]: https://coveralls.io/github/gitalk/gitalk
-[gzip-size]: https://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
-[gzip-url]: https://unpkg.com/gitalk/dist/gitalk.min.js

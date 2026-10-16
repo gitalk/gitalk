@@ -3,15 +3,20 @@ import preact from '@preact/preset-vite'
 import { resolve } from 'node:path'
 
 /**
- * Standalone IIFE bundle for `<script>` users, separate from the ESM library
- * entry so consumers get one global (`window.Gitalk`) rather than a namespace
- * object of named exports.
+ * Standalone IIFE bundle for `<script src="gitalk.js">` users, kept separate
+ * from the ESM entry so that:
+ *  - consumers get one global (`window.Gitalk`) instead of a namespace object
+ *  - importing `@gitalk/core` as ESM never has the side effect of clobbering
+ *    a page global (see src/global-entry.ts)
  */
 export default defineConfig({
-  plugins: [preact()],
-  define: {
-    __GITALK_VERSION__: JSON.stringify(process.env.npm_package_version ?? '2.0.0')
-  },
+  plugins: [
+    preact(),
+    {
+      name: 'gitalk-version',
+      config: () => ({ define: { __GITALK_VERSION__: JSON.stringify('2.0.0') } })
+    }
+  ],
   build: {
     outDir: 'dist',
     emptyOutDir: false,

@@ -1,0 +1,74 @@
+name: Deploy landing page
+
+# Publishes apps/landing to the `gh-pages` branch of gitalk/gitalk.github.io,
+# which is what https://gitalk.github.io serves.
+#
+# NOTE (S2): the user-page repo gitalk/gitalk.github.io takes precedence over a
+# project repo's Pages branch, so building into *this* repo's gh-pages branch
+# would never be reachable at https://gitalk.github.io. See docs/tech.md §8.
+#
+# Required repository secret:
+#   GH_PAGES_TOKEN — a PAT with `public_repo` (or `repo`) scope on
+#                   gitalk/gitalk.github.io.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build landing page
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      # Core must be built first: the landing page imports @gitalk/core.
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+      - name: Build core
+        run: pnpm --filter @gitalk/core run build
+      - name: Build landing
+        run: pnpm build:landing
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: landing-dist
+          path: apps/landing/dist
+          retention-days: 1
+
+  deploy:
+    name: Push to gh-pages branch
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: landing-dist
+          path: dist
+
+      - name: Publish to gitalk/gitalk.github.io (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.GH_PAGES_TOKEN }}
+          external_repository: gitalk/gitalk.github.io
+          publish_branch: gh-pages
+          publish_dir: ./dist
+          force_orphan: true
+          user_name: gitalk-bot
+          user_email: bot@gitalk.github.io
+          commit_message: "deploy: ${{ github.sha }}"
