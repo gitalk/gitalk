@@ -175,7 +175,7 @@ export function useGitalk(options: GitalkOptions) {
   const t = useMemo(() => createTranslator(options.language ?? navigator.language), [options.language])
 
   const load = useCallback(
-    async (append = false) => {
+    async (append = false, fresh = false) => {
       // Read the page counter from a ref rather than `state`: the closure
       // would otherwise capture the snapshot from when this callback was
       // created and overwrite updates applied while a request was in flight.
@@ -184,7 +184,8 @@ export function useGitalk(options: GitalkOptions) {
       const result = await backend.getComments({
         first: opts.perPage,
         direction: 'last',
-        page: nextPage
+        page: nextPage,
+        fresh
       })
 
       // A page that comes back empty means we have drained the thread; stop
@@ -360,7 +361,9 @@ export function useGitalk(options: GitalkOptions) {
     try {
       await backend.addComment(state.draft)
       patch({ draft: '', submitting: false, previewing: false, previewHtml: '' })
-      await load()
+      // A plain reload can be answered from the browser's copy of the
+      // comments response, which still predates this comment.
+      await load(false, true)
     } catch (err) {
       reportFailure(patch, err, { submitting: false })
     }

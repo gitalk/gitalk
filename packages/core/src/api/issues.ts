@@ -108,7 +108,7 @@ export class IssuesBackend extends BaseBackend {
     return this.toThreadInfo(issue)
   }
 
-  async getComments({ first, direction, page }: PageOptions): Promise<ThreadPage> {
+  async getComments({ first, direction, page, fresh }: PageOptions): Promise<ThreadPage> {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
@@ -117,7 +117,8 @@ export class IssuesBackend extends BaseBackend {
     const currentPage = Math.max(page ?? 1, 1)
     const raw = await this.ctx.http.get<RawComment[]>(
       `/repos/${this.ctx.owner}/${this.ctx.repo}/issues/${thread.number}` +
-        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`
+        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`,
+      { cache: fresh ? 'reload' : undefined }
     )
 
     const comments: GitalkComment[] = raw.map((item) => ({

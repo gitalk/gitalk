@@ -30,6 +30,13 @@ export interface ResolveOptions {
 export interface PageOptions {
   /** Page size. REST caps this at 100. */
   first: number
+  /**
+   * Bypass the HTTP cache for this read. Set after a write: GitHub serves the
+   * comments endpoint with `cache-control: public, max-age=60`, so an
+   * immediate reload can be answered from the browser's copy and show the
+   * list as it was before the comment was posted.
+   */
+  fresh?: boolean
   /** Offset page for REST transports. 1-based; ignored by cursor-based ones. */
   page?: number
   after?: string | null

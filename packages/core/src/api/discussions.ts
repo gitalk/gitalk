@@ -424,7 +424,7 @@ export class DiscussionsBackend extends BaseBackend {
    * REST does expose `node_id`, and it equals the GraphQL node id, so the ids
    * needed for later mutations are available even anonymously.
    */
-  async getComments({ first, direction, page }: PageOptions): Promise<ThreadPage> {
+  async getComments({ first, direction, page, fresh }: PageOptions): Promise<ThreadPage> {
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
@@ -434,7 +434,8 @@ export class DiscussionsBackend extends BaseBackend {
 
     const raw = await this.ctx.http.get<RawComment[]>(
       `/repos/${this.ctx.owner}/${this.ctx.repo}/discussions/${thread.number}` +
-        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`
+        `/comments?per_page=${perPage}&page=${currentPage}&direction=${order}`,
+      { cache: fresh ? 'reload' : undefined }
     )
 
     // Grouping is by parent_id because REST interleaves replies with roots.
