@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+*.log
+.DS_Store
+
+.vscode
+
+dev/config.js
+yarn.lock
+package-lock.json
+coverage
+*.tgz

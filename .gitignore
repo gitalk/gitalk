@@ -11,3 +11,6 @@ dev/config.js
 yarn.lock
 
 coverage
+
+# build output: `npm run build` regenerates it, npm packs it via .npmignore
+dist
