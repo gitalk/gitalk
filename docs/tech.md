@@ -287,8 +287,13 @@ Cloudflare 账户注册的 workers.dev 子域
 ```
 
 **`*.workers.dev` 子域是全局唯一的**（跨所有 Cloudflare 账号），因此「能否拿到
-`gitalk` 这个子域」不由我们决定。实测 `gitalk-proxy.gitalk.workers.dev` 当前返回
-`error code: 1042`，即子域尚未注册。
+`gitalk` 这个子域」不由我们决定。子域是**账号级**资源，可能在注册 Worker 之前就已存在。
+
+> **勘误**：本节早先据 `error code: 1042` 推断「子域尚未注册」，该推断**不成立**。
+> 在一个已注册的子域上访问不存在的 Worker 同样返回 1042——它只说明该主机名没有
+> Worker 在服务。查实际子域请用
+> `GET /accounts/{id}/workers/subdomain`；`PUT` 同一端点会返回
+> `409 / 10036`，即**子域无法通过 API 改名**。
 
 若 `gitalk` 已被占用，① 和 ② 必须同步改——**只改一处会导致登录在 OAuth 回调处断掉**，
 而且症状是停在 GitHub 的错误页，不容易联想到是地址不匹配。

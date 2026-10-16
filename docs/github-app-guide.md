@@ -241,8 +241,27 @@ App 必须先被安装，Worker 才拿得到 installation token（匿名读依�
 由 `wrangler.toml` 的 `name = "gitalk-proxy"` 加上**你在 Cloudflare 注册的
 workers.dev 子域**拼成。
 
-⚠️ **`*.workers.dev` 的子域是全局唯一的**，跨所有 Cloudflare 账号。实测该地址当前返回
-`error code: 1042`，即**子域尚未注册**（[Cloudflare 社区说明](https://community.cloudflare.com/t/workers-dev-returns-http-404-error-1042-before-worker-invocation/943965)）。
+⚠️ **`*.workers.dev` 的子域是全局唯一的**，跨所有 Cloudflare 账号，因此「能否拿到
+`gitalk` 这个子域」不由我们决定。
+
+> **勘误**：本文早先写过「访问该地址返回 `error code: 1042`，即子域尚未注册」。
+> 这是**错的**。实测在一个**已注册**的子域上访问不存在的 worker，同样返回 1042。
+> 1042 只表示「该主机名没有 Worker 在服务」，**无法用来判断子域是否已被注册**。
+
+##### 怎么查当前账号的子域
+
+子域是**账号级**的，可能在你注册前就已存在（那正是「找不到注册入口」的常见原因）。
+用 API 直接查：
+
+```bash
+curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+  "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['subdomain'])"
+```
+
+已存在时，`PUT` 同一个端点会返回 `409 / code 10036`
+（`Account already has an associated subdomain`）——**子域不能通过 API 改名**，
+只能到控制台点 **Change**（账号级操作，会影响该账号下所有 Worker）。
 
 ##### 怎么注册这个子域
 
