@@ -5,16 +5,19 @@
       "release-type": "node",
       "package-name": "gitalk",
       "changelog-path": "CHANGELOG.md",
+      "component": "gitalk",
       "include-component-in-tag": false
     },
     "packages/react": {
       "release-type": "node",
       "package-name": "@gitalk/react",
+      "component": "gitalk",
       "include-component-in-tag": false
     },
     "packages/vue": {
       "release-type": "node",
       "package-name": "@gitalk/vue",
+      "component": "gitalk",
       "include-component-in-tag": false
     }
   },
