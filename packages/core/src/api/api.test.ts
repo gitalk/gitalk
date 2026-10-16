@@ -163,6 +163,259 @@ describe('DiscussionsBackend.resolveThread', () => {
   })
 })
 
+describe('DiscussionsBackend.createThread', () => {
+  /**
+   * Shaped exactly like the live `RESOLVE_CREATION_TARGET` response: the
+   * repository node id plus the category list (`slug` and `name` both present,
+   * because the `category` option matches either).
+   */
+  const TARGET = {
+    repository: {
+      id: 'R_kgDO',
+      hasDiscussionsEnabled: true,
+      discussionCategories: {
+        nodes: [
+          { id: 'DIC_ann', name: 'Announcements', slug: 'announcements' },
+          { id: 'DIC_gen', name: 'General', slug: 'general' }
+        ]
+      }
+    }
+  }
+
+  const CREATED = {
+    createDiscussion: {
+      discussion: {
+        id: 'D_kwDO7',
+        number: 7,
+        title: 'Page title',
+        url: 'https://github.com/gitalk/gitalk/discussions/7',
+        locked: false
+      }
+    }
+  }
+
+  /** A `ctx.graphql` stub that records every document and its variables. */
+  function graphqlMock(...responses: unknown[]) {
+    const calls: Array<{ query: string; variables: Record<string, unknown> }> = []
+    let index = 0
+    const fn = (<T,>(body: { query: string; variables: Record<string, unknown> }) => {
+      calls.push({ query: body.query, variables: body.variables })
+      return Promise.resolve(responses[Math.min(index++, responses.length - 1)] as T)
+    }) as BackendContext['graphql']
+    return { fn, calls }
+  }
+
+  it('sends the documented createDiscussion mutation and returns a usable thread', async () => {
+    const { fn, calls } = graphqlMock({ data: TARGET }, { data: CREATED })
+    const ctx = makeCtx({ getToken: () => 'tok', graphql: fn })
+    const backend = new DiscussionsBackend(ctx, { category: 'General', title: 'Page title', body: 'body' })
+
+    const thread = await backend.createThread()
+
+    // ThreadInfo must carry both ids or the widget cannot read or write next:
+    // `number` for the REST comment list, `nodeId` for comment mutations.
+    expect(thread).toEqual({
+      kind: 'discussions',
+      number: 7,
+      title: 'Page title',
+      url: 'https://github.com/gitalk/gitalk/discussions/7',
+      nodeId: 'D_kwDO7',
+      locked: false
+    })
+
+    // 1) the repository/category lookup
+    expect(calls).toHaveLength(2)
+    expect(calls[0]!.query).toContain('discussionCategories(first: 100)')
+    expect(calls[0]!.query).toContain('hasDiscussionsEnabled')
+    expect(calls[0]!.variables).toEqual({ owner: 'gitalk', name: 'gitalk' })
+
+    // 2) the mutation itself, with exactly the input fields GitHub declares
+    const mutation = calls[1]!
+    expect(mutation.query).toMatch(/mutation/)
+    expect(mutation.query).toContain(
+      'createDiscussion(input: { repositoryId: $repositoryId, categoryId: $categoryId, title: $title, body: $body })'
+    )
+    expect(mutation.query).toContain('discussion {\n      id\n      number\n      title\n      url\n      locked')
+    expect(mutation.variables).toEqual({
+      repositoryId: 'R_kgDO',
+      categoryId: 'DIC_gen',
+      title: 'Page title',
+      body: 'body'
+    })
+  })
+
+  it('matches the configured category case-insensitively by slug as well as by name', async () => {
+    const bySlug = graphqlMock({ data: TARGET }, { data: CREATED })
+    await new DiscussionsBackend(
+      makeCtx({ getToken: () => 'tok', graphql: bySlug.fn }),
+      { category: 'GENERAL', title: 't', body: 'b' }
+    ).createThread()
+    expect(bySlug.calls[1]!.variables.categoryId).toBe('DIC_gen')
+
+    const byName = graphqlMock({ data: TARGET }, { data: CREATED })
+    await new DiscussionsBackend(
+      makeCtx({ getToken: () => 'tok', graphql: byName.fn }),
+      { category: 'general', title: 't', body: 'b' }
+    ).createThread()
+    expect(byName.calls[1]!.variables.categoryId).toBe('DIC_gen')
+  })
+
+  it('falls back to the first category the API lists when none is configured', async () => {
+    // `CreateDiscussionInput.categoryId` is `ID!`, so a category cannot be
+    // omitted; without configuration the first listed one is used.
+    const { fn, calls } = graphqlMock({ data: TARGET }, { data: CREATED })
+    await new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    }).createThread()
+
+    expect(calls[1]!.variables.categoryId).toBe('DIC_ann')
+  })
+
+  it('refuses to create anything, and never touches the network, without a token', async () => {
+    const { fn, calls } = graphqlMock({ data: TARGET })
+    const backend = new DiscussionsBackend(makeCtx({ graphql: fn }), { title: 't', body: 'b' })
+
+    await expect(backend.createThread()).rejects.toThrow(/Log in with GitHub/)
+    // GraphQL's anonymous quota is zero, so the request would be a guaranteed
+    // failure dressed up as a 403.
+    expect(calls).toHaveLength(0)
+  })
+
+  it('explains that Discussions are disabled instead of reporting a generic failure', async () => {
+    const { fn, calls } = graphqlMock({
+      data: { repository: { ...TARGET.repository, hasDiscussionsEnabled: false } }
+    })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    await expect(backend.createThread()).rejects.toThrow(/Discussions are disabled for gitalk\/gitalk/)
+    expect(calls).toHaveLength(1)
+  })
+
+  it('names the missing category problem when the repository has none', async () => {
+    const { fn } = graphqlMock({
+      data: {
+        repository: {
+          ...TARGET.repository,
+          discussionCategories: { nodes: [] }
+        }
+      }
+    })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    await expect(backend.createThread()).rejects.toThrow(/no categories to post into/)
+  })
+
+  it('lists the available categories when the configured one does not exist', async () => {
+    const { fn, calls } = graphqlMock({ data: TARGET })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      category: 'Q&A',
+      title: 't',
+      body: 'b'
+    })
+
+    await expect(backend.createThread()).rejects.toThrow(
+      /No discussion category matching `Q&A`.*General \(`general`\)/
+    )
+    // The mutation is not attempted with an id that cannot work.
+    expect(calls).toHaveLength(1)
+  })
+
+  it('distinguishes an unresolvable repository from a permission problem', async () => {
+    const { fn } = graphqlMock({ data: { repository: null } })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    await expect(backend.createThread()).rejects.toThrow(/could not resolve gitalk\/gitalk/i)
+  })
+
+  it('classifies a permission failure on the repository lookup, not at the mutation', async () => {
+    const { fn, calls } = graphqlMock({
+      errors: [{ type: 'FORBIDDEN', message: 'Resource not accessible by integration' }]
+    })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    // Without this, a token that cannot even read discussions would surface
+    // GitHub's opaque wording instead of the fix.
+    await expect(backend.createThread()).rejects.toThrow(/discussions: write/)
+    expect(calls).toHaveLength(1)
+  })
+
+  it('turns a FORBIDDEN mutation error into the permission fix', async () => {
+    const { fn } = graphqlMock(
+      { data: TARGET },
+      {
+        errors: [{ type: 'FORBIDDEN', message: 'Resource not accessible by integration' }]
+      }
+    )
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    const failure = await backend
+      .createThread()
+      .then(() => null)
+      .catch((err: unknown) => err)
+
+    expect(failure).toBeInstanceOf(GitalkError)
+    const error = failure as GitalkError
+    expect(error.message).toMatch(/discussions: write/)
+    expect(error.status).toBe(403)
+  })
+
+  it('points at the `category` option when GitHub rejects the category', async () => {
+    const { fn } = graphqlMock(
+      { data: TARGET },
+      { errors: [{ type: 'UNPROCESSABLE', message: 'Category is not valid' }] }
+    )
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    await expect(backend.createThread()).rejects.toThrow(/`category` option/)
+  })
+
+  it('falls back to GitHub\u2019s own wording for anything it cannot classify', async () => {
+    const { fn } = graphqlMock({ data: TARGET }, { errors: [{ message: 'Something exploded' }] })
+    const backend = new DiscussionsBackend(makeCtx({ getToken: () => 'tok', graphql: fn }), {
+      title: 't',
+      body: 'b'
+    })
+
+    await expect(backend.createThread()).rejects.toThrow(/Something exploded/)
+  })
+
+  it('finds a discussion it created by its configured title on the next page load', async () => {
+    // `opts.title` is what createThread posts, while `term` is the page id.
+    // Matching only the term would hide the new discussion and auto-create a
+    // duplicate on every subsequent view.
+    const ctx = makeCtx({
+      getThread: () => null,
+      graphql: graphqlMock().fn
+    })
+    vi.mocked(ctx.http.get).mockResolvedValue([
+      { number: 7, node_id: 'D_kwDO7', title: 'Page title', html_url: 'u', locked: false }
+    ])
+
+    const backend = new DiscussionsBackend(ctx, { title: 'Page title', body: 'b' })
+    const thread = await backend.resolveThread({ term: '/posts/hello' })
+    expect(thread?.number).toBe(7)
+  })
+})
+
 describe('IssuesBackend', () => {
   const ISSUE_THREAD: ThreadInfo = { ...THREAD, kind: 'issues' }
 

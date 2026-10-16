@@ -150,6 +150,62 @@ describe('GitalkWidget', () => {
     expect(counts?.textContent).not.toContain('||||')
   })
 
+  it('reports the rendered count to updateCountCallback, replies included', async () => {
+    stubFetch((url) => {
+      if (url.includes('/comments')) return REST_COMMENTS
+      if (url.includes('/discussions/442')) {
+        return { number: 442, node_id: 'D_442', title: 'demo', html_url: 'https://github.com/x', locked: false }
+      }
+      return {}
+    })
+
+    const reported: number[] = []
+    mount(host, { ...OPTIONS, updateCountCallback: (n) => reported.push(n) })
+    await waitForComment(host)
+
+    // One top-level comment plus one reply: the UI says 2, so the callback has
+    // to say 2 too. It used to receive the top-level array length (1), which
+    // meant any thread with replies reported a smaller number than the page.
+    expect(host.querySelector('.gt-counts')?.textContent).toContain('2')
+    expect(reported.at(-1)).toBe(2)
+  })
+
+  it('accumulates the count across loaded pages, replies included', async () => {
+    stubFetch((url) => {
+      if (url.includes('/comments')) {
+        const page = Number(new URL(url, 'http://x').searchParams.get('page') ?? '1')
+        // Page 1 (REST_COMMENTS) is one comment + one reply and fills the page
+        // size, so "load more" appears; page 2 adds one comment and two replies.
+        return page === 1
+          ? REST_COMMENTS
+          : [
+              { ...REST_COMMENTS[0]!, id: 1000, parent_id: null, body_html: '<p>page two</p>' },
+              { ...REST_COMMENTS[1]!, id: 1001, parent_id: 1000, body_html: '<p>reply a</p>' },
+              { ...REST_COMMENTS[1]!, id: 1002, parent_id: 1000, body_html: '<p>reply b</p>' }
+            ]
+      }
+      if (url.includes('/discussions/442')) {
+        return { number: 442, node_id: 'D_442', title: 'demo', html_url: 'https://github.com/x', locked: false }
+      }
+      return {}
+    })
+
+    const reported: number[] = []
+    mount(host, { ...OPTIONS, perPage: 2, updateCountCallback: (n) => reported.push(n) })
+    await waitForComment(host)
+    expect(reported.at(-1)).toBe(2)
+
+    const button = host.querySelector('.gt-btn-loadmore') as HTMLButtonElement | null
+    expect(button).toBeTruthy()
+    button!.click()
+    await tick()
+    await tick()
+
+    // 2 from page 1 + 3 from page 2 — the widget's own `.gt-counts` value.
+    expect(host.querySelector('.gt-counts')?.textContent).toContain('5')
+    expect(reported.at(-1)).toBe(5)
+  })
+
 })
 
 describe('formatRelativeTime', () => {

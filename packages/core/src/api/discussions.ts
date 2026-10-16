@@ -18,6 +18,55 @@ mutation addDiscussionComment($body: String!, $discussionId: ID!, $replyToId: ID
   }
 }`
 
+/**
+ * Resolve the two ids `createDiscussion` needs, plus the information required
+ * to explain a failure.
+ *
+ * `CreateDiscussionInput.repositoryId` and `.categoryId` are both `ID!`, so
+ * neither can be omitted and neither is derivable from the REST endpoint
+ * (REST exposes the repository's `node_id`, but no category ids at all).
+ * `hasDiscussionsEnabled` is the difference between "repo never turned
+ * Discussions on" and "wrong category", which are two different fixes for the
+ * operator, so it is worth one extra field.
+ *
+ * Verified against the published schema:
+ *   https://docs.github.com/en/graphql/reference/repos#discussioncategories
+ *   https://docs.github.com/en/graphql/reference/discussions
+ */
+const RESOLVE_CREATION_TARGET = `
+query gitalkDiscussionTarget($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    id
+    hasDiscussionsEnabled
+    discussionCategories(first: 100) { nodes { id name slug } }
+  }
+}`
+
+/**
+ * The only way to create a discussion: GraphQL `createDiscussion`.
+ *
+ * There is no REST equivalent (POST /repos/{owner}/{repo}/discussions does not
+ * exist), which is why the Discussions backend cannot reuse the Issues
+ * backend's `POST /issues`. Input fields and payload per the official
+ * reference:
+ *   https://docs.github.com/en/graphql/reference/mutations#creatediscussion
+ *
+ * The `discussion` payload carries `number`, which is what the REST comment
+ * reads below need, and `id`, which later comment mutations need.
+ */
+const CREATE_DISCUSSION = `
+mutation gitalkCreateDiscussion($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
+  createDiscussion(input: { repositoryId: $repositoryId, categoryId: $categoryId, title: $title, body: $body }) {
+    discussion {
+      id
+      number
+      title
+      url
+      locked
+    }
+  }
+}`
+
 const ADD_REACTION = `
 mutation ($subjectId: ID!, $content: ReactionContent!) {
   addReaction(input: { subjectId: $subjectId, content: $content }) { clientMutationId }
@@ -52,6 +101,44 @@ interface GraphQLComment {
   url: string
   bodyHTML: string
   reactions?: ReactionSummary
+}
+
+/** A row of `Repository.discussionCategories`. */
+interface DiscussionCategoryNode {
+  id: string
+  name: string
+  slug: string
+}
+
+interface CreationTargetData {
+  repository: {
+    id: string
+    hasDiscussionsEnabled: boolean
+    discussionCategories?: { nodes?: DiscussionCategoryNode[] } | null
+  } | null
+}
+
+/** The slice of the `Discussion` type the widget needs to start working. */
+interface GraphQLDiscussion {
+  id: string
+  number: number
+  title: string
+  url: string
+  locked: boolean
+}
+
+interface CreateDiscussionData {
+  createDiscussion: { discussion: GraphQLDiscussion | null } | null
+}
+
+/**
+ * One entry of a GraphQL `errors` array. `type` is GitHub's coarse error code
+ * (`FORBIDDEN`, `NOT_FOUND`, `UNPROCESSABLE`, ...) and is what makes it
+ * possible to tell a permission problem from a bad category.
+ */
+interface GraphQLError {
+  message: string
+  type?: string
 }
 
 /** GitHub caps REST per_page at 100. */
@@ -114,6 +201,14 @@ export class DiscussionsBackend extends BaseBackend {
    * See docs/tech.md §2.7.
    */
   private async findByTitle(term: string): Promise<ThreadInfo | null> {
+    // Two titles can legitimately address this page, because the creation
+    // path below titles the discussion with `opts.title` (the human-readable
+    // one) while `term` is the page id. Matching only `term` would mean a
+    // discussion Gitalk just created is invisible on the next page load — and
+    // with `createIssueManually: false` every visitor would then auto-create
+    // yet another duplicate. Matching either keeps create -> revisit working.
+    const titles = new Set([term, this.opts.title].filter((t): t is string => Boolean(t)))
+
     const MAX_PAGES = 5
     for (let page = 1; page <= MAX_PAGES; page++) {
       const list = await this.ctx.http.get<
@@ -122,7 +217,7 @@ export class DiscussionsBackend extends BaseBackend {
 
       if (!list.length) return null
 
-      const hit = list.find((d) => d.title === term)
+      const hit = list.find((d) => titles.has(d.title))
       if (hit) {
         return {
           kind: 'discussions',
@@ -138,12 +233,176 @@ export class DiscussionsBackend extends BaseBackend {
     return null
   }
 
+  /**
+   * Create this page's discussion with the GraphQL `createDiscussion`
+   * mutation.
+   *
+   * Verification status: the query, the input fields and the payload fields
+   * all come from GitHub's published schema and reference pages (links on
+   * `RESOLVE_CREATION_TARGET` / `CREATE_DISCUSSION` above); the behaviour of
+   * every failure branch is pinned by unit tests with a stubbed transport.
+   * What has NOT been exercised here is a real round trip to api.github.com,
+   * because that needs a token with write access to a repository that has
+   * Discussions enabled.
+   *
+   * The returned `ThreadInfo` carries both ids the widget needs next: `number`
+   * for the anonymous REST comment reads and `nodeId` for comment mutations,
+   * so the component can go straight from creation to posting a comment.
+   */
   async createThread(): Promise<ThreadInfo | null> {
-    throw new GitalkError(
-      'Discussions have no REST write API -- creating one requires GraphQL. ' +
-        'Create the discussion on GitHub once and pass its `number`, or ' +
-        'configure a `proxy` that can issue GraphQL mutations.'
+    // GraphQL has a literally-zero anonymous quota, so an unauthenticated
+    // attempt could only ever produce a confusing 401 upstream. Fail with the
+    // actionable version first (the generic `graphql()` guard would say
+    // "comment or react", which is not what the admin just tried to do).
+    if (!this.ctx.getToken()) {
+      throw new GitalkError('Log in with GitHub to initialize this page', 401)
+    }
+
+    const target = await this.resolveCreationTarget()
+
+    // `title` is `String!` and an empty one is useless for the title-based
+    // lookup, so an unset/blank title falls back to the page id. `body` may be
+    // empty; GitHub accepts "".
+    const title = this.opts.title?.trim() || this.ctx.term()
+
+    const response = await this.graphqlRequest<CreateDiscussionData>(CREATE_DISCUSSION, {
+      repositoryId: target.repositoryId,
+      categoryId: target.category.id,
+      title,
+      body: this.opts.body ?? ''
+    })
+
+    if (response.errors?.length) throw this.creationError(response.errors)
+
+    const discussion = response.data?.createDiscussion?.discussion
+    if (!discussion) {
+      throw new GitalkError(
+        `${this.ctx.owner}/${this.ctx.repo}: GitHub reported no error but returned no discussion`
+      )
+    }
+
+    return {
+      kind: 'discussions',
+      number: discussion.number,
+      title: discussion.title,
+      url: discussion.url,
+      nodeId: discussion.id,
+      locked: discussion.locked ?? false
+    }
+  }
+
+  /**
+   * Resolve the repository id and the category to post into, or throw an error
+   * that says which of the three operator-fixable situations this is.
+   *
+   * Category selection: `CreateDiscussionInput.categoryId` is non-nullable, so
+   * omitting it is not an option — GitHub offers no "default category" input.
+   * When the caller configured no `category`, the first category the API lists
+   * is used (GitHub lists a repository's categories in a stable order); when
+   * one is configured it is matched case-insensitively against both `slug` and
+   * `name`, matching the documented "slug or name" contract of the option.
+   */
+  private async resolveCreationTarget(): Promise<{
+    repositoryId: string
+    category: DiscussionCategoryNode
+  }> {
+    const response = await this.graphqlRequest<CreationTargetData>(RESOLVE_CREATION_TARGET, {
+      owner: this.ctx.owner,
+      name: this.ctx.repo
+    })
+
+    // A token without read access to the repository fails here, not at the
+    // mutation, so it has to go through the same classifier or the operator
+    // would only see GitHub's `Resource not accessible by integration`.
+    if (response.errors?.length) throw this.creationError(response.errors)
+
+    const where = `${this.ctx.owner}/${this.ctx.repo}`
+    const repository = response.data?.repository
+    if (!repository) {
+      throw new GitalkError(
+        `GitHub could not resolve ${where}: check the \`owner\`/\`repo\` options, and that the ` +
+          'signed-in account can see the repository (a private repository the account cannot ' +
+          'read looks exactly like a missing one).'
+      )
+    }
+
+    if (!repository.hasDiscussionsEnabled) {
+      throw new GitalkError(
+        `Discussions are disabled for ${where}. Turn them on under Settings -> General -> ` +
+          'Features -> Discussions, then create a category and retry.'
+      )
+    }
+
+    const categories = repository.discussionCategories?.nodes ?? []
+    if (!categories.length) {
+      throw new GitalkError(
+        `${where} has Discussions enabled but no categories to post into. Create one under the ` +
+          'Discussions tab, then retry.'
+      )
+    }
+
+    const wanted = this.opts.category?.trim()
+    if (!wanted) {
+      // No guesswork: this is simply the first category GitHub returns. Set
+      // `category` explicitly to pin a different one.
+      return { repositoryId: repository.id, category: categories[0]! }
+    }
+
+    const needle = wanted.toLowerCase()
+    const match = categories.find(
+      (c) => c.slug.toLowerCase() === needle || c.name.toLowerCase() === needle
     )
+    if (!match) {
+      const available = categories.map((c) => `${c.name} (\`${c.slug}\`)`).join(', ')
+      throw new GitalkError(
+        `No discussion category matching \`${wanted}\` exists in ${where}. Available: ${available}`
+      )
+    }
+
+    return { repositoryId: repository.id, category: match }
+  }
+
+  /**
+   * Turn a failed `createDiscussion` into an actionable message.
+   *
+   * The three cases have different fixes, so they must not collapse into one
+   * string: the account/app lacks write permission; Discussions were turned
+   * off for the repository; or the resolved category was rejected. Anything
+   * else keeps GitHub's own wording rather than guessing.
+   */
+  private creationError(errors: GraphQLError[]): GitalkError {
+    const message = errors.map((e) => e.message).join(', ')
+    const types = new Set(errors.map((e) => e.type).filter((t): t is string => Boolean(t)))
+    const where = `${this.ctx.owner}/${this.ctx.repo}`
+
+    if (
+      types.has('FORBIDDEN') ||
+      types.has('INSUFFICIENT_SCOPES') ||
+      /not accessible|forbidden|permission|resource not accessible/i.test(message)
+    ) {
+      return new GitalkError(
+        `GitHub refused to create a discussion in ${where}: ${message}. The signed-in account ` +
+          'needs write access to the repository, and the OAuth app / GitHub App needs the ' +
+          '`discussions: write` permission (classic OAuth apps: the `repo` or `public_repo` scope).',
+        403
+      )
+    }
+
+    if (/discussions?\s+(are|is)\s+(disabled|not enabled)|discussions? disabled/i.test(message)) {
+      return new GitalkError(
+        `Discussions are disabled for ${where}: ${message}. Turn them on under Settings -> ` +
+          'General -> Features -> Discussions, then retry.'
+      )
+    }
+
+    if (/categor/i.test(message)) {
+      return new GitalkError(
+        `GitHub rejected the discussion category in ${where}: ${message}. Set the \`category\` ` +
+          'option to one of the repository\'s existing category slugs.'
+      )
+    }
+
+    return new GitalkError(`Could not create a discussion in ${where}: ${message}`, 422)
   }
 
   /**
@@ -307,17 +566,27 @@ export class DiscussionsBackend extends BaseBackend {
     }
   }
 
-  private async graphql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
+  /**
+   * GraphQL round trip that fails only on transport problems.
+   *
+   * The anonymous guard lives here rather than in `graphql()` because every
+   * caller needs it: GraphQL's anonymous allowance is literally zero
+   * (`x-ratelimit-limit: 0`), so sending the request anyway would trade an
+   * actionable message for a confusing 403.
+   */
+  private async graphqlRequest<T>(
+    query: string,
+    variables: Record<string, unknown>
+  ): Promise<{ data?: T; errors?: GraphQLError[] }> {
     if (!this.ctx.getToken()) {
-      // GraphQL's anonymous allowance is literally zero; fail with something
-      // actionable instead of a confusing 403 from the API.
       throw new GitalkError('Log in with GitHub to comment or react', 401)
     }
 
-    const response = await this.ctx.graphql<{
-      data?: T
-      errors?: Array<{ message: string }>
-    }>({ query, variables })
+    return this.ctx.graphql<{ data?: T; errors?: GraphQLError[] }>({ query, variables })
+  }
+
+  private async graphql<T>(query: string, variables: Record<string, unknown>): Promise<T> {
+    const response = await this.graphqlRequest<T>(query, variables)
 
     if (response.errors?.length) {
       throw new GitalkError(response.errors.map((e) => e.message).join(', '))

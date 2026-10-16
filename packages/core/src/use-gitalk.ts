@@ -191,9 +191,24 @@ export function useGitalk(options: GitalkOptions) {
       // advertising "load more" instead of letting the user spin forever.
       const drained = result.comments.length === 0 && append
 
+      // Build the next list once and feed both the render and the count
+      // callback from it, so the number reported to `updateCountCallback` can
+      // never drift from the number the widget renders.
+      const previous = commentsRef.current
+      const nextComments = drained
+        ? previous
+        : append
+          ? [...previous, ...result.comments]
+          : result.comments
+
+      // Keep the ref authoritative for the *next* load too: two loads queued in
+      // the same tick would otherwise both read the last rendered list, and the
+      // second would drop the first one's page.
+      commentsRef.current = nextComments
+
       setState((prev) => ({
         ...prev,
-        comments: drained ? prev.comments : append ? [...prev.comments, ...result.comments] : result.comments,
+        comments: nextComments,
         hasMore: drained ? false : result.hasNextPage,
         loading: false,
         ready: true,
@@ -201,7 +216,7 @@ export function useGitalk(options: GitalkOptions) {
         rateLimited: false
       }))
       if (!drained) pageRef.current = nextPage
-      updateCount(opts.updateCountCallback, result.comments.length)
+      updateCount(opts.updateCountCallback, countLoadedComments(nextComments))
     },
     [backend, opts.perPage, opts.updateCountCallback]
   )
@@ -462,6 +477,20 @@ function updateCount(cb: ((n: number) => void) | undefined, count: number): void
   } catch (err) {
     console.warn('updateCountCallback threw:', err)
   }
+}
+
+/**
+ * How many comments the widget has loaded: every top-level comment plus every
+ * reply, summed over all pages fetched so far.
+ *
+ * This is deliberately the SAME metric the UI renders in `.gt-counts`
+ * (`widget.tsx`'s `loadedCount`). It used to be `result.comments.length`, which
+ * counts only top-level entries and only the page just fetched, so any thread
+ * with a reply — or whose comments span more than one page — reported a number
+ * smaller than the one on screen. Keep the two definitions in step.
+ */
+function countLoadedComments(comments: GitalkComment[]): number {
+  return comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0)
 }
 
 /** The query parameter the worker appends after a successful sign-in. */

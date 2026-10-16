@@ -256,6 +256,13 @@ async function handleTokenExchange(
  * Authenticated callers send their own token and we forward verbatim, so
  * writes are attributed to the real user. Anonymous callers get the
  * installation token, which is what lifts the read limit to 5,000/hr.
+ *
+ * There is deliberately NO per-operation allowlist here: the body is forwarded
+ * as-is, which is why `createDiscussion` (the only way to create a Discussion —
+ * there is no REST equivalent) needs no proxy change. The widget is what keeps
+ * this least-privilege: `DiscussionsBackend` refuses to issue any mutation
+ * without a visitor token, so creations run as the signed-in user and never as
+ * the installation. Keep it that way rather than widening the forwarder.
  */
 async function handleGraphql(
   request: Request,

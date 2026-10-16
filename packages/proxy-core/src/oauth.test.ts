@@ -205,3 +205,39 @@ describe('/oauth/token', () => {
     expect(response.status).toBe(401)
   })
 })
+
+describe('/graphql', () => {
+  it('forwards createDiscussion verbatim, authenticated as the visitor', async () => {
+    const sent: Array<{ url: string; auth: string | null; body: unknown }> = []
+    vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      sent.push({
+        url: String(input),
+        auth: (init?.headers as Record<string, string> | undefined)?.Authorization ?? null,
+        body: init?.body ? JSON.parse(String(init.body)) : null
+      })
+      return json({ data: { createDiscussion: { discussion: { number: 7 } } } })
+    })
+
+    // The forwarder has no operation allowlist (see `handleGraphql`), so this
+    // pins the property the discussions backend depends on: a GraphQL mutation
+    // it sends is not filtered out, and it runs as the visitor rather than as
+    // the App, because `createDiscussion` is attributed to its token's owner.
+    const body = {
+      query:
+        'mutation gitalkCreateDiscussion($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) { createDiscussion(input: { repositoryId: $repositoryId, categoryId: $categoryId, title: $title, body: $body }) { discussion { id number title url locked } } }',
+      variables: { repositoryId: 'R_1', categoryId: 'DIC_1', title: 't', body: 'b' }
+    }
+
+    const response = await call('/graphql', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer gho_visitor' },
+      body: JSON.stringify(body)
+    })
+
+    expect(response.status).toBe(200)
+    expect((await response.json()).data.createDiscussion.discussion.number).toBe(7)
+    expect(sent[0]?.url).toBe('https://api.github.com/graphql')
+    expect(sent[0]?.auth).toBe('Bearer gho_visitor')
+    expect(sent[0]?.body).toEqual(body)
+  })
+})

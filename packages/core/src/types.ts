@@ -103,7 +103,14 @@ export interface GitalkOptions {
   number?: number
   /** `discussions` (default) or `issues`. */
   backend?: BackendKind
-  /** Discussions-only: category slug or name used when creating a thread. */
+  /**
+   * Discussions-only: category slug or name used when creating a thread.
+   *
+   * Matched case-insensitively against both the category's `slug` and its
+   * `name`. When omitted, the first category `Repository.discussionCategories`
+   * returns is used — GitHub's `createDiscussion` requires a category id and
+   * offers no default, so a thread cannot be created without one.
+   */
   category?: string
   /** Threads created by Gitalk are labelled with these, plus `id`. */
   labels?: string[]
@@ -138,10 +145,12 @@ export interface GitalkOptions {
    * login appears in `admin` may ever create a thread. Anonymous visitors are
    * shown the "not initialized" notice whatever this option says.
    *
-   * Backend note: `createThread()` only has a REST implementation for
-   * `backend: 'issues'`. With `backend: 'discussions'` an auto-create attempt
-   * fails with an actionable error (GitHub has no REST discussion-create API)
-   * rather than silently doing nothing.
+   * Backend note: both backends can create. `issues` uses `POST /issues`;
+   * `discussions` uses the GraphQL `createDiscussion` mutation, which requires
+   * the visitor to be signed in and the repository to have Discussions enabled
+   * with at least one category (see {@link GitalkOptions.category}). Failures
+   * are reported with the specific fix (permission, disabled Discussions, or a
+   * missing/unknown category).
    */
   createIssueManually?: boolean
   /**

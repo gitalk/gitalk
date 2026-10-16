@@ -14,9 +14,9 @@ import { TOKEN_STORAGE_KEY } from './auth'
  * ...plus the v1 security boundary that a visitor who is not an authenticated
  * admin never creates anything, whatever the option says.
  *
- * The `issues` backend is used because it is the one whose `createThread()`
- * has a REST implementation; the `discussions` error path is covered at the
- * end.
+ * Both backends are covered: `issues` creates over REST (`POST /issues`), and
+ * `discussions` — the default — creates through the GraphQL `createDiscussion`
+ * mutation, including the failure branch.
  */
 const BASE: GitalkOptions = {
   clientID: 'client-id',
@@ -31,6 +31,8 @@ const BASE: GitalkOptions = {
 interface Call {
   url: string
   method: string
+  /** Request body when there was one, so GraphQL operations can be told apart. */
+  body?: string
 }
 
 /**
@@ -47,7 +49,7 @@ function stubFetch(login = 'booxood', createDelayMs = 0): Call[] {
   globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : String(input)
     const method = (init?.method ?? 'GET').toUpperCase()
-    calls.push({ url, method })
+    calls.push({ url, method, body: typeof init?.body === 'string' ? init.body : undefined })
 
     let body: unknown = {}
     if (method === 'POST' && /\/issues$/.test(url)) {
@@ -92,6 +94,88 @@ function stubFetch(login = 'booxood', createDelayMs = 0): Call[] {
 /** The thread-creating POSTs, i.e. `createThread()` calls that reached GitHub. */
 function creates(calls: Call[]): Call[] {
   return calls.filter((c) => c.method === 'POST' && /\/issues$/.test(c.url))
+}
+
+/**
+ * The same walk for the default (`discussions`) backend, which has no REST
+ * create path: the REST discussion list comes back empty, `/user` identifies
+ * the admin, then the GraphQL category lookup and the `createDiscussion`
+ * mutation run, and finally the created discussion's comments are read over
+ * REST.
+ *
+ * `failWith` makes the mutation answer with a GraphQL error instead, which is
+ * how the failure branch is exercised end to end.
+ */
+function stubFetchDiscussions(failWith?: { message: string; type?: string }): Call[] {
+  const calls: Call[] = []
+  globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === 'string' ? input : String(input)
+    const method = (init?.method ?? 'GET').toUpperCase()
+    calls.push({ url, method, body: typeof init?.body === 'string' ? init.body : undefined })
+
+    let body: unknown = {}
+
+    if (url.includes('/graphql')) {
+      const document = JSON.parse(String(init?.body)) as { query?: string }
+      if (document.query?.includes('createDiscussion')) {
+        body = failWith
+          ? { errors: [failWith] }
+          : {
+              data: {
+                createDiscussion: {
+                  discussion: {
+                    id: 'D_7',
+                    number: 7,
+                    title: 'page-id',
+                    url: 'https://github.com/gitalk/gitalk/discussions/7',
+                    locked: false
+                  }
+                }
+              }
+            }
+      } else {
+        body = {
+          data: {
+            repository: {
+              id: 'R_1',
+              hasDiscussionsEnabled: true,
+              discussionCategories: {
+                nodes: [{ id: 'DIC_general', name: 'General', slug: 'general' }]
+              }
+            }
+          }
+        }
+      }
+    } else if (url.includes('/user')) {
+      body = { login: 'booxood', avatar_url: 'https://avatars.test/1' }
+    } else if (/\/discussions\?/.test(url)) {
+      // No discussion carries this page's title yet.
+      body = []
+    } else if (url.includes('/comments')) {
+      body = [
+        {
+          id: 523955,
+          node_id: 'n1',
+          user: { login: 'booxood', avatar_url: 'https://avatars.test/1', html_url: 'u' },
+          body_html: '<p>created thread</p>',
+          created_at: new Date().toISOString(),
+          html_url: 'h',
+          reactions: { total_count: 0, heart: 0 }
+        }
+      ]
+    }
+
+    return new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }) as typeof fetch
+  return calls
+}
+
+/** The `createDiscussion` mutations that actually reached GitHub. */
+function discussionCreates(calls: Call[]): Call[] {
+  return calls.filter((c) => c.method === 'POST' && c.body?.includes('createDiscussion'))
 }
 
 function tick(): Promise<void> {
@@ -194,16 +278,35 @@ describe('createIssueManually', () => {
     expect(sawInitButton).toBe(false)
   })
 
-  it('surfaces a creation failure instead of swallowing it', async () => {
+  it('auto-creates a discussion on the default backend, then loads its comments', async () => {
     localStorage.setItem(TOKEN_STORAGE_KEY, 'test-token')
-    stubFetch()
+    const calls = stubFetchDiscussions()
 
-    // Discussions have no REST create API, so this exercises the failure
-    // branch of the auto-create path end to end.
+    mount(host, { ...BASE, backend: 'discussions', createIssueManually: false })
+    await waitFor(() => host.querySelector('.gt-comment-body'))
+
+    // Exactly one `createDiscussion` mutation reached GitHub, and the widget
+    // went straight from creating the thread to rendering its comments — the
+    // "created but still shows uninitialized" failure mode is what this pins.
+    expect(discussionCreates(calls)).toHaveLength(1)
+    expect(host.querySelector('.gt-error')).toBeNull()
+    expect(host.querySelector('.gt-no-init')).toBeNull()
+    expect(host.querySelector('.gt-comment-body')?.innerHTML).toContain('created thread')
+  })
+
+  it('surfaces a discussion creation failure instead of swallowing it', async () => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, 'test-token')
+    const calls = stubFetchDiscussions({
+      type: 'FORBIDDEN',
+      message: 'Resource not accessible by integration'
+    })
+
     mount(host, { ...BASE, backend: 'discussions', createIssueManually: false })
     await waitFor(() => host.querySelector('.gt-error'))
 
-    expect(host.querySelector('.gt-error')?.textContent).toContain('REST write API')
+    // The message names the fix, not just the symptom.
+    expect(host.querySelector('.gt-error')?.textContent).toContain('discussions: write')
+    expect(discussionCreates(calls)).toHaveLength(1)
     // The admin is left with the manual escape hatch rather than a dead end.
     expect(host.querySelector('.gt-btn-init')).toBeTruthy()
   })
