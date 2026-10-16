@@ -82,7 +82,10 @@ class GitalkComponent extends Component {
       updateCountCallback: null
     }, props.options)
 
-    this.state.theme = props.theme
+    // Theme comes from the `theme` prop (`<GitalkComponent theme="dark"/>`)
+    // or the `theme` option (`new Gitalk(options)`); anything but 'dark'
+    // falls back to the light theme.
+    this.state.theme = props.theme === 'dark' || this.options.theme === 'dark' ? 'dark' : 'light'
 
     this.state.pagerDirection = this.options.pagerDirection
     const storedComment = window.localStorage.getItem(GT_COMMENT)
@@ -237,7 +240,13 @@ class GitalkComponent extends Component {
         password: clientSecret
       },
       params: {
-        labels: labels.concat(id).join(','),
+        // The list endpoint takes label NAMES as a comma separated string, so
+        // the `{name}` object form has to be normalised here. The create
+        // endpoint accepts both forms and is left untouched.
+        labels: labels.concat(id)
+          .map(label => (label && typeof label === 'object' ? label.name : label))
+          .filter(Boolean)
+          .join(','),
         t: Date.now()
       }
     }).then(res => {
@@ -714,7 +723,11 @@ class GitalkComponent extends Component {
           </a>
         }
         <div className="gt-header-comment">
+          <label htmlFor="gt-header-textarea" className="gt-header-label">
+            {this.i18n.t('leave-a-comment')}
+          </label>
           <textarea
+            id="gt-header-textarea"
             ref={t => { this.commentEL = t }}
             className={`gt-header-textarea ${isPreview ? 'hide' : ''}`}
             value={comment}
