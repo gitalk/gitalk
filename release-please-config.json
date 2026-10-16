@@ -33,7 +33,7 @@
   ],
   "commit-search-depth": 200,
   "release-search-depth": 400,
-  "separate-pull-requests": true,
+  "separate-pull-requests": false,
   "bump-minor-pre-major": true,
   "include-v-in-tag": true,
   "pull-request-title-pattern": "chore(release): ${version} :rocket:",
