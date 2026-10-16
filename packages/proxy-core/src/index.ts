@@ -131,10 +131,12 @@ export async function handle(
       headers: {
         ...cors,
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-        // The widget sends Authorization once a visitor signs in. Leaving it
-        // out made every authenticated write fail the preflight — anonymous
-        // reads do not send it, so the endpoint looked healthy.
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+        // Every header the widget can send. Getting this list wrong fails the
+        // preflight silently for exactly the requests that carry the missing
+        // header, and anonymous reads carry almost none of them — which is how
+        // Authorization and then X-GitHub-Api-Version each broke sign-in and
+        // commenting in turn without any check noticing.
+        'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, X-GitHub-Api-Version',
         'Access-Control-Max-Age': '86400'
       }
     })
