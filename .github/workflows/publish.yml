@@ -170,9 +170,11 @@ jobs:
             # （比如 core 发出去、react 失败）；重跑时 core 会因「版本已存在」
             # 报 EPUBLISHCONFLICT 把整个 job 卡死，永远轮不到 react。
             # 让这一步幂等，重跑就总能收敛。
+            # 注意结尾的 \n：`read` 在遇到没有换行定界符的输入时会返回非零
+            # （即使已经赋值），配合 set -e 会让整个 job 静默退出、一行日志都没有。
             read -r pkg version < <(
               tar -xzOf "$tarball" package/package.json |
-                node -e 'const d=JSON.parse(require("node:fs").readFileSync(0,"utf8"));process.stdout.write(`${d.name} ${d.version}`)'
+                node -e 'const d=JSON.parse(require("node:fs").readFileSync(0,"utf8"));process.stdout.write(`${d.name} ${d.version}\n`)'
             )
             if npm view "$pkg@$version" version >/dev/null 2>&1; then
               echo "↷ $pkg@$version 已发布，跳过"
