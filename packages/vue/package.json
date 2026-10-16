@@ -1,6 +1,6 @@
 {
   "name": "@aifire/gitalk-vue",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Vue 3 wrapper for Gitalk 2.0 comment widget.",
   "license": "MIT",
   "type": "module",

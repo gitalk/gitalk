@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.1](https://github.com/gitalk/gitalk/compare/v2.2.0...v2.2.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* resolve the packages from CommonJS as well ([777e8b4](https://github.com/gitalk/gitalk/commit/777e8b41f73407ec986582adf4cc00076ff13084))
+
 ## [2.2.0](https://github.com/gitalk/gitalk/compare/v2.1.0...v2.2.0) (2026-10-16)
 
 
