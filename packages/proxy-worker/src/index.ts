@@ -58,6 +58,16 @@ const GITHUB_API = 'https://api.github.com'
 const GITHUB_AUTHORIZE = 'https://github.com/login/oauth/authorize'
 const GITHUB_TOKEN_URL = 'https://github.com/login/oauth/access_token'
 
+/**
+ * GitHub rejects any API request without a `User-Agent`, and it answers with
+ * **403**, not 401 — so a missing header reads as an authorization problem.
+ *
+ * The Workers runtime sends no `User-Agent` of its own, which makes this easy
+ * to miss: the same request succeeds from Node or curl, because those clients
+ * add one for you. Every GitHub call below must set this explicitly.
+ */
+const GITHUB_USER_AGENT = 'gitalk-proxy'
+
 /** Installation tokens are valid for an hour; refresh a little early. */
 const TOKEN_REFRESH_MARGIN_MS = 5 * 60 * 1000
 
@@ -212,7 +222,8 @@ async function handleGraphql(
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2026-03-10'
+      'X-GitHub-Api-Version': '2026-03-10',
+      'User-Agent': GITHUB_USER_AGENT
     },
     body
   })
@@ -234,7 +245,11 @@ function bearerFrom(request: Request): string | null {
 async function exchangeCode(env: Env, code: string): Promise<string | null> {
   const response = await fetch(GITHUB_TOKEN_URL, {
     method: 'POST',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'User-Agent': GITHUB_USER_AGENT
+    },
     body: JSON.stringify({
       client_id: env.GITHUB_CLIENT_ID,
       client_secret: env.GITHUB_CLIENT_SECRET,
@@ -279,7 +294,11 @@ async function installationToken(env: Env, ctx: ExecutionContext): Promise<strin
     `${GITHUB_API}/app/installations/${installationId}/access_tokens`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${jwt}`, Accept: 'application/vnd.github+json' }
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': GITHUB_USER_AGENT
+      }
     }
   )
 
@@ -307,9 +326,16 @@ async function resolveInstallationId(env: Env): Promise<number | null> {
 
   const jwt = await signAppJwt(env)
   const response = await fetch(`${GITHUB_API}/app/installations?per_page=1`, {
-    headers: { Authorization: `Bearer ${jwt}`, Accept: 'application/vnd.github+json' }
+    headers: {
+      Authorization: `Bearer ${jwt}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': GITHUB_USER_AGENT
+    }
   })
-  if (!response.ok) return null
+  if (!response.ok) {
+    console.error('installation lookup failed:', response.status)
+    return null
+  }
 
   const list = (await response.json()) as Array<{ id: number }>
   return list[0]?.id ?? null
