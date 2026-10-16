@@ -40,8 +40,8 @@ pnpm add @aifire/gitalk-vue      # Vue
 Or skip the build step entirely:
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@aifire/gitalk@2/dist/gitalk.css">
-<script src="https://cdn.jsdelivr.net/npm/@aifire/gitalk@2/dist/gitalk.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@aifire/gitalk@latest/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/@aifire/gitalk@latest/dist/gitalk.js"></script>
 ```
 
 > Until the first release is published, these are not on the registry yet —

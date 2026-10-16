@@ -295,7 +295,7 @@ Vue 的 `<Gitalk :options="..." />`。Preact 打包在内，不与宿主的 Reac
 manifest 与 CHANGELOG、**三个包各自独立版本**但**统一 tag**（`include-component-in-tag: false`
 → `v2.3.0`）。发布走 npm OIDC Trusted Publishing + provenance，仓库不留长期令牌。
 
-已发布：`@aifire/gitalk@2.3.0`、`@aifire/gitalk-react@2.2.1`、`@aifire/gitalk-vue@2.2.1`。
+三个包以预发布版发布，版本号由发布流程自动递增（当前停在 `2.0.0-beta.N` 这条基线上）。
 
 ### 9.1 版本号注入
 

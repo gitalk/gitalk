@@ -17,8 +17,7 @@
 
 三端匿名读结果一致：`gitalk/gitalk#442` = 顶层 2 + 回复 1。
 
-**已发布**：npm `@aifire/gitalk@2.3.0`、`@aifire/gitalk-react@2.2.1`、`@aifire/gitalk-vue@2.2.1`
-（OIDC Trusted Publisher + provenance 生效）；GitHub Release 与 tag `v2.3.0`。
+**发布**：三个包以预发布版发布（`2.0.0-beta.N`），版本号由发布流程自动递增，GitHub Actions 手动触发；走 OIDC Trusted Publishing + provenance，仓库不留长期令牌。
 主分支 `main` 干净，landing 已上中英切换，demo 可在两个端点间切换。
 
 **包结构**

@@ -37,8 +37,8 @@ pnpm add @aifire/gitalk-vue      # Vue
 不想构建的话，直接引 CDN：
 
 ```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@aifire/gitalk@2/dist/gitalk.css">
-<script src="https://cdn.jsdelivr.net/npm/@aifire/gitalk@2/dist/gitalk.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@aifire/gitalk@latest/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/@aifire/gitalk@latest/dist/gitalk.js"></script>
 ```
 
 > 首次发布完成前，npm 上还没有这些包，请先按 [开发](#开发) 从源码构建。
