@@ -30,9 +30,13 @@ owner 是个人账号 `Vincentqyw`，不是 gitalk org。GitHub App / OAuth App 
 | `Gitalk` | `gitalk` | 200 已占用 |
 | `Gitalk Comments` | `gitalk-comments` | 200 已占用 |
 | `Gitalk App` | `gitalk-app` | 200 已占用 |
-| **`Gitalk Discussions`** | **`gitalk-discussions`** | **404 可用** ✅ |
+| **`Gitalk X`** | **`gitalk-x`** | **404 可用** ✅ |
 
-→ **App name 填 `Gitalk Discussions`。**
+→ **App name 填 `Gitalk X`。**
+
+> `Gitalk Discussions`（slug `gitalk-discussions`）也曾是候选且同样可用，
+> 最终选了 `Gitalk X`。改这个名字只需替换 App name 字段，
+> 其余字段（回调、权限、可见性）都不受影响。
 
 ### 0.2 回调地址必须填 `/oauth/callback`，但当前代码发的是 proxy 根路径
 
@@ -76,7 +80,7 @@ const session = await sealSession(env, { accessToken: token, issuedAt: Date.now(
 
 | 表单字段 | 填什么 | 说明 |
 | --- | --- | --- |
-| `integration[name]` | `Gitalk Discussions` | 全局唯一，见 §0.1 |
+| `integration[name]` | `Gitalk X` | 全局唯一，见 §0.1 |
 | `integration[description]` | 见 §1.1.1（中英双语） | 会展示给安装/授权用户 |
 | `integration[url]` | `https://gitalk.github.io` | Homepage URL，必填。裸域名根站点，部署方式见 tech.md §8 |
 
@@ -292,7 +296,7 @@ App 建好后需改成新的 GitHub App client id，并补上 `proxy`，否则 d
 
 创建完成后，按顺序确认：
 
-- [ ] `/apps/gitalk-discussions` 已可访问（slug 生效）
+- [ ] `/apps/gitalk-x` 已可访问（slug 生效）
 - [ ] 表单里 Webhook "Active" 是**未勾选**状态
 - [ ] Repository permissions 只勾了 Discussions(+Issues) 和强制 Metadata
 - [ ] "Any account" 已选中
@@ -309,7 +313,7 @@ App 建好后需改成新的 GitHub App client id，并补上 `proxy`，否则 d
 ## 附：完整字段速查
 
 ```text
-integration[name]                                  = Gitalk Discussions
+integration[name]                                  = Gitalk X
 integration[description]                           = <见 §1.1.1，中英双语 / 纯中文 / 纯英文三选一>
 integration[url]                                   = https://gitalk.github.io
 integration[application_callback_urls_attributes][0][url]
