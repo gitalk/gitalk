@@ -155,6 +155,14 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      # OIDC 只有在 id-token: write 生效时才会注入这两个变量；缺了它们，
+      # npm CLI 会直接跳过 OIDC 并报 ENEEDAUTH，而日志里看不出区别。
+      - name: Check OIDC availability
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL:   ${ACTIONS_ID_TOKEN_REQUEST_URL:+present}"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${ACTIONS_ID_TOKEN_REQUEST_TOKEN:+present}"
+          echo "npm: $(npm -v)   node: $(node -v)"
+
       - name: Publish to npm
         run: |
           set -euo pipefail
