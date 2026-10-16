@@ -18,5 +18,8 @@
     "@cloudflare/workers-types": "5.20261015.1",
     "typescript": "7.0.2",
     "wrangler": "4.151.0"
+  },
+  "dependencies": {
+    "@gitalk/proxy-core": "workspace:*"
   }
 }

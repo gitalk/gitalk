@@ -1,0 +1,21 @@
+{
+  "name": "@gitalk/proxy-node",
+  "version": "2.2.1",
+  "private": true,
+  "description": "Container / VPS deployment target for the Gitalk 2.0 token endpoint.",
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "esbuild src/server.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/server.js --log-level=warning",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gitalk/proxy-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "esbuild": "0.28.2",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { describe, expect, it, afterEach, vi } from 'vitest'
-import worker from './index'
+import { handle } from './index'
 
 /**
- * These drive the real worker handler with GitHub stubbed out, so the whole
+ * These drive the real handler with GitHub stubbed out, so the whole
  * authorize → callback → token round trip is exercised as one flow. The
  * refresh path in particular is easy to get subtly wrong (rotated tokens,
  * expiry math) and impossible to reach by hand while the App does not expire
@@ -21,12 +21,12 @@ const ENV = {
 
 // The worker keeps its ExecutionContext interface private, so borrow the type
 // rather than redeclaring it and risking drift.
-type WorkerContext = Parameters<typeof worker.fetch>[2]
+type WorkerContext = Parameters<typeof handle>[2]
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as WorkerContext
 
 const call = (path: string, init?: RequestInit) =>
-  worker.fetch(new Request(`https://proxy.example${path}`, init), ENV, ctx)
+  handle(new Request(`https://proxy.example${path}`, init), ENV, ctx)
 
 const json = (body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -192,7 +192,7 @@ describe('/oauth/token', () => {
       ...ENV,
       SESSION_ENCRYPTION_KEY: 'cd'.repeat(32)
     }
-    const response = await worker.fetch(
+    const response = await handle(
       new Request('https://proxy.example/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

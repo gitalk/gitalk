@@ -92,7 +92,33 @@ importers:
         specifier: 5.1.2
         version: 5.1.2(@vue/language-core@3.3.13)(esbuild@0.28.2)(rolldown@1.2.14)(typescript@7.0.2)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(jiti@2.7.0))
 
+  packages/proxy-core:
+    devDependencies:
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
+  packages/proxy-node:
+    dependencies:
+      '@gitalk/proxy-core':
+        specifier: workspace:*
+        version: link:../proxy-core
+    devDependencies:
+      '@types/node':
+        specifier: 24.10.1
+        version: 24.10.1
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+
   packages/proxy-worker:
+    dependencies:
+      '@gitalk/proxy-core':
+        specifier: workspace:*
+        version: link:../proxy-core
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 5.20261015.1

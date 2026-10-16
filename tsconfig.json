@@ -28,14 +28,22 @@
       ],
       "@aifire/gitalk/*": [
         "./packages/core/src/*"
+      ],
+      "@gitalk/proxy-core": [
+        "./packages/proxy-core/src/index.ts"
+      ],
+      "@gitalk/proxy-core/*": [
+        "./packages/proxy-core/src/*"
       ]
     }
   },
   "include": [
     "packages/core/src/**/*",
     "packages/vue/src/**/*",
+    "packages/proxy-core/src/**/*",
     "packages/proxy-worker/src/**/*",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "packages/proxy-node/src/**/*"
   ],
   "exclude": [
     "packages/react"

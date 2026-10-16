@@ -1,0 +1,21 @@
+{
+  "name": "@gitalk/proxy-core",
+  "version": "2.2.1",
+  "private": true,
+  "description": "Runtime-agnostic token-exchange handler shared by every Gitalk 2.0 deployment target.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2"
+  }
+}
