@@ -11,8 +11,8 @@
 
 ### 1. 创建 GitHub App
 
-Gitalk 2.0 用的是 **GitHub App**，不是 1.x 的 OAuth App —— 正是这个 App 让未登录访客
-能拿到 5000 次/小时的读取额度，而不再是 60 次。
+Gitalk 2.0 用的是 **GitHub App**，不是 1.x 的 OAuth App。它让令牌端点能在**不把
+密钥交给浏览器**的前提下签发 installation token，登录所需的 client secret 也留在服务端。
 
 按 **[docs/github-app-guide.md](docs/github-app-guide.md)** 走：它逐字段说明表单怎么填，
 包括回调地址、权限、以及两个填错就会**静默导致登录失败**的开关。
@@ -153,12 +153,13 @@ pnpm --filter @gitalk/proxy-worker deploy
 
 | 访客状态 | 走的接口 | 额度 |
 |---|---|---|
-| 未登录 | REST，用 App 的 installation token | 5000 次/小时 |
-| 已登录 | GraphQL | 5000 点/小时 |
+| 未登录 | 浏览器直连 GitHub REST | **每 IP 60 次/小时** |
+| 已登录 | 用访客自己的 token 走 REST / GraphQL | 5000 次/小时 |
 
-未登录读用 installation token，正是它把 1.x 的每 IP 60 次/小时提上来的。
-写操作必须走 GraphQL —— GitHub 没有给 discussions 提供 REST 写接口 ——
-所以发评论必须登录。
+**评论读取不经过令牌端点**——REST 读是 CORS 开放的、不需要任何凭据，所以浏览器直接请求
+`api.github.com`，计入匿名额度。也就是说**登录之前，1.x 的 60 次/小时上限依然存在**。
+写操作必须走 GraphQL（GitHub 没有给 discussions 提供 REST 写接口），所以发评论必须登录。
+实测矩阵见 [docs/tech.md §2.1](docs/tech.md)。
 
 会话有效期 30 天；App 若开启了令牌过期，Worker 会自动静默续期，
 见 [docs/tech.md §3.7](docs/tech.md)。

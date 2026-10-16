@@ -12,8 +12,9 @@ administer; the rest is copy-paste.
 
 ### 1. Create a GitHub App
 
-Gitalk 2.0 uses a **GitHub App**, not the 1.x OAuth App — the App is what lets
-anonymous visitors read comments at 5,000 requests/hour instead of 60.
+Gitalk 2.0 uses a **GitHub App**, not the 1.x OAuth App. The App is what lets
+the token endpoint mint an installation token without shipping a secret to the
+browser — and what keeps the client secret server-side for sign-in.
 
 Follow **[docs/github-app-guide.md](docs/github-app-guide.md)** — it walks the
 creation form field by field, including the callback URL, permissions and the
@@ -158,12 +159,15 @@ client secret from the browser, and never a visitor's raw token in a URL.
 
 | Visitor | Path | Limit |
 |---|---|---|
-| Logged out | REST, with the App's installation token | 5,000/hour |
-| Logged in | GraphQL | 5,000 points/hour |
+| Logged out | GitHub REST, straight from the browser | **60 requests/hour per IP** |
+| Logged in | GitHub REST / GraphQL, with the visitor's own token | 5,000 per hour |
 
-Anonymous reads using the installation token are what lift the 1.x ceiling of
-60 requests/hour per IP. Writing requires GraphQL — GitHub exposes no REST write
-API for discussions — which is why signing in is unavoidable for posting.
+Comment reads do **not** go through the token endpoint — REST reads are
+CORS-enabled and need no credential, so they go directly to `api.github.com`
+and count against the anonymous per-IP budget. The 1.x ceiling therefore still
+applies until a visitor signs in. Writing must use GraphQL (GitHub exposes no
+REST write API for discussions), which is why posting requires signing in.
+See [docs/tech.md §2.1](docs/tech.md) for the measured matrix.
 
 Sessions last 30 days and renew silently when the App is configured to expire
 access tokens; see [docs/tech.md §3.7](docs/tech.md).
