@@ -1,18 +1,166 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gitalk 2.0 — 基于 GitHub Discussions 的评论组件</title>
-    <meta
-      name="description"
-      content="Gitalk 2.0: a serverless comment component backed by GitHub Discussions. Framework-free, React, and Vue builds."
-    />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <script type="module" crossorigin src="./assets/index-C8J4MoZx.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-DhmdQzo4.css">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <meta name="keywords" content="gitalk,duoshuo,多说,评论组件,凹凸实验室,aotulabs,comment,plugin,github,issue,react,preact,component">
+    <meta name="description" content="A modern comment component based on Github Issue and Preact.凹凸实验室出品的一款基于 Github Issue 和 Preact 开发的评论插件">
+    <title>Gitalk Demo | Aotu.io「凹凸实验室」</title>
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"/>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style type="text/css">
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        margin: 0 auto;
+        padding-bottom: 60px;
+        max-width: 720px;
+        color: #6190E8;
+        font-family: "PingFang SC", Helvetica, "Microsoft YaHei", Arial, sans-serif;
+      }
+      .hero {
+        margin: 80px 0;
+        text-align: center;
+      }
+      .logo {
+        display: inline-block;
+        text-decoration: none;
+        height: 50px;
+        line-height: 50px;
+        vertical-align: middle;
+      }
+      .hero h1 {
+        margin-left: 16px;
+        display: inline-block;
+        font-size: 32px;
+        font-weight: 500;
+        vertical-align: bottom;
+      }
+      .hero-intro {
+        margin: 28px 0;
+        font-size: 20px;
+        font-weight: 300;
+      }
+      .hero-buttons a {
+        display: inline-block;
+        text-decoration: none;
+        height: 36px;
+        line-height: 36px;
+        border-radius: 36px;
+      }
+      .btn-begin {
+        padding: 0 20px;
+        min-width: 80px;
+        color: white;
+        background-color: #6190E8;
+      }
+      .btn-github {
+        margin-left: 36px;
+        width: 120px;
+        color: #6190E8;
+        border: 1px solid #6190E8;
+      }
+      .demo-title {
+        text-align: center;
+      }
+      .demo-title span {
+        display: inline-block;
+        padding-bottom: 10px;
+        font-size: 20px;
+        border-bottom: 1px dashed #6190E8;
+        width: 120px;
+      }
+      @media (max-width: 720px) {
+        .container {
+          width: 90%;
+        }
+      }
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/gitalk@latest/dist/gitalk.css">
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?8a8dd2e0b4b595edaa77bd0093279a08";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div class="container">
+      <div class="hero">
+        <div>
+          <a href="https://github.com/gitalk/gitalk" class="logo">
+            <svg width="50px" height="50px" viewBox="0 0 56 56" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <g id="landing" transform="translate(-606.000000, -124.000000)" fill-rule="nonzero" fill="#6190E8">
+                        <g id="Group-3" transform="translate(606.000000, 124.000000)">
+                            <g id="logo">
+                                <g transform="translate(29.836274, 29.694853) rotate(-45.000000) translate(-29.836274, -29.694853) translate(-3.163726, -5.805147)">
+                                    <path d="M61.4740373,21.997696 L43.8264213,4.35008 C38.1266666,-1.377152 28.9384853,-1.40343469 23.2721813,4.285568 L4.26861869,23.2927147 C-1.39888,28.9948587 -1.370208,38.3467094 4.34866138,44.0703574 L16.6214721,56.3479467 C17.9141014,57.647744 20.0764481,57.4697387 21.5936748,56.0839254 L22.8229868,54.8450561 C24.3414081,53.4568534 24.3903895,51.1654828 23.0965655,49.8728534 L13.9310828,40.7002027 C10.0926188,36.85696 10.0723095,30.563456 13.8785175,26.724992 L26.6710081,13.9325013 C30.4808001,10.1071786 36.6632001,10.1262933 40.4944961,13.9755093 L51.8832535,25.363072 C55.7264961,29.2325973 55.7491948,35.502208 51.9298455,39.3430613 L47.9301015,43.3428053 L41.3104535,36.7255466 C39.5280108,34.9359359 36.6345281,34.9060693 34.8568641,36.6861226 L33.9477228,37.5940693 C32.1796161,39.38368 32.1700588,42.293888 33.9548908,44.085888 L43.8754028,54.002816 C45.5455468,55.680128 48.1738135,55.7601707 49.9538668,54.3062613 C49.8606828,54.4281173 61.5158508,42.7466666 61.5158508,42.7466666 C67.18096,37.0301867 67.18096,27.750016 61.4740373,21.997696"></path>
+                                    <path d="M36.397984,63.1659093 L34.3025387,61.0752426 C33.0158827,59.7730559 30.8475627,59.9510613 29.3363094,61.3368746 L28.1010241,62.5709653 C26.5826028,63.9615573 26.5336214,66.2505386 27.8274454,67.5479466 L29.9228907,69.6410026 C31.2071574,70.9407999 33.369504,70.7651839 34.8879254,69.3769813 L36.1244054,68.1428906 C37.634464,66.7499093 37.6834453,64.4633173 36.397984,63.1659093"></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </svg>
+          </a>
+          <h1>
+            GITALK
+          </h1>
+        </div>
+
+         <h2 class="hero-intro">一个基于 Github Issue 和 Preact 开发的评论插件</h2>
+         <div class="hero-buttons">
+          <a href="https://github.com/gitalk/gitalk#install" class="btn-begin">开始使用</a>
+          <a href="https://github.com/gitalk/gitalk" class="btn-github">GITHUB</a>
+         </div>
+      </div>
+      <p class="demo-title">
+        <span class="demo">演示</span>
+      </p>
+      <div id="gitalk-container"></div>
+    </div>
+    <script src="https://unpkg.com/gitalk@latest/dist/gitalk.min.js"></script>
+    <script type="text/javascript">
+      var gitalk = new Gitalk({
+        clientID: 'e46f6dec7c07145c652c',
+        clientSecret: 'd1a0b627f9b76d21bd3080d1777d0aa0ad55dd83',
+        accessToken: '6a2f4d91a1f188a2089e70c2a7b63628f3e9e664',
+        repo: 'gitalk',
+        owner: 'gitalk',
+        admin: ['booxood', 'mamboer'],
+        id: 'Demo',
+        distractionFreeMode: true
+      });
+      gitalk.render('gitalk-container');
+
+      var language = navigator.language || navigator.userLanguage;
+      var intro = document.getElementsByClassName('hero-intro')[0];
+      var beginBtn = document.getElementsByClassName('btn-begin')[0];
+      var demo = document.getElementsByClassName('demo')[0];
+      if (language === 'zh-TW') {
+        intro.innerText = '一個基於 Github Issue 和 Preact 開發的評論插件';
+        beginBtn.innerText = '開始使用';
+      } else if (!~language.indexOf('zh')) {
+        intro.innerText = 'A modern comment component based on Github Issue and Preact';
+        beginBtn.innerText = 'GET STARTED';
+        demo.innerText = 'Demo';
+      }
+    </script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-49304532-4', 'auto');
+      ga('send', 'pageview');
+    </script>
   </body>
 </html>
