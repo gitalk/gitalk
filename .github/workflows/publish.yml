@@ -124,17 +124,27 @@ jobs:
       - name: Verify publish entry points exist
         run: node scripts/check-publishable.mjs
 
-      # workspace:* 只有 pnpm 会替换成真实版本号，npm 不认，所以先 pack 再 publish。
-      - name: Pack
+      # npm 不认 workspace:*，pnpm 又不支持 OIDC，所以自己把依赖换成真实版本号，
+      # 再交给 npm 在**包目录里**发布 —— 与 textural 验证过的做法一致。
+      # （用 tarball 发布，即 npm publish <file.tgz>，走不通 Trusted Publishing。）
+      - name: Resolve workspace dependency versions
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/tarballs"
-          pnpm -r \
-            --filter @aifire/gitalk \
-            --filter @aifire/gitalk-react \
-            --filter @aifire/gitalk-vue \
-            exec pnpm pack --pack-destination "$RUNNER_TEMP/tarballs"
-          ls -l "$RUNNER_TEMP/tarballs"
+          node - <<'NODE'
+          const { readFileSync, writeFileSync } = require('node:fs')
+          const core = JSON.parse(readFileSync('packages/core/package.json', 'utf8'))
+          for (const dir of ['packages/react', 'packages/vue']) {
+            const path = `${dir}/package.json`
+            const before = readFileSync(path, 'utf8')
+            const after = before.replace(
+              /"@aifire\/gitalk":\s*"workspace:[^"]*"/,
+              `"@aifire/gitalk": "${core.version}"`
+            )
+            if (after === before) throw new Error(`no workspace range found in ${path}`)
+            writeFileSync(path, after)
+            console.log(`  ${dir}: workspace:* -> ${core.version}`)
+          }
+          NODE
 
       # 认证二选一，按有没有配 NPM_TOKEN 决定：
       #   设了 → 用 token。这是引导期需要的：包在 npm 上还不存在时，压根没有
@@ -166,28 +176,17 @@ jobs:
       - name: Publish to npm
         run: |
           set -euo pipefail
-          shopt -s nullglob
-          tarballs=("$RUNNER_TEMP"/tarballs/*.tgz)
-          if [ "${#tarballs[@]}" -ne 3 ]; then
-            echo "预期 3 个 tarball，实际 ${#tarballs[@]} 个" >&2
-            exit 1
-          fi
-          # 排序让 core 先发，react/vue 依赖它。
-          for tarball in $(printf '%s\n' "${tarballs[@]}" | sort); do
-            # 已发过的版本直接跳过。一个 job 里发三个包，可能只成功了一部分
+          version=$(node -p "require('./packages/core/package.json').version")
+          for dir in packages/core packages/react packages/vue; do
+            name=$(node -p "require('./$dir/package.json').name")
+            # 已发过的版本直接跳过：一个 job 里发三个包，可能只成功了一部分
             # （比如 core 发出去、react 失败）；重跑时 core 会因「版本已存在」
             # 报 EPUBLISHCONFLICT 把整个 job 卡死，永远轮不到 react。
             # 让这一步幂等，重跑就总能收敛。
-            # 注意结尾的 \n：`read` 在遇到没有换行定界符的输入时会返回非零
-            # （即使已经赋值），配合 set -e 会让整个 job 静默退出、一行日志都没有。
-            read -r pkg version < <(
-              tar -xzOf "$tarball" package/package.json |
-                node -e 'const d=JSON.parse(require("node:fs").readFileSync(0,"utf8"));process.stdout.write(`${d.name} ${d.version}\n`)'
-            )
-            if npm view "$pkg@$version" version >/dev/null 2>&1; then
-              echo "↷ $pkg@$version 已发布，跳过"
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "↷ $name@$version 已发布，跳过"
               continue
             fi
-            echo "→ $(basename "$tarball")"
-            npm publish "$tarball" --access public
+            echo "→ $name@$version"
+            (cd "$dir" && npm publish --access public)
           done
