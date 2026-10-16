@@ -7,7 +7,7 @@ import Gitalk from './standalone'
  * published explicitly here.
  *
  * This file is deliberately NOT part of the ESM entry: importing
- * `@gitalk/core` must never write to `window`.
+ * `@aifire/gitalk` must never write to `window`.
  */
 if (typeof globalThis !== 'undefined') {
   ;(globalThis as unknown as { Gitalk?: typeof Gitalk }).Gitalk = Gitalk

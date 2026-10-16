@@ -48,11 +48,11 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      # Core must be built first: the landing page imports @gitalk/core.
+      # Core must be built first: the landing page imports @aifire/gitalk.
       - name: Install
         run: pnpm install --no-frozen-lockfile
       - name: Build core
-        run: pnpm --filter @gitalk/core run build
+        run: pnpm --filter @aifire/gitalk run build
       - name: Build landing
         run: pnpm build:landing
 

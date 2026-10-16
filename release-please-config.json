@@ -3,20 +3,20 @@
   "packages": {
     "packages/core": {
       "release-type": "node",
-      "package-name": "gitalk",
+      "package-name": "@aifire/gitalk",
       "changelog-path": "CHANGELOG.md",
       "component": "gitalk",
       "include-component-in-tag": false
     },
     "packages/react": {
       "release-type": "node",
-      "package-name": "@gitalk/react",
+      "package-name": "@aifire/gitalk-react",
       "component": "gitalk",
       "include-component-in-tag": false
     },
     "packages/vue": {
       "release-type": "node",
-      "package-name": "@gitalk/vue",
+      "package-name": "@aifire/gitalk-vue",
       "component": "gitalk",
       "include-component-in-tag": false
     }

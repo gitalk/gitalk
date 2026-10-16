@@ -60,7 +60,7 @@ export function App() {
       <section id="demo" className="section demo-section">
         <h2>实时 Demo</h2>
         <p className="lede">
-          下面的评论框就是 <code>@gitalk/core</code> 本身。它直接读取{' '}
+          下面的评论框就是 <code>@aifire/gitalk</code> 本身。它直接读取{' '}
           <code>gitalk/gitalk</code> 的 Discussions，匿名即可查看，登录后可评论。
         </p>
         <GitalkDemo />

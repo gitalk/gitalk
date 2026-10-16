@@ -23,10 +23,10 @@
       "node"
     ],
     "paths": {
-      "@gitalk/core": [
+      "@aifire/gitalk": [
         "./packages/core/src/index.ts"
       ],
-      "@gitalk/core/*": [
+      "@aifire/gitalk/*": [
         "./packages/core/src/*"
       ]
     }

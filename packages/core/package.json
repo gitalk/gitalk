@@ -1,9 +1,18 @@
 {
-  "name": "@gitalk/core",
+  "name": "@aifire/gitalk",
   "version": "2.1.0",
   "description": "Gitalk 2.0 core: framework-agnostic comment widget backed by GitHub Discussions (default) or Issues.",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitalk/gitalk.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
   "files": [
     "dist"
   ],
@@ -15,12 +24,14 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./style.css": "./dist/core.css"
+    "./style.css": "./dist/gitalk.css",
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "vite build && vite build --config vite.iife.config.ts && tsc -p tsconfig.types.json",
     "dev": "vite build --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run typecheck && pnpm run build"
   },
   "dependencies": {
     "preact": "11.0.1"

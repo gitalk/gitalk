@@ -35,4 +35,4 @@ function resolve(target?: string | Element): Element | null {
 
 // The `window.Gitalk` assignment lives in `global-entry.ts`, which is built as
 // the IIFE bundle only. Keeping it out of here means importing this module as
-// ESM (via @gitalk/core) never has the side effect of clobbering a page global.
+// ESM (via @aifire/gitalk) never has the side effect of clobbering a page global.

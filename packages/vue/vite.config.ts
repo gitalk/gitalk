@@ -9,7 +9,7 @@ export default defineConfig({
       fileName: () => 'index.js'
     },
     rollupOptions: {
-      external: ['vue', '@gitalk/core']
+      external: ['vue', '@aifire/gitalk']
     }
   }
 })

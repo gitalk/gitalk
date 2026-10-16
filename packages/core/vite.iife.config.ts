@@ -6,7 +6,7 @@ import { resolve } from 'node:path'
  * Standalone IIFE bundle for `<script src="gitalk.js">` users, kept separate
  * from the ESM entry so that:
  *  - consumers get one global (`window.Gitalk`) instead of a namespace object
- *  - importing `@gitalk/core` as ESM never has the side effect of clobbering
+ *  - importing `@aifire/gitalk` as ESM never has the side effect of clobbering
  *    a page global (see src/global-entry.ts)
  */
 export default defineConfig({

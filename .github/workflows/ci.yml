@@ -29,7 +29,7 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build core
-        run: pnpm --filter @gitalk/core run build
+        run: pnpm --filter @aifire/gitalk run build
 
       - name: Typecheck
         run: pnpm -r --filter "./packages/**" run typecheck
@@ -53,7 +53,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
-      - run: pnpm --filter @gitalk/core run build
+      - run: pnpm --filter @aifire/gitalk run build
       - uses: preactjs/compressed-size-action@v2
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}

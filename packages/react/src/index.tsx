@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
-import { mount, type MountResult } from '@gitalk/core'
-import type { GitalkOptions } from '@gitalk/core'
+import { mount, type MountResult } from '@aifire/gitalk'
+import type { GitalkOptions } from '@aifire/gitalk'
 
 export interface GitalkProps {
   options: GitalkOptions
@@ -12,7 +12,7 @@ export interface GitalkProps {
 /**
  * React wrapper around the framework-agnostic core.
  *
- * The core renders with Preact internally, bundled inside `@gitalk/core`. That
+ * The core renders with Preact internally, bundled inside `@aifire/gitalk`. That
  * is deliberate: mounting the widget inside React's own tree would couple it to
  * whichever React version the host app uses, whereas delegating to Preact keeps
  * versions independent and lets the same core serve Vue and plain-script users.

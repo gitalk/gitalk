@@ -1,5 +1,5 @@
 {
-  "name": "@gitalk/vue",
+  "name": "@aifire/gitalk-vue",
   "version": "2.1.0",
   "description": "Vue 3 wrapper for Gitalk 2.0 comment widget.",
   "license": "MIT",
@@ -14,22 +14,33 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "build": "vite build && tsc -p tsconfig.types.json",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm run typecheck && pnpm run build"
   },
   "peerDependencies": {
     "vue": ">=3.4"
   },
   "dependencies": {
-    "@gitalk/core": "workspace:*"
+    "@aifire/gitalk": "workspace:*"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "6.0.10",
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vue": "3.5.44"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gitalk/gitalk.git",
+    "directory": "packages/vue"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   }
 }

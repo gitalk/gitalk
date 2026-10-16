@@ -1,11 +1,11 @@
 import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { mount, type MountResult } from '@gitalk/core'
-import type { GitalkOptions } from '@gitalk/core'
+import { mount, type MountResult } from '@aifire/gitalk'
+import type { GitalkOptions } from '@aifire/gitalk'
 
 /**
  * Vue 3 wrapper around the framework-agnostic core.
  *
- * As with the React wrapper, the UI is rendered by Preact inside `@gitalk/core`
+ * As with the React wrapper, the UI is rendered by Preact inside `@aifire/gitalk`
  * and merely mounted into this component's element — so it neither requires a
  * specific Vue version nor competes with Vue's renderer.
  */

@@ -1,10 +1,10 @@
 import { useEffect, useRef } from 'react'
-import { mount, type MountResult } from '@gitalk/core'
-import type { GitalkOptions } from '@gitalk/core'
+import { mount, type MountResult } from '@aifire/gitalk'
+import type { GitalkOptions } from '@aifire/gitalk'
 
 /**
  * Demo host for the landing page. Mounts the framework-agnostic core directly
- * (rather than going through `@gitalk/react`) so the page proves the
+ * (rather than going through `@aifire/gitalk-react`) so the page proves the
  * no-framework path works in a real browser.
  */
 export function Gitalk({

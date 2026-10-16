@@ -21,9 +21,12 @@ export default defineConfig({
   resolve: {
     alias: [
       // Styles first: a bare substring alias would also swallow
-      // `@gitalk/core/style.css` and point it at index.ts.
-      { find: /^@gitalk\/core\/style\.css$/, replacement: resolve(CORE_SRC, 'styles/index.css') },
-      { find: /^@gitalk\/core$/, replacement: resolve(CORE_SRC, 'index.ts') }
+      // `@aifire/gitalk/style.css` and point it at index.ts.
+      //
+      // These point at source so the landing page always reflects the working
+      // tree, and so it builds without `packages/core` having been built.
+      { find: /^@aifire\/gitalk\/style\.css$/, replacement: resolve(CORE_SRC, 'styles/index.css') },
+      { find: /^@aifire\/gitalk$/, replacement: resolve(CORE_SRC, 'index.ts') }
     ]
   }
 })

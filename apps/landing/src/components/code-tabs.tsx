@@ -32,8 +32,8 @@ const SNIPPETS: Array<{ id: string; label: string; hint: string; code: string }>
     id: 'react',
     label: 'React',
     hint: 'peerDependency: react >= 18',
-    code: `import { Gitalk } from '@gitalk/react'
-import '@gitalk/core/style.css'
+    code: `import { Gitalk } from '@aifire/gitalk-react'
+import '@aifire/gitalk/style.css'
 
 export function Comments() {
   return (
@@ -56,8 +56,8 @@ export function Comments() {
     label: 'Vue',
     hint: 'peerDependency: vue >= 3.4',
     code: `<script setup lang="ts">
-import { Gitalk } from '@gitalk/vue'
-import '@gitalk/core/style.css'
+import { Gitalk } from '@aifire/gitalk-vue'
+import '@aifire/gitalk/style.css'
 
 const options = {
   clientID: 'Iv1.xxxxxxxx',

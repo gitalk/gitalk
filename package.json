@@ -9,7 +9,7 @@
   "scripts": {
     "build": "pnpm -r --filter \"./packages/**\" run build",
     "build:landing": "pnpm --filter @gitalk/landing run build",
-    "dev": "pnpm --filter @gitalk/core run dev",
+    "dev": "pnpm --filter @aifire/gitalk run dev",
     "dev:landing": "pnpm --filter @gitalk/landing run dev",
     "test": "vitest run",
     "test:watch": "vitest",

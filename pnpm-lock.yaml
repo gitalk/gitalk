@@ -38,7 +38,7 @@ importers:
 
   apps/landing:
     dependencies:
-      '@gitalk/core':
+      '@aifire/gitalk':
         specifier: workspace:*
         version: link:../../packages/core
       react:
@@ -106,7 +106,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@gitalk/core':
+      '@aifire/gitalk':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -128,7 +128,7 @@ importers:
 
   packages/vue:
     dependencies:
-      '@gitalk/core':
+      '@aifire/gitalk':
         specifier: workspace:*
         version: link:../core
     devDependencies:
