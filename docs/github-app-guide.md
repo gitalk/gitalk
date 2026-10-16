@@ -244,17 +244,66 @@ workers.dev 子域**拼成。
 ⚠️ **`*.workers.dev` 的子域是全局唯一的**，跨所有 Cloudflare 账号。实测该地址当前返回
 `error code: 1042`，即**子域尚未注册**（[Cloudflare 社区说明](https://community.cloudflare.com/t/workers-dev-returns-http-404-error-1042-before-worker-invocation/943965)）。
 
-到 Cloudflare 控制台 → **Workers & Pages** → 注册一个子域：
+##### 怎么注册这个子域
 
-- 能拿到 `gitalk` → 什么都不用改，最终 URL 就是 `https://gitalk-proxy.gitalk.workers.dev`
-- 拿不到（已被他人占用）→ 记下你实际拿到的子域，**必须同步改三处**：
+**不要在 `Workers & Pages` 列表页找入口**——那里只有「创建应用」。
+子域注册是独立的 onboarding 流程，官方文档描述的位置是
+「**Workers & Pages** 页 → **Your subdomain** 旁的 **Change**」
+（[workers.dev 文档](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/)），
+但**账号从未注册过子域时，这个 widget 不会出现**，于是看起来像是「只能创建 app」。
+
+三条可行路径，任选：
+
+**路径 A · 专用链接（最直接）**
+
+```
+https://dash.cloudflare.com/<你的 account id>/workers/onboarding
+```
+
+`<account id>` 就是控制台 URL 里那一串十六进制。例如账号 id 为 `abf76d...` 时：
+
+```
+https://dash.cloudflare.com/abf76d830af2ba0959b7c49d541f5f09/workers/onboarding
+```
+
+这个链接来自 wrangler 自己的报错信息
+（`You need to register a workers.dev subdomain … register one here: …/workers/onboarding`），
+在没有子域时会被主动打印出来。
+
+**路径 B · 先建一个 Worker**
+
+2026-05 起控制台新增了 **Domains** 标签，用来管理该 Worker 的
+workers.dev 子域与 Preview URL
+（[改版说明](https://developers.cloudflare.com/changelog/post/2026-05-14-domains-tab/)）：
+**Workers & Pages → 选中某个 Worker → Domains 标签**。
+先把 `gitalk-proxy` 建出来（或直接跑下面的 `wrangler deploy`），再进 Domains 操作。
+
+**路径 C · 直接部署，让 wrangler 引导**
+
+```bash
+cd packages/proxy-worker
+npx wrangler login
+npx wrangler deploy
+```
+
+账号没有子域时 wrangler 会交互式询问
+`Would you like to register a workers.dev subdomain now?`，按提示输入即可。
+
+##### 选好名字之后
+
+子域决定最终 URL：worker 名为 `gitalk-proxy`，所以地址是
+`https://gitalk-proxy.<你的子域>.workers.dev`。
+
+- 拿到了 `gitalk` → 什么都不用改，URL 即 `https://gitalk-proxy.gitalk.workers.dev`
+- 拿不到（已被他人占用）→ 记下实际子域，**必须同步改三处**：
   1. `packages/core/src/auth.ts` 的 `DEFAULT_PROXY`
   2. 本文 §1.2 与 GitHub App 的 Redirect URI
   3. 凡是出现 `gitalk-proxy.gitalk.workers.dev` 的文档
 
 > **更稳的做法：绑自定义域名。** 如果你拥有域名并托管在 Cloudflare，可以用
-> `routes` 绑定（如 `proxy.gitalk.dev`）。它不受子域被占/改名的影响，也比
-> `*.workers.dev` 更像一个可信端点。代价是需要一个域名。
+> `routes` 绑定（如 `proxy.gitalk.dev`）。它不受子域被占/改名的影响。
+> Cloudflare 官方也明确建议生产 Worker 走自定义域名或 route——
+> workers.dev 被视为「Free website」，面向个人/业余项目，不适合关键业务。
 
 #### ② 登录 Cloudflare
 
