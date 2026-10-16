@@ -1,33 +1,130 @@
 /**
  * Gitalk stylesheet
  *
- * Ported from the original Gitalk 1.x Stylus source (`src/style/index.styl`).
- * All theme tokens now live in CSS custom properties declared in `:root`
- * below, so the widget can be re-themed at runtime by overriding them --
- * no rebuild step required. Values are identical to v1, so the rendered
- * result is pixel-for-pixel the same unless a custom property is changed.
+ * v2.2 redesign. The visual language comes from the "comment-ui" design
+ * reference: one soft card per region, flat comment rows split by hairlines,
+ * a brand-tinted rail carrying nested replies, 36px circular avatars, and a
+ * single brand accent for everything interactive.
+ *
+ * Reference -> token mapping (light values; dark ones below):
+ *   --primary-base  -> --gt-color-main         #1E4FFF, untouched brand
+ *   --surface       -> --gt-color-surface      card background
+ *   --surface-soft  -> --gt-color-surface-soft textarea / soft blocks
+ *   --text(-2/-3)   -> --gt-color-text(-2/-3)
+ *   --border        -> --gt-color-border
+ *   --shadow        -> --gt-shadow-card
+ *   --reply-line    -> --gt-color-reply-line   nested-reply rail
+ *   --primary-soft  -> --gt-color-main-soft    hover wash / admin tint
+ *
+ * Type scales with --gt-size-base (the v1 contract). Spacing, radii and
+ * borders are px so they can be compared 1:1 with the reference.
+ *
+ * Theming: dark values live under `[data-theme='dark']`, which matches either
+ * `<html data-theme="dark">` (what the landing page toggles) or the widget's
+ * own container. Every v1/v2.0 `--gt-*` token keeps its name so existing
+ * overrides keep applying.
  */
 :root {
+  /* ---- brand: unchanged, it is the whole point of the palette ---- */
   --gt-color-main: #1e4fff;
-  --gt-color-sub: #a1a1a1;
-  --gt-color-loader: #999999;
+
+  /* ---- v1 tokens, names preserved for existing overrides ---- */
+  --gt-color-sub: #64748b;
+  --gt-color-loader: #94a3b8;
   --gt-color-error: #ff3860;
-  --gt-color-hr: #e9e9e9;
-  --gt-color-input-border: rgba(0, 0, 0, 0.1);
-  --gt-color-input-bg: #f6f6f6;
-  --gt-color-comment-bg: #f9f9f9;
-  --gt-color-comment-adminbg: #f6f9fe;
-  --gt-color-comment-txt: #333;
-  --gt-color-link-active: #333;
+  --gt-color-hr: #e7ecf3;
+  --gt-color-input-border: #e7ecf3;
+  --gt-color-input-bg: #f8fafc;
+  /* v1's per-comment grey box is gone: rows are flat inside one card. The
+     token stays (default transparent) so an embedder who wants the boxes
+     back can still just set it. */
+  --gt-color-comment-bg: transparent;
+  --gt-color-comment-adminbg: color-mix(in srgb, var(--gt-color-accent) 6%, transparent);
+  --gt-color-comment-txt: #0f172a;
+  --gt-color-link-active: #0f172a;
   --gt-color-btn: #fff;
-  --gt-color-popbg: #fff;
+  --gt-color-popbg: #ffffff;
   --gt-size-base: 16px;
-  --gt-size-border-radius: 5px;
+  --gt-size-border-radius: 9px;
+
+  /* ---- design tokens ---- */
+  --gt-color-surface: #ffffff;
+  --gt-color-surface-soft: #f8fafc;
+  --gt-color-text: #0f172a;
+  --gt-color-text-2: #64748b;
+  --gt-color-text-3: #94a3b8;
+  --gt-color-border: #e7ecf3;
+  /* The accent is what brand-coloured *text* uses. In light mode it is the
+     brand itself; dark mode overrides it (see below). */
+  --gt-color-accent: var(--gt-color-main);
+  /* Every derived brand tint is mixed from --gt-color-accent, exactly like the
+     reference mixes from --primary: in dark mode that means the reply rail,
+     the hover wash and the focus ring all follow the lightened brand instead
+     of staying dark and muddy. */
+  --gt-color-accent-hover: color-mix(in srgb, var(--gt-color-accent) 82%, #000);
+  /* Button fill hover stays brand-based: white label on #1E4FFF is 5.8:1 and
+     lightening it (what the reference does) would drop it under AA. */
+  --gt-color-btn-hover: color-mix(in srgb, var(--gt-color-main) 84%, #000);
+  --gt-color-main-soft: color-mix(in srgb, var(--gt-color-accent) 8%, #fff);
+  --gt-color-main-border: color-mix(in srgb, var(--gt-color-accent) 22%, #fff);
+  --gt-color-reply-line: color-mix(in srgb, var(--gt-color-accent) 22%, transparent);
+  --gt-color-error-soft: color-mix(in srgb, var(--gt-color-error) 8%, #fff);
+  --gt-color-error-border: color-mix(in srgb, var(--gt-color-error) 24%, #fff);
+  --gt-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.35);
+  --gt-shadow-focus: 0 0 0 3px var(--gt-color-main-soft);
+  --gt-radius-card: 16px;
+  --gt-radius-control: 11px;
+  --gt-radius-pill: 7px;
+  --gt-size-avatar: 36px;
 }
 
-.gt-container {
+[data-theme='dark'] {
+  --gt-color-sub: #94a3b8;
+  --gt-color-loader: #64748b;
+  --gt-color-hr: #1f2a3d;
+  --gt-color-input-border: #1f2a3d;
+  --gt-color-input-bg: #0f172a;
+  --gt-color-comment-adminbg: color-mix(in srgb, var(--gt-color-accent) 22%, transparent);
+  --gt-color-comment-txt: #e5e7eb;
+  --gt-color-link-active: #e5e7eb;
+  --gt-color-popbg: #111827;
+
+  --gt-color-surface: #111827;
+  --gt-color-surface-soft: #0f172a;
+  --gt-color-text: #e5e7eb;
+  --gt-color-text-2: #94a3b8;
+  --gt-color-text-3: #64748b;
+  --gt-color-border: #1f2a3d;
+  /* #1E4FFF on #111827 is about 3:1, below AA for body text, so -- as the
+     reference does -- brand-coloured *text and icons* get lightened toward
+     white. --gt-color-main itself stays untouched: it is the brand and the
+     button fill, where white type sits on top of it. */
+  --gt-color-accent: color-mix(in srgb, var(--gt-color-main) 72%, #fff);
+  --gt-color-accent-hover: color-mix(in srgb, var(--gt-color-accent) 85%, #fff);
+  --gt-color-btn-hover: color-mix(in srgb, var(--gt-color-main) 84%, #000);
+  --gt-color-main-soft: color-mix(in srgb, var(--gt-color-accent) 16%, #0b1220);
+  --gt-color-main-border: color-mix(in srgb, var(--gt-color-accent) 34%, #0b1220);
+  --gt-color-reply-line: color-mix(in srgb, var(--gt-color-accent) 32%, transparent);
+  --gt-color-error-soft: color-mix(in srgb, var(--gt-color-error) 18%, #0b1220);
+  --gt-color-error-border: color-mix(in srgb, var(--gt-color-error) 42%, #0b1220);
+  --gt-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -18px rgba(0, 0, 0, 0.9);
+}
+
+/* Native widgets (textarea scrollbars, selection) follow the theme when it is
+   explicitly dark; otherwise they inherit whatever the host page asked for. */
+.gt-container,
+[data-theme='dark'] .gt-container,
+.gt-container[data-theme='dark'] {
   box-sizing: border-box;
   font-size: var(--gt-size-base);
+  color: var(--gt-color-text);
+  line-height: 1.62;
+  transition: color 0.25s ease;
+}
+
+[data-theme='dark'] .gt-container,
+.gt-container[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 .gt-container * {
@@ -39,13 +136,13 @@
 
 /* common */
 .gt-container a {
-  color: var(--gt-color-main);
+  color: var(--gt-color-accent);
 }
 
 .gt-container a:hover {
-  /* lighten(--gt-color-main, 20%) */
-  color: #436cff;
-  border-color: #436cff;
+  /* lighten/darken toward the themed accent */
+  color: var(--gt-color-accent-hover);
+  border-color: var(--gt-color-accent-hover);
 }
 
 .gt-container a.is--active {
@@ -72,7 +169,7 @@
 .gt-container .gt-svg svg {
   width: 100%;
   height: 100%;
-  fill: var(--gt-color-main);
+  fill: var(--gt-color-accent);
 }
 
 .gt-container .gt-ico {
@@ -84,8 +181,8 @@
 }
 
 .gt-container .gt-ico-github {
-  width: 100%;
-  height: 100%;
+  width: 18px;
+  height: 18px;
 }
 
 .gt-container .gt-ico-github .gt-svg {
@@ -106,14 +203,14 @@
   content: '';
   box-sizing: border-box;
   position: absolute;
-  top: 3px;
+  top: 50%;
+  left: 50%;
   width: 0.75em;
   height: 0.75em;
-  margin-top: -0.1875em;
-  margin-left: -0.375em;
+  margin: -0.375em 0 0 -0.375em;
   border-radius: 50%;
-  border: 1px solid var(--gt-color-btn);
-  border-top-color: var(--gt-color-main);
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
   animation: gt-kf-rotate 0.6s linear infinite;
 }
 
@@ -145,44 +242,58 @@
 
 /* avatar */
 .gt-container .gt-avatar {
-  display: inline-block;
-  width: 3.125em;
-  height: 3.125em;
-}
-
-@media (max-width: 479px) {
-  .gt-container .gt-avatar {
-    width: 2em;
-    height: 2em;
-  }
+  display: block;
+  flex: none;
+  width: var(--gt-size-avatar);
+  height: var(--gt-size-avatar);
 }
 
 .gt-container .gt-avatar img {
   width: 100%;
-  height: auto;
-  border-radius: 3px;
+  height: 100%;
+  object-fit: cover;
+  /* Reference avatars are circles, not the v1 3px squares. */
+  border-radius: 50%;
+  background-color: var(--gt-color-surface-soft);
 }
 
+/* Signed-out state: the GitHub mark replaces the avatar and is a button, so it
+   borrows the reference's square icon button treatment. */
 .gt-container .gt-avatar-github {
-  /* $gt-size-avatar - em(2px) */
-  width: 3em;
-  height: 3em;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--gt-size-avatar);
+  height: var(--gt-size-avatar);
+  border: 1px solid var(--gt-color-border);
+  border-radius: 10px;
+  background-color: var(--gt-color-surface);
+  color: var(--gt-color-text-2);
   cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background-color 0.18s;
 }
 
-@media (max-width: 479px) {
-  .gt-container .gt-avatar-github {
-    /* $gt-size-avatar-mobi - em(2px) */
-    width: 1.875em;
-    height: 1.875em;
-  }
+.gt-container .gt-avatar-github:hover {
+  border-color: var(--gt-color-main-border);
+  color: var(--gt-color-accent);
+  background-color: var(--gt-color-main-soft);
 }
 
 /* button */
 .gt-container .gt-btn {
-  padding: 0.75em 1.25em;
-  display: inline-block;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 15px;
+  /* The reference's .btn renders 34px tall (7px padding + an inherited 1.6
+     line box); pin the height instead of inheriting a line-height, so the
+     button stays the same size next to an in-progress spinner. */
+  min-height: 34px;
+  font-family: inherit;
+  font-size: 0.8125em;
+  font-weight: 600;
+  line-height: 1.2;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
@@ -191,18 +302,22 @@
   background-color: var(--gt-color-main);
   color: var(--gt-color-btn);
   outline: none;
-  font-size: 0.75em;
+  transition: background-color 0.16s, border-color 0.16s, color 0.16s, box-shadow 0.16s;
 }
 
 .gt-container .gt-btn-text {
-  font-weight: 400;
+  font-weight: 600;
+}
+
+.gt-container .gt-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
 }
 
 .gt-container .gt-btn-loading {
   position: relative;
-  margin-left: 0.5em;
   display: inline-block;
-  width: 0.75em;
+  width: 0.9167em;
   height: 1em;
   vertical-align: top;
 }
@@ -216,45 +331,76 @@
   margin-right: 0;
 }
 
-.gt-container .gt-btn-preview {
-  background-color: var(--gt-color-btn);
-  color: var(--gt-color-main);
+/* Ghost buttons: Preview / Login, matching the reference's .btn-ghost. */
+.gt-container .gt-btn-preview,
+.gt-container .gt-btn-login {
+  background-color: transparent;
+  border-color: var(--gt-color-border);
+  color: var(--gt-color-text-2);
 }
 
-.gt-container .gt-btn-preview:hover {
-  /* darken(--gt-color-btn, 5%) / lighten(--gt-color-main, 20%) */
-  background-color: #f2f2f2;
-  border-color: #436cff;
+.gt-container .gt-btn-preview:hover,
+.gt-container .gt-btn-login:hover {
+  background-color: var(--gt-color-surface-soft);
+  border-color: var(--gt-color-text-3);
+  color: var(--gt-color-text);
 }
 
 .gt-container .gt-btn-public:hover {
-  /* lighten(--gt-color-main, 20%) */
-  background-color: #436cff;
-  border-color: #436cff;
+  background-color: var(--gt-color-btn-hover);
+  border-color: var(--gt-color-btn-hover);
 }
 
 /* error */
 .gt-container .gt-error {
+  margin: 0 0 16px;
+  padding: 12px 16px;
   text-align: center;
-  margin: 0.625em;
+  font-size: 0.875em;
   color: var(--gt-color-error);
+  background-color: var(--gt-color-error-soft);
+  border: 1px solid var(--gt-color-error-border);
+  border-radius: var(--gt-radius-control);
+}
+
+.gt-container .gt-error-hint {
+  color: var(--gt-color-text-2);
 }
 
 /* initing */
 .gt-container .gt-initing {
-  padding: 1.25em 0;
+  padding: 32px 0;
   text-align: center;
+  color: var(--gt-color-text-3);
 }
 
 .gt-container .gt-initing-text {
-  margin: 0.625em auto;
-  font-size: 92%;
+  margin: 10px auto;
+  font-size: 0.875em;
 }
 
 /* no init */
 .gt-container .gt-no-init {
-  padding: 1.25em 0;
+  padding: 28px 20px;
   text-align: center;
+  color: var(--gt-color-text-2);
+  background-color: var(--gt-color-surface);
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-card);
+  box-shadow: var(--gt-shadow-card);
+}
+
+.gt-container .gt-no-init p {
+  margin: 0 0 12px;
+  font-size: 0.875em;
+}
+
+.gt-container .gt-no-init p:last-child {
+  margin-bottom: 0;
+}
+
+.gt-container .gt-no-init .gt-btn {
+  margin-top: 4px;
 }
 
 /* link */
@@ -267,36 +413,54 @@
   text-decoration: none;
 }
 
-/* meta */
+/* meta -- now the section header above the composer, the way the reference
+   puts the count above the list. */
 .gt-container .gt-meta {
-  margin: 1.25em 0;
-  padding: 1em 0;
-  position: relative;
-  border-bottom: 1px solid var(--gt-color-hr);
-  font-size: 1em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0 2px;
   position: relative;
   z-index: 10;
-}
-
-/* clearfix() */
-.gt-container .gt-meta:before,
-.gt-container .gt-meta:after {
-  content: " ";
-  display: table;
-}
-
-.gt-container .gt-meta:after {
-  clear: both;
+  font-size: 1em;
 }
 
 .gt-container .gt-counts {
-  margin: 0 0.625em 0 0;
+  margin: 0;
+  font-size: 0.8125em;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--gt-color-text-3);
+}
+
+/* The i18n string is one sentence ("2 comments" / "2 条评论"), so the count
+   element inside it is what gets the reference's 22px/700 <h1> treatment while
+   the surrounding wording stays small and muted. */
+.gt-container .gt-counts .gt-link-counts {
+  /* 22px at the 13px .gt-counts size -- spelled out to 6 decimals so Chrome
+     lands on exactly 22px instead of 21.9999px. */
+  font-size: 1.692308em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--gt-color-text);
+  text-decoration: none;
+}
+
+.gt-container .gt-counts .gt-link-counts:hover {
+  color: var(--gt-color-accent);
+  border-bottom: 0;
 }
 
 .gt-container .gt-user {
-  float: right;
   margin: 0;
-  font-size: 92%;
+  font-size: 0.8125em;
+  color: var(--gt-color-text-2);
+}
+
+.gt-container .gt-user-name {
+  white-space: nowrap;
 }
 
 .gt-container .gt-user-pic {
@@ -304,6 +468,7 @@
   height: 16px;
   vertical-align: top;
   margin-right: 0.5em;
+  border-radius: 50%;
 }
 
 .gt-container .gt-user-inner {
@@ -320,18 +485,19 @@
 }
 
 .gt-container .gt-user .is--poping .gt-ico svg {
-  fill: var(--gt-color-main);
+  fill: var(--gt-color-accent);
 }
 
 .gt-container .gt-version {
-  color: var(--gt-color-sub);
+  color: inherit;
   margin-left: 0.375em;
 }
 
 .gt-container .gt-copyright {
-  margin: 0 0.9375em 0.5em;
-  border-top: 1px solid var(--gt-color-hr);
-  padding-top: 0.5em;
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 0.75em;
+  color: var(--gt-color-text-3);
 }
 
 /* popup */
@@ -341,122 +507,135 @@
   top: 2.375em;
   background: var(--gt-color-popbg);
   display: inline-block;
-  border: 1px solid var(--gt-color-hr);
-  padding: 0.625em 0;
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-control);
+  box-shadow: var(--gt-shadow-card);
+  padding: 4px 0;
   font-size: 0.875em;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
 }
 
 .gt-container .gt-popup .gt-action {
   cursor: pointer;
   display: block;
-  margin: 0.5em 0;
-  padding: 0 1.125em;
+  margin: 2px 4px;
+  padding: 6px 12px;
+  border-radius: var(--gt-radius-pill);
   position: relative;
   text-decoration: none;
+  color: var(--gt-color-text-2);
+}
+
+.gt-container .gt-popup .gt-action:hover {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
 }
 
 .gt-container .gt-popup .gt-action.is--active:before {
   content: '';
-  width: 0.25em;
-  height: 0.25em;
-  background: var(--gt-color-main);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gt-color-accent);
   position: absolute;
-  left: 0.5em;
-  top: 0.4375em;
+  left: 0;
+  top: 50%;
+  margin-top: -2px;
 }
 
-/* header */
+/* header -- the composer card */
 .gt-container .gt-header {
   position: relative;
   display: flex;
+  gap: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: var(--gt-color-surface);
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-card);
+  box-shadow: var(--gt-shadow-card);
+  transition: background-color 0.25s, border-color 0.25s;
 }
 
 .gt-container .gt-header-comment {
   flex: 1;
-  margin-left: 1.25em;
-}
-
-@media (max-width: 479px) {
-  .gt-container .gt-header-comment {
-    margin-left: 0.875em;
-  }
+  min-width: 0;
+  margin-left: 0;
 }
 
 .gt-container .gt-header-textarea {
-  padding: 0.75em;
+  padding: 10px 12px;
   display: block;
   box-sizing: border-box;
   width: 100%;
-  min-height: 5.125em;
+  min-height: 44px;
   max-height: 15em;
-  border-radius: var(--gt-size-border-radius);
-  border: 1px solid var(--gt-color-input-border);
+  border-radius: var(--gt-radius-control);
+  border: 1px solid var(--gt-color-border);
+  font-family: inherit;
   font-size: 0.875em;
+  line-height: 1.55;
+  color: var(--gt-color-text);
   word-wrap: break-word;
   resize: vertical;
-  background-color: var(--gt-color-input-bg);
+  background-color: var(--gt-color-surface-soft);
   outline: none;
-  transition: all 0.25s ease;
+  transition: border-color 0.16s, box-shadow 0.16s, background-color 0.16s;
+}
+
+.gt-container .gt-header-textarea::placeholder {
+  color: var(--gt-color-text-3);
 }
 
 .gt-container .gt-header-textarea:hover {
-  /* lighten(--gt-color-input-bg, 50%) */
-  background-color: #fbfbfb;
+  background-color: var(--gt-color-surface);
+}
+
+.gt-container .gt-header-textarea:focus {
+  background-color: var(--gt-color-surface);
+  border-color: var(--gt-color-main);
+  box-shadow: var(--gt-shadow-focus);
 }
 
 .gt-container .gt-header-preview {
-  padding: 0.75em;
-  border-radius: var(--gt-size-border-radius);
-  border: 1px solid var(--gt-color-input-border);
-  background-color: var(--gt-color-input-bg);
+  padding: 10px 12px;
+  min-height: 44px;
+  border-radius: var(--gt-radius-control);
+  border: 1px solid var(--gt-color-border);
+  background-color: var(--gt-color-surface-soft);
 }
 
 .gt-container .gt-header-controls {
   position: relative;
-  margin: 0.75em 0 0;
-}
-
-/* clearfix() */
-.gt-container .gt-header-controls:before,
-.gt-container .gt-header-controls:after {
-  content: " ";
-  display: table;
-}
-
-.gt-container .gt-header-controls:after {
-  clear: both;
-}
-
-@media (max-width: 479px) {
-  .gt-container .gt-header-controls {
-    margin: 0;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
 }
 
 .gt-container .gt-header-controls-tip {
+  /* float the markdown hint to the far left, buttons stay right */
+  margin-right: auto;
   font-size: 0.875em;
-  color: var(--gt-color-main);
+  color: var(--gt-color-accent);
   text-decoration: none;
   vertical-align: sub;
+}
+
+.gt-container .gt-header-controls .gt-btn {
+  margin-left: 0;
 }
 
 @media (max-width: 479px) {
   .gt-container .gt-header-controls-tip {
     display: none;
   }
-}
 
-.gt-container .gt-header-controls .gt-btn {
-  float: right;
-  margin-left: 1.25em;
-}
-
-@media (max-width: 479px) {
   .gt-container .gt-header-controls .gt-btn {
-    float: none;
     width: 100%;
-    margin: 0.75em 0 0;
+    margin: 0;
   }
 }
 
@@ -491,51 +670,76 @@
   z-index: 10000;
 }
 
-/* comments */
+/* comments -- the list card */
 .gt-container .gt-comments {
-  padding-top: 1.25em;
+  padding: 6px 16px;
+  background-color: var(--gt-color-surface);
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-card);
+  box-shadow: var(--gt-shadow-card);
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+.gt-container .gt-comments > .gt-comment + .gt-comment {
+  border-top: 1px solid var(--gt-color-border);
 }
 
 .gt-container .gt-comments-null {
+  padding: 24px 0;
   text-align: center;
+  font-size: 0.875em;
+  color: var(--gt-color-text-3);
 }
 
 .gt-container .gt-comments-controls {
-  margin: 1.25em 0;
+  margin: 4px 0 12px;
   text-align: center;
 }
 
-/* comment */
+/* Secondary action: a ghost pill, so it never competes with "Comment". */
+.gt-container .gt-btn-loadmore {
+  min-width: 8em;
+  background-color: transparent;
+  border-color: var(--gt-color-border);
+  color: var(--gt-color-text-2);
+}
+
+.gt-container .gt-btn-loadmore:hover {
+  background-color: var(--gt-color-main-soft);
+  border-color: var(--gt-color-main-border);
+  color: var(--gt-color-accent);
+}
+
+/* comment -- one flat row per comment */
 .gt-container .gt-comment {
   position: relative;
-  padding: 0.625em 0;
   display: flex;
+  gap: 12px;
+  padding: 14px 0;
+}
+
+/* Top-aligned with the first line of the header, like the reference's .avatar. */
+.gt-container .gt-comment-avatar {
+  align-self: flex-start;
 }
 
 .gt-container .gt-comment-content {
   flex: 1;
-  margin-left: 1.25em;
-  padding: 0.75em 1em;
+  min-width: 0;
+  margin-left: 0;
+  padding: 0;
   background-color: var(--gt-color-comment-bg);
-  overflow: auto;
-  transition: all ease 0.25s;
-}
-
-.gt-container .gt-comment-content:hover {
-  /* darken(--gt-color-comment-bg, 2%) */
-  box-shadow: 0 0.625em 3.75em 0 #f4f4f4;
-}
-
-@media (max-width: 479px) {
-  .gt-container .gt-comment-content {
-    margin-left: 0.875em;
-    padding: 0.625em 0.75em;
-  }
+  border-radius: 12px;
+  overflow: visible;
+  transition: background-color 0.25s ease;
 }
 
 .gt-container .gt-comment-header {
-  margin-bottom: 0.5em;
-  font-size: 0.875em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+  font-size: 1em;
   position: relative;
 }
 
@@ -552,51 +756,59 @@
 }
 
 .gt-container .gt-comment-username {
-  font-weight: 500;
-  color: var(--gt-color-main);
+  font-size: 0.84375em;
+  font-weight: 600;
+  color: var(--gt-color-text);
   text-decoration: none;
 }
 
 .gt-container .gt-comment-username:hover {
-  text-decoration: underline;
+  color: var(--gt-color-accent);
+  text-decoration: none;
 }
 
 .gt-container .gt-comment-text {
-  margin-left: 0.5em;
-  color: var(--gt-color-sub);
+  font-size: 0.75em;
+  color: var(--gt-color-text-2);
 }
 
 .gt-container .gt-comment-date {
-  margin-left: 0.5em;
-  color: var(--gt-color-sub);
-}
-
-.gt-container .gt-comment-like,
-.gt-container .gt-comment-edit,
-.gt-container .gt-comment-reply {
-  position: absolute;
-  height: 1.375em;
-}
-
-.gt-container .gt-comment-like:hover,
-.gt-container .gt-comment-edit:hover,
-.gt-container .gt-comment-reply:hover {
-  cursor: pointer;
-}
-
-.gt-container .gt-comment-like {
-  top: 0;
-  right: 2em;
-}
-
-.gt-container .gt-comment-edit,
-.gt-container .gt-comment-reply {
-  top: 0;
-  right: 0;
+  font-size: 0.75em;
+  color: var(--gt-color-text-3);
 }
 
 .gt-container .gt-comment-body {
   color: var(--gt-color-comment-txt) !important;
+  font-size: 0.875em;
+  line-height: 1.62;
+  word-break: break-word;
+}
+
+.gt-container .gt-comment-body *:first-child {
+  margin-top: 0;
+}
+
+/*
+ * The reference's .text keeps a 6px bottom margin, and that margin is what
+ * separates the paragraph from the action pills underneath it. The vendored
+ * github-markdown-css zeroes every last child with `!important`, so restore it
+ * only on the paragraph that actually has pills after it -- without this, the
+ * gap has to be faked on the pill row and a comment with no actions ends up
+ * with a phantom 6px of trailing space.
+ */
+.gt-container .gt-comment-body:has(+ .gt-comment-actions) > *:last-child {
+  margin-bottom: 6px !important;
+}
+
+/* @mentions rendered by the host (GitHub linkifies them); the reference
+   highlights them with a soft brand pill. */
+.gt-container .gt-comment-body .mention,
+.gt-container .gt-header-preview .mention {
+  color: var(--gt-color-accent);
+  font-weight: 600;
+  background: var(--gt-color-main-soft);
+  border-radius: 4px;
+  padding: 0 4px;
 }
 
 .gt-container .gt-comment-body .email-hidden-toggle a {
@@ -606,15 +818,15 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 6px;
-  color: #444d56;
+  color: var(--gt-color-text-2);
   text-decoration: none;
   vertical-align: middle;
-  background: #dfe2e5;
-  border-radius: 1px;
+  background: var(--gt-color-border);
+  border-radius: 3px;
 }
 
 .gt-container .gt-comment-body .email-hidden-toggle a:hover {
-  background-color: #c6cbd1;
+  background-color: var(--gt-color-surface-soft);
 }
 
 .gt-container .gt-comment-body .email-hidden-reply {
@@ -625,16 +837,82 @@
 .gt-container .gt-comment-body .email-hidden-reply .email-signature-reply {
   padding: 0 15px;
   margin: 15px 0;
-  color: #586069;
-  border-left: 4px solid #dfe2e5;
+  color: var(--gt-color-text-2);
+  border-left: 4px solid var(--gt-color-border);
 }
 
 .gt-container .gt-comment-body .email-hidden-reply.expanded {
   display: block;
 }
 
-.gt-container .gt-comment-admin .gt-comment-content {
+/* action row -- the reference's .actions: quiet pills under the text */
+.gt-container .gt-comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 0 -8px;
+}
+
+/* .gt-ico-text carries a legacy 0.3125em margin; the reference spaces icon and
+   count with a 5px gap. */
+.gt-container .gt-comment-actions .gt-ico-text {
+  margin-left: 5px;
+}
+
+.gt-container .gt-comment-like,
+.gt-container .gt-comment-edit,
+.gt-container .gt-comment-reply {
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  height: auto;
+  padding: 4px 8px;
+  border-radius: var(--gt-radius-pill);
+  font-size: 0.78125em;
+  line-height: 1;
+  color: var(--gt-color-text-2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.16s, color 0.16s;
+}
+
+.gt-container .gt-comment-like:hover,
+.gt-container .gt-comment-edit:hover,
+.gt-container .gt-comment-reply:hover {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+  border-color: transparent;
+}
+
+.gt-container .gt-comment-like:focus-visible,
+.gt-container .gt-comment-edit:focus-visible,
+.gt-container .gt-comment-reply:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
+}
+
+/* Both action icons are single-colour glyphs, so they follow the pill's
+   currentColor instead of the global accent fill. */
+.gt-container .gt-comment-like .gt-svg svg,
+.gt-container .gt-comment-edit .gt-svg svg,
+.gt-container .gt-comment-reply .gt-svg svg {
+  fill: currentColor;
+}
+
+.gt-container .gt-comment-like.is--liked {
+  color: var(--gt-color-accent);
+  font-weight: 600;
+}
+
+.gt-container .gt-comment-reply .gt-ico-text {
+  white-space: nowrap;
+}
+
+.gt-container .gt-comment-admin > .gt-comment-content {
   background-color: var(--gt-color-comment-adminbg);
+  padding: 8px 12px;
+  /* keep the author's text on the same column as everyone else's */
+  margin: -8px 0 -8px -12px;
 }
 
 @keyframes gt-kf-rotate {
@@ -646,6 +924,7 @@
     transform: rotate(360deg);
   }
 }
+
 
 /*
  * Markdown rendering (github-markdown-css).
@@ -1359,37 +1638,33 @@
   border-bottom-color: #eee;
 }
 
-
 /*
  * Reply container.
  *
- * Deliberately NOT `.gt-comment-reply`: that class is the absolutely-positioned
- * reply *button* inherited from Gitalk 1.x, so reusing it here would take each
- * reply out of the document flow and make it invisible.
+ * Deliberately NOT `.gt-comment-reply`: that class is the reply *button*
+ * inherited from Gitalk 1.x, so reusing it here would take each reply out of
+ * the document flow and make it invisible.
+ *
+ * The rail is brand-tinted rather than neutral grey -- the reference's
+ * --reply-line -- so nesting reads as "part of the same thread" instead of as
+ * a boxed-off quote. Replies are separated by whitespace only, like the
+ * reference's .children, and share the same 14px row rhythm as top level.
  */
 .gt-container .gt-comment-replies {
-  margin-top: 12px;
-  border-left: 2px solid var(--gt-color-hr);
-  padding-left: 12px;
+  margin-top: 2px;
+  margin-left: 4px;
+  padding-left: 16px;
+  border-left: 2px solid var(--gt-color-reply-line);
 }
 
-.gt-container .gt-comment-reply-item {
-  padding: 8px 0;
-}
-
-.gt-container .gt-comment-reply-item + .gt-comment-reply-item {
-  border-top: 1px solid var(--gt-color-hr);
-}
-
-.gt-container .gt-comment-reply-item .gt-comment-avatar {
-  width: 2em;
-  height: 2em;
-}
-
-@media (max-width: 479px) {
-  .gt-container .gt-comment-replies {
-    padding-left: 8px;
-  }
+/*
+ * Nested rows keep the top-level 14px rhythm and carry no separator of their
+ * own: the rail is the only thing that expresses the hierarchy (reference
+ * `.children > .comment`). Stated explicitly so a future hairlines-between-
+ * replies rule has to argue with this comment first.
+ */
+.gt-container .gt-comment-replies .gt-comment-reply-item {
+  padding: 14px 0;
 }
 
 /*
@@ -1399,4 +1674,148 @@
 .gt-container .gt-avatar-github-idle {
   cursor: default;
   opacity: 0.55;
+}
+
+@media (max-width: 479px) {
+  .gt-container .gt-avatar,
+  .gt-container .gt-avatar-github {
+    width: 32px;
+    height: 32px;
+  }
+
+  .gt-container .gt-header {
+    padding: 12px;
+  }
+
+  .gt-container .gt-comments {
+    padding: 4px 12px;
+  }
+
+  .gt-container .gt-comment {
+    gap: 10px;
+    padding: 12px 0;
+  }
+
+  .gt-container .gt-comment-replies {
+    margin-left: 0;
+    padding-left: 12px;
+  }
+
+  .gt-container .gt-comment-admin > .gt-comment-content {
+    margin-left: -10px;
+    padding: 8px 10px;
+  }
+}
+
+/*
+ * Dark overrides for the vendored github-markdown-css block above.
+ *
+ * That stylesheet hardcodes GitHub light colours (#24292e body text, #f6f8fa
+ * code blocks, #dfe2e5 borders), so it has to be re-pointed at the dark
+ * tokens. The `:is()` wrapper matches both `<html data-theme="dark">` and a
+ * container that carries the attribute itself.
+ */
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body {
+  color: var(--gt-color-comment-txt);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body a {
+  color: var(--gt-color-accent);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body h1,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body h2 {
+  border-bottom-color: var(--gt-color-border);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body h6 {
+  color: var(--gt-color-text-2);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body hr {
+  background-color: var(--gt-color-border);
+  border-bottom-color: var(--gt-color-border);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body blockquote {
+  color: var(--gt-color-text-2);
+  border-left-color: var(--gt-color-border);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body code {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: inherit;
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body pre,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .highlight pre {
+  background-color: var(--gt-color-surface-soft);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body kbd {
+  color: var(--gt-color-text-2);
+  background-color: var(--gt-color-surface-soft);
+  border-color: var(--gt-color-border);
+  border-bottom-color: var(--gt-color-border);
+  box-shadow: inset 0 -1px 0 var(--gt-color-border);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body table th,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body table td {
+  border-color: var(--gt-color-border);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body table tr {
+  background-color: transparent;
+  border-top-color: var(--gt-color-border);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body table tr:nth-child(2n) {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body img {
+  background-color: transparent;
+}
+
+/* Syntax colours from github-markdown-css assume a light code block. */
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-c,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-ba,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-sg {
+  color: var(--gt-color-text-3);
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-k,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-bu,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-c2 {
+  color: #ff7b72;
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-s,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-pds,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-sr,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-sr .pl-cce {
+  color: #a5d6ff;
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-c1,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-v,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-mh {
+  color: #79c0ff;
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-e,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-en,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-mdr {
+  color: #d2a8ff;
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-ent {
+  color: #7ee787;
+}
+
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-smi,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-s .pl-s1,
+:is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body .pl-mb {
+  color: var(--gt-color-text);
 }

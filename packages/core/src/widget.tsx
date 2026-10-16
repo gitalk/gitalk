@@ -71,6 +71,33 @@ export function GitalkWidget({ options, className }: GitalkProps) {
 
       {state.ready && !state.missingThread ? (
         <>
+          {/*
+            Counts + identity read as the section header above the composer,
+            which is where the design reference puts its "title + count" row.
+            The copyright line moved out to its own footer at the end.
+          */}
+          <div className="gt-meta">
+            <span
+              className="gt-counts"
+              dangerouslySetInnerHTML={{
+                __html: t(
+                  'counts',
+                  {
+                    counts: `<a class="gt-link gt-link-counts" href="${state.thread?.url ?? '#'}" target="_blank" rel="noopener noreferrer">${loadedCount}</a>`
+                  },
+                  loadedCount
+                )
+              }}
+            />
+            <div className="gt-user">
+              {meta.authenticated ? (
+                <span className="gt-user-name">{state.user?.login ?? t('anonymous')}</span>
+              ) : (
+                <span className="gt-user-name">{t('anonymous')}</span>
+              )}
+            </div>
+          </div>
+
           <div className="gt-header">
             {state.user ? (
               <Avatar className="gt-header-avatar" src={state.user.avatarUrl} alt={state.user.login} />
@@ -144,6 +171,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   comment={comment}
                   locale={options.language ?? navigator.language}
                   commentedText={t('commented')}
+                  replyText={t('reply')}
                   isAdmin={options.admin.some((a) => a.toLowerCase() === comment.user.login.toLowerCase())}
                   canReact={meta.authenticated}
                   onReply={meta.authenticated ? actions.replyTo : undefined}
@@ -163,37 +191,16 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             ) : null}
           </div>
 
-          <div className="gt-meta">
-            <span
-              className="gt-counts"
-              dangerouslySetInnerHTML={{
-                __html: t(
-                  'counts',
-                  {
-                    counts: `<a class="gt-link gt-link-counts" href="${state.thread?.url ?? '#'}" target="_blank" rel="noopener noreferrer">${loadedCount}</a>`
-                  },
-                  loadedCount
-                )
-              }}
-            />
-            <div className="gt-user">
-              {meta.authenticated ? (
-                <span className="gt-user-name">{state.user?.login ?? t('anonymous')}</span>
-              ) : (
-                <span className="gt-user-name">{t('anonymous')}</span>
-              )}
-            </div>
-            <div className="gt-copyright">
-              <a
-                className="gt-link gt-link-project"
-                href="https://github.com/gitalk/gitalk"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Gitalk
-              </a>
-              <span className="gt-version">{VERSION}</span>
-            </div>
+          <div className="gt-copyright">
+            <a
+              className="gt-link gt-link-project"
+              href="https://github.com/gitalk/gitalk"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Gitalk
+            </a>
+            <span className="gt-version">{VERSION}</span>
           </div>
         </>
       ) : null}
