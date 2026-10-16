@@ -1,6 +1,8 @@
 import { GitalkError } from './api/client'
 
 const STORAGE_KEY = 'GT_ACCESS_TOKEN'
+const SESSION_KEY = 'GT_SESSION'
+const EXPIRES_KEY = 'GT_TOKEN_EXPIRES_AT'
 const DRAFT_KEY = 'GT_COMMENT'
 
 /**
@@ -22,30 +24,46 @@ const DRAFT_KEY = 'GT_COMMENT'
  */
 export const DEFAULT_PROXY = 'https://gitalk-proxy.aispin-abf.workers.dev'
 
-/** Scope needed to read and write discussions on public repositories. */
-const SCOPES = 'public_repo'
-
-const AUTHORIZE_URL = 'https://github.com/login/oauth/authorize'
-
 export interface AuthOptions {
   clientID: string
   /** Override the token-exchange endpoint (e.g. a self-hosted worker). */
   proxy?: string
 }
 
+/** What `POST <proxy>/oauth/token` answers with. */
+interface TokenResponse {
+  access_token?: string
+  expires_in?: number
+  /** Present only when the worker rotated the refresh token. */
+  session?: string
+}
+
 export class Auth {
   private token: string | null = null
+  private session: string | null = null
+  /** Epoch ms at which `token` stops working; 0 means it never expires. */
+  private expiresAt = 0
 
   constructor(private readonly options: AuthOptions) {
-    this.token = readStoredToken()
+    this.token = readStored(STORAGE_KEY)
+    this.session = readStored(SESSION_KEY)
+    this.expiresAt = Number(readStored(EXPIRES_KEY) ?? 0) || 0
   }
 
+  /**
+   * The token to send with API calls, or `null` when there is nothing usable.
+   *
+   * An expired token is reported as absent rather than returned: GitHub would
+   * answer 401 to every request, whereas `null` lets the widget fall back to
+   * anonymous reads that still work.
+   */
   getToken(): string | null {
+    if (this.token && this.isExpired()) return null
     return this.token
   }
 
   isAuthenticated(): boolean {
-    return Boolean(this.token)
+    return this.getToken() !== null
   }
 
   /**
@@ -62,25 +80,85 @@ export class Auth {
     return this.options.proxy || DEFAULT_PROXY
   }
 
+  /** Whether we hold a session that can still be exchanged for a token. */
+  hasSession(): boolean {
+    return Boolean(this.session)
+  }
+
   /**
-   * Build the GitHub authorize URL. The redirect target is the token proxy,
-   * which completes the exchange away from the browser.
+   * URL that starts the OAuth round trip.
+   *
+   * This points at the worker's `/oauth/authorize` rather than at GitHub
+   * directly. The worker owns the `client_secret`, knows its own public origin,
+   * and mints the `state` value — so redirect target and state can never drift
+   * out of sync with what `/oauth/callback` expects. Building the GitHub URL
+   * here would mean duplicating those three decisions in the browser.
    */
   loginUrl(redirectTo: string): string {
     if (!this.options.clientID) {
       throw new GitalkError(
-        '`clientID` is required to sign in. Create a GitHub OAuth Application ' +
-          'and pass its client id in the gitalk options.'
+        '`clientID` is required to sign in. Create a GitHub App and pass ' +
+          'its client id in the gitalk options.'
       )
     }
 
-    const params = new URLSearchParams({
-      client_id: this.options.clientID,
-      redirect_uri: this.proxy,
-      scope: SCOPES,
-      state: redirectTo
-    })
-    return `${AUTHORIZE_URL}?${params}`
+    const params = new URLSearchParams({ return_to: redirectTo })
+    return `${this.proxy.replace(/\/$/, '')}/oauth/authorize?${params}`
+  }
+
+  /**
+   * Redeem a session handed back by the worker after the OAuth round trip.
+   *
+   * The session — not the token — is what gets persisted. A token expires;
+   * the session is what lets us get a new one without troubling the visitor.
+   */
+  async completeLogin(session: string): Promise<boolean> {
+    this.session = session
+    writeStored(SESSION_KEY, session)
+    return this.refresh()
+  }
+
+  /**
+   * Exchange the stored session for a fresh access token.
+   *
+   * Returns false and forgets the session when it can no longer be redeemed,
+   * so the UI can fall back to the signed-out state instead of retrying a dead
+   * credential forever.
+   */
+  async refresh(): Promise<boolean> {
+    if (!this.session) return false
+
+    let payload: TokenResponse
+    try {
+      const response = await fetch(`${this.proxy.replace(/\/$/, '')}/oauth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session: this.session })
+      })
+      if (!response.ok) {
+        this.forgetSession()
+        return false
+      }
+      payload = (await response.json()) as TokenResponse
+    } catch {
+      // Network failure is not proof the session is bad — keep it and let a
+      // later attempt try again.
+      return false
+    }
+
+    if (!payload.access_token) {
+      this.forgetSession()
+      return false
+    }
+
+    this.setToken(payload.access_token, payload.expires_in)
+    // The worker rotates the refresh token on every renewal, so the previous
+    // session is now stale and must be replaced.
+    if (payload.session) {
+      this.session = payload.session
+      writeStored(SESSION_KEY, payload.session)
+    }
+    return true
   }
 
   /** Persist draft so a round trip to GitHub does not lose it. */
@@ -103,20 +181,53 @@ export class Auth {
 
   logout(): void {
     this.token = null
-    trySafe(() => localStorage.removeItem(STORAGE_KEY))
+    this.expiresAt = 0
+    this.forgetSession()
+    removeStored(STORAGE_KEY)
+    removeStored(EXPIRES_KEY)
+  }
+
+  private isExpired(): boolean {
+    return this.expiresAt > 0 && Date.now() >= this.expiresAt
+  }
+
+  private setToken(token: string, expiresIn?: number): void {
+    this.token = token
+    this.expiresAt = expiresIn ? Date.now() + expiresIn * 1000 : 0
+    writeStored(STORAGE_KEY, token)
+    writeStored(EXPIRES_KEY, String(this.expiresAt))
+  }
+
+  private forgetSession(): void {
+    this.session = null
+    removeStored(SESSION_KEY)
   }
 }
 
-function readStoredToken(): string | null {
+function readStored(key: string): string | null {
   try {
-    return typeof localStorage === 'undefined' ? null : localStorage.getItem(STORAGE_KEY)
+    return typeof localStorage === 'undefined' ? null : localStorage.getItem(key)
   } catch {
     return null
   }
 }
 
+function writeStored(key: string, value: string): void {
+  trySafe(() => localStorage.setItem(key, value))
+}
+
+function removeStored(key: string): void {
+  trySafe(() => localStorage.removeItem(key))
+}
+
+/**
+ * Store a token obtained elsewhere, with no known expiry.
+ *
+ * Kept for callers that already hold a raw token; the OAuth flow should use
+ * `Auth.completeLogin` so the session is retained and renewal stays possible.
+ */
 export function storeToken(token: string): void {
-  trySafe(() => localStorage.setItem(STORAGE_KEY, token))
+  writeStored(STORAGE_KEY, token)
 }
 
 function trySafe(fn: () => void): void {

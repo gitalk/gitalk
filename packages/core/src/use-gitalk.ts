@@ -161,6 +161,17 @@ export function useGitalk(options: GitalkOptions) {
   const init = useCallback(async () => {
     patch({ loading: true, error: null, rateLimited: false })
     try {
+      // Complete the OAuth round trip, or renew an expired token, before
+      // anything below reads `auth.getToken()`. Both are no-ops for an
+      // anonymous visitor.
+      const returned = takeSessionFromUrl()
+      if (returned) {
+        await auth.completeLogin(returned)
+      } else if (auth.hasSession() && !auth.getToken()) {
+        // Signed in previously, but the token lapsed while the page was away.
+        await auth.refresh()
+      }
+
       const thread = await backend.resolveThread({ term: opts.id, number: opts.number })
       threadRef.current = thread
 
@@ -338,16 +349,34 @@ function updateCount(cb: ((n: number) => void) | undefined, count: number): void
   }
 }
 
+/** The query parameter the worker appends after a successful sign-in. */
+const SESSION_PARAM = 'gitalk_session'
+
+/**
+ * Take the session the worker handed back, and remove it from the address bar.
+ *
+ * It is scrubbed immediately so the credential does not survive in history,
+ * get copied when the visitor shares the link, or leak through a referrer.
+ * The session is useless without the server-side key, but there is no reason
+ * to leave it lying around.
+ */
+function takeSessionFromUrl(): string | null {
+  try {
+    if (typeof window === 'undefined') return null
+    const url = new URL(window.location.href)
+    const session = url.searchParams.get(SESSION_PARAM)
+    if (!session) return null
+
+    url.searchParams.delete(SESSION_PARAM)
+    window.history.replaceState(null, '', url.toString())
+    return session
+  } catch {
+    return null
+  }
+}
+
 function consumeReturnedDraft(): string {
   try {
-    const params = new URLSearchParams(window.location.search)
-    const token = params.get('gitalk_token')
-    if (token && typeof localStorage !== 'undefined') {
-      localStorage.setItem('GT_ACCESS_TOKEN', token)
-      params.delete('gitalk_token')
-      const next = `${window.location.pathname}?${params}${window.location.hash}`
-      history.replaceState(null, '', next)
-    }
     const raw = localStorage.getItem('GT_COMMENT')
     if (raw) {
       localStorage.removeItem('GT_COMMENT')

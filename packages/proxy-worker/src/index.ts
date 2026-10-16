@@ -82,6 +82,32 @@ interface InstallationToken {
 interface SessionPayload {
   accessToken: string
   issuedAt: number
+  /**
+   * Only issued when the App has "Expire user authorization tokens" enabled.
+   * Without it an expired access token cannot be renewed and the visitor has
+   * to sign in again.
+   */
+  refreshToken?: string
+  /** Epoch ms at which `accessToken` stops working. Absent means no expiry. */
+  expiresAt?: number
+  /** Epoch ms at which `refreshToken` stops working. */
+  refreshTokenExpiresAt?: number
+}
+
+/** A normalized response from `github.com/login/oauth/access_token`. */
+interface TokenSet {
+  accessToken: string
+  refreshToken?: string
+  expiresAt?: number
+  refreshTokenExpiresAt?: number
+}
+
+interface GitHubTokenResponse {
+  access_token?: string
+  refresh_token?: string
+  expires_in?: number
+  refresh_token_expires_in?: number
+  error?: string
 }
 
 const json = (body: unknown, init: ResponseInit = {}) =>
@@ -143,7 +169,8 @@ function handleAuthorize(url: URL, env: Env): Response {
   const target = new URL(GITHUB_AUTHORIZE)
   target.searchParams.set('client_id', env.GITHUB_CLIENT_ID)
   target.searchParams.set('redirect_uri', `${url.origin}/oauth/callback`)
-  target.searchParams.set('scope', 'public_repo')
+  // No `scope`: a GitHub App's permissions come from its registration, and
+  // GitHub ignores `scope` on the authorize URL. Sending one only misleads.
   target.searchParams.set('state', safeEncode(returnTo))
 
   return Response.redirect(target.toString(), 302)
@@ -166,14 +193,14 @@ async function handleCallback(
   const error = url.searchParams.get('error')
 
   const returnTo = state ? safeDecode(state) : '/'
-  if (error) return redirectBack(returnTo, { error })
+  if (error) return redirectBack(returnTo, { error }, url.origin)
   if (!code) return json({ error: '`code` is required' }, { status: 400, headers: cors })
 
-  const token = await exchangeCode(env, code)
-  if (!token) return redirectBack(returnTo, { error: 'token_exchange_failed' })
+  const tokens = await exchangeCode(env, code)
+  if (!tokens) return redirectBack(returnTo, { error: 'token_exchange_failed' }, url.origin)
 
-  const session = await sealSession(env, { accessToken: token, issuedAt: Date.now() })
-  return redirectBack(returnTo, { gitalk_session: session })
+  const session = await sealSession(env, toSessionPayload(tokens))
+  return redirectBack(returnTo, { gitalk_session: session }, url.origin)
 }
 
 /** Swap a session for the raw token. Kept out of the page's URL. */
@@ -193,7 +220,27 @@ async function handleTokenExchange(
   const payload = await openSession(env, session)
   if (!payload) return json({ error: 'Invalid or expired session' }, { status: 401, headers: cors })
 
-  return json({ access_token: payload.accessToken }, { headers: cors })
+  const current = await renewIfExpired(env, payload)
+  if (!current) {
+    // The visitor has to sign in again; say so rather than handing back a
+    // token that GitHub will reject.
+    return json({ error: 'Session expired; sign in again' }, { status: 401, headers: cors })
+  }
+
+  const body: { access_token: string; expires_in?: number; session?: string } = {
+    access_token: current.payload.accessToken
+  }
+
+  if (current.renewed) {
+    // GitHub rotates the refresh token, so the client must replace the session
+    // it holds or the next refresh will fail.
+    body.session = await sealSession(env, current.payload)
+    if (current.payload.expiresAt) {
+      body.expires_in = Math.max(0, Math.round((current.payload.expiresAt - Date.now()) / 1000))
+    }
+  }
+
+  return json(body, { headers: cors })
 }
 
 /**
@@ -242,7 +289,11 @@ function bearerFrom(request: Request): string | null {
   return match ? match[1]!.trim() : null
 }
 
-async function exchangeCode(env: Env, code: string): Promise<string | null> {
+/**
+ * Both the code exchange and the refresh grant hit the same endpoint and
+ * differ only in their body, so they share one request path.
+ */
+async function requestToken(env: Env, body: Record<string, string>): Promise<TokenSet | null> {
   const response = await fetch(GITHUB_TOKEN_URL, {
     method: 'POST',
     headers: {
@@ -253,16 +304,83 @@ async function exchangeCode(env: Env, code: string): Promise<string | null> {
     body: JSON.stringify({
       client_id: env.GITHUB_CLIENT_ID,
       client_secret: env.GITHUB_CLIENT_SECRET,
-      code
+      ...body
     })
   })
 
-  const payload = (await response.json()) as { access_token?: string; error?: string }
+  const payload = (await response.json()) as GitHubTokenResponse
   if (payload.error || !payload.access_token) {
-    console.error('token exchange failed:', payload.error)
+    console.error('token request failed:', payload.error ?? response.status)
     return null
   }
-  return payload.access_token
+  return toTokenSet(payload)
+}
+
+const exchangeCode = (env: Env, code: string): Promise<TokenSet | null> =>
+  requestToken(env, { code })
+
+const refreshAccessToken = (env: Env, refreshToken: string): Promise<TokenSet | null> =>
+  requestToken(env, { grant_type: 'refresh_token', refresh_token: refreshToken })
+
+function toTokenSet(payload: GitHubTokenResponse): TokenSet {
+  const now = Date.now()
+  return {
+    accessToken: payload.access_token as string,
+    refreshToken: payload.refresh_token,
+    expiresAt: payload.expires_in ? now + payload.expires_in * 1000 : undefined,
+    refreshTokenExpiresAt: payload.refresh_token_expires_in
+      ? now + payload.refresh_token_expires_in * 1000
+      : undefined
+  }
+}
+
+function toSessionPayload(tokens: TokenSet): SessionPayload {
+  return {
+    accessToken: tokens.accessToken,
+    issuedAt: Date.now(),
+    refreshToken: tokens.refreshToken,
+    expiresAt: tokens.expiresAt,
+    refreshTokenExpiresAt: tokens.refreshTokenExpiresAt
+  }
+}
+
+/**
+ * Renew an expired access token, leaving a live one alone.
+ *
+ * Returns `null` only when the stored credentials can no longer be used, which
+ * tells the caller to ask the visitor to sign in again.
+ */
+async function renewIfExpired(
+  env: Env,
+  payload: SessionPayload
+): Promise<{ payload: SessionPayload; renewed: boolean } | null> {
+  // No `expiresAt` means the App does not expire tokens, so nothing to do.
+  const expiring = payload.expiresAt !== undefined
+  if (!expiring || payload.expiresAt! - TOKEN_REFRESH_MARGIN_MS > Date.now()) {
+    return { payload, renewed: false }
+  }
+
+  if (!payload.refreshToken) {
+    console.error('access token expired and no refresh token was issued')
+    return null
+  }
+  if (payload.refreshTokenExpiresAt && payload.refreshTokenExpiresAt <= Date.now()) {
+    console.error('refresh token expired')
+    return null
+  }
+
+  const refreshed = await refreshAccessToken(env, payload.refreshToken)
+  if (!refreshed) return null
+
+  // GitHub may omit `refresh_token` on refresh, in which case the previous one
+  // stays valid — keep it rather than dropping the ability to renew again.
+  return {
+    payload: toSessionPayload({
+      ...refreshed,
+      refreshToken: refreshed.refreshToken ?? payload.refreshToken
+    }),
+    renewed: true
+  }
 }
 
 /* ------------------------------------------------------------------ *
@@ -486,14 +604,21 @@ function corsHeaders(origin: string | null, allowed: string): Record<string, str
   return { 'Access-Control-Allow-Origin': permit, Vary: 'Origin' }
 }
 
-function redirectBack(returnTo: string, params: Record<string, string>): Response {
-  const target = new URL(returnTo, 'https://placeholder.invalid')
+/**
+ * Send the visitor back to their page with the result attached.
+ *
+ * The location is always resolved to an absolute URL: `Response.redirect`
+ * throws on a relative one, so a missing or relative `return_to` would
+ * otherwise turn into a 502 instead of a trip home.
+ */
+function redirectBack(
+  returnTo: string,
+  params: Record<string, string>,
+  origin: string
+): Response {
+  const target = new URL(returnTo, origin)
   for (const [k, v] of Object.entries(params)) target.searchParams.set(k, v)
-
-  const location = returnTo.startsWith('http')
-    ? target.toString()
-    : `${target.pathname}${target.search}`
-  return Response.redirect(location, 302)
+  return Response.redirect(target.toString(), 302)
 }
 
 function safeEncode(value: string): string {
