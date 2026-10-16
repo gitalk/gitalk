@@ -88,7 +88,7 @@ export function App() {
  */
 const DEMO_ENDPOINTS = [
   { id: 'cloudflare', label: 'Cloudflare', proxy: 'https://gitalk-proxy.aispin-abf.workers.dev' },
-  { id: 'cloudbase', label: '腾讯云 CloudBase', proxy: 'https://gitalk.xsin.work/gitalk' }
+  { id: 'cloudbase', label: '腾讯云 CloudBase', proxy: 'https://gitalk.xsin.work' }
 ] as const
 
 function GitalkDemo() {

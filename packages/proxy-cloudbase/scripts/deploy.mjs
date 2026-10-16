@@ -181,7 +181,9 @@ async function main() {
   ok('logged in with the configured sub-account credentials')
 
   step(4, 'Deploying')
-  const deploy = await run(tcb, ['fn', 'deploy', 'gitalk-proxy', '--json'], PKG_DIR)
+  // --force 是必需的：不带它时，对已存在的函数 `tcb fn deploy` 会报告成功但什么都不做
+  // （实测：函数 UpdateTime 不变，新增的 envVariables 也不会被写入）。
+  const deploy = await run(tcb, ['fn', 'deploy', 'gitalk-proxy', '--force', '--json'], PKG_DIR)
   const output = `${deploy.stdout}${deploy.stderr}`
   if (deploy.code !== 0 || /"error"/.test(output)) {
     console.error(output)
@@ -190,12 +192,17 @@ async function main() {
   ok(`deployed gitalk-proxy to ${env.CLOUDBASE_ENV_ID.trim()}`)
 
   step(5, 'Endpoint')
-  console.log(
-    `    The function is reachable at the environment's HTTP access domain.\n` +
-      `    Run \`tcb fn detail gitalk-proxy\` to see the exact URL, then set\n` +
-      `    \`proxy\` in your Gitalk options to it and add that origin to\n` +
-      `    GITALK_ALLOWED_ORIGINS if the widget is served from elsewhere.\n`
-  )
+  const publicOrigin = env.PUBLIC_ORIGIN?.trim()
+  if (publicOrigin) {
+    ok(`public origin: ${publicOrigin}`)
+    console.log(
+      `    Health check:  curl ${publicOrigin}/\n` +
+        `    OAuth 回调需要指向 ${publicOrigin}/oauth/callback\n`
+    )
+  } else {
+    warn('PUBLIC_ORIGIN is not set — the function will fall back to the forwarded host,')
+    warn('and OAuth redirects may point at an address visitors cannot reach.')
+  }
   console.log(bold(green('Done.\n')))
 }
 

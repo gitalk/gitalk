@@ -15,8 +15,32 @@ import { readFileSync } from 'node:fs'
 import { handle, type Env } from '@gitalk/proxy-core'
 
 const PORT = Number(process.env.PORT ?? 8787)
-/** Used to resolve the request URL; only the path matters to core. */
-const ORIGIN = process.env.PUBLIC_ORIGIN ?? `http://127.0.0.1:${PORT}`
+
+/**
+ * The origin the public sees, which is not the one this process serves on.
+ *
+ * Behind CloudBase — and any container platform — the request arrives on an
+ * internal address such as `http://127.0.0.1:9000`. Core derives `redirect_uri`
+ * from `request.url`, so using that address sends visitors to a host they
+ * cannot reach and sign-in never returns. State the public origin explicitly
+ * with `PUBLIC_ORIGIN`; the deploy scripts set it.
+ *
+ * The forwarded headers are a fallback for platforms that set them; the local
+ * address is the last resort so a bare `node server.js` still works.
+ */
+function publicOrigin(req: IncomingMessage): string {
+  if (process.env.PUBLIC_ORIGIN) return process.env.PUBLIC_ORIGIN.replace(/\/+$/, '')
+
+  const host = first(req.headers['x-forwarded-host']) ?? first(req.headers.host)
+  if (!host) return `http://127.0.0.1:${PORT}`
+
+  const proto = first(req.headers['x-forwarded-proto']) ?? 'http'
+  return `${proto}://${host}`
+}
+
+function first(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value
+}
 
 /**
  * The App private key, from wherever it was provided.
@@ -90,8 +114,8 @@ function assertConfigured(env: Env): void {
   }
 }
 
-function toWebRequest(req: IncomingMessage, body: Buffer): Request {
-  const url = new URL(req.url ?? '/', ORIGIN)
+function toWebRequest(req: IncomingMessage, body: Buffer, origin: string): Request {
+  const url = new URL(req.url ?? '/', origin)
   const headers = new Headers()
   for (const [key, value] of Object.entries(req.headers)) {
     if (Array.isArray(value)) value.forEach((v) => headers.append(key, v))
@@ -129,7 +153,7 @@ assertConfigured(ENV)
 const server = createServer((req, res) => {
   void (async () => {
     try {
-      const request = toWebRequest(req, await readBody(req))
+      const request = toWebRequest(req, await readBody(req), publicOrigin(req))
       // A Worker's ExecutionContext is per-request scratch space plus waitUntil.
       // Core only uses it as a token cache scoped to the request, so a minimal
       // stand-in reproduces its behaviour exactly.
@@ -148,7 +172,8 @@ const server = createServer((req, res) => {
 })
 
 server.listen(PORT, () => {
-  console.log(`gitalk-proxy listening on ${ORIGIN} (port ${PORT})`)
+  console.log(`gitalk-proxy listening on port ${PORT}` +
+    (process.env.PUBLIC_ORIGIN ? ` (public origin ${process.env.PUBLIC_ORIGIN})` : ''))
 })
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
