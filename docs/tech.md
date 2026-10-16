@@ -420,35 +420,77 @@ gitalk/
 
 ## 8. 分支与部署策略
 
-⚠️ **现状勘误**：`gitalk/gitalk` 仓库原本**未启用 GitHub Pages**，
-而 `https://gitalk.github.io` 指向独立仓库 **`gitalk/gitalk.github.io`**
-（默认分支 `master`，legacy build，内容仅 `index.html` + `favicon.ico`，最后提交 2020-02-06）。
+落地页发布在**裸域名** `https://gitalk.github.io/`。
+
+只有名字形如 `<org>.github.io` 的仓库才能服务裸域名，因此站点必须落在独立仓库
+**`gitalk/gitalk.github.io`** 的 `gh-pages` 分支上；放在 `gitalk/gitalk` 自己的
+`gh-pages` 里只会得到 `https://gitalk.github.io/gitalk/`。
 
 | 方式 | 说明 | 站点 URL |
 |---|---|---|
-| **S1（已采用）**：`gitalk` 仓库建 `gh-pages` 分支并启用 Pages | 落地页与源码同仓库，CI 直接推送，**无需额外 secret** | `https://gitalk.github.io/gitalk/` |
-| **S2**：改为推送到 `gitalk/gitalk.github.io` 的 `gh-pages` 分支 | 需要 PAT secret（默认 `GITHUB_TOKEN` 不能跨仓库推送） | `https://gitalk.github.io/`（裸域名） |
+| S1：`gitalk` 仓库建 `gh-pages` 并启用 Pages | 源码与产物同仓库，无需额外凭据 | `https://gitalk.github.io/gitalk/` |
+| **S2（已采用）**：推送到 `gitalk/gitalk.github.io` 的 `gh-pages` 分支 | 需要跨仓库凭据（`GITHUB_TOKEN` 只能写当前仓库） | `https://gitalk.github.io/`（裸域名） |
 
-**最终采用 S1。** 落地页构建产物已发布到 `gh-pages` 分支，
-`.github/workflows/deploy-pages.yml` 在每次 push 到 `main` 时自动更新。
+**最终采用 S2**，因为裸域名要作为 GitHub App 的 Homepage URL：
 
-选 S1 而非 S2 的理由：
+- `https://gitalk.github.io` 比带 `/gitalk` 子路径的地址更适合填进 App 表单；
+- README 里的 Demo 链接本来就指向裸域名，采用 S2 后无需再改；
+- 代价是需要一个跨仓库凭据，见 §8.1。
 
-- S1 不需要额外 PAT，降低凭据暴露面；
-- 源码与产物同仓库，`gh-pages` 的内容来源清晰可追溯；
-- 代价是 URL 带 `/gitalk` 子路径，因此 `apps/landing/vite.config.ts` 使用
-  相对 `base: './'`，同一份构建在子路径和裸域名下都能工作。
+### 8.1 跨仓库凭据：deploy key 而非 PAT
 
-若将来要迁到裸域名，把 workflow 里的 `github_token` 换成
-`personal_token` + `external_repository: gitalk/gitalk.github.io` 即可，
-落地页无需改动。
+`GITHUB_TOKEN` 的作用域限于当前仓库，无法推送到 `gitalk/gitalk.github.io`。
+这里用 **SSH deploy key** 而不是 PAT：
+
+| 方案 | 作用域 | 撤销方式 |
+|---|---|---|
+| **deploy key（已采用）** | 仅 `gitalk/gitalk.github.io` 一个仓库 | 目标仓库 Settings → Deploy keys 删除 |
+| PAT | 账号级，视 scope 可能覆盖全部仓库 | 个人设置里撤销，影响面大 |
+
+在目标仓库添加一个**可写** deploy key，私钥存为 `gitalk/gitalk` 的 secret：
+
+```bash
+ssh-keygen -t ed25519 -N '' -f /tmp/k -C 'gitalk-bot gh-pages deploy'
+gh api -X POST repos/gitalk/gitalk.github.io/keys \
+  -f title='gitalk-bot gh-pages deploy' -f key="$(cat /tmp/k.pub)" -F read_only=false
+gh secret set GH_PAGES_DEPLOY_KEY -R gitalk/gitalk < /tmp/k
+shred -u /tmp/k
+```
+
+`.github/workflows/deploy-pages.yml` 在 push 到 `main` 时构建并发布：
+
+```yaml
+- uses: peaceiris/actions-gh-pages@v4
+  with:
+    deploy_key: ${{ secrets.GH_PAGES_DEPLOY_KEY }}
+    external_repository: gitalk/gitalk.github.io
+    publish_branch: gh-pages
+    publish_dir: ./apps/landing/dist
+    force_orphan: true
+```
+
+首次部署后还需把目标仓库的 Pages 源指向 `gh-pages`。
+**该仓库原本从 `master` 构建，只推送分支不会改变线上站点：**
+
+```bash
+gh api -X PUT repos/gitalk/gitalk.github.io/pages \
+  -f 'source[branch]=gh-pages' -f 'source[path]=/'
+```
+
+`master` 分支保留原 v1 演示页作为存档，不再由 Pages 提供。
+
+> 落地页使用相对 `base: './'`，同一份构建在裸域名和 `/gitalk/` 子路径下都能工作，
+> 将来若回退到 S1 无需改代码。
 
 > 另需注意：仓库默认分支已从 `master` 切换为 `main`，
 > 否则 release-please 会去 `master` 上找 manifest 而失败（已实测复现）。
 
-> 安全提示：现有 `index.html` 中硬编码了
+> ⚠️ **安全提示（未解决）**：`gitalk/gitalk.github.io` 的 `master` 分支
+> `index.html` 中硬编码了
 > `clientSecret: 'd1a0b627f9b76d21bd3080d1777d0aa0ad55dd83'`。
-> 这是公开仓库里的公开凭据，**建议轮换**。§3 的 Worker 方案会让此类泄露在设计上不再可能发生。
+> 该文件在公开仓库里，**任何人都能读到**；切到 `gh-pages` 后它仍留在 `master` 上。
+> 处置：轮换或直接删除这个旧 OAuth App（`clientID e46f6dec7c07145c652c`）。
+> §3 的 Worker 方案让此类泄露在设计上不再可能发生。
 
 ---
 

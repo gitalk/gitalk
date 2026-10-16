@@ -1,16 +1,20 @@
 name: Deploy landing page
 
-# Publishes apps/landing to THIS repository's `gh-pages` branch, which GitHub
-# Pages serves at https://gitalk.github.io/gitalk/.
+# Publishes apps/landing to the `gh-pages` branch of gitalk/gitalk.github.io,
+# which GitHub Pages serves at https://gitalk.github.io/ (the bare org domain).
 #
-# No extra secret is required: the default GITHUB_TOKEN already has
-# `contents: write` on this repo.
+# Why a separate repo: only a repo literally named `<org>.github.io` can serve
+# the bare domain. A `gh-pages` branch inside gitalk/gitalk would be served at
+# https://gitalk.github.io/gitalk/ instead.
 #
-# To move the site to the bare domain later (https://gitalk.github.io without
-# the /gitalk suffix), switch `github_token` to a PAT via `personal_token` +
-# `external_repository: gitalk/gitalk.github.io`. That variant needs a secret
-# because the default token cannot push across repositories — see
-# docs/tech.md §8 for why the user-page repo wins over a project Pages branch.
+# Why a deploy key: the default GITHUB_TOKEN is scoped to this repository and
+# cannot push across repos. `GH_PAGES_DEPLOY_KEY` is an SSH deploy key with
+# write access to gitalk/gitalk.github.io only — repo-scoped and revocable,
+# unlike a PAT, which would carry account-wide scope.
+#
+# The target repo's Pages source must stay configured to build from `gh-pages`.
+# Its `master` branch still holds the original v1 demo and is left untouched as
+# an archive.
 
 on:
   push:
@@ -21,8 +25,10 @@ on:
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
+# Only `contents: read` is needed: publishing authenticates with the deploy
+# key, not with GITHUB_TOKEN.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: gh-pages
@@ -50,10 +56,11 @@ jobs:
       - name: Build landing
         run: pnpm build:landing
 
-      - name: Publish to gh-pages
+      - name: Publish to gitalk.github.io
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_key: ${{ secrets.GH_PAGES_DEPLOY_KEY }}
+          external_repository: gitalk/gitalk.github.io
           publish_branch: gh-pages
           publish_dir: ./apps/landing/dist
           force_orphan: true
