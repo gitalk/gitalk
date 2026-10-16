@@ -230,28 +230,63 @@ App 必须先被安装，Worker 才拿得到 installation token（匿名读依�
 2. Repository access 选包含评论仓库的范围（demo 用 `gitalk/gitalk`）
 3. 确认目标仓库 **已开启 Discussions**，且存在用于承载评论的 category
 
-### 5.3 部署 Worker（Cloudflare Workers）
+### 5.3 部署 Worker（两条命令的事）
 
-这一节里**大部分步骤只有你能做**——需要 Cloudflare 账号权限和浏览器交互，
-代码侧无法代劳。按顺序走，因为第 1 步的结论会决定第 4 步填什么。
+#### ① 建一个 Cloudflare API Token
 
-#### ① 定下 worker 的公开 URL（先做这步）
+1. 打开 <https://dash.cloudflare.com/profile/api-tokens> → **Create Token**
+2. 选 **Edit Cloudflare Workers** 模板 → **Continue to summary** → **Create Token**
+3. 复制 token
 
-代码里写死的默认地址是 `https://gitalk-proxy.gitalk.workers.dev`，
-由 `wrangler.toml` 的 `name = "gitalk-proxy"` 加上**你在 Cloudflare 注册的
-workers.dev 子域**拼成。
+写进 `packages/proxy-worker/.env`（可从同目录 `.env.example` 复制一份作起点，
+里面列全了所有需要的键）：
 
-⚠️ **`*.workers.dev` 的子域是全局唯一的**，跨所有 Cloudflare 账号，因此「能否拿到
-`gitalk` 这个子域」不由我们决定。
+```bash
+cp packages/proxy-worker/.env.example packages/proxy-worker/.env
+# 然后填入 CLOUDFLARE_API_TOKEN=刚复制的 token
+```
 
-> **勘误**：本文早先写过「访问该地址返回 `error code: 1042`，即子域尚未注册」。
-> 这是**错的**。实测在一个**已注册**的子域上访问不存在的 worker，同样返回 1042。
-> 1042 只表示「该主机名没有 Worker 在服务」，**无法用来判断子域是否已被注册**。
+`.env` 已被 `.gitignore` 覆盖（`.env`、`.env.*`、`.dev.vars`、`*.pem` 全在内），
+**不要提交**；部署脚本每次运行也会替你确认这一点。
 
-##### 怎么查当前账号的子域
+有了这个 token 就不需要 `wrangler login`——脚本用它完成认证、上传与 secret 设置。
 
-子域是**账号级**的，可能在你注册前就已存在（那正是「找不到注册入口」的常见原因）。
-用 API 直接查：
+#### ② 一条命令部署
+
+```bash
+pnpm --filter @gitalk/proxy-worker deploy
+```
+
+即 `node packages/proxy-worker/scripts/deploy.mjs`，依次完成：
+
+| 步骤 | 做什么 |
+| --- | --- |
+| 1 | 读 `.env`，确认它确实被 git 忽略 |
+| 2 | 校验字段格式——**包括识破「把密钥指纹当密钥填」**，并直接给出把 `.pem` 压成单行的命令 |
+| 3 | 自动解析 Cloudflare 账号；只有 token 能看到多个账号时才需你填 `CLOUDFLARE_ACCOUNT_ID` |
+| 4 | 上传 Worker |
+| 5 | 把 6 个值作为**加密 secret** 推送（先部署再推：`wrangler secret put` 要求脚本已存在） |
+| 6 | 健康检查 `https://<worker>.<子域>.workers.dev/` |
+| 7 | 比对 `packages/core/src/auth.ts` 的 `DEFAULT_PROXY`，不一致就打印需同步的两处 |
+
+第 7 步是唯一需要你动手的地方，输出形如：
+
+```text
+[7] Checking the widget default
+    ! DEFAULT_PROXY is https://gitalk-proxy.gitalk.workers.dev
+    ! but the Worker is live at https://gitalk-proxy.<你的子域>.workers.dev
+      • packages/core/src/auth.ts  DEFAULT_PROXY
+      • GitHub App settings -> Identifying and authorizing users -> Redirect URI
+        must be https://gitalk-proxy.<你的子域>.workers.dev/oauth/callback
+```
+
+> secret 不会被打印，`.env` 也不进 Worker 包——部署时 Cloudflare 只列出
+> `wrangler.toml` 的 `[vars]`，`.env` 的内容不会作为明文变量上传。
+
+#### 关于端点地址
+
+worker 名固定为 `gitalk-proxy`，地址是 `https://gitalk-proxy.<子域>.workers.dev`。
+**子域是账号级资源，可能在建 Worker 之前就已存在**，所以先查一下实际值：
 
 ```bash
 curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
@@ -259,126 +294,16 @@ curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['subdomain'])"
 ```
 
-已存在时，`PUT` 同一个端点会返回 `409 / code 10036`
-（`Account already has an associated subdomain`）——**子域不能通过 API 改名**，
-只能到控制台点 **Change**（账号级操作，会影响该账号下所有 Worker）。
+`PUT` 同一端点会返回 `409 / 10036`——**子域不能用 API 改名**，只能在控制台
+**Workers & Pages → Your subdomain → Change** 操作（账号级，影响该账号下所有 Worker）。
+若账号尚无子域，`wrangler deploy` 会直接给出注册链接。
 
-##### 怎么注册这个子域
+**推荐绑自定义域名**（`routes`）而非依赖 `*.workers.dev`：子域与账号绑定，
+迁移账号或子域被回收会让所有已发布的 widget 集体失效；Cloudflare 官方也建议
+生产 Worker 走自定义域名或 route。
 
-**不要在 `Workers & Pages` 列表页找入口**——那里只有「创建应用」。
-子域注册是独立的 onboarding 流程，官方文档描述的位置是
-「**Workers & Pages** 页 → **Your subdomain** 旁的 **Change**」
-（[workers.dev 文档](https://developers.cloudflare.com/workers/configuration/routing/workers-dev/)），
-但**账号从未注册过子域时，这个 widget 不会出现**，于是看起来像是「只能创建 app」。
-
-三条可行路径，任选：
-
-**路径 A · 专用链接（最直接）**
-
-```
-https://dash.cloudflare.com/<你的 account id>/workers/onboarding
-```
-
-`<account id>` 就是控制台 URL 里那一串十六进制。例如账号 id 为 `abf76d...` 时：
-
-```
-https://dash.cloudflare.com/abf76d830af2ba0959b7c49d541f5f09/workers/onboarding
-```
-
-这个链接来自 wrangler 自己的报错信息
-（`You need to register a workers.dev subdomain … register one here: …/workers/onboarding`），
-在没有子域时会被主动打印出来。
-
-**路径 B · 先建一个 Worker**
-
-2026-05 起控制台新增了 **Domains** 标签，用来管理该 Worker 的
-workers.dev 子域与 Preview URL
-（[改版说明](https://developers.cloudflare.com/changelog/post/2026-05-14-domains-tab/)）：
-**Workers & Pages → 选中某个 Worker → Domains 标签**。
-先把 `gitalk-proxy` 建出来（或直接跑下面的 `wrangler deploy`），再进 Domains 操作。
-
-**路径 C · 直接部署，让 wrangler 引导**
-
-```bash
-cd packages/proxy-worker
-npx wrangler login
-npx wrangler deploy
-```
-
-账号没有子域时 wrangler 会交互式询问
-`Would you like to register a workers.dev subdomain now?`，按提示输入即可。
-
-##### 选好名字之后
-
-子域决定最终 URL：worker 名为 `gitalk-proxy`，所以地址是
-`https://gitalk-proxy.<你的子域>.workers.dev`。
-
-- 拿到了 `gitalk` → 什么都不用改，URL 即 `https://gitalk-proxy.gitalk.workers.dev`
-- 拿不到（已被他人占用）→ 记下实际子域，**必须同步改三处**：
-  1. `packages/core/src/auth.ts` 的 `DEFAULT_PROXY`
-  2. 本文 §1.2 与 GitHub App 的 Redirect URI
-  3. 凡是出现 `gitalk-proxy.gitalk.workers.dev` 的文档
-
-> **更稳的做法：绑自定义域名。** 如果你拥有域名并托管在 Cloudflare，可以用
-> `routes` 绑定（如 `proxy.gitalk.dev`）。它不受子域被占/改名的影响。
-> Cloudflare 官方也明确建议生产 Worker 走自定义域名或 route——
-> workers.dev 被视为「Free website」，面向个人/业余项目，不适合关键业务。
-
-#### ② 登录 Cloudflare
-
-```bash
-cd packages/proxy-worker
-npx wrangler login          # 打开浏览器授权，交互式，无法代跑
-npx wrangler whoami         # 确认账号与子域
-```
-
-#### ③ 写入 6 个 secret
-
-`wrangler secret put` 会把值加密存进 Cloudflare，**不要写进 `wrangler.toml`**
-（那个文件是提交进仓库的）。
-
-```bash
-npx wrangler secret put GITHUB_APP_ID
-npx wrangler secret put GITHUB_APP_PRIVATE_KEY      # 单行 \n 转义，见 §5.5
-npx wrangler secret put GITHUB_CLIENT_ID
-npx wrangler secret put GITHUB_CLIENT_SECRET
-npx wrangler secret put SESSION_ENCRYPTION_KEY      # openssl rand -hex 32
-npx wrangler secret put GITALK_ALLOWED_ORIGINS      # 逗号分隔，须含站点来源
-```
-
-`GITALK_ALLOWED_ORIGINS` 至少要包含 `https://gitalk.github.io`，
-否则浏览器会被 CORS 拦掉。本地调试再追加 `http://127.0.0.1:4181`。
-
-> `wrangler.toml` 的 `[vars] GITALK_ALLOWED_ORIGINS = "*"` 是占位值。
-> 上线后应改成具体来源（`*` 表示任何站点都能借用这个代理）。
-> `.env` / `.dev.vars` 与 `[vars]` 的优先级未实测，改完请用第 4 步的 `curl` 验证。
-
-#### ④ 部署并确认
-
-```bash
-npx wrangler deploy
-```
-
-输出会打印实际 URL，形如 `https://gitalk-proxy.<你的子域>.workers.dev`。
-**以这个输出为准**，别照抄文档里的地址。
-
-```bash
-curl https://gitalk-proxy.<你的子域>.workers.dev/
-# 期望：{"ok":true,"service":"gitalk-proxy"}
-```
-
-#### ⑤ 把最终 URL 填回 GitHub App
-
-回到 App settings → **Identifying and authorizing users** → Redirect URI，
-确保是 `<最终 URL>/oauth/callback`，且与 §1.2 一致。
-
-**顺序不能颠倒**：回调地址与 Worker 实际地址不一致，登录会停在 OAuth 错误页。
-
-#### 可选：让 CI 自动部署
-
-目前**没有** worker 的部署工作流，每次改动都要手动 `wrangler deploy`。
-若要自动化，需在仓库 secrets 里加 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`
-（同样只能由你在 Cloudflare 后台创建 API Token），再新增一个 workflow。
+改端点时必须**同步三处**，只改一处登录会停在 OAuth 回调错误页：
+`auth.ts` 的 `DEFAULT_PROXY`、GitHub App 的 Redirect URI、文档中出现的地址。
 
 ### 5.4 上传 App logo
 

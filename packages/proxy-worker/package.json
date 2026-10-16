@@ -10,7 +10,8 @@
     "wrangler.toml"
   ],
   "scripts": {
-    "deploy": "wrangler deploy",
+    "deploy": "node scripts/deploy.mjs",
+    "deploy:raw": "wrangler deploy",
     "dev": "wrangler dev"
   },
   "devDependencies": {
