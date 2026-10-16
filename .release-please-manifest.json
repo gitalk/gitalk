@@ -1,5 +1,5 @@
 {
-  "packages/core": "2.0.0-beta",
-  "packages/react": "2.0.0-beta",
-  "packages/vue": "2.0.0-beta"
+  "packages/core": "2.0.0-beta.0",
+  "packages/react": "2.0.0-beta.0",
+  "packages/vue": "2.0.0-beta.0"
 }
