@@ -192,9 +192,15 @@ jobs:
               continue
             fi
             echo "→ $name@$version"
+            # 预发布版不能打 latest：npm 会以「pre-release 必须显式指定 tag」直接拒绝，
+            # 而 2.0.0-beta 正是这种情况。给预发布版打 beta 标签，正式版维持现状。
+            publish_args=(--access public)
+            case "$version" in
+              *-*) publish_args+=(--tag beta) ;;
+            esac
             # 失败时把 npm 的调试日志打出来：ENEEDAUTH 可能是没尝试 OIDC 交换，
             # 也可能是交换被拒，两者排查方向完全不同。
-            (cd "$dir" && npm publish --access public --loglevel verbose) || {
+            (cd "$dir" && npm publish "${publish_args[@]}" --loglevel verbose) || {
               echo "--- npm 调试日志（OIDC / auth 相关）---"
               grep -iE "oidc|auth|token|403|401|404|trusted" "$HOME"/.npm/_logs/*-debug-0.log 2>/dev/null | tail -40
               exit 1
