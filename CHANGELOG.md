@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.8.1](https://github.com/gitalk/gitalk/compare/v1.7.2...v1.8.1) (2026-10-16)
+
+
+### Features
+
+* add a `theme` option (and `theme` prop) with a dark theme ([#587](https://github.com/gitalk/gitalk/pull/587))
+* support `pagerDirection: 'last'` (newest first) on the v3 api ([#446](https://github.com/gitalk/gitalk/pull/446))
+
+
+### Bug Fixes
+
+* **theme:** use the light theme unless `theme` is explicitly `'dark'` ([#587](https://github.com/gitalk/gitalk/pull/587))
+* **a11y:** add the visually hidden label for the comment textarea ([#308](https://github.com/gitalk/gitalk/pull/308))
+* **labels:** normalise `{name}` label objects for the issues list query ([#540](https://github.com/gitalk/gitalk/pull/540))
+* **deps:** bump axios from 0.19.2 to 0.29.0 (CVE-2021-3749, CVE-2023-45857), supersedes [#566](https://github.com/gitalk/gitalk/pull/566) and [#596](https://github.com/gitalk/gitalk/pull/596)
+
+
+### Chores
+
+* stop tracking the built `dist/` directory (still shipped on npm through `.npmignore`)
+* **docs:** fix the misplaced `id` example in readme-cn.md ([#577](https://github.com/gitalk/gitalk/pull/577)), add a license badge ([#584](https://github.com/gitalk/gitalk/pull/584))
+
 ### [1.7.2](https://github.com/gitalk/gitalk/compare/v1.7.1...v1.7.2) (2021-03-03)
 
 
