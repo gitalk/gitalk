@@ -20,7 +20,7 @@ const DRAFT_KEY = 'GT_COMMENT'
  * trust it can deploy `packages/proxy-worker` themselves and override `proxy`.
  * See docs/tech.md §3.
  */
-export const DEFAULT_PROXY = 'https://gitalk-proxy.gitalk.workers.dev'
+export const DEFAULT_PROXY = 'https://gitalk-proxy.aispin-abf.workers.dev'
 
 /** Scope needed to read and write discussions on public repositories. */
 const SCOPES = 'public_repo'

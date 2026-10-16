@@ -1,313 +1,262 @@
-# GitHub App 创建填写指南
+# Gitalk 2.0 自部署指南
 
-本文对应 `https://github.com/organizations/gitalk/settings/apps/new`（Create GitHub App）表单，
-逐字段给出该填什么。表单字段名来自页面 HTML 的 `name` 属性，便于对照。
+跑起来需要两样东西：**一个 GitHub App** 和 **一个 Cloudflare Worker**。
+前者负责权限与登录，后者负责把 GitHub 密钥挡在浏览器之外。
 
-> 配套文档：[docs/tech.md](./tech.md)（整体技术设计与 API 结论）。
+全程约 15 分钟，两个账号都免费。
+
+> 配套：[docs/tech.md](./tech.md) 讲整体设计与 API 结论。本文只讲「怎么做」。
 
 ---
 
-## 0. 动手前：三个必须先知道的结论
+## 总览
 
-这三点都是实测/查证得到的，直接决定表单里几个关键字段怎么填。
+| 步骤 | 做什么 | 在哪做 |
+| --- | --- | --- |
+| **1** | 创建 GitHub App | github.com |
+| **2** | 安装它 | github.com |
+| **3** | 部署 Worker | 本地命令行 |
+| **4** | 把地址接回去 | 改 1 处代码 + 1 处 App 设置 |
+| **✓** | 验收：匿名能拉到全部评论与回复 | — |
 
-### 0.1 `gitalk` 这个 slug 已经被占用，新 App 不能叫 `gitalk`
+**顺序不能颠倒**：第 1 步拿到的 client id 要给第 3 步用，第 3 步产出的地址要给第 4 步用。
 
-`/apps/gitalk` 在共享命名空间里已存在，且**是一个第三方 GitHub App**：
+---
+
+# 第 1 步 · 创建 GitHub App
+
+打开创建页（把 `<org>` 换成你的组织，个人账号用 `https://github.com/settings/apps/new`）：
+
+```
+https://github.com/organizations/gitalk/settings/apps/new
+```
+
+## 先看这三个坑，再动手填
+
+这三条是实测/查证得到的，踩中任何一个都会让后面的步骤白做。
+
+### 坑 1 · `gitalk` 这个名字已被第三方占用
+
+GitHub App 和 OAuth App **共用 `/apps/<slug>` 命名空间**，而 `/apps/gitalk` 早就被占了：
 
 ```
 gh api /apps/gitalk
-→ {"client_id":"Iv1.4d5a76667e64f1bb","id":5808,"name":"gitalk","owner":"Vincentqyw","slug":"gitalk"}
+→ {"id":5808,"name":"gitalk","owner":"Vincentqyw","slug":"gitalk"}
 ```
 
-owner 是个人账号 `Vincentqyw`，不是 gitalk org。GitHub App / OAuth App 共用 `/apps/<slug>` 命名空间，
-所以新的 App 必须换名字。
+owner 是个人账号，不是 gitalk org。所以必须换名。已验证：
 
-已验证可用：
-
-| 候选名字 | 推导 slug | `/apps/<slug>` |
+| App name | slug | `/apps/<slug>` |
 | --- | --- | --- |
-| `Gitalk` | `gitalk` | 200 已占用 |
-| `Gitalk Comments` | `gitalk-comments` | 200 已占用 |
-| `Gitalk App` | `gitalk-app` | 200 已占用 |
-| **`Gitalk X`** | **`gitalk-x`** | **404 可用** ✅ |
+| `Gitalk` | `gitalk` | ❌ 已占用 |
+| `Gitalk Comments` | `gitalk-comments` | ❌ 已占用 |
+| `Gitalk App` | `gitalk-app` | ❌ 已占用 |
+| **`Gitalk X`** | **`gitalk-x`** | ✅ 可用 |
 
-→ **App name 填 `Gitalk X`。**
+→ **名称填 `Gitalk X`**。换别的名字也可以，只要 `/apps/<slug>` 是 404。
 
-> `Gitalk Discussions`（slug `gitalk-discussions`）也曾是候选且同样可用，
-> 最终选了 `Gitalk X`。改这个名字只需替换 App name 字段，
-> 其余字段（回调、权限、可见性）都不受影响。
+### 坑 2 · 回调地址必须带 `/oauth/callback`
 
-### 0.2 回调地址必须填 `/oauth/callback`，但当前代码发的是 proxy 根路径
+Worker 只在 `/oauth/callback` 上处理授权码。根路径 `/` 是个健康检查，只返回 JSON。
 
-Worker 的回调路由是 `/oauth/callback`（`packages/proxy-worker/src/index.ts:107`），
-我们自己的 `handleAuthorize` 也是这么拼的（同文件 `:133`）：
+→ 填 `<你的 Worker 地址>/oauth/callback`，例如
+`https://gitalk-proxy.aispin-abf.workers.dev/oauth/callback`
 
-```ts
-target.searchParams.set('redirect_uri', `${url.origin}/oauth/callback`)
-```
+> 这里有个**代码侧的坑**：前台 `auth.ts` 的 `loginUrl()` 目前发的是 proxy 根路径，少了
+> `/oauth/callback`。表单填得再对，不改代码登录也会停在一个 JSON 页面上。修法见附录 C.1。
+> 因为你能提前知道 Worker 地址（名字由你定），所以**第 1 步就能把这个字段填对**，不必等第 3 步。
 
-但前台代码走的是另一条路——`packages/core/src/use-gitalk.ts:202` 调
-`auth.loginUrl()`，而 `packages/core/src/auth.ts` 里写的是：
+### 坑 3 · 取消勾选 "Expire user authorization tokens"
 
-```ts
-redirect_uri: this.proxy,   // ← proxy 根路径，缺 /oauth/callback
-```
+Worker 封存的会话里只有 `accessToken` 和 `issuedAt`，**全仓库没有 `refresh_token` 处理**。
+一旦勾选过期，token 8 小时后失效且会下发 `refresh_token`——我们不存它，就续不了期。
 
-proxy 根路径命中 Worker 的 `case '/'`，返回的是 JSON `{"ok":true,...}`，**不会处理 `code`**。
-也就是说：表单填对了，只要不改这行代码，点登录仍然会停在一个 JSON 页面上。
+→ **取消勾选**。
 
-→ **表单按 `.../oauth/callback` 填**；代码侧的修法见 §6.1。
+## 要填的字段
 
-### 0.3 "Expire user authorization tokens" 必须取消勾选
+正文用人类语言；括号里是表单的真实字段名，完整清单见[附录 A](#附录-a--完整字段速查)。
 
-Worker 封存的会话里只有两个字段（`handleCallback`）：
+| 字段 | 填什么 |
+| --- | --- |
+| 名称 | `Gitalk X`（见坑 1） |
+| 描述 | 复制下方任一版本 |
+| Homepage URL | `https://gitalk.github.io` |
+| 回调地址（Redirect URI） | `<Worker 地址>/oauth/callback`（见坑 2） |
+| 回调的 Allow wildcard matching | **留空不勾**——开了会把 token 发给所有子域/子路径 |
+| Expire user authorization tokens | **取消勾选**（见坑 3） |
+| Request user authorization (OAuth) during installation | 不勾。访客是点「登录」时才授权 |
+| Enable Device Flow | 不勾。Device Flow 已被 CORS 挡住，开了没用 |
+| Setup URL / On update | 留空 / 不勾 |
+| Webhook · Active | **取消勾选**。Gitalk 是拉取模型，不需要推送 |
+| Repository permissions | `Discussions` **Read and write**、`Metadata` **Read-only**（强制） |
+| 其余所有权限 | **No access** |
+| Subscribe to events | **全不勾** |
+| Where can this app be installed | **Any account** ← 默认是 "Only on this account"，必须改 |
 
-```ts
-const session = await sealSession(env, { accessToken: token, issuedAt: Date.now() })
-```
-
-全仓库没有任何 `refresh_token` 处理（已 grep 确认）。而勾选过期后 user token 8 小时失效，
-且会**返回一个 `refresh_token`**——我们不存它，就续不了期。
-
-→ **取消勾选**。如果 GitHub 后续强制开启，则必须补 refresh 逻辑，见 §6.3。
-
----
-
-## 1. 逐字段填写
-
-### 1.1 基本信息
-
-| 表单字段 | 填什么 | 说明 |
-| --- | --- | --- |
-| `integration[name]` | `Gitalk X` | 全局唯一，见 §0.1 |
-| `integration[description]` | 见 §1.1.1（中英双语） | 会展示给安装/授权用户 |
-| `integration[url]` | `https://gitalk.github.io` | Homepage URL，必填。裸域名根站点，部署方式见 tech.md §8 |
-
-#### 1.1.1 Description 文案（中英双语）
-
-`integration[description]` **只有一个 textarea**（支持 Markdown，上限 20480 字符），
-所以下面给三个可直接整段粘贴的版本：中英双语合一（推荐）、纯中文、纯英文。
-
-每段都是**不硬换行的整行文本**——textarea 里的换行会被当成真实换行，粘贴后不必再手动调格式。
-
-**方案 A · 中英双语合一（推荐）**
-
-授权页面向的是全球用户，英文在前、中文在后，两种读者都能读到完整说明：
-
-```
-A backend-free comment widget powered by GitHub Discussions. Each comment thread is a Discussion, so there is no database or server to run — drop Gitalk into your blog or docs site and readers can comment and reply with their GitHub account. Available as a framework-free script, a React component, and a Vue component. It only reads and writes Discussions in the repositories you authorize, in order to load and post comments; it accesses no other data.
-
-基于 GitHub Discussions 的无后端评论组件。每条评论线程就是一个 Discussion，无需自建数据库或服务端 —— 把 Gitalk 嵌入博客或文档站点，读者用 GitHub 账号即可评论与回复。支持无框架脚本、React 组件、Vue 组件三种用法。本应用仅在你授权的仓库中读写 Discussions 以加载和发布评论，不访问其他任何数据。
-```
-
-**方案 B · 纯中文**
-
-```
-基于 GitHub Discussions 的无后端评论组件。每条评论线程就是一个 Discussion，无需自建数据库或服务端 —— 把 Gitalk 嵌入博客或文档站点，读者用 GitHub 账号即可评论与回复。支持无框架脚本、React 组件、Vue 组件三种用法。本应用仅在你授权的仓库中读写 Discussions 以加载和发布评论，不访问其他任何数据。
-```
-
-**方案 C · 纯英文**
-
-```
-A backend-free comment widget powered by GitHub Discussions. Each comment thread is a Discussion, so there is no database or server to run — drop Gitalk into your blog or docs site and readers can comment and reply with their GitHub account. Available as a framework-free script, a React component, and a Vue component. It only reads and writes Discussions in the repositories you authorize, in order to load and post comments; it accesses no other data.
-```
-
-> 三个版本结尾都刻意写了"只读写 Discussions、不访问其他数据"。
-> 授权页会紧挨着列出权限清单，文案里主动交代用途能减少访客的授权顾虑。
+> **`issues` 权限要不要一起开？** core 保留了 v1 的 issues 后端。
+> 权限**创建后再加，所有已安装仓库都要重新批准一次**，比较烦。所以：如果你可能用
+> issues 后端，现在就一起勾上；确定只要 Discussions 就留 No access，保持最小授权。
 >
-> 同理，上面没有写 "Gitalk 2.0" 这类版本号：App name 字段已经承担了品牌识别，
-> 描述里重复版本号反而会在 2.x 之后过期。
+> **为什么必须选 Any account？** Gitalk 的模型是每个博主把 App 装到自己的评论仓库上。
+> 选 "Only on this account" 就只有 gitalk org 自己的仓库能装（giscus 也是 Any account）。
 
-### 1.2 Identifying and authorizing users
+> **Webhook 的填写顺序**：先取消 `Active`，URL 才会从必填变隐藏；否则表单会被必填校验拦住。
 
-| 表单字段 | 填什么 | 说明 |
-| --- | --- | --- |
-| `integration[application_callback_urls_attributes][0][url]` | `https://gitalk-proxy.gitalk.workers.dev/oauth/callback` | Redirect URI，见 §0.2 |
-| `integration[application_callback_urls_attributes][0][matching_strategy]` | **留空**（不要勾 Allow wildcard matching） | wildcard 会把 token 发给所有子域/子路径，是安全风险 |
-| `integration[user_token_expiration_enabled]` | **取消勾选** | 见 §0.3 |
-| `integration[request_oauth_on_install]` | 不勾 | 访客是点"登录"时才授权，不是安装时 |
-| `integration[device_flow_enabled]` | 不勾 | Device Flow 已被 CORS 挡住（见 tech.md §3），开了也没用 |
+## 描述文案（可直接整段粘贴）
 
-> 自部署 Worker 的人把域名换成自己的即可；同一个 App 最多可加 10 个 Redirect URI。
+只有一个 textarea（支持 Markdown）。以下都是**不硬换行的整行文本**，粘贴后不用再调格式。
 
-### 1.3 Post installation
+**中英双语（推荐）** —— 授权页面向全球用户，英文在前中文在后，两种读者都能读到：
 
-| 表单字段 | 填什么 |
-| --- | --- |
-| `integration[setup_url]` | 留空 |
-| `integration[setup_on_update]` | 不勾 |
+```
+A backend-free comment widget powered by GitHub Discussions. Each comment thread is a Discussion, so there is no database or server to run — drop Gitalk into your blog or docs site and readers can comment and reply with their GitHub account. Available as a framework-free script, a React component, and a Vue component. It only reads and writes Discussions in the repositories you authorize, in order to load and post comments; it accesses no other data.
 
-### 1.4 Webhook
+基于 GitHub Discussions 的无后端评论组件。每条评论线程就是一个 Discussion，无需自建数据库或服务端 —— 把 Gitalk 嵌入博客或文档站点，读者用 GitHub 账号即可评论与回复。支持无框架脚本、React 组件、Vue 组件三种用法。本应用仅在你授权的仓库中读写 Discussions 以加载和发布评论，不访问其他任何数据。
+```
 
-Gitalk 是拉取模型：进页面时主动拉评论，不依赖任何事件推送，**不需要 Webhook**。
+**纯中文**：
 
-| 表单字段 | 填什么 |
-| --- | --- |
-| `integration[hook_attributes][active]` | **取消勾选** |
-| `integration[hook_attributes][url]` | 留空（取消 Active 后必填校验会解除） |
-| `integration[hook_attributes][secret]` | 留空 |
-| `integration[hook_attributes][insecure_ssl]` | 保持 `0`（Enable SSL verification） |
+```
+基于 GitHub Discussions 的无后端评论组件。每条评论线程就是一个 Discussion，无需自建数据库或服务端 —— 把 Gitalk 嵌入博客或文档站点，读者用 GitHub 账号即可评论与回复。支持无框架脚本、React 组件、Vue 组件三种用法。本应用仅在你授权的仓库中读写 Discussions 以加载和发布评论，不访问其他任何数据。
+```
 
-> 顺序很重要：先取消 Active，Webhook URL 才会从必填变隐藏；否则表单会被必填校验拦住。
+**纯英文**：
 
----
+```
+A backend-free comment widget powered by GitHub Discussions. Each comment thread is a Discussion, so there is no database or server to run — drop Gitalk into your blog or docs site and readers can comment and reply with their GitHub account. Available as a framework-free script, a React component, and a Vue component. It only reads and writes Discussions in the repositories you authorize, in order to load and post comments; it accesses no other data.
+```
 
-## 2. Permissions（权限）
+> 三个版本结尾都刻意交代了「只读写 Discussions、不访问其他数据」——授权页会紧挨着列出权限
+> 清单，主动说明用途能减少访客的授权顾虑。
+>
+> 也刻意**没写版本号**：「2.0」这类字眼会在 2.x 之后过期，品牌识别交给 App name。
 
-只开两个（外加强制的 Metadata）。
+## 创建后还要做两件事
 
-### 2.1 Repository permissions
-
-| 资源 | 设为 | 必要性 |
-| --- | --- | --- |
-| `integration[default_permissions][discussions]` | **Read and write** | 必需。读评论 + 发评论/回复/表态都靠它 |
-| `integration[default_permissions][metadata]` | **Read-only** | 强制项，表单已自动选中，改不了 |
-| `integration[default_permissions][issues]` | **Read and write** | 建议开，见下方说明 |
-| 其余全部 repository 权限 | **No access** | — |
-
-关于 `issues`：core 保留了 v1 的 issues 后端（`backend: 'issues'`）。
-**权限一旦创建后再加，所有已安装仓库都要重新批准一次**，比较烦。
-如果你希望 issues 后端也能用上 Worker 的安装令牌（5000/hr），建议现在就一起勾上；
-如果确定只要 Discussions，可以留 No access，保持最小授权。
-
-### 2.2 Organization / Account / Enterprise permissions
-
-**全部保持 No access。** 这三段（`data-organization-permissions`、`data-user-permissions`、
-`data-business-permissions`）我们一个都不需要：
-
-- 评论读写是仓库级操作，已由 `discussions` 覆盖
-- 拿用户身份靠 OAuth 授权流程，不靠 Account permissions
-
----
-
-## 3. Subscribe to events（事件订阅）
-
-**全部不勾。**
-
-表单顶部三项（`integration[integrator_events][]`：Installation target / Meta / Security advisory）
-和下面的 `integration[default_events][]`（Discussion、Discussion comment、Issue comment……）全部留空。
-
-理由同上：拉取模型，不需要推送。
-
----
-
-## 4. Where can this GitHub App be installed?
-
-| 表单字段 | 选哪个 |
-| --- | --- |
-| `integration[visibility]` | **Any account**（`public_visibility`） |
-
-默认选中的是 "Only on this account"。**必须改成 Any account**——
-否则只有 gitalk org 自己的仓库能装，而 Gitalk 的模型是每个博主把它装到自己的评论仓库上
-（giscus 也是 Any account）。
-
----
-
-## 5. 点 "Create GitHub App" 之后
-
-### 5.1 抄下 / 生成 6 个值
+### 一、拿 6 个值
 
 在 App 的 settings 页：
 
-| Worker 环境变量 | 从哪来 |
+| 值 | 从哪来 |
 | --- | --- |
-| `GITHUB_APP_ID` | App settings 顶部 "App ID"（纯数字，如 `1236702`） |
-| `GITHUB_CLIENT_ID` | "Client ID"，形如 `Iv1.…` / `Iv23li…` |
-| `GITHUB_CLIENT_SECRET` | "Client secrets" → Generate a new client secret（只显示一次） |
-| `GITHUB_APP_PRIVATE_KEY` | "Private keys" → Generate a private key，下载 `.pem` |
+| App ID | 页面顶部，纯数字 |
+| Client ID | `Iv1.…` 或 `Iv23li…` |
+| Client secret | Client secrets → Generate（**只显示一次**） |
+| Private key | Private keys → Generate，下载 `.pem` |
 | `SESSION_ENCRYPTION_KEY` | 自己生成：`openssl rand -hex 32` |
-| `GITALK_ALLOWED_ORIGINS` | 逗号分隔的允许来源，如 `https://gitalk.github.io`；本地调试可加 `http://127.0.0.1:4181` |
-| `GITHUB_INSTALLATION_ID` | 可选。App 只有一个安装时可填，跳过安装发现 |
+| `GITALK_ALLOWED_ORIGINS` | 逗号分隔，如 `https://gitalk.github.io` |
 
-> 环境变量名以 `packages/proxy-worker/src/index.ts` 的 `Env` 接口为准。
+这些值先记下，第 3 步要用。
 
-### 5.2 安装 App
+> ⚠️ **别把「密钥指纹」当成密钥。** Private keys 列表里那一列 `SHA256:…` 是**指纹**，
+> 不是密钥本身。要的是下载下来的 `.pem` 文件。部署脚本会识破这个错误并直接告诉你。
 
-⚠️ **没安装就没有 installation token，Worker 的匿名读会返回
-`503 {"error":"No usable GitHub credential"}`。**
-这条是端到端跑通前的最后一道人工步骤，且只能由有仓库管理权限的人在浏览器里完成。
+### 二、传 logo
 
-直接打开安装页：
+⚠️ **Create 表单里没有 logo 字段**，创建后才能补：
+App settings → 左侧 **Display information** → **Logo**。
+
+用 `apps/landing/public/logo.png`（512×512 方形、满幅不透明）。
+**故意不预烘焙圆角**：GitHub 会用自己的圆角/圆形容器裁切，图片自带圆角会在容器里再套一层。
+
+---
+
+# 第 2 步 · 安装 App
+
+⚠️ **不安装就没有 installation token，匿名读会直接返回
+`503 {"error":"No usable GitHub credential"}`。** 这是最后一道只能由人在浏览器里完成的步骤。
 
 ```
 https://github.com/apps/<slug>/installations/new
 ```
 
-例如本次创建的 App：<https://github.com/apps/gitalk-x/installations/new>
+例如 <https://github.com/apps/gitalk-x/installations/new>
 
-1. 选择要安装到的账号 / 组织（demo 用 `gitalk`）
-2. Repository access 选包含评论仓库的范围（demo 用 `gitalk/gitalk`）
-3. 确认目标仓库 **已开启 Discussions**，且存在用于承载评论的 category
+1. 选要装到哪个账号/组织
+2. Repository access 选包含评论仓库的范围
+3. 确认目标仓库**已开启 Discussions**，且存在承载评论的 category
 
-装好后可以这样确认（把 `<slug>` 和 App ID 换成自己的）：
+装没装成功，可以这样查（需要 App JWT，见附录 B）：
 
 ```bash
-# 用 App JWT 查安装列表；需要 jq 或 python 解析
 curl -s -H "Authorization: Bearer $APP_JWT" \
-  -H 'Accept: application/vnd.github+json' \
+  -H 'Accept: application/vnd.github+json' -H 'User-Agent: gitalk' \
   https://api.github.com/app/installations | python3 -m json.tool | head -20
 ```
 
-返回空数组 `[]` 就说明还没装成功。
+返回 `[]` 就是还没装上。
 
-### 5.3 部署 Worker（两条命令的事）
+---
 
-#### ① 建一个 Cloudflare API Token
+# 第 3 步 · 部署 Worker
 
-1. 打开 <https://dash.cloudflare.com/profile/api-tokens> → **Create Token**
-2. 选 **Edit Cloudflare Workers** 模板 → **Continue to summary** → **Create Token**
-3. 复制 token
+## ① 建一个 Cloudflare API Token
 
-写进 `packages/proxy-worker/.env`（可从同目录 `.env.example` 复制一份作起点，
-里面列全了所有需要的键）：
+打开 <https://dash.cloudflare.com/profile/api-tokens> → **Create Token** →
+选 **Edit Cloudflare Workers** 模板 → Continue → Create → 复制。
+
+写进 `packages/proxy-worker/.env`：
 
 ```bash
 cp packages/proxy-worker/.env.example packages/proxy-worker/.env
-# 然后填入 CLOUDFLARE_API_TOKEN=刚复制的 token
+# 编辑 .env，填入 CLOUDFLARE_API_TOKEN 和上面那 6 个值
 ```
 
-`.env` 已被 `.gitignore` 覆盖（`.env`、`.env.*`、`.dev.vars`、`*.pem` 全在内），
-**不要提交**；部署脚本每次运行也会替你确认这一点。
+`.env` 已被 `.gitignore` 覆盖（`.env`、`.env.*`、`.dev.vars`、`*.pem` 全在内），不要提交。
+部署脚本每次运行也会替你确认这一点。
 
-有了这个 token 就不需要 `wrangler login`——脚本用它完成认证、上传与 secret 设置。
+有了 token 就**不需要 `wrangler login`**——脚本用它完成认证、上传与 secret 设置。
 
-#### ② 一条命令部署
+> **私钥最省事的放法**：把下载的 `.pem` 直接丢进 `packages/proxy-worker/` 就行。
+> 脚本会发现它、自己读取，并确认它被 git 忽略。该目录下只能有一个 `.pem`。
+> 不想放文件也可以压成单行写进 `.env`，两种等价——见[附录 B](#附录-b--本地调试)。
+
+## ② 一条命令部署
 
 ```bash
 pnpm --filter @gitalk/proxy-worker deploy
 ```
 
-即 `node packages/proxy-worker/scripts/deploy.mjs`，依次完成：
+脚本依次完成：
 
 | 步骤 | 做什么 |
 | --- | --- |
 | 1 | 读 `.env`，确认它确实被 git 忽略 |
-| 2 | 校验字段格式——**包括识破「把密钥指纹当密钥填」**，并直接给出把 `.pem` 压成单行的命令 |
-| 3 | 自动解析 Cloudflare 账号；只有 token 能看到多个账号时才需你填 `CLOUDFLARE_ACCOUNT_ID` |
+| 2 | 校验字段格式——**包括识破「把密钥指纹当密钥填」** |
+| 3 | 自动解析 Cloudflare 账号；多账号时才需填 `CLOUDFLARE_ACCOUNT_ID` |
 | 4 | 上传 Worker |
-| 5 | 把 6 个值作为**加密 secret** 推送（先部署再推：`wrangler secret put` 要求脚本已存在） |
+| 5 | 把 6 个值作为**加密 secret** 推送（先部署再推：`secret put` 要求脚本已存在） |
 | 6 | 健康检查 `https://<worker>.<子域>.workers.dev/` |
-| 7 | 比对 `packages/core/src/auth.ts` 的 `DEFAULT_PROXY`，不一致就打印需同步的两处 |
+| 7 | 比对 `DEFAULT_PROXY`，不一致就打印需同步的两处 |
 
-第 7 步是唯一需要你动手的地方，输出形如：
+---
 
-```text
-[7] Checking the widget default
-    ! DEFAULT_PROXY is https://gitalk-proxy.gitalk.workers.dev
-    ! but the Worker is live at https://gitalk-proxy.<你的子域>.workers.dev
-      • packages/core/src/auth.ts  DEFAULT_PROXY
-      • GitHub App settings -> Identifying and authorizing users -> Redirect URI
-        must be https://gitalk-proxy.<你的子域>.workers.dev/oauth/callback
+# 第 4 步 · 把地址接回去
+
+## ① 改代码里的默认端点
+
+`packages/core/src/auth.ts`：
+
+```ts
+export const DEFAULT_PROXY = 'https://<worker>.<子域>.workers.dev'
 ```
 
-> secret 不会被打印，`.env` 也不进 Worker 包——部署时 Cloudflare 只列出
-> `wrangler.toml` 的 `[vars]`，`.env` 的内容不会作为明文变量上传。
+## ② 改 GitHub App 的回调地址
 
-#### 关于端点地址
+App settings → **Identifying and authorizing users** → Redirect URI，
+确认等于 `<DEFAULT_PROXY>/oauth/callback`。
 
-worker 名固定为 `gitalk-proxy`，地址是 `https://gitalk-proxy.<子域>.workers.dev`。
-**子域是账号级资源，可能在建 Worker 之前就已存在**，所以先查一下实际值：
+> **组织拥有的 App 无法用 REST API 修改**（`PATCH /app` 返回 404），只能在网页上改。
+> 个人账号拥有的 App 才能走 API。
+
+**这两处必须一致。** 只改一处，登录会停在 GitHub 的 OAuth 错误页——症状和「地址不匹配」
+完全联想不到一起，所以脚本第 7 步专门帮你比对。
+
+## 关于 Worker 地址
+
+worker 名固定为 `gitalk-proxy`（`wrangler.toml`），地址是
+`https://gitalk-proxy.<子域>.workers.dev`。**子域是账号级资源，可能在你建 Worker 之前就已存在**：
 
 ```bash
 curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
@@ -315,202 +264,97 @@ curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['subdomain'])"
 ```
 
-`PUT` 同一端点会返回 `409 / 10036`——**子域不能用 API 改名**，只能在控制台
-**Workers & Pages → Your subdomain → Change** 操作（账号级，影响该账号下所有 Worker）。
-若账号尚无子域，`wrangler deploy` 会直接给出注册链接。
+`PUT` 同一端点会返回 `409 / 10036`——**子域不能用 API 改名**，只能到控制台
+**Workers & Pages → Your subdomain → Change**（账号级，影响该账号下全部 Worker）。
 
-**推荐绑自定义域名**（`routes`）而非依赖 `*.workers.dev`：子域与账号绑定，
-迁移账号或子域被回收会让所有已发布的 widget 集体失效；Cloudflare 官方也建议
-生产 Worker 走自定义域名或 route。
+若账号还没有子域，`wrangler deploy` 会给出注册链接；官方文档说的是
+Workers & Pages 页 → **Your subdomain** 旁的 **Change**，但从未注册过时该控件不会出现，
+此时用 `https://dash.cloudflare.com/<account id>/workers/onboarding`。
 
-改端点时必须**同步三处**，只改一处登录会停在 OAuth 回调错误页：
-`auth.ts` 的 `DEFAULT_PROXY`、GitHub App 的 Redirect URI、文档中出现的地址。
-
-### 5.4 上传 App logo
-
-⚠️ **Create GitHub App 表单里没有 logo 字段**，创建完成后才能补：
-
-1. 进入 `https://github.com/organizations/gitalk/settings/apps/<slug>`
-2. 左侧 **Display information** → **Logo** → Upload
-3. 选 `apps/landing/public/logo.png`
-
-该文件为 512×512 方形、满幅不透明（**故意不预烘焙圆角**：GitHub 会用自己的圆角/圆形容器
-去裁切，若图片自带圆角，容器内会再套一层圆角，四角透出背景）。
-图形四周留白 14%，即使被裁成内接圆，白色气泡也完整可见。
-
-品牌资产都放在 `apps/landing/public/`：
-
-| 文件 | 用途 |
-| --- | --- |
-| `logo.svg` | 圆角方形 logo 母版（蓝底白标） |
-| `favicon.svg` | 站点 favicon，内容同 `logo.svg`（浏览器要求该文件名） |
-| `logo-mono.svg` | `currentColor` 单色版，供落地页头部使用 |
-| `logo.png` | 512×512 满幅方形，用于上传 GitHub App logo |
-
-品牌色为电光克莱因蓝 `#1e4fff`（浅色背景）／`#6e8cff`（深色背景）。
-它同时写在 `apps/landing/src/index.css` 的 `--accent` 和
-`packages/core/src/styles/index.css` 的 `--gt-color-main`，改动需两处同步。
-
-### 5.5 本地调试：`.env` 放哪、`.pem` 怎么填
-
-#### `.env` 必须在 `packages/proxy-worker/` 下
-
-`wrangler dev` 读取 `.env` / `.dev.vars`，但它**只在 `wrangler.toml` 所在目录查找，
-不会向上级目录搜索**（已实测：把 `.env` 放在仓库根目录不会被加载）。
-所以本地密钥文件的位置是：
-
-```
-packages/proxy-worker/.env
-```
-
-两个文件名都支持，`wrangler dev` 启动时会打印实际加载了哪个：
-
-```
-Using secrets defined in .env
-```
-
-`.dev.vars` 是 Cloudflare 的约定名；两者都已加入 `.gitignore`。
-
-> 若坚持把 `.env` 放在别处，可用 `wrangler dev --env-file ../../.env` 显式指定。
-
-#### `GITHUB_APP_PRIVATE_KEY`：直接放 `.pem` 文件，什么都不用压
-
-**最简单：把下载的 `.pem` 丢进 `packages/proxy-worker/` 就行。**
-部署脚本会发现它、自己读取，并确认它被 git 忽略：
-
-```
-[1] Reading .env
-    ✓ private key read from gitalk-x.2026-10-15.private-key.pem
-    ✓ gitalk-x.2026-10-15.private-key.pem is git-ignored
-```
-
-该目录下**只能有一个 `.pem`**；有多个时脚本会报错并列出，让你删到只剩一个，
-或在 `.env` 里显式指定 `GITHUB_APP_PRIVATE_KEY` 来选定。
-`.env` 里已填该字段时优先用 `.env`，`.pem` 原样保留不动。
-
-> `*.pem` 已在 `.gitignore` 内。脚本每次都会用 `git check-ignore` 复核，
-> 未被忽略时**直接中止**而不是继续部署。
-
-##### 备选：压成单行写进 `.env`
-
-如果不想放文件，`.pem` 是多行的而 `.env` 值不能跨行，就要把换行转成**字面量 `\n`**：
-
-```bash
-# 打印成单行（首尾的 BEGIN/END 行保留）
-awk 'NF {printf "%s\\n", $0}' ~/Downloads/gitalk-x.*.private-key.pem
-```
-
-把输出整行贴进 `.env`，用双引号包住：
-
-```
-GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----\n"
-```
-
-两种方式**效果等价**，选省事的即可。要点：
-
-- **保留 `-----BEGIN/END-----` 行**——Worker 会自己剥掉，缺了 header 也能识别（见下）
-- 用**双引号**，避免值里的字符被当作注释
-- **PKCS#1 与 PKCS#8 都支持**，不需要跑 `openssl pkcs8` 转换
-
-最后一点值得展开：GitHub 签发的是 **PKCS#1**（`-----BEGIN RSA PRIVATE KEY-----`），
-而 WebCrypto 的 `importKey('pkcs8', …)` 只接受 PKCS#8，裸喂会报 `Invalid keyData`。
-`packages/proxy-worker/src/pkcs8.ts` 会自动补上 PKCS#8 信封，且格式判定读的是 DER 本身
-而非 PEM 头，所以下面几种写法都能用：
-
-| 写法 | 是否可用 |
-| --- | --- |
-| PKCS#1 多行原文 | ✅ |
-| PKCS#1 单行 `\n` 转义 | ✅ |
-| PKCS#1 去掉 PEM 头的裸 base64 | ✅ |
-| PKCS#8（多行或单行） | ✅ |
-
-#### `SESSION_ENCRYPTION_KEY` 与 SHA-256 无关
-
-这个键必须恰好是 **32 字节、64 个十六进制字符**：
-
-```bash
-openssl rand -hex 32
-```
-
-它用于 **AES-GCM** 封存会话（`sessionKey()` → `importKey('raw', …, 'AES-GCM')`），
-不是哈希。传一个 SHA-256 十六进制串虽然长度也是 64 字符、能跑起来，
-但安全性取决于你哈希的那个输入是否真有熵——直接用 `openssl rand` 即可。
-
-> 全仓库只有一处用到 SHA-256：`index.ts` 里 GitHub App JWT 的签名算法
-> `RSASSA-PKCS1-v1_5` + `SHA-256`（即 RS256），由 GitHub 规定，不需要你配置。
+**建议正式发布时绑自定义域名**（`routes`）而非依赖 `*.workers.dev`：子域与账号绑定，
+迁移账号或子域被回收会让所有已发布的 widget 集体失效。Cloudflare 官方也建议生产
+Worker 走自定义域名或 route（workers.dev 被视为 Free website，面向个人/业余项目）。
 
 ---
 
-## 6. 填完之后必须改的代码
+# 验收
 
-只填表单登录还是不通。以下是已知缺口，按优先级列出。
-
-### 6.1 🔴 登录回调路径不匹配（阻塞登录）
-
-- **位置**：`packages/core/src/auth.ts`，`loginUrl()` 里的 `redirect_uri: this.proxy`
-- **问题**：发出去的是 proxy 根路径，Worker 根路径只返回 JSON，不处理 `code`
-- **两种修法**（选一）：
-  - **(a) 让前台直接走 Worker 的授权入口**（推荐，最贴合 Worker 现有设计）：
-    `window.location.href = `${proxy}/oauth/authorize?return_to=${encodeURIComponent(location.href)}``
-    Worker 的 `handleAuthorize` 已负责拼正确的 `redirect_uri` 和 `state`，
-    前台不必再自己拼 authorize URL
-  - **(b) 保留前台拼 URL，只把 `redirect_uri` 改成 `${this.proxy}/oauth/callback`**，
-    并确认 `state` 能带回原页面
-
-### 6.2 🟡 `scope=public_repo` 对 GitHub App 无意义
-
-`auth.ts` 的 `SCOPES = 'public_repo'` 和 Worker `handleAuthorize` 里的 `scope` 都是
-**OAuth App 的概念**。GitHub App 的权限由 App 注册信息决定，授权 URL 上的 `scope` 会被忽略。
-
-目前无害，但会误导后续维护者。建议删掉，或加注释说明。
-
-### 6.3 🟡 没有 refresh_token 支持（与 §0.3 是同一件事的两面）
-
-会话只存 `accessToken` + `issuedAt`。若 GitHub 强制开启 token 过期：
-
-1. `exchangeCode` 的返回体里会多出 `refresh_token` / `expires_in`
-2. `handleCallback` 需要把 `refreshToken` 一并 `sealSession`
-3. 新增一个刷新端点（或在 `/oauth/token` 里按 `expiresAt` 判断后刷新）
-
-### 6.4 🟡 落地页 demo 还指着老的 OAuth App
-
-`apps/landing/src/app.tsx:83` 目前是：
-
-```ts
-clientID: 'e46f6dec7c07145c652c',   // 老 OAuth App，且没有配 proxy
-```
-
-App 建好后需改成新的 GitHub App client id，并补上 `proxy`，否则 demo 上登录入口是隐藏的
-（`canLogin()` 为真但没有可用 proxy）。
-
----
-
-## 7. 验收清单
-
-创建完成后，按顺序确认：
-
-- [ ] `/apps/gitalk-x` 已可访问（slug 生效）
-- [ ] 表单里 Webhook "Active" 是**未勾选**状态
-- [ ] Repository permissions 只勾了 Discussions(+Issues) 和强制 Metadata
-- [ ] "Any account" 已选中
-- [ ] "Expire user authorization tokens" 未勾选
+- [ ] `/apps/<slug>` 可访问（slug 生效）
+- [ ] Webhook `Active` 未勾选
+- [ ] 权限只勾了 `Discussions`(+`issues`) 和强制 `Metadata`
+- [ ] **Any account** 已选中
+- [ ] **Expire user authorization tokens** 未勾选
 - [ ] Redirect URI 精确等于 `<proxy>/oauth/callback`，且未开 wildcard
-- [ ] Private key 已生成、`SESSION_ENCRYPTION_KEY` 已生成
+- [ ] Private key 已下载、`SESSION_ENCRYPTION_KEY` 已生成
 - [ ] App 已安装到评论仓库，且该仓库 Discussions 已开启
 - [ ] `curl <proxy>/` 返回 `{"ok":true,...}`
-- [ ] §6.1 已修复，点击登录能完整走完并回到原页面
-- [ ] 匿名状态能拉到全部评论与回复（对比 v1 的 `gitalk/gitalk#475`，应有 2 条顶层 + 4 条回复）
+- [ ] **匿名状态能拉到全部评论与回复**
+      —— 对比 v1 基准 `gitalk/gitalk#475`，应有 **2 条顶层 + 4 条回复**
+- [ ] 点击登录能走完 OAuth 并回到原页面（需先修附录 C.1）
+
+最后一条是真正的端到端验证，可以这样跑：
+
+```bash
+curl -s -X POST <proxy>/graphql -H 'Content-Type: application/json' \
+  -d '{"query":"{ repository(owner: \"gitalk\", name: \"gitalk\") { discussion(number: 475) { title comments(first: 20) { totalCount } } } }"}'
+```
 
 ---
 
-## 附：完整字段速查
+# 排错
+
+## `503 {"error":"No usable GitHub credential"}`
+
+Worker 拿不到 installation token。按可能性排序：
+
+| 原因 | 怎么确认 | 怎么修 |
+| --- | --- | --- |
+| **App 没有安装** | `GET /app/installations` 返回 `[]` | 回到[第 2 步](#第-2-步--安装-app) |
+| **私钥填成了指纹** | `.env` 里是 `SHA256:…` 开头 | 用 `.pem` 文件，见[附录 B](#附录-b--本地调试) |
+| **私钥不是该 App 的** | 本地用同一把密钥签 JWT 调 `GET /app`，看是 401 还是 200 | 重新生成并下载 |
+
+排查时先开日志，比盲猜快得多：
+
+```bash
+cd packages/proxy-worker
+npx wrangler tail --format pretty
+```
+
+> **历史坑（已修复）**：早期版本的所有 GitHub 请求都没设 `User-Agent`，而 GitHub 对这类请求
+> 返回的是 **403 而非 401**，日志只写 `no installation found for this app`，极易误判成
+> 「没装 App」。实测同一 JWT：带 `User-Agent` → `201`，不带 → `403
+> Request forbidden by administrative rules`。Workers 运行时不会自带 `User-Agent`，
+> 而从 Node/curl 调用会自带，所以本地怎么试都正常——这个差异极具迷惑性。
+
+## 登录后停在一个 JSON 页面
+
+`auth.ts` 的 `loginUrl()` 把授权码发回了 proxy 根路径。见附录 C.1。
+
+## 浏览器报 CORS 错误
+
+`GITALK_ALLOWED_ORIGINS` 必须包含站点的来源（scheme + host + port，**不要带路径**）：
+
+```
+GITALK_ALLOWED_ORIGINS=https://your.site,http://127.0.0.1:4181
+```
+
+## 评论只拉到一部分
+
+分页没走完。检查页面选项里的 `perPage` 与 `page`；v1 的 `gitalk/gitalk#475`
+（2 条顶层 + 4 条回复）是现成的比对基准。
+
+---
+
+# 附录 A · 完整字段速查
+
+正文用人类语言，这里是表单里 `name` 属性的原始值，便于对照源码：
 
 ```text
 integration[name]                                  = Gitalk X
-integration[description]                           = <见 §1.1.1，中英双语 / 纯中文 / 纯英文三选一>
+integration[description]                           = <见描述文案，三选一>
 integration[url]                                   = https://gitalk.github.io
 integration[application_callback_urls_attributes][0][url]
-                                                   = https://gitalk-proxy.gitalk.workers.dev/oauth/callback
+                                                   = <proxy>/oauth/callback
 integration[application_callback_urls_attributes][0][matching_strategy]
                                                    = <留空，strict>
 integration[user_token_expiration_enabled]         = 取消勾选
@@ -530,3 +374,116 @@ integration[integrator_events][]                   = <全不勾>
 integration[default_events][]                      = <全不勾>
 integration[visibility]                            = public_visibility   （Any account）
 ```
+
+---
+
+# 附录 B · 本地调试
+
+## `.env` 必须在 `packages/proxy-worker/` 下
+
+`wrangler dev` 读取 `.env` / `.dev.vars`，但**只在 `wrangler.toml` 所在目录查找，
+不会向上级目录搜索**——放仓库根目录不会被加载。启动时会打印实际加载了哪个：
+
+```
+Using secrets defined in .env
+```
+
+`.dev.vars` 是 Cloudflare 的约定名，两个都支持，都已 gitignore。
+
+## 私钥：直接放 `.pem`，或压成单行
+
+**方式一（推荐）**：把 `.pem` 丢进 `packages/proxy-worker/`。脚本自己读取并校验 gitignore 状态。
+
+**方式二**：压成单行写进 `.env`（`.env` 的值不能跨行，所以要把换行转成**字面量 `\n`**）：
+
+```bash
+awk 'NF {printf "%s\\n", $0}' ~/Downloads/<app>.private-key.pem
+```
+
+输出整行贴进 `.env`，用双引号包住：
+
+```
+GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----\n"
+```
+
+要点：
+
+- **保留 `-----BEGIN/END-----` 行**——Worker 会自己剥掉，缺了 header 也能识别
+- 用**双引号**，避免值里的字符被当作注释
+- **PKCS#1 与 PKCS#8 都支持**，不需要跑 `openssl pkcs8` 转换
+
+最后一点值得展开：GitHub 签发的是 **PKCS#1**（`BEGIN RSA PRIVATE KEY`），而 WebCrypto 的
+`importKey('pkcs8', …)` 只接受 PKCS#8，裸喂会报 `Invalid keyData`。
+`packages/proxy-worker/src/pkcs8.ts` 会自动补上 PKCS#8 信封，且格式判定读的是 DER 本身
+而非 PEM 头，所以下面几种写法都能用：
+
+| 写法 | 可用 |
+| --- | --- |
+| PKCS#1 多行原文 | ✅ |
+| PKCS#1 单行 `\n` 转义 | ✅ |
+| PKCS#1 去掉 PEM 头的裸 base64 | ✅ |
+| PKCS#8（多行或单行） | ✅ |
+
+## `SESSION_ENCRYPTION_KEY` 与 SHA-256 无关
+
+必须恰好 **32 字节、64 个十六进制字符**：
+
+```bash
+openssl rand -hex 32
+```
+
+它用于 **AES-GCM** 封存会话，不是哈希。传一个 SHA-256 十六进制串长度也够、能跑起来，
+但安全性取决于你哈希的输入是否真有熵——直接用 `openssl rand` 即可。
+
+> 全仓库只有一处 SHA-256：`index.ts` 里 App JWT 的签名算法
+> `RSASSA-PKCS1-v1_5` + `SHA-256`（即 RS256），由 GitHub 规定，不需要配置。
+
+## 本地起签名验证用的 App JWT
+
+排查凭据问题时很有用：
+
+```bash
+# 用 .pem 签一个 9 分钟有效的 JWT（RS256）
+# 载荷：{ iat: now-30, exp: now+540, iss: <App ID> }
+# 然后带上它调用：
+curl -s -H "Authorization: Bearer $APP_JWT" \
+  -H 'Accept: application/vnd.github+json' -H 'User-Agent: gitalk' \
+  https://api.github.com/app        # 200 = 私钥与 App ID 匹配
+```
+
+---
+
+# 附录 C · 已知代码缺口
+
+## C.1 🔴 登录回调路径不匹配（阻塞登录）
+
+- **位置**：`packages/core/src/auth.ts` 的 `loginUrl()`，`redirect_uri: this.proxy`
+- **问题**：发出去的是 proxy 根路径，而 Worker 只在 `/oauth/callback` 处理 `code`，
+  根路径返回 JSON
+- **两种修法**（选一）：
+  - **(a) 让前台直接走 Worker 的授权入口**（推荐，最贴合 Worker 现有设计）：
+    `window.location.href = \`${proxy}/oauth/authorize?return_to=${encodeURIComponent(location.href)}\``
+    —— Worker 的 `handleAuthorize` 已负责拼正确的 `redirect_uri` 和 `state`，前台不必自己拼
+  - **(b) 保留前台拼 URL，只把 `redirect_uri` 改成 `${this.proxy}/oauth/callback`**，
+    并确认 `state` 能带回原页面
+
+## C.2 🟡 `scope=public_repo` 对 GitHub App 无意义
+
+`auth.ts` 的 `SCOPES` 和 Worker `handleAuthorize` 里的 `scope` 都是 **OAuth App 的概念**。
+GitHub App 的权限由 App 注册信息决定，授权 URL 上的 `scope` 会被忽略。
+
+目前无害，但会误导后续维护者。建议删掉或加注释。
+
+## C.3 🟡 没有 refresh_token 支持
+
+与[坑 3](#坑-3--取消勾选-expire-user-authorization-tokens) 是同一件事的两面。
+会话只存 `accessToken` + `issuedAt`。若 GitHub 强制开启 token 过期：
+
+1. `exchangeCode` 的返回体会多出 `refresh_token` / `expires_in`
+2. `handleCallback` 需要把 `refreshToken` 一并 `sealSession`
+3. 新增刷新端点（或在 `/oauth/token` 里按 `expiresAt` 判断后刷新）
+
+## C.4 🟡 落地页 demo 指着老的 OAuth App
+
+`apps/landing/src/app.tsx` 里的 `clientID` 还是老 OAuth App 的值，且没配 `proxy`，
+导致 demo 上登录入口不可用。需改成新的 GitHub App client id 并补上 `proxy`。

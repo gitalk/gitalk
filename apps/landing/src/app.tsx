@@ -80,7 +80,8 @@ export function App() {
 
 function GitalkDemo() {
   const options = {
-    clientID: 'e46f6dec7c07145c652c',
+    clientID: 'Iv23liM54pLB6TIqnqb6',
+    proxy: 'https://gitalk-proxy.aispin-abf.workers.dev',
     owner: 'gitalk',
     repo: 'gitalk',
     admin: ['booxood'],
