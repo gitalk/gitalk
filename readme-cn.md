@@ -14,7 +14,7 @@
 Gitalk 2.0 用的是 **GitHub App**，不是 1.x 的 OAuth App。它让令牌端点能在**不把
 密钥交给浏览器**的前提下签发 installation token，登录所需的 client secret 也留在服务端。
 
-按 **[docs/github-app-guide.md](docs/github-app-guide.md)** 走：它逐字段说明表单怎么填，
+按 **[docs/guide.md](docs/guide.md)** 走：它逐字段说明表单怎么填，
 包括回调地址、权限、以及两个填错就会**静默导致登录失败**的开关。
 
 做完你会得到：
@@ -132,7 +132,7 @@ https://gitalk-proxy.aispin-abf.workers.dev
 
 如果你不想依赖它，可以自己部署一份，代码在
 [`packages/proxy-worker`](packages/proxy-worker)。一条命令、免费额度、约一分钟
-—— 见 [docs/github-app-guide.md §5.3](docs/github-app-guide.md)：
+—— 见 [docs/guide.md](docs/guide.md) 第 3 步：
 
 ```sh
 cp packages/proxy-worker/.env.example packages/proxy-worker/.env

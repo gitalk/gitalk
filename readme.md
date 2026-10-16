@@ -16,7 +16,7 @@ Gitalk 2.0 uses a **GitHub App**, not the 1.x OAuth App. The App is what lets
 the token endpoint mint an installation token without shipping a secret to the
 browser — and what keeps the client secret server-side for sign-in.
 
-Follow **[docs/github-app-guide.md](docs/github-app-guide.md)** — it walks the
+Follow **[docs/guide.md](docs/guide.md)** — it walks the
 creation form field by field, including the callback URL, permissions and the
 two settings that silently break sign-in if you get them wrong.
 
@@ -138,7 +138,7 @@ https://gitalk-proxy.aispin-abf.workers.dev
 
 If you would rather not depend on it, deploy your own from
 [`packages/proxy-worker`](packages/proxy-worker). One command, free tier, about
-a minute — see [docs/github-app-guide.md §5.3](docs/github-app-guide.md):
+a minute — see [docs/guide.md §第 3 步](docs/guide.md):
 
 ```sh
 cp packages/proxy-worker/.env.example packages/proxy-worker/.env
