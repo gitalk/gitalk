@@ -246,6 +246,31 @@ npx wrangler deploy
 部署完先自检：`curl https://gitalk-proxy.gitalk.workers.dev/` 应返回
 `{"ok":true,"service":"gitalk-proxy"}`。
 
+### 5.4 上传 App logo
+
+⚠️ **Create GitHub App 表单里没有 logo 字段**，创建完成后才能补：
+
+1. 进入 `https://github.com/organizations/gitalk/settings/apps/<slug>`
+2. 左侧 **Display information** → **Logo** → Upload
+3. 选 `apps/landing/public/logo.png`
+
+该文件为 512×512 方形、满幅不透明（**故意不预烘焙圆角**：GitHub 会用自己的圆角/圆形容器
+去裁切，若图片自带圆角，容器内会再套一层圆角，四角透出背景）。
+图形四周留白 14%，即使被裁成内接圆，白色气泡也完整可见。
+
+品牌资产都放在 `apps/landing/public/`：
+
+| 文件 | 用途 |
+| --- | --- |
+| `logo.svg` | 圆角方形 logo 母版（蓝底白标） |
+| `favicon.svg` | 站点 favicon，内容同 `logo.svg`（浏览器要求该文件名） |
+| `logo-mono.svg` | `currentColor` 单色版，供落地页头部使用 |
+| `logo.png` | 512×512 满幅方形，用于上传 GitHub App logo |
+
+品牌色为电光克莱因蓝 `#1e4fff`（浅色背景）／`#6e8cff`（深色背景）。
+它同时写在 `apps/landing/src/index.css` 的 `--accent` 和
+`packages/core/src/styles/index.css` 的 `--gt-color-main`，改动需两处同步。
+
 ---
 
 ## 6. 填完之后必须改的代码

@@ -1,6 +1,16 @@
-import type { CSSProperties } from 'react'
+import { useId, type CSSProperties } from 'react'
 
+/**
+ * Gitalk brand mark: a speech bubble whose two bars stand for a root comment
+ * and its reply. Drawn with `currentColor` so it inherits the surrounding text
+ * colour, and with the bars knocked out via a mask so they read as holes
+ * rather than filled shapes.
+ */
 export function Logo({ className, style }: { className?: string; style?: CSSProperties }) {
+  // useId keeps the mask unique if the mark is ever rendered more than once.
+  // Colons are stripped because they are not valid inside `url(#…)`.
+  const maskId = `gitalk-mark-${useId().replace(/[^a-zA-Z0-9-]/g, '')}`
+
   return (
     <svg
       viewBox="0 0 1024 1024"
@@ -9,10 +19,15 @@ export function Logo({ className, style }: { className?: string; style?: CSSProp
       role="img"
       aria-label="Gitalk logo"
     >
-      <path
-        fill="currentColor"
-        d="M64 524C64 719.602 189.356 885.926 364.113 947.017c23.545 5.983 20.888-10.902 20.888-22.25l0-77.66c-135.882 15.9-141.326-89.948-150.5-105.002-18-31.5-61.5-39.5-48.5-54.5 31-16 62.5 4 99 58 26.456 39.141 78.866 32.574 104.658 25.996 5.745-23.5 17.979-43.455 34.695-59.859-198.579-25.029-291.231-111.078-291.231-223.497 0-49.447 17.322-92.094 51.465-129.873-19.323-60.699 1.956-112.437 4.872-120.187 58.121-5.284 118.551 41.578 123.263 45.27 33.114-8.865 70.792-13.955 113.051-13.955 42.924 0 80.81 5.296 114.075 14.363 7.821-5.98 64.855-48.779 119.1-43.685 2.882 7.686 23.585 58.327 4.458 118.118 34.458 37.874 51.942 80.727 51.942 130.418 0 112.374-92.01 198.453-290.197 223.113 24.578 21.217 37.625 48.61 37.625 78.011l0 112.645c0.752 8.973 0 17.991 14.086 17.992C832.344 888.962 960 721.389 960 524 960 276.576 759.424 76 512 76 264.577 76 64 276.576 64 524Z"
-      />
+      <mask id={maskId}>
+        <rect width="1024" height="1024" fill="#fff" />
+        <rect x="330" y="308" width="364" height="104" rx="52" fill="#000" />
+        <rect x="330" y="476" width="228" height="104" rx="52" fill="#000" />
+      </mask>
+      <g fill="currentColor" mask={`url(#${maskId})`}>
+        <circle cx="512" cy="444" r="300" />
+        <path d="M368 700H516L360 880Z" />
+      </g>
     </svg>
   )
 }

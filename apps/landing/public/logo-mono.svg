@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Gitalk">
+  <mask id="gitalk-knockout">
+    <rect width="1024" height="1024" fill="#fff"/>
+    <rect x="330" y="308" width="364" height="104" rx="52" fill="#000"/>
+    <rect x="330" y="476" width="228" height="104" rx="52" fill="#000"/>
+  </mask>
+  <g fill="currentColor" mask="url(#gitalk-knockout)">
+    <circle cx="512" cy="444" r="300"/>
+    <path d="M368 700H516L360 880Z"/>
+  </g>
+</svg>

@@ -8,7 +8,7 @@
  * result is pixel-for-pixel the same unless a custom property is changed.
  */
 :root {
-  --gt-color-main: #6190e8;
+  --gt-color-main: #1e4fff;
   --gt-color-sub: #a1a1a1;
   --gt-color-loader: #999999;
   --gt-color-error: #ff3860;
@@ -44,8 +44,8 @@
 
 .gt-container a:hover {
   /* lighten(--gt-color-main, 20%) */
-  color: #81a6ed;
-  border-color: #81a6ed;
+  color: #436cff;
+  border-color: #436cff;
 }
 
 .gt-container a.is--active {
@@ -224,13 +224,13 @@
 .gt-container .gt-btn-preview:hover {
   /* darken(--gt-color-btn, 5%) / lighten(--gt-color-main, 20%) */
   background-color: #f2f2f2;
-  border-color: #81a6ed;
+  border-color: #436cff;
 }
 
 .gt-container .gt-btn-public:hover {
   /* lighten(--gt-color-main, 20%) */
-  background-color: #81a6ed;
-  border-color: #81a6ed;
+  background-color: #436cff;
+  border-color: #436cff;
 }
 
 /* error */

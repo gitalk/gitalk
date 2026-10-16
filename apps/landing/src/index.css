@@ -6,7 +6,7 @@
   --fg: #1f2328;
   --fg-muted: #59636e;
   --border: #d1d9e0;
-  --accent: #6190e8;
+  --accent: #1e4fff;
   --code-bg: #f6f8fa;
   color-scheme: light;
 }
@@ -17,7 +17,7 @@
   --fg: #e6edf3;
   --fg-muted: #9198a1;
   --border: #30363d;
-  --accent: #79a7f0;
+  --accent: #6e8cff;
   --code-bg: #161b22;
   color-scheme: dark;
 }
