@@ -230,21 +230,87 @@ App 必须先被安装，Worker 才拿得到 installation token（匿名读依�
 2. Repository access 选包含评论仓库的范围（demo 用 `gitalk/gitalk`）
 3. 确认目标仓库 **已开启 Discussions**，且存在用于承载评论的 category
 
-### 5.3 部署 Worker
+### 5.3 部署 Worker（Cloudflare Workers）
+
+这一节里**大部分步骤只有你能做**——需要 Cloudflare 账号权限和浏览器交互，
+代码侧无法代劳。按顺序走，因为第 1 步的结论会决定第 4 步填什么。
+
+#### ① 定下 worker 的公开 URL（先做这步）
+
+代码里写死的默认地址是 `https://gitalk-proxy.gitalk.workers.dev`，
+由 `wrangler.toml` 的 `name = "gitalk-proxy"` 加上**你在 Cloudflare 注册的
+workers.dev 子域**拼成。
+
+⚠️ **`*.workers.dev` 的子域是全局唯一的**，跨所有 Cloudflare 账号。实测该地址当前返回
+`error code: 1042`，即**子域尚未注册**（[Cloudflare 社区说明](https://community.cloudflare.com/t/workers-dev-returns-http-404-error-1042-before-worker-invocation/943965)）。
+
+到 Cloudflare 控制台 → **Workers & Pages** → 注册一个子域：
+
+- 能拿到 `gitalk` → 什么都不用改，最终 URL 就是 `https://gitalk-proxy.gitalk.workers.dev`
+- 拿不到（已被他人占用）→ 记下你实际拿到的子域，**必须同步改三处**：
+  1. `packages/core/src/auth.ts` 的 `DEFAULT_PROXY`
+  2. 本文 §1.2 与 GitHub App 的 Redirect URI
+  3. 凡是出现 `gitalk-proxy.gitalk.workers.dev` 的文档
+
+> **更稳的做法：绑自定义域名。** 如果你拥有域名并托管在 Cloudflare，可以用
+> `routes` 绑定（如 `proxy.gitalk.dev`）。它不受子域被占/改名的影响，也比
+> `*.workers.dev` 更像一个可信端点。代价是需要一个域名。
+
+#### ② 登录 Cloudflare
 
 ```bash
 cd packages/proxy-worker
+npx wrangler login          # 打开浏览器授权，交互式，无法代跑
+npx wrangler whoami         # 确认账号与子域
+```
+
+#### ③ 写入 6 个 secret
+
+`wrangler secret put` 会把值加密存进 Cloudflare，**不要写进 `wrangler.toml`**
+（那个文件是提交进仓库的）。
+
+```bash
 npx wrangler secret put GITHUB_APP_ID
-npx wrangler secret put GITHUB_APP_PRIVATE_KEY      # 粘贴 .pem 全文
+npx wrangler secret put GITHUB_APP_PRIVATE_KEY      # 单行 \n 转义，见 §5.5
 npx wrangler secret put GITHUB_CLIENT_ID
 npx wrangler secret put GITHUB_CLIENT_SECRET
-npx wrangler secret put SESSION_ENCRYPTION_KEY
-npx wrangler secret put GITALK_ALLOWED_ORIGINS
+npx wrangler secret put SESSION_ENCRYPTION_KEY      # openssl rand -hex 32
+npx wrangler secret put GITALK_ALLOWED_ORIGINS      # 逗号分隔，须含站点来源
+```
+
+`GITALK_ALLOWED_ORIGINS` 至少要包含 `https://gitalk.github.io`，
+否则浏览器会被 CORS 拦掉。本地调试再追加 `http://127.0.0.1:4181`。
+
+> `wrangler.toml` 的 `[vars] GITALK_ALLOWED_ORIGINS = "*"` 是占位值。
+> 上线后应改成具体来源（`*` 表示任何站点都能借用这个代理）。
+> `.env` / `.dev.vars` 与 `[vars]` 的优先级未实测，改完请用第 4 步的 `curl` 验证。
+
+#### ④ 部署并确认
+
+```bash
 npx wrangler deploy
 ```
 
-部署完先自检：`curl https://gitalk-proxy.gitalk.workers.dev/` 应返回
-`{"ok":true,"service":"gitalk-proxy"}`。
+输出会打印实际 URL，形如 `https://gitalk-proxy.<你的子域>.workers.dev`。
+**以这个输出为准**，别照抄文档里的地址。
+
+```bash
+curl https://gitalk-proxy.<你的子域>.workers.dev/
+# 期望：{"ok":true,"service":"gitalk-proxy"}
+```
+
+#### ⑤ 把最终 URL 填回 GitHub App
+
+回到 App settings → **Identifying and authorizing users** → Redirect URI，
+确保是 `<最终 URL>/oauth/callback`，且与 §1.2 一致。
+
+**顺序不能颠倒**：回调地址与 Worker 实际地址不一致，登录会停在 OAuth 错误页。
+
+#### 可选：让 CI 自动部署
+
+目前**没有** worker 的部署工作流，每次改动都要手动 `wrangler deploy`。
+若要自动化，需在仓库 secrets 里加 `CLOUDFLARE_API_TOKEN` 和 `CLOUDFLARE_ACCOUNT_ID`
+（同样只能由你在 Cloudflare 后台创建 API Token），再新增一个 workflow。
 
 ### 5.4 上传 App logo
 

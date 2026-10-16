@@ -270,6 +270,35 @@ giscus **不是 serverless**：它是部署在 Vercel 上的 Next.js 应用，�
 这条路用户体验很好，但**依赖中心化服务**。Gitalk 2.0 保持「无我们自己的后端」这一核心卖点，
 因此选 B 而非复刻 giscus。
 
+### 3.6 托管端点的 URL 是一处连锁依赖
+
+方案 B 自带了「项目得自己托管一个端点」的代价，而这个端点的地址牵动三处配置：
+
+```
+wrangler.toml  name = "gitalk-proxy"
+        +
+Cloudflare 账户注册的 workers.dev 子域
+        ↓
+最终 URL  https://gitalk-proxy.<子域>.workers.dev
+        ↓
+① packages/core/src/auth.ts  DEFAULT_PROXY
+② GitHub App 的 Redirect URI ＝ <URL>/oauth/callback
+③ 文档中所有出现该地址处
+```
+
+**`*.workers.dev` 子域是全局唯一的**（跨所有 Cloudflare 账号），因此「能否拿到
+`gitalk` 这个子域」不由我们决定。实测 `gitalk-proxy.gitalk.workers.dev` 当前返回
+`error code: 1042`，即子域尚未注册。
+
+若 `gitalk` 已被占用，① 和 ② 必须同步改——**只改一处会导致登录在 OAuth 回调处断掉**，
+而且症状是停在 GitHub 的错误页，不容易联想到是地址不匹配。
+
+**建议：优先绑自定义域名**（`routes`），而不是依赖 `*.workers.dev`。
+workers.dev 子域与账号绑定，迁移账号或子域被回收都会让已发布的 widget 集体失效；
+自定义域名可控得多。自部署者用 `options.proxy` 指向自己的端点即可绕开整条链。
+
+详细操作清单见 [docs/github-app-guide.md](./github-app-guide.md) §5.3。
+
 ---
 
 ## 4. Markdown 渲染
