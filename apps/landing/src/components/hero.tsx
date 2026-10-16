@@ -1,19 +1,20 @@
+import { useI18n } from '../i18n'
+
 export function Hero({ counts }: { counts: { stars: string; size: string; deps: string } }) {
+  const { t } = useI18n()
+
   return (
     <section className="hero">
-      <p className="eyebrow">Serverless comments · GitHub Discussions</p>
+      <p className="eyebrow">{t.hero.eyebrow}</p>
       <h1>
-        把评论区
+        {t.hero.titleLine1}
         <br />
-        搬回你的仓库
+        {t.hero.titleLine2}
       </h1>
-      <p className="lede">
-        Gitalk 2.0 用 GitHub Discussions 承载评论。无后端、无数据库、无第三方代理——
-        匿名访客可直接阅读，登录后即可评论与点赞。
-      </p>
+      <p className="lede">{t.hero.lede}</p>
       <div className="cta">
         <a className="btn btn-primary" href="#usage">
-          开始使用
+          {t.hero.getStarted}
         </a>
         <a
           className="btn btn-ghost"
@@ -21,20 +22,20 @@ export function Hero({ counts }: { counts: { stars: string; size: string; deps: 
           target="_blank"
           rel="noopener noreferrer"
         >
-          查看源码
+          {t.hero.viewSource}
         </a>
       </div>
       <dl className="stats">
         <div>
-          <dt>体积</dt>
+          <dt>{t.hero.size}</dt>
           <dd>{counts.size}</dd>
         </div>
         <div>
-          <dt>运行时依赖</dt>
+          <dt>{t.hero.runtimeDeps}</dt>
           <dd>{counts.deps}</dd>
         </div>
         <div>
-          <dt>Star</dt>
+          <dt>{t.hero.stars}</dt>
           <dd>{counts.stars}</dd>
         </div>
       </dl>

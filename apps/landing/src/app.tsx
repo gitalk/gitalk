@@ -5,8 +5,10 @@ import { CodeTabs } from './components/code-tabs'
 import { Hero } from './components/hero'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
+import { LANGS, RichText, useI18n } from './i18n'
 
 export function App() {
+  const { lang, setLang, t } = useI18n()
   const [dark, setDark] = useState<boolean>(() => prefersDark())
 
   useEffect(() => {
@@ -31,9 +33,9 @@ export function App() {
           <span className="brand-tag">2.0</span>
         </div>
         <nav className="topnav">
-          <a href="#features">特性</a>
-          <a href="#usage">用法</a>
-          <a href="#demo">Demo</a>
+          <a href="#features">{t.nav.features}</a>
+          <a href="#usage">{t.nav.usage}</a>
+          <a href="#demo">{t.nav.demo}</a>
           <a
             className="btn btn-ghost"
             href="https://github.com/gitalk/gitalk"
@@ -42,11 +44,24 @@ export function App() {
           >
             GitHub
           </a>
+          <div className="lang-switch" role="group" aria-label={t.nav.language}>
+            {LANGS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                className={option.id === lang ? 'is-active' : ''}
+                aria-pressed={option.id === lang}
+                onClick={() => setLang(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             className="btn btn-icon"
             onClick={() => setDark((v) => !v)}
-            aria-label="Toggle theme"
+            aria-label={t.nav.theme}
           >
             {dark ? '☀' : '☾'}
           </button>
@@ -58,10 +73,9 @@ export function App() {
       <BackendExplainer />
       <CodeTabs />
       <section id="demo" className="section demo-section">
-        <h2>实时 Demo</h2>
+        <h2>{t.demo.title}</h2>
         <p className="lede">
-          下面的评论框就是 <code>@aifire/gitalk</code> 本身。它直接读取{' '}
-          <code>gitalk/gitalk</code> 的 Discussions，匿名即可查看，登录后可评论。
+          <RichText text={t.demo.lede} />
         </p>
         <GitalkDemo />
       </section>
@@ -85,13 +99,16 @@ export function App() {
  * widget uses, and the CloudBase function exists because `*.workers.dev` is
  * unreachable from mainland China. Letting visitors switch shows what that
  * difference actually buys instead of only describing it.
+ *
+ * Labels come from the dictionary; only the ids and URLs live here.
  */
 const DEMO_ENDPOINTS = [
-  { id: 'cloudflare', label: 'Cloudflare', proxy: 'https://gitalk-proxy.aispin-abf.workers.dev' },
-  { id: 'cloudbase', label: '腾讯云 CloudBase', proxy: 'https://gitalk.xsin.work' }
+  { id: 'cloudflare', proxy: 'https://gitalk-proxy.aispin-abf.workers.dev' },
+  { id: 'cloudbase', proxy: 'https://gitalk.xsin.work' }
 ] as const
 
 function GitalkDemo() {
+  const { t } = useI18n()
   const [endpoint, setEndpoint] = useState<(typeof DEMO_ENDPOINTS)[number]>(DEMO_ENDPOINTS[0])
 
   const options = {
@@ -108,7 +125,7 @@ function GitalkDemo() {
 
   return (
     <>
-      <div className="demo-endpoints" role="group" aria-label="令牌端点">
+      <div className="demo-endpoints" role="group" aria-label={t.demo.endpointsLabel}>
         {DEMO_ENDPOINTS.map((candidate) => (
           <button
             key={candidate.id}
@@ -117,7 +134,7 @@ function GitalkDemo() {
             aria-pressed={candidate.id === endpoint.id}
             onClick={() => setEndpoint(candidate)}
           >
-            {candidate.label}
+            {t.demo.endpoints[candidate.id]}
           </button>
         ))}
       </div>

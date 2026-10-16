@@ -100,6 +100,40 @@ a {
   color: var(--fg);
 }
 
+/* Language switcher. Same segmented-control look as .demo-endpoints, kept
+   small and quiet so it reads as a top-bar control rather than a feature. */
+.lang-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--code-bg);
+}
+
+.lang-switch button {
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.lang-switch button:hover {
+  color: var(--accent);
+}
+
+.lang-switch button.is-active {
+  background: var(--bg);
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* ---------- buttons ---------- */
 .btn {
   display: inline-flex;
