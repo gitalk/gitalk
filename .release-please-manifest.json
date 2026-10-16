@@ -1,5 +1,5 @@
 {
-  "packages/core": "2.2.1",
+  "packages/core": "2.3.0",
   "packages/react": "2.2.1",
   "packages/vue": "2.2.1"
 }

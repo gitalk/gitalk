@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0](https://github.com/gitalk/gitalk/compare/v2.2.1...v2.3.0) (2026-10-16)
+
+
+### Features
+
+* **core:** restyle the widget after the comment-ui design reference ([e858617](https://github.com/gitalk/gitalk/commit/e8586179371f3ee4ecb60c8504053a2c5b9bcf38))
+
+
+### Bug Fixes
+
+* **core:** count replies, and stop rendering the plural separator ([a6ca2d0](https://github.com/gitalk/gitalk/commit/a6ca2d0763ec08e43e263b11d0eeb5bca68fdce2))
+* **core:** stop hardcoding the version shown in the widget ([17deb8f](https://github.com/gitalk/gitalk/commit/17deb8fc606f1c34e8acb350fe7e550d127e99d7))
+
 ## [2.2.1](https://github.com/gitalk/gitalk/compare/v2.2.0...v2.2.1) (2026-10-16)
 
 
