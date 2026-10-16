@@ -131,7 +131,10 @@ export async function handle(
       headers: {
         ...cors,
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        // The widget sends Authorization once a visitor signs in. Leaving it
+        // out made every authenticated write fail the preflight — anonymous
+        // reads do not send it, so the endpoint looked healthy.
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
         'Access-Control-Max-Age': '86400'
       }
     })
