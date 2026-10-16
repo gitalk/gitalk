@@ -497,4 +497,21 @@ describe('HttpClient', () => {
     const init = vi.mocked(globalThis.fetch).mock.calls[0]![1] as RequestInit
     expect((init.headers as Record<string, string>).Accept).toContain('full+json')
   })
+
+  it('asks for a network read when fresh is set', async () => {
+    const http = { get: vi.fn().mockResolvedValue([]), post: vi.fn(), request: vi.fn() }
+    const backend = new DiscussionsBackend(makeCtx({ http: http as unknown as HttpClient }))
+    const cacheOf = (call: number) => (http.get.mock.calls[call]?.[1] as { cache?: string } | undefined)?.cache
+
+    // GitHub serves this endpoint with `cache-control: public, max-age=60`, so a
+    // reload right after posting can be answered from the browser's copy and show
+    // the thread as it was before the comment. `fresh` is how the caller opts out.
+    await backend.getComments({ first: 10, fresh: true })
+    expect(cacheOf(0)).toBe('reload')
+
+    // Ordinary reads keep the cache: revalidation is free against the rate limit.
+    await backend.getComments({ first: 10 })
+    expect(cacheOf(1)).toBeUndefined()
+  })
+
 })
