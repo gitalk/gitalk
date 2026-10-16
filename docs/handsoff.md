@@ -8,29 +8,30 @@
 
 ## 一句话现状
 
-端点逻辑已拆成平台无关的 `proxy-core`，**Cloudflare 与容器两条路已跑通并验证**，
-**CloudBase 函数已部署但还没有公网入口**——只差一张 `gitalk.xsin.work` 的证书。
+**CF 与 CloudBase 两条端点都已上线并通过端到端验证**；容器本地实测与 CF 一致。
+npm 上 `@aifire/*` 停在 2.2.0（2.2.1 未发布）。落地页正在做 i18n。
 
----
+```
+CF         https://gitalk-proxy.aispin-abf.workers.dev
+CloudBase  https://gitalk.xsin.work          ← 根路径，无前缀
+容器       本地 8787 / 自部署
+```
+
+三端匿名读结果一致：`gitalk/gitalk#442` = 顶层 2 + 回复 1。
 
 ## 下一步（按顺序）
 
-1. **为 `gitalk.xsin.work` 签发证书**（阿里云 DNS-01）
-   - 凭据已在 `.env`：`ALIYUN_SECRET_ID_DNS` / `ALIYUN_SECRET_KEY_DNS`
-   - 参考项目：`/Volumes/Pluto/dev/github/aispin/x.certbot`（见下方评估）
-   - ⚠️ 本机 **Docker 已安装但 daemon 未运行**
-2. **上传证书到腾讯云 SSL** → 拿到 `certId`
-   - 子账号 `ai-matrix-dev` 已加 `QcloudSSLFullAccess` ✓
-3. **绑定域名**：`tcb domains add gitalk.xsin.work -e <envId> --certid <certId>`
-4. **加触发路径**：`/gitalk` → `WEB_SCF:gitalk-proxy`
-   - ⚠️ 必须实测 `enablePathTransmission` 取值：我们的 handler 按**根路径**路由
-     （`/oauth/authorize`、`/graphql`），前缀若被透传进去会 404
-5. **端到端验证**：健康检查 / 授权跳转参数 / 匿名读，与 CF、容器三方比对
-6. **落地页加端点切换**（CF ↔ CloudBase），设计已定，见下
-7. **文档**：把 `tech.md` §8.2 自部署方案拆到 `tech-deploy.md`，`tech.md` 里引用
-8. **npm 2.2.1 未发布**（见「未了事项」）
-
----
+1. **落地页 i18n**（进行中）：默认跟随 `navigator.language`，顶栏加中/EN 切换并记住选择；
+   同时把「为什么是 2.0」改为 **What's New**。分支由 subagent 在做，文件限于 `apps/landing/`。
+2. **npm 2.2.1 发布**：见「未了事项 §1」，需要在 npm 上为三个包注册 Trusted Publisher。
+3. **`tech.md` §8.2 拆到 `tech-deploy.md`**，`tech.md` 里引用（用户要求）。
+4. **x.certbot 落地**（用户已明确「后面再看」，不阻塞）：
+   - 交付物在 `.x-certbot-delivery/`（已 gitignore），落地命令见其 `README.md`
+   - ⚠️ **必须修正**：用户已在 x.certbot 配好 **Environment `PROD`**
+     的 secrets/variables，而 subagent 的设计用的是另一套名字且没声明 `environment:`
+     - secrets：`ALIYUN_SECRET_KEY_DNS`、`CLOUDBASE_SECRET_KEY`
+     - variables：`CLOUDBASE_SECRET_ID`、`ALIYUN_SECRET_ID_DNS`
+     - job 必须写 `environment: PROD`，引用分别用 `${{ secrets.X }}` 与 `${{ vars.X }}`
 
 ## 已完成并验证
 
@@ -53,7 +54,7 @@ packages/proxy-cloudbase/  CloudBase Web 函数（复用 proxy-node 的构建产
 | --- | --- | --- |
 | **CF Workers** | ✅ `https://gitalk-proxy.aispin-abf.workers.dev` | ✅ 授权参数、匿名读（2 顶层 + 1 回复）、错误回跳 302 |
 | **容器** | — | ✅ 本地实测，与 CF **逐项一致**（健康检查/授权跳转/匿名读） |
-| **CloudBase** | ✅ `Type=HTTP / Status=Active` | ⚠️ 无公网入口（缺证书） |
+| **CloudBase** | ✅ `https://gitalk.xsin.work`（根路径路由 `/`） | ✅ 授权参数、匿名读（与 CF 一致） |
 
 容器产物：**16KB 零依赖单文件**，Dockerfile 只需 `COPY dist/server.js`。
 
@@ -225,6 +226,18 @@ pnpm --filter @gitalk/proxy-node build         # 容器（再 docker build）
   完全一致**，否则 ETag 不同、返回 200。我早先「304 也扣额度」的结论就是这个坑导致的误判。
 
 **CloudBase**
+
+- **`tcb fn deploy` 对已存在的函数是空操作**：不带 `--force` 时会「报成功但什么都不做」
+  （`UpdateTime` 不变，新增的 `envVariables` 也不会写入）。部署脚本已固定带 `--force`。
+- **CLI 只在当前目录找 `cloudbaserc.json`**：从仓库根目录调用会退化成
+  `Deploying directly with the inferred configuration`，建出一个 `CreateFailed` 的坏函数。
+  必须在 `packages/proxy-cloudbase/` 下运行。
+- **公网 origin 必须显式给**：函数跑在内部 `127.0.0.1:9000`，而 core 用 `request.url`
+  拼 `redirect_uri`；不设 `PUBLIC_ORIGIN` 会把访客导向一个不可达地址，登录永远回不来。
+- **路由前缀不可用**：平台会在函数收到请求前剥掉前缀，`url.origin` 无法还原它。
+  所以端点挂在**根路径**（`/`），不要用 `/gitalk` 这类前缀。
+- `tcb api` 必须显式传 `--api-version`（如 `2019-12-05`），否则报 `version=undefined`。
+- `tcb routes add` / `delete` **没有 `-y`**，会交互确认，需要喂 `yes`。
 
 - `protocolType` 字段会被 CreateFunction 拒绝（`ProtocolType 取值与规范不符`），zip 部署的
   Web 函数**不能带**这个字段
