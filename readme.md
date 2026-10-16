@@ -29,7 +29,7 @@ Gitalk is a modern comment component based on GitHub Issue and Preact.
 - Facebook-like distraction free mode (Can be enabled via the `distractionFreeMode` option)
 - Hotkey submit comment (cmd|ctrl + enter)
 
-[中文说明](https://github.com/gitalk/gitalk/blob/master/readme-cn.md)
+[中文说明](https://github.com/gitalk/gitalk/blob/v1/readme-cn.md)
 [Demo (1.x)](https://gitalk.github.io/gitalk/)
 [Gitalk 2.x](https://gitalk.github.io)
 
@@ -252,7 +252,7 @@ Definitions for React component usage are not included.
 
 ## Contributing
 
-1. [Fork the repository](https://github.com/gitalk/gitalk/fork) and create your branch from master
+1. [Fork the repository](https://github.com/gitalk/gitalk/fork) and create your branch from `main` (Gitalk 1.x is end-of-life and no longer accepts changes)
 2. If you've added code that should be tested, add tests!
 3. If you've changed APIs, update the documentation.
 4. Ensure the test suite passes (npm test).
@@ -269,16 +269,16 @@ Definitions for React component usage are not included.
 MIT
 
 [license-version-image]: https://img.shields.io/github/license/gitalk/gitalk
-[license-version-url]: https://github.com/gitalk/gitalk/blob/master/LICENSE
+[license-version-url]: https://github.com/gitalk/gitalk/blob/v1/LICENSE
 [npm-version-image]: https://img.shields.io/npm/v/gitalk.svg?style=flat-square
 [npm-version-url]: https://www.npmjs.com/package/gitalk
 [cdnjs-version-image]: https://img.shields.io/cdnjs/v/gitalk.svg?style=flat-square
 [cdnjs-version-url]: https://cdnjs.com/libraries/gitalk
 [david-dm-image]: https://david-dm.org/gitalk/gitalk.svg?style=flat-square
 [david-dm-url]: https://david-dm.org/gitalk/gitalk
-[travis-image]: https://img.shields.io/travis/gitalk/gitalk/master.svg?style=flat-square
+[travis-image]: https://img.shields.io/travis/gitalk/gitalk/v1.svg?style=flat-square
 [travis-url]: https://travis-ci.org/gitalk/gitalk
-[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/master.svg?style=flat-square
+[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/v1.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/github/gitalk/gitalk
 [gzip-size]: https://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
 [gzip-url]: https://unpkg.com/gitalk/dist/gitalk.min.js

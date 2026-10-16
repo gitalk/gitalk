@@ -28,7 +28,7 @@ Gitalk 是一個基於 GitHub Issue 和 Preact 開發的評論插件。
 - 無干擾模式（設置 distractionFreeMode 為 true 開啟）
 - 快捷鍵提交評論 （cmd|ctrl + enter）
 
-[Readme](https://github.com/gitalk/gitalk/blob/master/readme.md)
+[Readme](https://github.com/gitalk/gitalk/blob/v1/readme.md)
 [在線示例（1.x）](https://gitalk.github.io/gitalk/)
 [Gitalk 2.x](https://gitalk.github.io)
 
@@ -244,7 +244,7 @@ const gitalk = new Gitalk({
 
 ## 貢獻
 
-1. [Fork 代碼倉庫](https://github.com/gitalk/gitalk/fork) 並從 master 創建你的分支
+1. [Fork 代碼倉庫](https://github.com/gitalk/gitalk/fork) 並從 `main` 創建你的分支（Gitalk 1.x 已停止維護，不再接受改動）
 2. 如果你添加的代碼需要測試，請添加測試！
 3. 如果你修改了 API，請更新文檔。
 4. 確保單元測試通過 (npm test).
@@ -266,9 +266,9 @@ MIT
 [cdnjs-version-url]: https://cdnjs.com/libraries/gitalk
 [david-dm-image]: https://david-dm.org/gitalk/gitalk.svg?style=flat-square
 [david-dm-url]: https://david-dm.org/gitalk/gitalk
-[travis-image]: https://img.shields.io/travis/gitalk/gitalk/master.svg?style=flat-square
+[travis-image]: https://img.shields.io/travis/gitalk/gitalk/v1.svg?style=flat-square
 [travis-url]: https://travis-ci.org/gitalk/gitalk
-[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/master.svg?style=flat-square
+[coveralls-image]: https://img.shields.io/coveralls/gitalk/gitalk/v1.svg?style=flat-square
 [coveralls-url]: https://coveralls.io/github/gitalk/gitalk
 [gzip-size]: https://img.badgesize.io/https://unpkg.com/gitalk/dist/gitalk.min.js?compression=gzip&style=flat-square
 [gzip-url]: https://unpkg.com/gitalk/dist/gitalk.min.js
