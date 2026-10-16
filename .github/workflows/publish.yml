@@ -1,0 +1,149 @@
+# 发布：release-please 算版本 → 合并 Release PR → 打 tag、建 GitHub Release、npm publish
+#
+# 推 main（带 feat/fix 等）→ release-please 开/更新一个 Release PR（里面已改好各包
+#   package.json 的 version、CHANGELOG.md、.release-please-manifest.json）
+# → **你合并这个 PR** → 本次 workflow 在合并后的推送里完成 tag + Release + npm 发布
+#   docs:/chore:/ci:/style:/refactor: 不触发发版。
+#   版本规则：feat: → minor ｜ fix: → patch ｜ feat!: 或 body 里写 BREAKING CHANGE: → major
+#
+# 本仓库是 monorepo，三个包共享同一个 component 与同一个 `vX.Y.Z` tag：
+#   packages/core → @aifire/gitalk
+#   packages/react → @aifire/gitalk-react
+#   packages/vue → @aifire/gitalk-vue
+# 一次 Release PR 把三者一起升版，由下面的 publish job 依次发出。
+# （packages/proxy-worker 是 private，不发布。）
+#
+# ⚠️ 为什么保留「合并」这一次人工点击 —— 两条全自动路线都实测被 GitHub 挡住：
+#   1) 挂 GitHub 原生 auto-merge：仓库没有分支保护规则，直接报
+#      "Protected branch rules not configured for this branch"。
+#   2) 由 workflow 用 GITHUB_TOKEN 合并：这种 push 不触发下游 workflow（防递归），
+#      而 Release/Tag 也建不出来（403 Resource not accessible by integration）。
+#   注：`skip-github-pull-request: true` 也不行 —— 那个模式只负责「收尾已合并的
+#   Release PR」，不会从裸提交直接发版。
+#   想连这一次点击都省掉：给仓库配一个 PAT 或 GitHub App token 来合并（长期凭证，谨慎）。
+#
+# 认证：npm Trusted Publishing（OIDC），仓库里不存任何 npm 令牌，provenance 自动生成。
+#   ⚠️ 三个包**各自**都要在 npmjs.com 的包 Settings → Trusted Publisher 绑一次：
+#        Organization or user : gitalk
+#        Repository           : gitalk
+#        Workflow filename    : publish.yml      ← 必须仍是这个文件名
+#        Allowed actions      : 勾上 **npm publish**
+#      2026-09-03 之后新建的配置默认只允许 `npm stage publish`（每次发版需人工审批），
+#      不勾这一项的话下面的 `npm publish` 会没有权限。
+#      新建的配置还必须在 **2 天内**完成首次成功发布，否则作废、只能删了重建。
+#
+# ⚠️ 为什么不是 `pnpm publish`：pnpm 10.x 不实现 OIDC 交换（没有 --provenance，
+#   产物里也搜不到 ACTIONS_ID_TOKEN_REQUEST_URL），拿不到临时凭证。
+#   所以打包交给 pnpm（它会正确替换掉 workspace:*），发布交给 npm CLI。
+#
+# 手动补发（tag 建好了但 npm 发布失败）：Actions → Release → Run workflow，
+#   勾上 publish_current_version，会按各包 package.json 当前版本重新构建并发布。
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish_current_version:
+        description: '跳过版本判定，直接按各包 package.json 当前版本构建并发布（补发用）'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write        # 打 tag、建 GitHub Release
+  pull-requests: write   # 开/更新 Release PR
+  id-token: write        # OIDC：Trusted Publishing 的必需品
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.flag.outputs.publish }}
+    steps:
+      # 合并 Release PR 的那次运行会返回 releases_created=true。
+      # 这里是多包（一次发三个），所以看 releases_created 而不是单个 release_created。
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - id: flag
+        name: Decide whether to publish
+        run: |
+          set -euo pipefail
+          publish="${{ steps.release.outputs.releases_created == 'true' || inputs.publish_current_version == true }}"
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+          echo "releases_created=${{ steps.release.outputs.releases_created }} / forced=${{ inputs.publish_current_version }} → publish=$publish"
+
+  publish:
+    needs: release
+    if: needs.release.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          # 不传 registry-url：避免 .npmrc 里出现空的 ${NODE_AUTH_TOKEN} 干扰 OIDC。
+          # registry 与 access 由各包 package.json 的 publishConfig 提供。
+
+      # Trusted Publishing 要 npm CLI ≥ 11.5.1，Node 自带的 npm 不保证够新。
+      - name: Install latest npm
+        run: |
+          npm install -g npm@latest
+          node -v && npm -v
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      # 防住「声明了却构建不出来」的入口点：有一次 exports 指向了
+      # 打包器从未产出的 core.css，构建仍然全绿。详见脚本内注释。
+      - name: Verify publish entry points exist
+        run: node scripts/check-publishable.mjs
+
+      # workspace:* 只有 pnpm 会替换成真实版本号，npm 不认，所以先 pack 再 publish。
+      - name: Pack
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/tarballs"
+          pnpm -r \
+            --filter @aifire/gitalk \
+            --filter @aifire/gitalk-react \
+            --filter @aifire/gitalk-vue \
+            exec pnpm pack --pack-destination "$RUNNER_TEMP/tarballs"
+          ls -l "$RUNNER_TEMP/tarballs"
+
+      # 不传 NODE_AUTH_TOKEN：npm CLI 在 GitHub Actions 里自动用 OIDC 换临时凭证。
+      - name: Publish to npm
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          tarballs=("$RUNNER_TEMP"/tarballs/*.tgz)
+          if [ "${#tarballs[@]}" -ne 3 ]; then
+            echo "预期 3 个 tarball，实际 ${#tarballs[@]} 个" >&2
+            exit 1
+          fi
+          # 排序让 core 先发，react/vue 依赖它。
+          for tarball in $(printf '%s\n' "${tarballs[@]}" | sort); do
+            echo "→ $(basename "$tarball")"
+            npm publish "$tarball" --access public
+          done
