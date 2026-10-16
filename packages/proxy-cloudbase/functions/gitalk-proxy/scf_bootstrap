@@ -1,0 +1,12 @@
+#!/bin/bash
+# CloudBase HTTP 函数（Web 云函数）的启动脚本。
+#
+# SCF 通过执行这个脚本来拉起函数，所以它必须启动一个监听 9000 端口的 HTTP
+# 服务——9000 是 Web 云函数的约定端口，不接受其他值。
+#
+# server.js 就是 packages/proxy-node 构建出来的同一份产物：端点逻辑在
+# @gitalk/proxy-core 里，Node 与 CloudBase 共用，这里只是换了个启动方式。
+set -euo pipefail
+
+export PORT=9000
+exec node server.js

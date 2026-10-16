@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.cloudbase.net/cli/cloudbaserc.schema.json",
+  "version": "2.1",
+  "envId": "{{env.CLOUDBASE_ENV_ID}}",
+  "functionRoot": "functions",
+  "functions": [
+    {
+      "name": "gitalk-proxy",
+      "description": "Gitalk 2.0 token endpoint (CloudBase Web function)",
+      "type": "HTTP",
+      "runtime": "Nodejs20.19",
+      "entry": "server.js",
+      "timeout": 10,
+      "memorySize": 256,
+      "buildStrategy": "zip",
+      "public": true,
+      "installDependency": false,
+      "envVariables": {
+        "GITHUB_APP_ID": "{{env.GITHUB_APP_ID}}",
+        "GITHUB_APP_PRIVATE_KEY": "{{env.GITHUB_APP_PRIVATE_KEY}}",
+        "GITHUB_CLIENT_ID": "{{env.GITHUB_CLIENT_ID}}",
+        "GITHUB_CLIENT_SECRET": "{{env.GITHUB_CLIENT_SECRET}}",
+        "SESSION_ENCRYPTION_KEY": "{{env.SESSION_ENCRYPTION_KEY}}",
+        "GITALK_ALLOWED_ORIGINS": "{{env.GITALK_ALLOWED_ORIGINS}}"
+      }
+    }
+  ]
+}

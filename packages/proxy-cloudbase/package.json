@@ -1,0 +1,15 @@
+{
+  "name": "@gitalk/proxy-cloudbase",
+  "version": "2.2.1",
+  "private": true,
+  "description": "Tencent CloudBase (Web function) deployment target for the Gitalk 2.0 token endpoint.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "typecheck": "node --check scripts/deploy.mjs && node --check scripts/build.mjs"
+  },
+  "devDependencies": {
+    "@cloudbase/cli": "3.8.7"
+  }
+}

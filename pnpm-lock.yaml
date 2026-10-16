@@ -92,6 +92,12 @@ importers:
         specifier: 5.1.2
         version: 5.1.2(@vue/language-core@3.3.13)(esbuild@0.28.2)(rolldown@1.2.14)(typescript@7.0.2)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(jiti@2.7.0))
 
+  packages/proxy-cloudbase:
+    devDependencies:
+      '@cloudbase/cli':
+        specifier: 3.8.7
+        version: 3.8.7
+
   packages/proxy-core:
     devDependencies:
       typescript:
@@ -276,6 +282,10 @@ packages:
 
   '@bramus/specificity@2.4.3':
     resolution: {integrity: sha512-0GEz8qJWokkUVYQYRukmkSHIFNoBH8QTreeHrAFbvz1XFYc3Y+puhMs8PQ5x8GNugiC2l5jvDBXKLbBIByeSBw==}
+    hasBin: true
+
+  '@cloudbase/cli@3.8.7':
+    resolution: {integrity: sha512-PDYlkIKirATcLJb9+1OETLM0mXdSKKCpvEE5CmG0dJ/72ux1BH0L7jx4fn4qf6WKvzdWZho405iaUobRSwRZpQ==}
     hasBin: true
 
   '@cloudflare/kv-asset-handler@0.5.0':
@@ -2165,6 +2175,8 @@ snapshots:
   '@bramus/specificity@2.4.3':
     dependencies:
       css-tree: 3.2.1
+
+  '@cloudbase/cli@3.8.7': {}
 
   '@cloudflare/kv-asset-handler@0.5.0': {}
 
