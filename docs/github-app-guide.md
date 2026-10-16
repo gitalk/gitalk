@@ -224,11 +224,32 @@ Gitalk 是拉取模型：进页面时主动拉评论，不依赖任何事件推�
 
 ### 5.2 安装 App
 
-App 必须先被安装，Worker 才拿得到 installation token（匿名读依赖它）。
+⚠️ **没安装就没有 installation token，Worker 的匿名读会返回
+`503 {"error":"No usable GitHub credential"}`。**
+这条是端到端跑通前的最后一道人工步骤，且只能由有仓库管理权限的人在浏览器里完成。
 
-1. App 页面 → Install App → 选 gitalk org
+直接打开安装页：
+
+```
+https://github.com/apps/<slug>/installations/new
+```
+
+例如本次创建的 App：<https://github.com/apps/gitalk-x/installations/new>
+
+1. 选择要安装到的账号 / 组织（demo 用 `gitalk`）
 2. Repository access 选包含评论仓库的范围（demo 用 `gitalk/gitalk`）
 3. 确认目标仓库 **已开启 Discussions**，且存在用于承载评论的 category
+
+装好后可以这样确认（把 `<slug>` 和 App ID 换成自己的）：
+
+```bash
+# 用 App JWT 查安装列表；需要 jq 或 python 解析
+curl -s -H "Authorization: Bearer $APP_JWT" \
+  -H 'Accept: application/vnd.github+json' \
+  https://api.github.com/app/installations | python3 -m json.tool | head -20
+```
+
+返回空数组 `[]` 就说明还没装成功。
 
 ### 5.3 部署 Worker（两条命令的事）
 
@@ -352,9 +373,27 @@ Using secrets defined in .env
 
 > 若坚持把 `.env` 放在别处，可用 `wrangler dev --env-file ../../.env` 显式指定。
 
-#### `GITHUB_APP_PRIVATE_KEY`：需要打开 `.pem`，但要压成单行
+#### `GITHUB_APP_PRIVATE_KEY`：直接放 `.pem` 文件，什么都不用压
 
-下载到的 `.pem` 是**多行**的，而 `.env` 的值不能跨行，因此要把换行转成**字面量 `\n`**：
+**最简单：把下载的 `.pem` 丢进 `packages/proxy-worker/` 就行。**
+部署脚本会发现它、自己读取，并确认它被 git 忽略：
+
+```
+[1] Reading .env
+    ✓ private key read from gitalk-x.2026-10-15.private-key.pem
+    ✓ gitalk-x.2026-10-15.private-key.pem is git-ignored
+```
+
+该目录下**只能有一个 `.pem`**；有多个时脚本会报错并列出，让你删到只剩一个，
+或在 `.env` 里显式指定 `GITHUB_APP_PRIVATE_KEY` 来选定。
+`.env` 里已填该字段时优先用 `.env`，`.pem` 原样保留不动。
+
+> `*.pem` 已在 `.gitignore` 内。脚本每次都会用 `git check-ignore` 复核，
+> 未被忽略时**直接中止**而不是继续部署。
+
+##### 备选：压成单行写进 `.env`
+
+如果不想放文件，`.pem` 是多行的而 `.env` 值不能跨行，就要把换行转成**字面量 `\n`**：
 
 ```bash
 # 打印成单行（首尾的 BEGIN/END 行保留）
@@ -367,7 +406,7 @@ awk 'NF {printf "%s\\n", $0}' ~/Downloads/gitalk-x.*.private-key.pem
 GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----\n"
 ```
 
-要点：
+两种方式**效果等价**，选省事的即可。要点：
 
 - **保留 `-----BEGIN/END-----` 行**——Worker 会自己剥掉，缺了 header 也能识别（见下）
 - 用**双引号**，避免值里的字符被当作注释

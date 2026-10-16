@@ -12,7 +12,7 @@
  */
 
 import { spawn } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -76,6 +76,32 @@ function readEnvFile(path) {
 }
 
 /* ------------------------------------------------------------------ *
+ * private key
+ * ------------------------------------------------------------------ */
+
+/**
+ * Locate the App private key.
+ *
+ * It may be given either as a flattened `GITHUB_APP_PRIVATE_KEY` in `.env`, or
+ * as the downloaded `.pem` dropped into this directory. Prefer whichever the
+ * operator already has: reading the file avoids the error-prone flattening
+ * step entirely, since the Worker accepts real newlines too.
+ */
+function findPrivateKeyFile() {
+  const pems = readdirSync(WORKER_DIR).filter((name) => name.endsWith('.pem'))
+  if (pems.length === 0) return null
+  if (pems.length > 1) {
+    return {
+      error:
+        `found ${pems.length} .pem files in packages/proxy-worker — keep only one, ` +
+        'or set GITHUB_APP_PRIVATE_KEY in .env to pick explicitly:\n' +
+        pems.map((name) => `      ${name}`).join('\n')
+    }
+  }
+  return { name: pems[0], path: join(WORKER_DIR, pems[0]) }
+}
+
+/* ------------------------------------------------------------------ *
  * validation
  * ------------------------------------------------------------------ */
 
@@ -97,7 +123,12 @@ const REQUIRED = [
 function privateKeyProblem(value) {
   const v = (value ?? '').trim()
 
-  if (!v) return 'missing'
+  if (!v) {
+    return (
+      'missing — either drop the downloaded .pem into packages/proxy-worker/, ' +
+      'or set this to the flattened key'
+    )
+  }
   if (/^SHA256:/i.test(v)) {
     return (
       'this is the key FINGERPRINT from the GitHub App settings page, not the key.\n' +
@@ -205,12 +236,38 @@ async function main() {
   const env = readEnvFile(ENV_FILE)
   ok(`loaded ${Object.keys(env).length} keys`)
 
+  // The key may be a .pem sitting in this directory rather than a flattened
+  // .env value. Reading the file skips the flattening step, so prefer it.
+  const pem = findPrivateKeyFile()
+  if (pem?.error) die(pem.error)
+
+  let keyFromPem = false
+  if (pem && !env.GITHUB_APP_PRIVATE_KEY?.trim()) {
+    env.GITHUB_APP_PRIVATE_KEY = readFileSync(pem.path, 'utf8')
+    keyFromPem = true
+    ok(`private key read from ${pem.name}`)
+  } else if (pem) {
+    ok(`private key taken from .env (${pem.name} left untouched)`)
+  }
+
   // Fail loudly rather than deploy credentials into a public repo.
   const ignored = await run('git', ['check-ignore', '-q', ENV_FILE])
   if (ignored.code === 0) {
     ok('.env is git-ignored')
   } else {
     warn('.env is NOT git-ignored — add it to .gitignore before committing anything')
+  }
+
+  if (keyFromPem) {
+    const pemIgnored = await run('git', ['check-ignore', '-q', pem.path])
+    if (pemIgnored.code === 0) {
+      ok(`${pem.name} is git-ignored`)
+    } else {
+      die(
+        `${pem.name} is NOT git-ignored — it is a private key and must never be committed.\n` +
+          '  Add `*.pem` to .gitignore and unstage it before going any further.'
+      )
+    }
   }
 
   step(2, 'Validating')
