@@ -37,6 +37,8 @@
  * @see docs/tech.md §3
  */
 
+import { pemToPkcs8 } from './pkcs8'
+
 export interface Env {
   GITHUB_APP_ID: string
   /** PEM-encoded RSA private key for the GitHub App. */
@@ -342,15 +344,16 @@ async function signAppJwt(env: Env): Promise<string> {
   return `${header}.${claims}.${base64UrlBytes(new Uint8Array(signature))}`
 }
 
+/**
+ * Import the GitHub App private key as a WebCrypto signing key.
+ *
+ * GitHub serves the key as PKCS#1 while `importKey` only takes PKCS#8, so the
+ * envelope is rebuilt on the fly — see `./pkcs8`. Accepts the PEM either as
+ * multi-line text or with newlines escaped as `\n`, which is how it has to be
+ * stored in a `.env` file or a `wrangler secret`.
+ */
 async function importPemKey(pem: string): Promise<CryptoKey> {
-  const body = pem
-    .replace(/\\n/g, '\n')
-    .replace(/\r/g, '')
-    .replace(/-----BEGIN (RSA )?PRIVATE KEY-----/, '')
-    .replace(/-----END (RSA )?PRIVATE KEY-----/, '')
-    .replace(/\s+/g, '')
-
-  const binary = Uint8Array.from(atob(body), (c) => c.charCodeAt(0))
+  const binary = pemToPkcs8(pem)
 
   return crypto.subtle.importKey(
     'pkcs8',

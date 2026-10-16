@@ -5,6 +5,12 @@ dist/
 .env
 .env.*
 !.env.example
+# Cloudflare's own local-secrets file (what `wrangler dev` reads). Same
+# hazard as .env: it holds real credentials and must never be committed.
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
 .wrangler/
 coverage/
 .pnpm-store/
+*.pem

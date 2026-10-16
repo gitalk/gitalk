@@ -271,6 +271,76 @@ npx wrangler deploy
 它同时写在 `apps/landing/src/index.css` 的 `--accent` 和
 `packages/core/src/styles/index.css` 的 `--gt-color-main`，改动需两处同步。
 
+### 5.5 本地调试：`.env` 放哪、`.pem` 怎么填
+
+#### `.env` 必须在 `packages/proxy-worker/` 下
+
+`wrangler dev` 读取 `.env` / `.dev.vars`，但它**只在 `wrangler.toml` 所在目录查找，
+不会向上级目录搜索**（已实测：把 `.env` 放在仓库根目录不会被加载）。
+所以本地密钥文件的位置是：
+
+```
+packages/proxy-worker/.env
+```
+
+两个文件名都支持，`wrangler dev` 启动时会打印实际加载了哪个：
+
+```
+Using secrets defined in .env
+```
+
+`.dev.vars` 是 Cloudflare 的约定名；两者都已加入 `.gitignore`。
+
+> 若坚持把 `.env` 放在别处，可用 `wrangler dev --env-file ../../.env` 显式指定。
+
+#### `GITHUB_APP_PRIVATE_KEY`：需要打开 `.pem`，但要压成单行
+
+下载到的 `.pem` 是**多行**的，而 `.env` 的值不能跨行，因此要把换行转成**字面量 `\n`**：
+
+```bash
+# 打印成单行（首尾的 BEGIN/END 行保留）
+awk 'NF {printf "%s\\n", $0}' ~/Downloads/gitalk-x.*.private-key.pem
+```
+
+把输出整行贴进 `.env`，用双引号包住：
+
+```
+GITHUB_APP_PRIVATE_KEY="-----BEGIN RSA PRIVATE KEY-----\nMIIE...\n-----END RSA PRIVATE KEY-----\n"
+```
+
+要点：
+
+- **保留 `-----BEGIN/END-----` 行**——Worker 会自己剥掉，缺了 header 也能识别（见下）
+- 用**双引号**，避免值里的字符被当作注释
+- **PKCS#1 与 PKCS#8 都支持**，不需要跑 `openssl pkcs8` 转换
+
+最后一点值得展开：GitHub 签发的是 **PKCS#1**（`-----BEGIN RSA PRIVATE KEY-----`），
+而 WebCrypto 的 `importKey('pkcs8', …)` 只接受 PKCS#8，裸喂会报 `Invalid keyData`。
+`packages/proxy-worker/src/pkcs8.ts` 会自动补上 PKCS#8 信封，且格式判定读的是 DER 本身
+而非 PEM 头，所以下面几种写法都能用：
+
+| 写法 | 是否可用 |
+| --- | --- |
+| PKCS#1 多行原文 | ✅ |
+| PKCS#1 单行 `\n` 转义 | ✅ |
+| PKCS#1 去掉 PEM 头的裸 base64 | ✅ |
+| PKCS#8（多行或单行） | ✅ |
+
+#### `SESSION_ENCRYPTION_KEY` 与 SHA-256 无关
+
+这个键必须恰好是 **32 字节、64 个十六进制字符**：
+
+```bash
+openssl rand -hex 32
+```
+
+它用于 **AES-GCM** 封存会话（`sessionKey()` → `importKey('raw', …, 'AES-GCM')`），
+不是哈希。传一个 SHA-256 十六进制串虽然长度也是 64 字符、能跑起来，
+但安全性取决于你哈希的那个输入是否真有熵——直接用 `openssl rand` 即可。
+
+> 全仓库只有一处用到 SHA-256：`index.ts` 里 GitHub App JWT 的签名算法
+> `RSASSA-PKCS1-v1_5` + `SHA-256`（即 RS256），由 GitHub 规定，不需要你配置。
+
 ---
 
 ## 6. 填完之后必须改的代码
