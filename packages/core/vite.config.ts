@@ -1,6 +1,11 @@
 import { defineConfig } from 'vite'
 import preact from '@preact/preset-vite'
 import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+
+const packageVersion = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, 'package.json'), 'utf8')
+).version as string
 
 /**
  * Library build: dist/index.js (ESM) plus type declarations.
@@ -14,7 +19,11 @@ export default defineConfig({
     preact(),
     {
       name: 'gitalk-version',
-      config: () => ({ define: { __GITALK_VERSION__: JSON.stringify('2.0.0') } })
+      config: () => ({
+        // Read from package.json rather than hardcoding: the literal here
+        // drifted three releases behind the published version.
+        define: { __GITALK_VERSION__: JSON.stringify(packageVersion) }
+      })
     }
   ],
   build: {

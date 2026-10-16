@@ -2,8 +2,16 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 
 const CORE_SRC = resolve(import.meta.dirname, '../../packages/core/src')
+
+// The landing page imports core's source, so core's own builds never define
+// this. Without it here the widget falls back to a hardcoded dev string and
+// the page advertises a version that is not the one shipping.
+const coreVersion = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, '../../packages/core/package.json'), 'utf8')
+).version as string
 
 /**
  * Landing page build. Emits a fully static site consumed by the gh-pages
@@ -11,6 +19,7 @@ const CORE_SRC = resolve(import.meta.dirname, '../../packages/core/src')
  */
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  define: { __GITALK_VERSION__: JSON.stringify(coreVersion) },
   // The site is served from the bare domain (gitalk.github.io). A relative
   // base keeps the same build valid if it ever moves back under a subpath.
   base: './',
