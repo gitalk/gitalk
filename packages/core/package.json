@@ -1,6 +1,6 @@
 {
   "name": "@aifire/gitalk",
-  "version": "2.3.0",
+  "version": "2.0.0-beta",
   "description": "Gitalk 2.0 core: framework-agnostic comment widget backed by GitHub Discussions (default) or Issues.",
   "license": "MIT",
   "type": "module",
