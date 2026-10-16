@@ -129,7 +129,7 @@ CloudBase 要求把环境变量声明在 `cloudbaserc.json` 里，而 schema 明
 
 **证书续期后必须重绑**：CloudBase 存的是 `CertId` 指针，而 Let's Encrypt 每次续期都是新证书
 → 新 ID → 不重绑就不生效。本仓库内的自动化（acme.sh + 阿里云 DNS-01 + 续期钩子）见
-[cert-automation/README.md](./cert-automation/README.md)。
+x.certbot 仓库的 `scripts/manual/README.md`（单域名手动路径）。
 
 > 另一套面向多域名、跑在 GitHub Actions 上的证书自动化（腾讯云 CloudBase + 阿里云
 > CAS/CDN/DCDN）属于独立的 `x.certbot` 项目，目前只存在于 gitignore 的暂存目录
