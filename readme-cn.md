@@ -5,6 +5,175 @@
 
 [English](readme.md) · [在线 Demo](https://gitalk.github.io) · [讨论区](https://github.com/gitalk/gitalk/discussions)
 
+## 快速开始
+
+三步，只有第 1 步需要浏览器和你自己的仓库管理权限。
+
+### 1. 创建 GitHub App
+
+Gitalk 2.0 用的是 **GitHub App**，不是 1.x 的 OAuth App —— 正是这个 App 让未登录访客
+能拿到 5000 次/小时的读取额度，而不再是 60 次。
+
+按 **[docs/github-app-guide.md](docs/github-app-guide.md)** 走：它逐字段说明表单怎么填，
+包括回调地址、权限、以及两个填错就会**静默导致登录失败**的开关。
+
+做完你会得到：
+
+- App 的 **Client ID**（形如 `Iv23li…`）—— 这个才写进页面
+- App 已**安装**到用来存评论的仓库
+- 该仓库已**开启 Discussions**，并有可用的分类
+
+> App 的 client secret **不要**放进页面。它只存在令牌端点里，见下方
+> [令牌端点](#令牌端点)。
+
+### 2. 安装
+
+```sh
+pnpm add @aifire/gitalk          # 无框架
+pnpm add @aifire/gitalk-react    # React
+pnpm add @aifire/gitalk-vue      # Vue
+```
+
+不想构建的话，直接引 CDN：
+
+```html
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@aifire/gitalk@2/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/@aifire/gitalk@2/dist/gitalk.js"></script>
+```
+
+> 首次发布完成前，npm 上还没有这些包，请先按 [开发](#开发) 从源码构建。
+
+### 3. 渲染
+
+**无框架**
+
+```html
+<div id="gitalk-container"></div>
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'Iv23li…',     // 你的 GitHub App client id
+    owner: 'you',            // 存放评论的仓库
+    repo: 'blog-comments',
+    admin: ['you'],          // 谁可以在首次访问时创建 thread
+    number: 42               // 本页对应的 discussion number
+  })
+  gitalk.render('gitalk-container')
+</script>
+```
+
+**React**
+
+```tsx
+import { Gitalk } from '@aifire/gitalk-react'
+import '@aifire/gitalk/style.css'
+
+export function Comments() {
+  return (
+    <Gitalk
+      options={{
+        clientID: 'Iv23li…',
+        owner: 'you',
+        repo: 'blog-comments',
+        admin: ['you'],
+        number: 42
+      }}
+    />
+  )
+}
+```
+
+**Vue**
+
+```vue
+<script setup lang="ts">
+import { Gitalk } from '@aifire/gitalk-vue'
+import '@aifire/gitalk/style.css'
+
+const options = {
+  clientID: 'Iv23li…',
+  owner: 'you',
+  repo: 'blog-comments',
+  admin: ['you'],
+  number: 42
+}
+</script>
+
+<template>
+  <Gitalk :options="options" />
+</template>
+```
+
+## 配置项
+
+| 配置 | 默认 | 说明 |
+|---|---|---|
+| `clientID` | — | 你的 GitHub App client id |
+| `owner`, `repo` | — | 存放 discussion 的仓库 |
+| `admin` | `[]` | 允许创建 thread 的用户 |
+| `backend` | `'discussions'` | 1.x 老用户可传 `'issues'` |
+| `number` | — | discussion 编号。**推荐**：省掉一次标题扫描 |
+| `id` | `location.pathname` | 未给 `number` 时用于定位页面的标识 |
+| `category` | — | 创建 discussion 时使用的分类 |
+| `perPage` | `10` | 每页条数 |
+| `proxy` | 托管端点 | 令牌交换端点，见下 |
+| `language` | `navigator.language` | 沿承 1.x 的 11 种语言 |
+
+## 令牌端点
+
+`github.com/login/oauth/access_token` **不返回 `Access-Control-Allow-Origin`**，
+device flow 同样被 CORS 挡住，所以**纯静态页面无法自己完成 OAuth 交换**。
+必须有个服务端持有 client secret。
+
+默认情况下 Gitalk 用本项目托管的端点，`proxy` 不填即可：
+
+```
+https://gitalk-proxy.aispin-abf.workers.dev
+```
+
+如果你不想依赖它，可以自己部署一份，代码在
+[`packages/proxy-worker`](packages/proxy-worker)。一条命令、免费额度、约一分钟
+—— 见 [docs/github-app-guide.md §5.3](docs/github-app-guide.md)：
+
+```sh
+cp packages/proxy-worker/.env.example packages/proxy-worker/.env
+# 填入 Cloudflare API token 与你的 GitHub App 凭据
+pnpm --filter @gitalk/proxy-worker deploy
+```
+
+然后把地址传进来：
+
+```js
+{ proxy: 'https://your-worker.your-subdomain.workers.dev' }
+```
+
+端点只会看到 OAuth code 或加密后的会话——浏览器里从不出现 client secret，
+访客的原始 token 也不会出现在 URL 中。
+
+## 额度
+
+| 访客状态 | 走的接口 | 额度 |
+|---|---|---|
+| 未登录 | REST，用 App 的 installation token | 5000 次/小时 |
+| 已登录 | GraphQL | 5000 点/小时 |
+
+未登录读用 installation token，正是它把 1.x 的每 IP 60 次/小时提上来的。
+写操作必须走 GraphQL —— GitHub 没有给 discussions 提供 REST 写接口 ——
+所以发评论必须登录。
+
+会话有效期 30 天；App 若开启了令牌过期，Worker 会自动静默续期，
+见 [docs/tech.md §3.7](docs/tech.md)。
+
+## 从 1.x 迁移
+
+老评论存在 Issues 里，不会出现在 Discussions。传 `backend: 'issues'`
+即可继续读写：
+
+```js
+{ backend: 'issues' }
+```
+
+但 `clientID` 必须换：1.x 用的是 OAuth App，2.0 需要 GitHub App。
+
 ## 相比 1.x 的变化
 
 | | 1.x | 2.0 |
@@ -17,110 +186,19 @@
 
 所有 API 行为结论均有实测记录，详见 [docs/tech.md](docs/tech.md)。
 
-## 安装
-
-```sh
-pnpm add @gitalk/core       # 无框架
-pnpm add @gitalk/react      # React
-pnpm add @gitalk/vue        # Vue
-```
-
-## 用法
-
-### 无框架
-
-```html
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
-<script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.js"></script>
-
-<div id="gitalk-container"></div>
-<script>
-  const gitalk = new Gitalk({
-    clientID: 'Iv1.xxxxxxxx',
-    owner: 'you',
-    repo: 'comments',
-    admin: ['you'],
-    number: 42,              // discussion 编号，推荐显式指定
-    backend: 'discussions'
-  })
-  gitalk.render('gitalk-container')
-</script>
-```
-
-### React
-
-```tsx
-import { Gitalk } from '@gitalk/react'
-import '@gitalk/core/style.css'
-
-<Gitalk options={{ clientID: 'Iv1.xxxxxxxx', owner: 'you', repo: 'comments', admin: ['you'], number: 42 }} />
-```
-
-### Vue
-
-```vue
-<script setup lang="ts">
-import { Gitalk } from '@gitalk/vue'
-import '@gitalk/core/style.css'
-
-const options = { clientID: 'Iv1.xxxxxxxx', owner: 'you', repo: 'comments', admin: ['you'], number: 42 }
-</script>
-
-<template>
-  <Gitalk :options="options" />
-</template>
-```
-
-## 配置项
-
-| 选项 | 默认值 | 说明 |
-|---|---|---|
-| `clientID` | — | OAuth Application 的 client id |
-| `owner`、`repo` | — | 承载评论的仓库 |
-| `admin` | `[]` | 允许初始化评论的用户 |
-| `backend` | `'discussions'` | 老站点可填 `'issues'` |
-| `number` | — | Discussion 编号，**推荐**，可省去标题扫描 |
-| `id` | `location.pathname` | 未指定 `number` 时使用的页面标识 |
-| `category` | — | 创建 discussion 时使用的分类 |
-| `perPage` | `10` | 每页条数 |
-| `proxy` | — | 你自己部署的 token 交换端点 |
-| `language` | `navigator.language` | 沿用 1.x 的 11 种语言 |
-
-## 部署准备
-
-1. 在仓库开启 **Discussions**，并建一个分类（默认 `General`）。
-2. 注册 **OAuth Application**，记下 client id。**不要把 client secret 写进页面。**
-3. 部署 [`packages/proxy-worker`](packages/proxy-worker) 到
-   Cloudflare Workers / Vercel / Netlify，配置
-   `GITALK_CLIENT_ID`、`GITALK_CLIENT_SECRET`、`GITALK_ALLOWED_ORIGINS`。
-4. 把部署后的地址填到 `proxy`。
-
-### 为什么需要代理？
-
-`github.com/login/oauth/access_token` 不返回 `Access-Control-Allow-Origin`，
-浏览器无法自行完成 token 交换。Device Flow 我们同样实测过：它不需要
-`client_secret`，但也被同样的 CORS 限制挡住。因此纯静态页面没有任何办法
-自行获取 token，详见 [docs/tech.md §3.2](docs/tech.md)。
-
-代理让密钥只存在于你自己的部署环境里。
-
-## 匿名阅读
-
-未登录访客通过 REST API 读取评论（60 次/小时/IP）。配合
-`ETag` / `If-None-Match`，未变更的响应不计入限额。已登录用户走
-GraphQL（5000 点/小时）——写操作必须走 GraphQL，因为 GitHub 没有
-Discussions 的 REST 写接口。
-
-## 本地开发
+## 开发
 
 ```sh
 pnpm install
 pnpm dev            # 落地页 + 实时评论组件
-pnpm test           # 28 项测试
-pnpm build          # 构建所有包
+pnpm test           # 68 个测试
+pnpm build          # 全部包
 pnpm typecheck
 ```
 
-## 许可
+发版由 release-please 完成：合并它开的 Release PR，CI 即通过 OIDC 发布到 npm，
+见 [.github/workflows/publish.yml](.github/workflows/publish.yml)。
+
+## 许可证
 
 MIT
