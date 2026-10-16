@@ -22,7 +22,11 @@
 #   Release PR」，不会从裸提交直接发版。
 #   想连这一次点击都省掉：给仓库配一个 PAT 或 GitHub App token 来合并（长期凭证，谨慎）。
 #
-# 认证：npm Trusted Publishing（OIDC），仓库里不存任何 npm 令牌，provenance 自动生成。
+# 认证：优先 npm Trusted Publishing（OIDC），仓库里不存任何 npm 令牌，provenance 自动生成。
+#   引导期例外：包在 npm 上**还不存在**时，没有 Settings 页可以绑 Trusted Publisher，
+#   所以第一次发布只能先用临时令牌。配了 NPM_TOKEN secret 就用它，没配就走 OIDC。
+#   首次发布成功后请补上绑定并删掉 secret：
+#     gh secret delete NPM_TOKEN -R gitalk/gitalk
 #   ⚠️ 三个包**各自**都要在 npmjs.com 的包 Settings → Trusted Publisher 绑一次：
 #        Organization or user : gitalk
 #        Repository           : gitalk
@@ -98,7 +102,7 @@ jobs:
           node-version: 24
           cache: pnpm
           # 不传 registry-url：避免 .npmrc 里出现空的 ${NODE_AUTH_TOKEN} 干扰 OIDC。
-          # registry 与 access 由各包 package.json 的 publishConfig 提供。
+          # 认证方式在下面按「有没有 NPM_TOKEN」决定。
 
       # Trusted Publishing 要 npm CLI ≥ 11.5.1，Node 自带的 npm 不保证够新。
       - name: Install latest npm
@@ -132,7 +136,25 @@ jobs:
             exec pnpm pack --pack-destination "$RUNNER_TEMP/tarballs"
           ls -l "$RUNNER_TEMP/tarballs"
 
-      # 不传 NODE_AUTH_TOKEN：npm CLI 在 GitHub Actions 里自动用 OIDC 换临时凭证。
+      # 认证二选一，按有没有配 NPM_TOKEN 决定：
+      #   设了 → 用 token。这是引导期需要的：包在 npm 上还不存在时，压根没有
+      #          Settings 页可以配 Trusted Publisher，第一次发布只能靠令牌手动过。
+      #   没设 → 交给 npm CLI 用 OIDC 换临时凭证，仓库里不留任何长期令牌。
+      # 首次发布成功后，请去三个包的 Settings → Trusted Publisher 绑好，
+      # 再删掉这个 secret（`gh secret delete NPM_TOKEN -R gitalk/gitalk`）和令牌本身。
+      - name: Configure npm auth
+        run: |
+          set -euo pipefail
+          if [ -n "${NPM_TOKEN:-}" ]; then
+            # 只写进文件，不回显。
+            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> "$HOME/.npmrc"
+            echo "认证方式：NPM_TOKEN"
+          else
+            echo "认证方式：OIDC Trusted Publishing"
+          fi
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
         run: |
           set -euo pipefail
