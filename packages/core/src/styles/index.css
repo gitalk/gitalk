@@ -911,8 +911,15 @@
 .gt-container .gt-comment-admin > .gt-comment-content {
   background-color: var(--gt-color-comment-adminbg);
   padding: 8px 12px;
-  /* keep the author's text on the same column as everyone else's */
-  margin: -8px 0 -8px -12px;
+  border-radius: var(--gt-radius-control);
+  /*
+   * Vertical negative margin only, so the tint fills the row without adding
+   * height. The horizontal one used to cancel the left padding in the name of
+   * alignment, but it pulled the box left by exactly the avatar gap and put it
+   * flush against the avatar. The tint is inset instead; the 12px shift is the
+   * price of keeping the avatar clear.
+   */
+  margin: -8px 0;
 }
 
 @keyframes gt-kf-rotate {
@@ -1702,7 +1709,6 @@
   }
 
   .gt-container .gt-comment-admin > .gt-comment-content {
-    margin-left: -10px;
     padding: 8px 10px;
   }
 }
