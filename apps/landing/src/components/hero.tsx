@@ -46,7 +46,6 @@ export function Hero() {
             else. The component ships its own panel shape. */}
         <div className="demo">
           <GitalkDemo mode={mode} proxy={proxy} />
-        </div>
         <div className="demo-controls">
             <div className="hero-mode" role="group" aria-label={t.hero.modeLabel}>
               {(["default", "inline"] as const).map((value) => (
@@ -74,6 +73,7 @@ export function Hero() {
               </button>
             ))}
           </div>
+        </div>
         </div>
       </div>
 

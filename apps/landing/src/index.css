@@ -1286,3 +1286,22 @@ a {
   background: color-mix(in srgb, var(--brand, #1e4fff) 16%, transparent);
   color: var(--brand-ink, #90a8ff);
 }
+
+/*
+ * The controls belong to the widget, so they live inside the demo box and stack
+ * under it; the box itself becomes a column whose first child takes the height.
+ */
+.demo {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.demo > .gt-container {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.demo-controls {
+  flex: none;
+}
