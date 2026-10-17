@@ -58,6 +58,8 @@
   --gt-color-text-2: #64748b;
   --gt-color-text-3: #94a3b8;
   --gt-color-border: #e7ecf3;
+  /* Line colour for inline mode, which draws on the page rather than a surface. */
+  --gt-color-inline-line: #c7d2e0;
   /* The accent is what brand-coloured *text* uses. In light mode it is the
      brand itself; dark mode overrides it (see below). */
   --gt-color-accent: var(--gt-color-main);
@@ -128,6 +130,8 @@
   --gt-color-text-2: #94a3b8;
   --gt-color-text-3: #64748b;
   --gt-color-border: #1f2a3d;
+  /* Line colour for inline mode, which draws on the page rather than a surface. */
+  --gt-color-inline-line: #1f2a3d;
   /* #1E4FFF on #111827 is about 3:1, below AA for body text, so -- as the
      reference does -- brand-coloured *text and icons* get lightened toward
      white. --gt-color-main itself stays untouched: it is the brand and the
@@ -4779,7 +4783,7 @@
 .gt-container.gt-mode-inline .gt-header.is--docked {
   position: static;
   order: 1;
-  border: 1px solid var(--gt-color-border);
+  border: 1px solid var(--gt-color-inline-line);
   border-radius: var(--gt-radius-control);
   background: none;
   box-shadow: none;
@@ -4859,6 +4863,7 @@
  * comment list below reads as continuing from it rather than as a separate box.
  */
 .gt-container.gt-mode-inline .gt-meta {
-  border-top: 1px solid var(--gt-color-border);
+  border-top: 1px solid var(--gt-color-inline-line);
   border-bottom-color: transparent;
 }
+
