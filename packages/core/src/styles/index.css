@@ -880,6 +880,15 @@
   transition: background-color 0.16s, color 0.16s;
 }
 
+/*
+ * Unlike the two anchor-based pills it shares its look with, the reply control
+ * is a native <button>: without an explicit reset the UA's 2px outset border
+ * shows through as a grey ring.
+ */
+.gt-container .gt-comment-reply {
+  border: 0;
+}
+
 .gt-container .gt-comment-like:hover,
 .gt-container .gt-comment-edit:hover,
 .gt-container .gt-comment-reply:hover {
