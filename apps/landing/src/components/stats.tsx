@@ -64,11 +64,8 @@ export function StatCards({ items }: { items: StatItem[] }) {
   return (
     <section className="stats-band" aria-label={t.hero.statsTitle}>
       <div className="stat-cards">
-        {items.map((item, index) => (
+        {items.map((item) => (
           <article className="stat-card" key={item.id}>
-            <span className="stat-card-index" aria-hidden="true">
-              {String(index + 1).padStart(2, '0')}
-            </span>
             <b className="stat-card-value">
               {item.value}
               {item.unit ? <small>{item.unit}</small> : null}

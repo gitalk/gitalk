@@ -12,11 +12,8 @@ export function Features() {
       </div>
 
       <div className="feature-grid">
-        {t.features.items.map((feature, index) => (
+        {t.features.items.map((feature) => (
           <article key={feature.title} className="feature-card">
-            <span className="feature-index" aria-hidden="true">
-              {String(index + 1).padStart(2, '0')}
-            </span>
             <h3>{feature.title}</h3>
             <p>{feature.body}</p>
           </article>

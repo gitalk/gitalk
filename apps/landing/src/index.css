@@ -532,14 +532,6 @@ a {
   box-shadow: var(--shadow-card);
 }
 
-.stat-card-index {
-  position: relative;
-  color: var(--brand-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  opacity: 0.75;
-}
 
 .stat-card-value {
   position: relative;
@@ -707,13 +699,6 @@ a {
   box-shadow: var(--shadow-card);
 }
 
-.feature-index {
-  color: var(--brand-ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  opacity: 0.8;
-}
 
 .feature-card h3 {
   margin: 12px 0 8px;
