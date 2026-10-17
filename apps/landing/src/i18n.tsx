@@ -29,6 +29,16 @@ export const LANGS: ReadonlyArray<{ id: Lang; label: string }> = [
 
 const STORAGE_KEY = 'gitalk-landing-lang'
 
+/** A comment in the static panel preview on the landing stage. */
+interface PanelComment {
+  name: string
+  badge?: string
+  time: string
+  likes: number
+  text: string
+  replies: ReadonlyArray<{ name: string; time: string; text: string }>
+}
+
 const zh = {
   meta: {
     title: 'Gitalk 2.0 — 基于 GitHub Discussions 的评论组件',
@@ -38,24 +48,114 @@ const zh = {
   nav: {
     features: '特性',
     usage: '用法',
-    demo: 'Demo',
+    demo: '演示',
     theme: '切换主题',
-    language: '切换语言'
+    language: '切换语言',
+    github: 'GitHub 仓库'
   },
   hero: {
-    eyebrow: 'Serverless comments · GitHub Discussions',
-    titleLine1: '把评论区',
-    titleLine2: '搬回你的仓库',
-    lede: 'Gitalk 2.0 用 GitHub Discussions 承载评论。无后端、无数据库、无第三方代理——匿名访客可直接阅读，登录后即可评论与点赞。',
-    getStarted: '开始使用',
-    viewSource: '查看源码',
+    eyebrow: '// GITHUB DISCUSSIONS POWERED COMMENTS',
+    titleLine1: '评论区，',
+    titleLine2: '轻得像',
+    titleEm: '一行代码',
+    lede: '把 GitHub Discussions 变成你的评论区。零后端、零数据库，评论实时同步，接入成本低到几乎无感。',
+    stats: [
+      { value: '0', label: '后端服务' },
+      { value: '1', label: '行接入' },
+      { value: '∞', label: '评论容量' }
+    ],
+    chips: ['⚡ 零后端', '✍️ Markdown', '🖼️ 图片上传', '🔍 全屏预览', '🌗 暗色自适应'],
     size: '体积',
     runtimeDeps: '运行时依赖',
     stars: 'Star'
   },
+  panel: {
+    title: '评论',
+    sortNew: '最新',
+    sortHot: '最热',
+    minimize: '最小化评论',
+    open: '打开评论',
+    loadMore: '加载更多评论',
+    me: '你',
+    placeholder: '写下你的评论，按 Enter 发布…',
+    upload: '上传图片',
+    publish: '发布评论',
+    reply: '回复',
+    like: '点赞',
+    previewLabel: '预览',
+    previewHint: 'Markdown',
+    comments: [
+      {
+        name: '林一凡',
+        badge: '作者',
+        time: '2 分钟前',
+        likes: 24,
+        text: '接入成本真的很低，两行代码就搞定了。评论直接映射到 GitHub Issue，维护成本几乎为零。',
+        replies: [
+          { name: '陈墨', time: '1 分钟前', text: '确实，之前用别的方案还要自己搞服务端，这个直接省了。' }
+        ]
+      },
+      {
+        name: '陈墨',
+        time: '14 分钟前',
+        likes: 41,
+        text: '支持暗色模式吗？想用在个人博客上，站点整体是深色主题。',
+        replies: [
+          { name: '林一凡', time: '12 分钟前', text: '支持的，主题变量完全可以自定义，和站点无缝融合。' },
+          { name: '苏晚晴', time: '8 分钟前', text: '我这边用下来暗色下对比度也很舒服。' }
+        ]
+      },
+      {
+        name: '苏晚晴',
+        time: '38 分钟前',
+        likes: 12,
+        text: '用 Issue 作为评论存储，数据永远在自己手里，这点特别安心。',
+        replies: []
+      },
+      {
+        name: '周予安',
+        time: '1 小时前',
+        likes: 33,
+        text: '刚在自己的 Hexo 上试了一下，配置过程比想象中顺利，照着文档改三处就完事了。',
+        replies: []
+      },
+      {
+        name: '顾南',
+        time: '3 小时前',
+        likes: 8,
+        text: '希望后续能加上邮件通知功能，有人回复的时候能第一时间知道。',
+        replies: [
+          { name: '沈时', time: '2 小时前', text: '这个可以通过 GitHub 的通知设置间接实现。' }
+        ]
+      },
+      {
+        name: '沈时',
+        time: '昨天',
+        likes: 19,
+        text: '回复功能很顺手，交互细节做得不错。Markdown 渲染也没问题。',
+        replies: []
+      },
+      {
+        name: '江屿',
+        time: '昨天',
+        likes: 27,
+        text: '一直想找一个无后端的评论方案，终于找到了。部署到 GitHub Pages 上完美运行。',
+        replies: []
+      },
+      {
+        name: '温故',
+        time: '2 天前',
+        likes: 6,
+        text: '构建体积很小，对页面性能几乎无感，这点很加分。',
+        replies: []
+      }
+    ] satisfies ReadonlyArray<PanelComment>
+  },
   features: {
+    eyebrow: "// WHAT'S NEW",
     // The English title is intentional in both locales; the user asked for it.
     title: "What's New",
+    lede: '2.0 把内核重写了一遍：默认落在 Discussions，登录走 OAuth，浏览器里不再有密钥。',
     items: [
       {
         title: 'Discussions 默认承载',
@@ -84,7 +184,9 @@ const zh = {
     ]
   },
   flow: {
+    eyebrow: '// DATA FLOW',
     title: '数据是怎么流动的',
+    lede: '匿名可读、登录才写。这不是限制，是 GitHub 的接口形态逼出来的唯一解。',
     anonTitle: '匿名访客',
     anonBadge: '无需登录',
     anonPoints: [
@@ -102,7 +204,9 @@ const zh = {
     note: '写操作必须走 GraphQL，因为 GitHub 没有 Discussions 的 REST 写接口（实测连 `POST` 路由都不存在）。而 GraphQL 的匿名额度是 `0`，所以「匿名读 + 登录写」是这套架构的必然形态，不是偷懒。'
   },
   tabs: {
+    eyebrow: '// GET STARTED',
     title: '三种用法',
+    lede: '同一个内核，挑一个和你项目最合得来的入口。',
     items: {
       vanilla: {
         label: '无框架',
@@ -177,6 +281,11 @@ const options = {
     },
     note: '登录需要在 `proxy` 里指向你自己部署的 edge function——因为 `github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。源码在 `packages/proxy-worker`，支持 Cloudflare Workers / Vercel / Netlify 一键部署。'
   },
+  live: {
+    eyebrow: '// LIVE DEMO',
+    title: '真正的组件，就在这儿',
+    lede: '下面挂的是打包进页面的同一份内核，不是截图。匿名即可阅读；登录 GitHub 后可以评论、回复和点赞。'
+  },
   demo: {
     live: '实时',
     liveNote: '真实组件 · 匿名可读，登录即可评论',
@@ -185,6 +294,10 @@ const options = {
       cloudflare: 'Cloudflare',
       cloudbase: '腾讯云 CloudBase'
     }
+  },
+  footer: {
+    note: 'Gitalk 2.0 · MIT · 基于 GitHub Discussions',
+    repo: '查看仓库'
   }
 }
 
@@ -202,21 +315,127 @@ const en: Messages = {
     usage: 'Usage',
     demo: 'Demo',
     theme: 'Toggle theme',
-    language: 'Switch language'
+    language: 'Switch language',
+    github: 'GitHub repository'
   },
   hero: {
-    eyebrow: 'Serverless comments · GitHub Discussions',
-    titleLine1: 'Bring comments',
-    titleLine2: 'back to your repo',
-    lede: 'Gitalk 2.0 keeps comments in GitHub Discussions. No backend, no database, no third-party proxy — anonymous visitors can read, and signing in lets them comment and react.',
-    getStarted: 'Get started',
-    viewSource: 'View source',
+    eyebrow: '// GITHUB DISCUSSIONS POWERED COMMENTS',
+    titleLine1: 'Comments,',
+    titleLine2: 'light as ',
+    titleEm: 'one line',
+    lede: 'Turn GitHub Discussions into your comment section. No backend, no database, comments sync in real time — setup costs almost nothing.',
+    stats: [
+      { value: '0', label: 'Backend services' },
+      { value: '1', label: 'Line to add' },
+      { value: '∞', label: 'Comments' }
+    ],
+    chips: ['⚡ No backend', '✍️ Markdown', '🖼️ Image upload', '🔍 Fullscreen', '🌗 Dark mode'],
     size: 'Size',
     runtimeDeps: 'Runtime deps',
     stars: 'Stars'
   },
+  panel: {
+    title: 'Comments',
+    sortNew: 'Newest',
+    sortHot: 'Top',
+    minimize: 'Minimise comments',
+    open: 'Open comments',
+    loadMore: 'Load more comments',
+    me: 'You',
+    placeholder: 'Write a comment, press Enter to post…',
+    upload: 'Upload image',
+    publish: 'Post comment',
+    reply: 'Reply',
+    like: 'Like',
+    previewLabel: 'Preview',
+    previewHint: 'Markdown',
+    comments: [
+      {
+        name: 'Lin Yifan',
+        badge: 'Author',
+        time: '2 min ago',
+        likes: 24,
+        text: 'The setup cost is genuinely low — two lines and it is done. Comments map straight to GitHub Issues, so there is almost nothing to maintain.',
+        replies: [
+          {
+            name: 'Chen Mo',
+            time: '1 min ago',
+            text: 'True. My last setup needed a server of my own; this one simply skips it.'
+          }
+        ]
+      },
+      {
+        name: 'Chen Mo',
+        time: '14 min ago',
+        likes: 41,
+        text: 'Does it support dark mode? I want it on my personal blog, which is dark throughout.',
+        replies: [
+          {
+            name: 'Lin Yifan',
+            time: '12 min ago',
+            text: 'Yes — the theme variables are fully customisable, so it blends into the site.'
+          },
+          {
+            name: 'Su Wanqing',
+            time: '8 min ago',
+            text: 'I have been using it and the contrast in dark mode feels comfortable too.'
+          }
+        ]
+      },
+      {
+        name: 'Su Wanqing',
+        time: '38 min ago',
+        likes: 12,
+        text: 'Storing comments in Issues means the data is always mine. That is a real comfort.',
+        replies: []
+      },
+      {
+        name: 'Zhou Yuan',
+        time: '1 hour ago',
+        likes: 33,
+        text: 'Tried it on my Hexo site just now; configuration was smoother than I expected. Three edits following the docs and it was done.',
+        replies: []
+      },
+      {
+        name: 'Gu Nan',
+        time: '3 hours ago',
+        likes: 8,
+        text: 'I would love email notifications later, so I know the moment someone replies.',
+        replies: [
+          {
+            name: 'Shen Shi',
+            time: '2 hours ago',
+            text: 'You can approximate that with GitHub’s own notification settings.'
+          }
+        ]
+      },
+      {
+        name: 'Shen Shi',
+        time: 'Yesterday',
+        likes: 19,
+        text: 'Replies feel natural, and the interaction details are well done. Markdown rendering works too.',
+        replies: []
+      },
+      {
+        name: 'Jiang Yu',
+        time: 'Yesterday',
+        likes: 27,
+        text: 'I had been looking for a backend-free comment option and finally found one. Deployed to GitHub Pages and it runs perfectly.',
+        replies: []
+      },
+      {
+        name: 'Wen Gu',
+        time: '2 days ago',
+        likes: 6,
+        text: 'The bundle is small enough that page performance barely notices. A real plus.',
+        replies: []
+      }
+    ]
+  },
   features: {
+    eyebrow: "// WHAT'S NEW",
     title: "What's New",
+    lede: '2.0 is a rewrite of the core: Discussions by default, OAuth for writes, and no secret anywhere in the browser.',
     items: [
       {
         title: 'Discussions by default',
@@ -245,7 +464,9 @@ const en: Messages = {
     ]
   },
   flow: {
+    eyebrow: '// DATA FLOW',
     title: 'How the data flows',
+    lede: 'Anonymous reads, signed-in writes. That is not a shortcut; GitHub’s APIs leave no other option.',
     anonTitle: 'Anonymous visitors',
     anonBadge: 'No sign-in',
     anonPoints: [
@@ -263,7 +484,9 @@ const en: Messages = {
     note: 'Writes must go through GraphQL, because GitHub exposes no REST write API for Discussions (the `POST` routes do not exist). Anonymous GraphQL gets a quota of literally `0`, so “anonymous reads + signed-in writes” is what the architecture forces, not a shortcut.'
   },
   tabs: {
+    eyebrow: '// GET STARTED',
     title: 'Three ways to use it',
+    lede: 'One core, three entry points. Pick whichever fits the project in front of you.',
     items: {
       vanilla: {
         label: 'Framework-free',
@@ -338,6 +561,11 @@ const options = {
     },
     note: 'Signing in needs `proxy` pointed at an edge function you deploy yourself — `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange on its own. The source is in `packages/proxy-worker`, with one-command deploys for Cloudflare Workers / Vercel / Netlify.'
   },
+  live: {
+    eyebrow: '// LIVE DEMO',
+    title: 'The real widget, right here',
+    lede: 'What you see below is the same core that ships to npm, mounted in this page — not a screenshot. Read anonymously, or sign in to GitHub to comment, reply and react.'
+  },
   demo: {
     live: 'Live',
     liveNote: 'The real widget — read anonymously, sign in to comment',
@@ -346,6 +574,10 @@ const options = {
       cloudflare: 'Cloudflare',
       cloudbase: 'Tencent CloudBase'
     }
+  },
+  footer: {
+    note: 'Gitalk 2.0 · MIT · powered by GitHub Discussions',
+    repo: 'View repository'
   }
 }
 

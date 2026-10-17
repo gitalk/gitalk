@@ -12,7 +12,12 @@ export function CodeTabs() {
 
   return (
     <section id="usage" className="section">
-      <h2>{t.tabs.title}</h2>
+      <div className="section-head">
+        <p className="eyebrow">{t.tabs.eyebrow}</p>
+        <h2>{t.tabs.title}</h2>
+        <p className="section-lede">{t.tabs.lede}</p>
+      </div>
+
       <div className="tabs" role="tablist">
         {TAB_IDS.map((id) => (
           <button
@@ -28,9 +33,21 @@ export function CodeTabs() {
         ))}
       </div>
       <p className="tab-hint">{current.hint}</p>
-      <pre className="code">
-        <code>{current.code}</code>
-      </pre>
+
+      <div className="code-shell">
+        <div className="code-bar" aria-hidden="true">
+          <span className="code-dots">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="code-name">{current.label}</span>
+        </div>
+        <pre className="code">
+          <code>{current.code}</code>
+        </pre>
+      </div>
+
       <p className="note">
         <RichText text={t.tabs.note} />
       </p>

@@ -23,7 +23,7 @@ const DEMO_ENDPOINTS = [
  * device frame, and nothing else on the page mounts a second copy.
  */
 export function GitalkDemo() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const [endpoint, setEndpoint] = useState<(typeof DEMO_ENDPOINTS)[number]>(DEMO_ENDPOINTS[0])
 
   const options = useMemo(
@@ -36,9 +36,13 @@ export function GitalkDemo() {
       id: 'gitalk-demo-thread',
       number: 442,
       backend: 'discussions' as const,
-      perPage: 10
+      perPage: 10,
+      // The widget localises its own chrome and relative dates; keep it in
+      // step with the page language instead of letting it fall back to the
+      // browser locale.
+      language: lang === 'zh' ? 'zh-CN' : 'en'
     }),
-    [endpoint]
+    [endpoint, lang]
   )
 
   return (
