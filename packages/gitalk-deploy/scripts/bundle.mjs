@@ -13,7 +13,7 @@
  * Re-run whenever the proxy changes; CI runs it before publishing.
  */
 import { execFileSync } from 'node:child_process'
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { accessSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -33,8 +33,24 @@ rmSync(TEMPLATES, { recursive: true, force: true })
 // ---------------------------------------------------------------- cloudflare
 log('bundling the Cloudflare worker…')
 mkdirSync(join(TEMPLATES, 'worker'), { recursive: true })
+// The binary lives in whichever node_modules held the install — this package's
+// own after a workspace install, the root's otherwise. Try both rather than
+// assuming one layout.
+function esbuildBinary() {
+  for (const base of [join(PKG, 'node_modules/.bin'), join(REPO, 'node_modules/.bin')]) {
+    const candidate = join(base, 'esbuild')
+    try {
+      accessSync(candidate)
+      return candidate
+    } catch {
+      // try the next one
+    }
+  }
+  throw new Error('esbuild not found — run `pnpm install` first')
+}
+
 run(
-  join(REPO, 'node_modules/.bin/esbuild'),
+  esbuildBinary(),
   [
     join(REPO, 'packages/proxy-worker/src/index.ts'),
     '--bundle',

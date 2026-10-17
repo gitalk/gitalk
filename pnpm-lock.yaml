@@ -101,6 +101,12 @@ importers:
         specifier: 5.1.2
         version: 5.1.2(@vue/language-core@3.3.13)(esbuild@0.28.2)(rolldown@1.2.14)(typescript@7.0.2)(vite@8.3.4(@types/node@24.10.1)(esbuild@0.28.2)(jiti@2.7.0))
 
+  packages/gitalk-deploy:
+    devDependencies:
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
+
   packages/proxy-cloudbase:
     devDependencies:
       '@cloudbase/cli':
