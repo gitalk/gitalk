@@ -177,6 +177,16 @@ export function GitalkWidget({ options, className }: GitalkProps) {
       className={shellClass}
       ref={containerRef}
       data-minimized={minimized ? 'true' : undefined}
+      style={
+        // The container isolates its own stacking context, so a high z-index on
+        // the FAB only wins against the widget's own content. While floating,
+        // it is the container that has to sit above the page.
+        minimized
+          ? { zIndex: options.minimizedZIndex ?? 9000 }
+          : docked
+            ? { zIndex: options.dockedZIndex ?? 8999 }
+            : undefined
+      }
     >
       {state.error ? (
         <div className="gt-error">

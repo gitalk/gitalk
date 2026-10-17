@@ -4840,3 +4840,14 @@
 .gt-container .gt-sort button.is-active {
   cursor: default;
 }
+
+/*
+ * `isolation: isolate` on the container scopes a z-index inside it: the FAB's
+ * 9000 only wins against the widget's own content. While the widget floats —
+ * minimised or docked — the container itself has to rise above the page, or a
+ * later section paints over it.
+ */
+.gt-container.gt-minimized,
+.gt-container:has(.gt-header.is--docked) {
+  z-index: 9000;
+}
