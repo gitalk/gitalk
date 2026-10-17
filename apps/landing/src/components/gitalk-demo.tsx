@@ -47,5 +47,5 @@ export function GitalkDemo({ mode, proxy }: { mode: "default" | "inline"; proxy:
     [lang, mode, proxy]
   )
 
-  return <Gitalk options={options} />
+  return <Gitalk options={options} className="demo-inner" />
 }

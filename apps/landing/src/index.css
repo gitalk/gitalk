@@ -639,7 +639,7 @@ a {
 
 /* The mount node injected by `mount()` is the only child; it has to pass the
    height through to `.gt-container`. */
-.demo > * {
+.demo > .demo-inner {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -1297,7 +1297,7 @@ a {
   min-height: 0;
 }
 
-.demo > .gt-container {
+.demo > .demo-inner {
   flex: 1 1 auto;
   min-height: 0;
 }
