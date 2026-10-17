@@ -84,6 +84,29 @@
   --gt-radius-control: 11px;
   --gt-radius-pill: 7px;
   --gt-size-avatar: 34px;
+
+  /* ---- v3 panel tokens (comment-ui reference) ------------------------
+     The widget itself is the panel now, so the surface/glass values that
+     used to live in the host page belong here. Light is a white glass card;
+     dark is the reference's near-black glass. Brand derivatives only. */
+  --gt-color-panel: rgba(255, 255, 255, 0.84);
+  --gt-color-panel-solid: #ffffff;
+  --gt-color-composer: rgba(248, 250, 252, 0.96);
+  --gt-color-panel-line: rgba(15, 23, 42, 0.07);
+  --gt-color-panel-line-strong: rgba(15, 23, 42, 0.14);
+  --gt-color-wash: rgba(15, 23, 42, 0.04);
+  --gt-color-wash-strong: rgba(15, 23, 42, 0.075);
+  --gt-color-row-hover: rgba(15, 23, 42, 0.032);
+  --gt-color-sort-active-bg: rgba(255, 255, 255, 0.92);
+  --gt-color-sort-active-fg: #0f172a;
+  --gt-color-sort-active-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  --gt-color-glow: rgba(30, 79, 255, 0.1);
+  --gt-color-brand-grad-a: #1e4fff;
+  --gt-color-brand-grad-b: #4d7cff;
+  --gt-color-avatar-ink: #ffffff;
+  --gt-shadow-panel: 0 40px 90px -20px rgba(15, 23, 42, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --gt-shadow-glow: 0 0 26px -6px rgba(30, 79, 255, 0.35);
 }
 
 [data-theme='dark'] {
@@ -121,6 +144,26 @@
   --gt-shadow-float: 0 26px 64px -18px rgba(0, 0, 0, 0.88),
     0 0 0 1px color-mix(in srgb, var(--gt-color-accent) 6%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ---- v3 panel tokens: the reference's glass panel ----------------- */
+  --gt-color-panel: rgba(13, 16, 24, 0.74);
+  --gt-color-panel-solid: #0d1018;
+  --gt-color-composer: rgba(12, 15, 23, 0.94);
+  --gt-color-panel-line: rgba(255, 255, 255, 0.075);
+  --gt-color-panel-line-strong: rgba(255, 255, 255, 0.12);
+  --gt-color-wash: rgba(255, 255, 255, 0.04);
+  --gt-color-wash-strong: rgba(255, 255, 255, 0.09);
+  --gt-color-row-hover: rgba(255, 255, 255, 0.032);
+  --gt-color-sort-active-bg: rgba(255, 255, 255, 0.09);
+  --gt-color-sort-active-fg: #eef2fb;
+  --gt-color-sort-active-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --gt-color-glow: rgba(90, 120, 255, 0.16);
+  --gt-color-brand-grad-a: #1e4fff;
+  --gt-color-brand-grad-b: #4d7cff;
+  --gt-color-avatar-ink: #ffffff;
+  --gt-shadow-panel: 0 40px 90px -20px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --gt-shadow-glow: 0 0 26px -6px rgba(90, 120, 255, 0.35);
 }
 
 /* Native widgets (textarea scrollbars, selection) follow the theme when it is
@@ -357,7 +400,7 @@
   color: var(--gt-color-text);
 }
 
-.gt-container .gt-btn-public:hover {
+.gt-container :is(.gt-btn-public, .gt-btn-send):hover {
   background-color: var(--gt-color-btn-hover);
   border-color: var(--gt-color-btn-hover);
 }
@@ -3155,7 +3198,7 @@
 
 /* Primary action: the reference's paper-plane icon button. The localised
    label stays in the DOM as the accessible name. */
-.gt-container .gt-header-controls .gt-btn-public {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) {
   position: relative;
   display: grid;
   place-items: center;
@@ -3175,7 +3218,7 @@
   box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--gt-color-main) 55%, transparent);
 }
 
-.gt-container .gt-header-controls .gt-btn-public:hover {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):hover {
   border: 0;
   background: linear-gradient(
     120deg,
@@ -3185,14 +3228,14 @@
   filter: brightness(1.08);
 }
 
-.gt-container .gt-header-controls .gt-btn-public .gt-btn-text {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-text {
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
 }
 
-.gt-container .gt-header-controls .gt-btn-public .gt-btn-label {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -3205,19 +3248,19 @@
   border: 0;
 }
 
-.gt-container .gt-header-controls .gt-btn-public .gt-ico-send .gt-svg {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-ico-send .gt-svg {
   display: block;
   width: 17px;
   height: 17px;
 }
 
 /* The new send glyph is a stroked outline, not a filled v1 icon. */
-.gt-container .gt-header-controls .gt-btn-public .gt-ico-send svg {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-ico-send svg {
   fill: none;
   stroke: currentColor;
 }
 
-.gt-container .gt-header-controls .gt-btn-public .gt-btn-loading {
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-loading {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -3309,7 +3352,7 @@
   }
 
   .gt-container .gt-btn-upload-image,
-  .gt-container .gt-header-controls .gt-btn-public {
+  .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) {
     flex: 0 0 34px;
     width: 34px;
     height: 34px;
@@ -3332,5 +3375,1100 @@
   .gt-container .gt-header-controls .gt-btn-login {
     padding: 0 9px;
     font-size: 0.6875em;
+  }
+}
+
+/* =====================================================================
+ * v3: the widget *is* the panel.
+ *
+ * This pass follows the comment-ui reference literally: .gt-container
+ * carries `.panel` (radius, hairline, glass, shadow), `.gt-meta` is its
+ * `.p-head`, `.gt-comments` is the `.p-scroll` list, and `.gt-header` is a
+ * single 56px `.p-composer` bar welded to the panel's bottom edge instead of
+ * a separate floating card. All chrome uses #1E4FFF and its derivatives —
+ * no mint/green from the reference.
+ *
+ * The tilt/glow values are copied 1:1 from the reference (8deg max, 0.5s
+ * cubic-bezier(.2,.8,.3,1) settle, 0.1s linear while tracking).
+ * ===================================================================== */
+
+.gt-container .gt-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- the panel ------------------------------------------------------ */
+.gt-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  --gt-panel-radius: var(--gt-radius-card);
+  border: 1px solid var(--gt-color-panel-line-strong);
+  border-radius: var(--gt-panel-radius);
+  background-color: var(--gt-color-panel);
+  background-image: radial-gradient(120% 60% at 50% 0%, var(--gt-color-glow), transparent 60%);
+  box-shadow: var(--gt-shadow-panel);
+  isolation: isolate;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* The reference's glass, on a pseudo-element rather than on the panel itself:
+   a `backdrop-filter` on the container would become the containing block of
+   the fixed docked composer. The pseudo is a leaf, so it only blurs what is
+   behind the panel and leaves `position: fixed` alone. */
+.gt-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+}
+
+.gt-container.gt-minimized::before {
+  display: none;
+}
+
+/* The reference's `.panel::before` top glow; kept as a background image above
+   so the container never gains a backdrop-filter (that would become the
+   containing block of the fixed, docked composer). */
+
+.gt-container.gt-minimized {
+  border-color: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+
+/* ---- head: 评论 + count + 最新 + minimise --------------------------- */
+.gt-container .gt-meta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--gt-color-panel-line);
+  font-size: 1em;
+}
+
+.gt-container .gt-meta-title {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  min-width: 0;
+}
+
+.gt-container .gt-title {
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  color: var(--gt-color-text);
+  white-space: nowrap;
+}
+
+.gt-container .gt-counts {
+  margin: 0;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-brand-grad-a),
+    var(--gt-color-brand-grad-b)
+  );
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.gt-container .gt-counts .gt-link-counts {
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-container .gt-counts .gt-link-counts:hover {
+  color: inherit;
+  border-bottom: 0;
+}
+
+.gt-container .gt-meta-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.gt-container .gt-sort {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--gt-color-panel-line);
+  border-radius: 9px;
+  background-color: var(--gt-color-wash);
+}
+
+.gt-container .gt-sort > * {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gt-color-text-2);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition: color 0.2s, background-color 0.25s;
+}
+
+.gt-container .gt-sort .is-active {
+  color: var(--gt-color-sort-active-fg);
+  background-color: var(--gt-color-sort-active-bg);
+  box-shadow: var(--gt-color-sort-active-shadow);
+  font-weight: 600;
+}
+
+.gt-container .gt-minimize {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--gt-color-panel-line);
+  border-radius: 8px;
+  background-color: var(--gt-color-wash);
+  color: var(--gt-color-text-2);
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.gt-container .gt-minimize:hover {
+  color: var(--gt-color-text);
+  background-color: var(--gt-color-wash-strong);
+  border-color: var(--gt-color-panel-line-strong);
+}
+
+.gt-container .gt-minimize:active {
+  transform: scale(0.92);
+}
+
+/* ---- list: the scroll viewport -------------------------------------- */
+.gt-container .gt-comments {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 6px 12px 20px;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gt-color-panel-line-strong) transparent;
+}
+
+.gt-container .gt-comments::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gt-container .gt-comments::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gt-container .gt-comments::-webkit-scrollbar-thumb {
+  background-color: var(--gt-color-panel-line-strong);
+  border-radius: 99px;
+}
+
+.gt-container .gt-comments > .gt-comment + .gt-comment {
+  border-top: 0;
+}
+
+.gt-container .gt-comments-null {
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gt-color-text-3);
+}
+
+.gt-container .gt-comments-controls {
+  margin: 10px 12px 4px;
+  text-align: center;
+}
+
+.gt-container .gt-btn-loadmore {
+  height: 38px;
+  min-height: 38px;
+  width: 100%;
+  border: 1px solid var(--gt-color-panel-line-strong);
+  border-radius: 10px;
+  background-color: var(--gt-color-wash);
+  color: var(--gt-color-text-2);
+  font-size: 13px;
+  font-weight: 400;
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+}
+
+.gt-container .gt-btn-loadmore:hover {
+  background-color: var(--gt-color-wash-strong);
+  border-color: var(--gt-color-panel-line-strong);
+  color: var(--gt-color-text);
+}
+
+/* ---- one comment row ------------------------------------------------ */
+.gt-container .gt-comment {
+  position: relative;
+  display: block;
+  margin: 0 0 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  perspective: 1000px;
+}
+
+.gt-container .gt-comment-main {
+  position: relative;
+  display: flex;
+  gap: 11px;
+  padding: 13px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition:
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1),
+    background-color 0.3s,
+    border-color 0.3s;
+}
+
+.gt-container .gt-comment-main:hover {
+  z-index: 3;
+  background-color: var(--gt-color-row-hover);
+  border-color: var(--gt-color-panel-line);
+  transition:
+    transform 0.1s linear,
+    background-color 0.3s,
+    border-color 0.3s;
+}
+
+.gt-container .gt-comment-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    var(--gt-color-glow),
+    transparent 68%
+  );
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.gt-container .gt-comment-main:hover .gt-comment-glow {
+  opacity: 1;
+}
+
+/* Initial avatar: 34px, brand-family colour, white letter. */
+.gt-container .gt-avatar-letter {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--gt-color-avatar-ink);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  user-select: none;
+  transform: translateZ(12px);
+}
+
+.gt-container .gt-comment-content {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+  transition: none;
+}
+
+.gt-container .gt-comment-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.gt-container .gt-comment-username {
+  font-size: 13.5px;
+  font-weight: 620;
+  letter-spacing: 0.01em;
+  color: var(--gt-color-text);
+  text-decoration: none;
+}
+
+.gt-container .gt-comment-username:hover {
+  color: var(--gt-color-accent);
+  text-decoration: none;
+}
+
+.gt-container .gt-comment-badge {
+  padding: 1.5px 6px;
+  border-radius: 5px;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-brand-grad-a),
+    var(--gt-color-brand-grad-b)
+  );
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.gt-container .gt-comment-date {
+  color: var(--gt-color-text-3);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.gt-container .gt-comment-body {
+  margin-top: 6px;
+  color: var(--gt-color-body) !important;
+  font-size: 13.5px;
+  line-height: 1.75;
+  word-break: break-word;
+}
+
+.gt-container .gt-comment-body *:first-child {
+  margin-top: 0;
+}
+
+.gt-container .gt-comment-body p {
+  margin: 0 0 6px;
+}
+
+.gt-container .gt-comment-body p:last-child {
+  margin-bottom: 0;
+}
+
+.gt-container .gt-comment-body a {
+  color: var(--gt-color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.gt-container .gt-comment-body strong {
+  color: var(--gt-color-text);
+  font-weight: 650;
+}
+
+.gt-container .gt-comment-body pre {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--gt-color-panel-line);
+  border-radius: 8px;
+  background-color: var(--gt-color-code-bg);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+/* Admin rows are marked by the badge alone: the reference keeps every row on
+   the same surface, so a tinted card would break the rhythm. */
+.gt-container .gt-comment.gt-comment-admin {
+  background-color: transparent;
+}
+
+/* ---- action pills --------------------------------------------------- */
+.gt-container .gt-comment-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.gt-container .gt-comment-like,
+.gt-container .gt-comment-edit,
+.gt-container .gt-comment-reply,
+.gt-container .gt-reaction-chip,
+.gt-container .gt-reaction-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 7px;
+  background-color: transparent;
+  color: var(--gt-color-text-2);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.gt-container .gt-comment-like:hover,
+.gt-container .gt-comment-edit:hover,
+.gt-container .gt-comment-reply:hover,
+.gt-container .gt-reaction-chip:hover,
+.gt-container .gt-reaction-trigger:hover {
+  border-color: transparent;
+  background-color: color-mix(in srgb, var(--gt-color-text) 5.5%, transparent);
+  color: var(--gt-color-text);
+}
+
+.gt-container .gt-comment-like:active,
+.gt-container .gt-comment-edit:active,
+.gt-container .gt-comment-reply:active,
+.gt-container .gt-reaction-chip:active,
+.gt-container .gt-reaction-trigger:active {
+  transform: scale(0.94);
+}
+
+.gt-container .gt-comment-like.is--liked,
+.gt-container .gt-comment-reply.is--active,
+.gt-container .gt-reaction-chip.is--active {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+  font-weight: 600;
+}
+
+.gt-container .gt-comment-reply .gt-ico-text {
+  margin-left: 0;
+}
+
+.gt-container .gt-comment-reactions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gt-container .gt-reaction-glyph {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.gt-container .gt-reaction-glyph svg {
+  display: block;
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+}
+
+/* ---- nested replies: 1px rail, 24px avatars ------------------------- */
+.gt-container .gt-comment-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 9px 0 0;
+  padding: 0 0 0 12px;
+  border-left: 1px solid var(--gt-color-panel-line-strong);
+}
+
+.gt-container .gt-comment-replies .gt-comment {
+  margin: 0;
+  padding: 0;
+}
+
+.gt-container .gt-comment-replies .gt-comment-main {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  transform: none !important;
+  transition: none;
+}
+
+.gt-container .gt-comment-replies .gt-comment-main:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.gt-container .gt-comment-replies .gt-comment-glow {
+  display: none;
+}
+
+.gt-container .gt-comment-replies .gt-avatar-letter {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  font-size: 10px;
+}
+
+.gt-container .gt-comment-replies .gt-comment-content {
+  min-width: 0;
+}
+
+.gt-container .gt-comment-replies .gt-comment-header {
+  gap: 6px;
+}
+
+.gt-container .gt-comment-replies .gt-comment-username {
+  font-size: 12.5px;
+}
+
+.gt-container .gt-comment-replies .gt-comment-date {
+  font-size: 10.5px;
+}
+
+.gt-container .gt-comment-replies .gt-comment-body {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--gt-color-body) !important;
+}
+
+.gt-container .gt-comment-replies .gt-comment-actions {
+  margin-top: 5px;
+}
+
+/* ---- inline reply box ---------------------------------------------- */
+.gt-container .gt-reply-box {
+  margin: 9px 0 4px;
+}
+
+.gt-container .gt-reply-textarea {
+  height: 34px;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--gt-color-panel-line-strong);
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 5%, transparent);
+  color: var(--gt-color-text);
+  font-size: 12.5px;
+  line-height: 32px;
+  resize: none;
+  outline: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.gt-container .gt-reply-textarea::placeholder {
+  color: color-mix(in srgb, var(--gt-color-text) 30%, transparent);
+}
+
+.gt-container .gt-reply-textarea:focus {
+  border-color: var(--gt-color-main-border);
+  box-shadow: 0 0 0 3px var(--gt-color-main-soft);
+}
+
+.gt-container .gt-reply-actions {
+  margin-top: 8px;
+}
+
+/* ---- composer: one bar welded to the panel -------------------------- */
+.gt-container .gt-header {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  border-top: 1px solid var(--gt-color-panel-line);
+  border-radius: 0 0 var(--gt-panel-radius) var(--gt-panel-radius);
+  background-color: var(--gt-color-composer);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gt-color-text) 5%, transparent);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gt-container .gt-header:focus-within {
+  border-top-color: var(--gt-color-panel-line-strong);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--gt-color-text) 5%, transparent),
+    0 -10px 34px -22px var(--gt-color-glow);
+}
+
+.gt-container .gt-header-comment {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+}
+
+.gt-container .gt-header-comment > .gt-editor {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gt-container .gt-header-textarea {
+  display: block;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+  color: var(--gt-color-text);
+  caret-color: var(--gt-color-accent);
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+  outline: 0;
+}
+
+.gt-container .gt-header-textarea:hover,
+.gt-container .gt-header-textarea:focus {
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.gt-container .gt-header-textarea::placeholder {
+  color: color-mix(in srgb, var(--gt-color-text) 28%, transparent);
+}
+
+/* The bar sits on the panel's bottom edge, so the suggestion list has to open
+   upwards or it would leave the panel. */
+.gt-container .gt-header .gt-mention-list {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+
+.gt-container .gt-header-controls {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+
+.gt-container .gt-header-controls .gt-btn {
+  margin: 0;
+}
+
+.gt-container .gt-header > .gt-avatar-letter {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  font-size: 11.5px;
+}
+
+.gt-container .gt-header > .gt-avatar-github {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+/* 36px square icon buttons, reference `.icon-btn`. */
+.gt-container .gt-btn-upload-image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 6%, transparent);
+  color: var(--gt-color-text-2);
+  transition: background-color 0.2s, color 0.2s, transform 0.15s, filter 0.2s;
+}
+
+.gt-container .gt-btn-upload-image:hover:not(:disabled) {
+  border: 0;
+  background-color: color-mix(in srgb, var(--gt-color-text) 13%, transparent);
+  color: var(--gt-color-text);
+}
+
+.gt-container .gt-btn-upload-image:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+.gt-container .gt-btn-upload-image .gt-ico-image .gt-svg {
+  width: 17px;
+  height: 17px;
+}
+
+.gt-container .gt-btn-upload-image .gt-btn-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gt-container .gt-btn-upload-cancel {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-brand-grad-a),
+    var(--gt-color-brand-grad-b)
+  );
+  color: #fff;
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--gt-color-main) 55%, transparent);
+  transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):hover {
+  border: 0;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-brand-grad-a),
+    var(--gt-color-brand-grad-b)
+  );
+  filter: brightness(1.08);
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):active {
+  transform: scale(0.93);
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):disabled {
+  opacity: 0.4;
+  filter: none;
+  transform: none;
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-ico-send .gt-svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-ico-send svg {
+  fill: none;
+  stroke: currentColor;
+  transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):hover .gt-ico-send svg {
+  transform: translate(1px, -1px) rotate(-4deg);
+}
+
+.gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -0.5em 0 0 -0.46em;
+  color: #fff;
+}
+
+.gt-container .gt-header-controls .gt-btn-login {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+/* ---- floating preview: same panel material ------------------------- */
+.gt-container .composer-preview {
+  left: 12px;
+  right: 12px;
+  bottom: calc(100% + 12px);
+  border-radius: 14px;
+  background-color: var(--gt-color-panel-solid);
+  border-color: var(--gt-color-panel-line-strong);
+  box-shadow: var(--gt-shadow-float);
+}
+
+.gt-container .composer-preview::after {
+  background-color: var(--gt-color-panel-solid);
+  border-color: var(--gt-color-panel-line-strong);
+}
+
+/* ---- docked composer: a rounded bar again -------------------------- */
+.gt-container .gt-header.is--docked {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px) + var(--gt-kb, 0px));
+  border: 1px solid var(--gt-color-panel-line-strong);
+  border-radius: 16px;
+  background-color: var(--gt-color-panel-solid);
+  box-shadow: var(--gt-shadow-float);
+  animation: gt-dock-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.gt-container .gt-header-placeholder {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+/* ---- floating restore button --------------------------------------- */
+.gt-container .gt-fab {
+  height: 52px;
+  padding: 0 18px 0 12px;
+  border: 1px solid var(--gt-color-panel-line-strong);
+  border-radius: 999px;
+  background-color: var(--gt-color-panel);
+  color: var(--gt-color-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: var(--gt-shadow-float);
+  transition:
+    opacity 0.35s ease,
+    transform 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.25),
+    border-color 0.25s,
+    box-shadow 0.3s;
+}
+
+.gt-container .gt-fab:hover {
+  border-color: var(--gt-color-main-border);
+  color: var(--gt-color-text);
+  box-shadow: var(--gt-shadow-float), var(--gt-shadow-glow);
+}
+
+.gt-container .gt-fab:active {
+  transform: scale(0.97);
+}
+
+.gt-container .gt-fab-logo {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--gt-color-brand-grad-a) 18%, transparent),
+    color-mix(in srgb, var(--gt-color-brand-grad-b) 18%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--gt-color-text) 7%, transparent);
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-fab-count {
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-brand-grad-a),
+    var(--gt-color-brand-grad-b)
+  );
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---- errors / notices sit inside the panel ------------------------- */
+.gt-container > .gt-error {
+  margin: 12px 16px 0;
+}
+
+.gt-container > .gt-notice {
+  margin: 12px 16px 0;
+}
+
+.gt-container > .gt-initing {
+  padding: 40px 16px;
+}
+
+.gt-container > .gt-no-init {
+  margin: 16px;
+  border-radius: 14px;
+  background-color: var(--gt-color-wash);
+  border-color: var(--gt-color-panel-line);
+  box-shadow: none;
+}
+
+/* The reference has no footer; the attribution stays in the DOM (and in the
+   accessibility tree for the project link) without adding a strip under the
+   composer, which would break the "composer is the bottom edge" shape. */
+.gt-container .gt-copyright {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- responsive: the reference's 720px dock edge -------------------- */
+@media (max-width: 720px) {
+  .gt-container {
+    --gt-panel-radius: 16px;
+  }
+
+  .gt-container .gt-comments {
+    padding: 4px 8px 16px;
+  }
+
+  .gt-container .gt-comment-main {
+    padding: 11px 9px;
+  }
+
+  .gt-container .gt-header {
+    gap: 6px;
+    min-height: 52px;
+    padding: 0 9px;
+  }
+
+  .gt-container .gt-header-comment {
+    gap: 6px;
+  }
+
+  .gt-container .gt-header-controls {
+    gap: 5px;
+  }
+
+  .gt-container .gt-header > .gt-avatar-letter,
+  .gt-container .gt-header > .gt-avatar-github {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .gt-container .gt-btn-upload-image,
+  .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  .gt-container .gt-header-controls .gt-btn {
+    width: auto;
+    margin: 0;
+  }
+}
+
+@media (max-width: 479px) {
+  .gt-container .gt-comment-main {
+    gap: 9px;
+  }
+
+  .gt-container .gt-comment-replies {
+    padding-left: 10px;
+  }
+
+  .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send),
+  .gt-container .gt-btn-upload-image {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+  }
+}
+
+/* ---- reduced motion: same layout, no movement ----------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .gt-container {
+    transition: none;
+  }
+
+  .gt-container .gt-comment-main,
+  .gt-container .gt-comment-main:hover {
+    transform: none !important;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+
+  .gt-container .gt-comment-glow {
+    display: none;
+  }
+
+  .gt-container .gt-comment-like:active,
+  .gt-container .gt-comment-edit:active,
+  .gt-container .gt-comment-reply:active,
+  .gt-container .gt-reaction-chip:active,
+  .gt-container .gt-reaction-trigger:active,
+  .gt-container .gt-btn-upload-image:active:not(:disabled),
+  .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):active,
+  .gt-container .gt-minimize:active,
+  .gt-container .gt-fab:active {
+    transform: none;
+  }
+
+  .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-ico-send svg,
+  .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send):hover .gt-ico-send svg {
+    transition: none;
+    transform: none;
+  }
+
+  .gt-container .gt-fab,
+  .gt-container .gt-header.is--docked {
+    animation: none;
+  }
+
+  .gt-container .composer-preview {
+    transition: none;
   }
 }

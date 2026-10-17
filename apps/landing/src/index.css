@@ -597,164 +597,54 @@ a {
   line-height: 1.8;
 }
 
-/* ---------- widget frame ---------- */
-.hero-widget {
+/* ---------- widget placement ---------- */
+/*
+ * The single box around the widget. It carries *no* visual treatment: no
+ * border, radius, background or shadow — the component is the panel now. All
+ * this does is give the hero column a stable height so a slow thread cannot
+ * push the page open.
+ */
+.demo {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
-  /* Fixed by the viewport, never by the thread: the widget scrolls inside. */
   height: clamp(420px, calc(100dvh - 210px), 640px);
-  border: 1px solid var(--line-2);
-  border-radius: 18px;
-  background-color: var(--panel);
-  background-image: radial-gradient(120% 60% at 50% 0%, var(--panel-glow), transparent 60%);
-  box-shadow: var(--shadow-panel);
-  backdrop-filter: blur(22px) saturate(1.4);
-  overflow: hidden;
 }
 
-/* The widget paints into the frame; only the frame, chrome and scroll
-   viewport are ours. */
-.gitalk-demo {
-  --gt-size-base: 14px;
-  --gt-color-surface: transparent;
-  --gt-color-surface-soft: var(--control-wash);
-  --gt-color-text: var(--fg);
-  --gt-color-text-2: var(--dim);
-  --gt-color-text-3: var(--dim-2);
-  --gt-color-border: var(--line-2);
-  --gt-color-input-bg: var(--control-wash);
-  --gt-color-popbg: var(--panel-strong);
-  --gt-color-main: var(--brand);
-  --gt-color-accent: var(--brand-ink);
-  --gt-color-comment-adminbg: color-mix(in srgb, var(--brand-ink) 10%, transparent);
-  --gt-color-main-soft: color-mix(in srgb, var(--brand-ink) 10%, transparent);
+/* Collapsed into the FAB: the panel is gone, so its slot goes with it instead
+   of leaving a 640px hole beside the copy (the reference's `.is-min`). */
+.demo:has(.gt-container.gt-minimized) {
+  height: 0;
+  min-height: 0;
+}
+
+/* The mount node injected by `mount()` is the only child; it has to pass the
+   height through to `.gt-container`. */
+.demo > * {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Inside a fixed-height box the list is the only scrolling region. Core's
+   default cap is sized for a full-page embed, so it is overridden here. */
+.demo .gt-container {
+  flex: 1;
   height: 100%;
   min-height: 0;
-  background: transparent;
-  color: var(--fg);
 }
 
-.demo-chrome {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 10px;
-  height: 34px;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--line);
-  background: var(--code-bar-bg);
-  color: var(--dim-2);
-  font-size: 10.5px;
-  line-height: 1;
-}
-
-.demo-dots {
-  display: flex;
-  flex: none;
-  gap: 4px;
-}
-
-.demo-dots i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #ff5f57;
-}
-
-.demo-dots i:nth-child(2) {
-  background: #febc2e;
-}
-
-.demo-dots i:nth-child(3) {
-  background: var(--brand-ink);
-}
-
-.demo-url {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  letter-spacing: 0.01em;
-}
-
-.demo-live {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-}
-
-.demo-live-dot {
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--brand-ink);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-ink) 18%, transparent);
-  animation: live-pulse 2.4s ease-out infinite;
-}
-
-.demo-live .demo-live-dot {
-  width: 5px;
-  height: 5px;
-  box-shadow: none;
-}
-
-@keyframes live-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.45;
-  }
-}
-
-.demo-stage {
-  position: relative;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  padding: 18px 20px;
-  overflow: hidden;
-  overscroll-behavior: contain;
-}
-
-.demo-widget {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-}
-
-/*
- * Keep the real widget inside the frame: the list is the only part that
- * scrolls, so the count header and the composer stay visible while comments
- * move under them. `max-height` is overridden because core's default is sized
- * for a full-page embed, not a 590px window.
- */
-.gitalk-demo .gt-container {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.gitalk-demo .gt-container .gt-meta,
-.gitalk-demo .gt-container .gt-header,
-.gitalk-demo .gt-container .gt-copyright {
+.demo .gt-container .gt-meta,
+.demo .gt-container .gt-header,
+.demo .gt-container .gt-copyright {
   flex: 0 0 auto;
 }
 
-.gitalk-demo .gt-container .gt-comments {
+.demo .gt-container .gt-comments {
   flex: 1 1 auto;
   min-height: 0;
   max-height: none !important;
@@ -764,71 +654,11 @@ a {
 
 /*
  * The widget dims the entire viewport while its composer has focus. That is
- * right for a full-page embed, but inside a frame it would black out the
- * landing page; the textarea's own focus ring is enough here.
+ * right for a full-page embed, but inside a box it would black out the landing
+ * page; the textarea's own focus ring is enough here.
  */
-.gitalk-demo .gt-container.gt-input-focused:after {
+.demo .gt-container.gt-input-focused:after {
   display: none;
-}
-
-.demo-status {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 6px 14px;
-  border-top: 1px solid var(--line);
-  background: var(--code-bar-bg);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.demo-status::-webkit-scrollbar {
-  display: none;
-}
-
-.demo-status-label {
-  flex: none;
-  color: var(--dim-2);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.demo-endpoints {
-  display: inline-flex;
-  flex: none;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--control-wash);
-}
-
-.demo-endpoints button {
-  padding: 3px 8px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--dim);
-  font-family: inherit;
-  font-size: 10.5px;
-  line-height: 1.4;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.demo-endpoints button:hover {
-  color: var(--fg-strong);
-}
-
-.demo-endpoints button.is-active {
-  background: var(--sort-active-bg);
-  color: var(--sort-active-fg);
-  font-weight: 600;
 }
 
 /* ---------- What's New ---------- */
@@ -1175,7 +1005,7 @@ a {
     justify-content: center;
   }
 
-  .hero-widget {
+  .demo {
     flex: 0 0 auto;
     width: 100%;
     max-width: 620px;
@@ -1262,9 +1092,8 @@ a {
     display: none;
   }
 
-  .hero-widget {
+  .demo {
     height: clamp(380px, 62dvh, 520px);
-    border-radius: 16px;
   }
 
   .stats-band {
@@ -1318,8 +1147,7 @@ a {
     scroll-behavior: auto;
   }
 
-  .aurora::before,
-  .demo-live-dot {
+  .aurora::before {
     animation: none;
   }
 

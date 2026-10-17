@@ -1,6 +1,6 @@
 import { formatRelativeTime } from '../time'
 import type { PendingComment } from '../types'
-import { Avatar } from './avatar'
+import { LetterAvatar } from './letter-avatar'
 
 interface PendingCommentProps {
   pending: PendingComment
@@ -57,35 +57,35 @@ export function PendingCommentRow({
       data-pending-key={pending.key}
       aria-busy={!failed}
     >
-      <Avatar
-        className="gt-comment-avatar"
-        src={pending.user.avatarUrl}
-        alt={pending.user.login}
-      />
+      <div className="gt-comment-main c-main">
+        <LetterAvatar className="gt-comment-avatar c-avatar" login={pending.user.login} />
 
-      <div className="gt-comment-content">
-        <div className="gt-comment-header">
-          <span className="gt-comment-username">{pending.user.login}</span>
-          <span className="gt-comment-text">{commentedText}</span>
-          <span className="gt-comment-date">{formatRelativeTime(pending.createdAt, locale)}</span>
-          <span className={`gt-pending-status ${failed ? 'is--failed' : 'is--sending'}`}>
-            {failed ? failedText : sendingText}
-          </span>
-        </div>
-
-        <div className="gt-comment-body gt-pending-body">{pending.body}</div>
-
-        {failed ? (
-          <div className="gt-pending-failure" role="alert">
-            <span className="gt-pending-error">{pending.error}</span>
-            <button type="button" className="gt-btn-link gt-pending-retry" onClick={onRetry}>
-              {retryText}
-            </button>
-            <button type="button" className="gt-btn-link gt-pending-discard" onClick={onDiscard}>
-              {discardText}
-            </button>
+        <div className="gt-comment-content c-body">
+          <div className="gt-comment-header c-meta">
+            <span className="gt-comment-username">{pending.user.login}</span>
+            <span className="gt-comment-text gt-sr-only">{commentedText}</span>
+            <span className="gt-comment-date c-time">
+              {formatRelativeTime(pending.createdAt, locale)}
+            </span>
+            <span className={`gt-pending-status ${failed ? 'is--failed' : 'is--sending'}`}>
+              {failed ? failedText : sendingText}
+            </span>
           </div>
-        ) : null}
+
+          <div className="gt-comment-body gt-pending-body c-text">{pending.body}</div>
+
+          {failed ? (
+            <div className="gt-pending-failure" role="alert">
+              <span className="gt-pending-error">{pending.error}</span>
+              <button type="button" className="gt-btn-link gt-pending-retry" onClick={onRetry}>
+                {retryText}
+              </button>
+              <button type="button" className="gt-btn-link gt-pending-discard" onClick={onDiscard}>
+                {discardText}
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   )

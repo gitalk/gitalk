@@ -3,12 +3,12 @@ import type { GitalkOptions } from './types'
 import { useGitalk } from './use-gitalk'
 import { useStickyComposer } from './use-sticky-composer'
 import { collectParticipants } from './mentions'
-import { Avatar } from './components/avatar'
 import { Button } from './components/button'
 import { Comment } from './components/comment'
 import type { CommentLabels } from './components/comment'
 import { Icon } from './components/icon'
 import { ImageUploadButton, ImageUploadError } from './components/image-upload'
+import { LetterAvatar } from './components/letter-avatar'
 import { MentionTextarea } from './components/mention-textarea'
 import type { MentionTextareaHandle } from './components/mention-textarea'
 import { buildImageMarkdown } from './images'
@@ -136,7 +136,8 @@ export function GitalkWidget({ options, className }: GitalkProps) {
       sending: t('sending'),
       failed: t('not-posted'),
       retry: t('retry'),
-      discard: t('discard')
+      discard: t('discard'),
+      author: t('author')
     }),
     [t]
   )
@@ -244,20 +245,24 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             composer now sits below the list (reference: `.p-composer`), so it
             can dock to the viewport bottom and hang its preview above it.
           */}
-          <div className="gt-meta">
-            <span
-              className="gt-counts"
-              dangerouslySetInnerHTML={{
-                __html: t(
-                  'counts',
-                  {
-                    counts: `<a class="gt-link gt-link-counts" href="${state.thread?.url ?? '#'}" target="_blank" rel="noopener noreferrer">${loadedCount}</a>`
-                  },
-                  loadedCount
-                )
-              }}
-            />
-            <div className="gt-meta-right">
+          <div className="gt-meta p-head">
+            <div className="gt-meta-title p-title">
+              <span className="gt-title">{t('comment')}</span>
+              <span
+                className="gt-counts p-count"
+                title={t('counts', { counts: String(loadedCount) }, loadedCount)}
+              >
+                <a
+                  className="gt-link gt-link-counts"
+                  href={state.thread?.url ?? '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {loadedCount}
+                </a>
+              </span>
+            </div>
+            <div className="gt-meta-tools p-tools">
               {meta.canUpvote ? (
                 <Upvote
                   upvote={state.upvote}
@@ -268,17 +273,21 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   onLoginRequired={() => actions.requireLogin('upvote')}
                 />
               ) : null}
-              <div className="gt-user">
-                {meta.authenticated ? (
-                  <span className="gt-user-name">{state.user?.login ?? t('anonymous')}</span>
-                ) : (
-                  <span className="gt-user-name">{t('anonymous')}</span>
-                )}
+              {/*
+                There is no "hot" segment: GitHub's API exposes no popularity
+                sort, so the control would be a promise the backend cannot keep.
+                "Latest" stays as a static segment to keep the reference's
+                visual rhythm.
+              */}
+              <div className="gt-sort p-sort" role="group" aria-label={t('latest')}>
+                <span className="is-active" aria-current="true">
+                  {t('latest')}
+                </span>
               </div>
               {meta.showMinimizable ? (
                 <button
                   type="button"
-                  className="gt-minimize"
+                  className="gt-minimize p-min"
                   title={t('minimize')}
                   aria-label={t('minimize')}
                   onClick={() => {
@@ -305,7 +314,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           </div>
 
           <div
-            className="gt-comments"
+            className="gt-comments p-scroll p-list"
             style={
               meta.maxHeight == null
                 ? undefined
@@ -390,7 +399,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
 
           <div
             ref={composerRef}
-            className={`gt-header${docked && !minimized ? ' is--docked' : ''}`}
+            className={`gt-header p-composer${docked && !minimized ? ' is--docked' : ''}`}
             data-docked={docked && !minimized ? 'true' : undefined}
           >
             {/*
@@ -424,7 +433,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             </div>
 
             {state.user ? (
-              <Avatar className="gt-header-avatar" src={state.user.avatarUrl} alt={state.user.login} />
+              <LetterAvatar className="gt-header-avatar" login={state.user.login} />
             ) : meta.canLogin ? (
               <a
                 className="gt-avatar-github"
@@ -474,18 +483,21 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   />
                 ) : null}
 
-                {meta.authenticated ? (
-                  <Button className="gt-btn-public" loading={state.submitting} onClick={() => void actions.submit()}>
+                {meta.authenticated || meta.canLogin ? (
+                  <Button
+                    /* Signed-in visitors get the real submit control. Anonymous
+                       ones get the same paper-plane affordance under its own
+                       class: the click routes through `actions.submit`, which
+                       answers with the sign-in notice. `.gt-btn-public` stays
+                       reserved for a control that can actually post. */
+                    className={meta.authenticated ? 'gt-btn-public' : 'gt-btn-send'}
+                    loading={state.submitting}
+                    onClick={() => void actions.submit()}
+                  >
                     {/* Icon-only in the reference (`.icon-btn.primary`); the
                         text stays in the DOM for the accessible name. */}
                     <Icon className="gt-ico-send" name="send" />
                     <span className="gt-btn-label">{t('comment')}</span>
-                  </Button>
-                ) : null}
-
-                {!meta.authenticated && meta.canLogin ? (
-                  <Button className="gt-btn-login" onClick={actions.login}>
-                    {t('login-with-github')}
                   </Button>
                 ) : null}
               </div>

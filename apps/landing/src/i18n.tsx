@@ -190,14 +190,6 @@ const options = {
     },
     note: '登录需要在 `proxy` 里指向你自己部署的 edge function——因为 `github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。源码在 `packages/proxy-worker`，支持 Cloudflare Workers / Vercel / Netlify 一键部署。'
   },
-  demo: {
-    live: '实时',
-    endpointsLabel: '令牌端点',
-    endpoints: {
-      cloudflare: 'Cloudflare',
-      cloudbase: '腾讯云 CloudBase'
-    }
-  },
   footer: {
     note: 'MIT · 基于 GitHub Discussions',
     repo: '查看仓库'
@@ -378,14 +370,6 @@ const options = {
       }
     },
     note: 'Signing in needs `proxy` pointed at an edge function you deploy yourself — `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange on its own. The source is in `packages/proxy-worker`, with one-command deploys for Cloudflare Workers / Vercel / Netlify.'
-  },
-  demo: {
-    live: 'Live',
-    endpointsLabel: 'Token endpoint',
-    endpoints: {
-      cloudflare: 'Cloudflare',
-      cloudbase: 'Tencent CloudBase'
-    }
   },
   footer: {
     note: 'MIT · powered by GitHub Discussions',

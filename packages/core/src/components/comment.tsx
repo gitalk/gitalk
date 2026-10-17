@@ -1,8 +1,8 @@
+import type { TargetedPointerEvent } from 'preact'
 import { formatRelativeTime } from '../time'
 import type { GitalkComment, GitalkReply, PendingComment, Reaction } from '../types'
 import type { MentionCandidate } from '../mentions'
-import { Avatar } from './avatar'
-import { Icon } from './icon'
+import { LetterAvatar } from './letter-avatar'
 import { PendingCommentRow } from './pending-comment'
 import { ReactionPicker } from './reaction-picker'
 import { ReplyBox } from './reply-box'
@@ -21,6 +21,8 @@ export interface CommentLabels {
   failed: string
   retry: string
   discard: string
+  /** Badge printed next to an admin's name. */
+  author: string
 }
 
 export interface CommentProps {
@@ -50,6 +52,33 @@ export interface CommentProps {
   onLoginRequired: () => void
   onRetryPending: (key: string) => void
   onDiscardPending: (key: string) => void
+}
+
+/**
+ * Tilt the row towards the pointer and move the glow to it.
+ *
+ * The values are the reference's: at most 8deg on either axis, expressed as
+ * CSS variables so the transition stays in the stylesheet (and so
+ * `prefers-reduced-motion` can switch the whole effect off without JS
+ * branching).
+ */
+function trackPointer(event: TargetedPointerEvent<HTMLDivElement>): void {
+  const row = event.currentTarget
+  const rect = row.getBoundingClientRect()
+  if (!rect.width || !rect.height) return
+
+  const x = (event.clientX - rect.left) / rect.width
+  const y = (event.clientY - rect.top) / rect.height
+
+  row.style.setProperty('--ry', `${((x - 0.5) * 8).toFixed(2)}deg`)
+  row.style.setProperty('--rx', `${((0.5 - y) * 8).toFixed(2)}deg`)
+  row.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`)
+  row.style.setProperty('--my', `${(y * 100).toFixed(1)}%`)
+}
+
+function resetPointer(event: TargetedPointerEvent<HTMLDivElement>): void {
+  event.currentTarget.style.setProperty('--ry', '0deg')
+  event.currentTarget.style.setProperty('--rx', '0deg')
 }
 
 export function Comment({
@@ -82,145 +111,149 @@ export function Comment({
   const needsReplyBox = canReply && onReply
 
   return (
-    <div className={`gt-comment ${isAdmin ? 'gt-comment-admin' : ''}`}>
-      <Avatar className="gt-comment-avatar" src={comment.user.avatarUrl} alt={comment.user.login} />
+    <article className={`gt-comment c${isAdmin ? ' gt-comment-admin' : ''}`}>
+      <div
+        className="gt-comment-main c-main"
+        onPointerMove={trackPointer}
+        onPointerLeave={resetPointer}
+      >
+        <div className="gt-comment-glow c-glow" aria-hidden="true" />
+        <LetterAvatar className="gt-comment-avatar c-avatar" login={comment.user.login} />
 
-      <div className="gt-comment-content">
-        <CommentHeader comment={comment} commentedText={labels.commented} locale={locale} />
-
-        <div
-          className="gt-comment-body markdown-body"
-          dangerouslySetInnerHTML={{ __html: comment.bodyHtml }}
-        />
-
-        {/*
-          Actions sit *below* the body, as in the design reference, rather than
-          floating top-right: a quiet row of pills under the text.
-        */}
-        {showActions ? (
-          <div className="gt-comment-actions">
-            {showReactions ? (
-              <ReactionPicker
-                reactions={comment.reactions}
-                canReact={authenticated}
-                label={labels.reactions}
-                addLabel={labels.addReaction}
-                onToggle={(content) => onToggleReaction?.(comment, content)}
-                onLoginRequired={onLoginRequired}
-              />
-            ) : null}
-
-            {needsReplyBox ? (
-              <button
-                type="button"
-                className={`gt-comment-reply${replying ? ' is--active' : ''}`}
-                title={labels.reply}
-                aria-expanded={replying}
-                onClick={() => onReply!(comment)}
-              >
-                <Icon className="gt-ico-reply" name="reply" text={labels.reply} />
-              </button>
-            ) : null}
+        <div className="gt-comment-content c-body">
+          <div className="gt-comment-header c-meta">
+            <a className="gt-comment-username" href={comment.user.htmlUrl}>
+              {comment.user.login}
+            </a>
+            {isAdmin ? <span className="gt-comment-badge badge">{labels.author}</span> : null}
+            <span className="gt-comment-text gt-sr-only">{labels.commented}</span>
+            <span className="gt-comment-date c-time">
+              {formatRelativeTime(comment.createdAt, locale)}
+            </span>
           </div>
-        ) : null}
 
-        {/*
-          The inline reply box lives in the parent's content column, directly
-          under the row it answers — the design reference's `.reply-box`.
-        */}
-        {replying && canReply ? (
-          <ReplyBox
-            value={replyDraft}
-            candidates={candidates}
-            submitting={replySubmitting}
-            placeholder={labels.replyTo(comment.user.login)}
-            mentionLabel={labels.mentionLabel}
-            cancelLabel={labels.cancel}
-            submitLabel={labels.submit}
-            onInput={onReplyInput}
-            onSubmit={onReplySubmit}
-            onCancel={onReplyCancel}
+          <div
+            className="gt-comment-body c-text markdown-body"
+            dangerouslySetInnerHTML={{ __html: comment.bodyHtml }}
           />
-        ) : null}
 
-        {replies.length || pending.length ? (
-          <div className="gt-comment-replies">
-            {replies.map((reply) => (
-              <div className="gt-comment gt-comment-reply-item" key={reply.id}>
-                <Avatar
-                  className="gt-comment-avatar"
-                  src={reply.user.avatarUrl}
-                  alt={reply.user.login}
+          {/*
+            Actions sit *below* the body, as in the design reference, rather than
+            floating top-right: a quiet row of pills under the text.
+          */}
+          {showActions ? (
+            <div className="gt-comment-actions c-acts">
+              {showReactions ? (
+                <ReactionPicker
+                  reactions={comment.reactions}
+                  canReact={authenticated}
+                  label={labels.reactions}
+                  addLabel={labels.addReaction}
+                  onToggle={(content) => onToggleReaction?.(comment, content)}
+                  onLoginRequired={onLoginRequired}
                 />
-                <div className="gt-comment-content">
-                  <div className="gt-comment-header">
-                    <a className="gt-comment-username" href={reply.user.htmlUrl}>
-                      {reply.user.login}
-                    </a>
-                    <span className="gt-comment-text">{labels.commented}</span>
-                    <span className="gt-comment-date">
-                      {formatRelativeTime(reply.createdAt, locale)}
-                    </span>
-                  </div>
-                  <div
-                    className="gt-comment-body markdown-body"
-                    dangerouslySetInnerHTML={{ __html: reply.bodyHtml }}
-                  />
+              ) : null}
 
-                  {showActions ? (
-                    <div className="gt-comment-actions">
-                      {showReactions ? (
-                        <ReactionPicker
-                          reactions={reply.reactions}
-                          canReact={authenticated}
-                          label={labels.reactions}
-                          addLabel={labels.addReaction}
-                          onToggle={(content) => onToggleReaction?.(reply, content)}
-                          onLoginRequired={onLoginRequired}
-                        />
+              {needsReplyBox ? (
+                <button
+                  type="button"
+                  className={`gt-comment-reply act${replying ? ' is--active' : ''}`}
+                  title={labels.reply}
+                  aria-expanded={replying}
+                  onClick={() => onReply!(comment)}
+                >
+                  {labels.reply}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/*
+            The inline reply box lives in the parent's content column, directly
+            under the row it answers — the design reference's `.reply-box`.
+          */}
+          {replying && canReply ? (
+            <ReplyBox
+              value={replyDraft}
+              candidates={candidates}
+              submitting={replySubmitting}
+              placeholder={labels.replyTo(comment.user.login)}
+              mentionLabel={labels.mentionLabel}
+              cancelLabel={labels.cancel}
+              submitLabel={labels.submit}
+              onInput={onReplyInput}
+              onSubmit={onReplySubmit}
+              onCancel={onReplyCancel}
+            />
+          ) : null}
+
+          {replies.length || pending.length ? (
+            <div className="gt-comment-replies c-replies">
+              {replies.map((reply) => (
+                <article className="gt-comment gt-comment-reply-item reply" key={reply.id}>
+                  <div
+                    className="gt-comment-main c-main"
+                    onPointerMove={trackPointer}
+                    onPointerLeave={resetPointer}
+                  >
+                    <div className="gt-comment-glow c-glow" aria-hidden="true" />
+                    <LetterAvatar
+                      className="gt-comment-avatar c-avatar r-avatar"
+                      login={reply.user.login}
+                    />
+                    <div className="gt-comment-content c-body r-body">
+                      <div className="gt-comment-header c-meta">
+                        <a className="gt-comment-username" href={reply.user.htmlUrl}>
+                          {reply.user.login}
+                        </a>
+                        <span className="gt-comment-text gt-sr-only">{labels.commented}</span>
+                        <span className="gt-comment-date c-time">
+                          {formatRelativeTime(reply.createdAt, locale)}
+                        </span>
+                      </div>
+                      <div
+                        className="gt-comment-body c-text markdown-body"
+                        dangerouslySetInnerHTML={{ __html: reply.bodyHtml }}
+                      />
+
+                      {showActions ? (
+                        <div className="gt-comment-actions c-acts">
+                          {showReactions ? (
+                            <ReactionPicker
+                              reactions={reply.reactions}
+                              canReact={authenticated}
+                              label={labels.reactions}
+                              addLabel={labels.addReaction}
+                              onToggle={(content) => onToggleReaction?.(reply, content)}
+                              onLoginRequired={onLoginRequired}
+                            />
+                          ) : null}
+                        </div>
                       ) : null}
                     </div>
-                  ) : null}
-                </div>
-              </div>
-            ))}
+                  </div>
+                </article>
+              ))}
 
-            {pending.map((entry) => (
-              <PendingCommentRow
-                key={entry.key}
-                pending={entry}
-                reply
-                locale={locale}
-                commentedText={labels.commented}
-                sendingText={labels.sending}
-                failedText={labels.failed}
-                retryText={labels.retry}
-                discardText={labels.discard}
-                onRetry={() => onRetryPending(entry.key)}
-                onDiscard={() => onDiscardPending(entry.key)}
-              />
-            ))}
-          </div>
-        ) : null}
+              {pending.map((entry) => (
+                <PendingCommentRow
+                  key={entry.key}
+                  pending={entry}
+                  reply
+                  locale={locale}
+                  commentedText={labels.commented}
+                  sendingText={labels.sending}
+                  failedText={labels.failed}
+                  retryText={labels.retry}
+                  discardText={labels.discard}
+                  onRetry={() => onRetryPending(entry.key)}
+                  onDiscard={() => onDiscardPending(entry.key)}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
-    </div>
-  )
-}
-
-function CommentHeader(props: {
-  comment: GitalkComment
-  commentedText: string
-  locale: string
-}) {
-  const { comment, commentedText, locale } = props
-
-  return (
-    <div className="gt-comment-header">
-      <a className="gt-comment-username" href={comment.user.htmlUrl}>
-        {comment.user.login}
-      </a>
-      <span className="gt-comment-text">{commentedText}</span>
-      <span className="gt-comment-date">{formatRelativeTime(comment.createdAt, locale)}</span>
-    </div>
+    </article>
   )
 }

@@ -18,6 +18,34 @@ interface ReactionPickerProps {
 }
 
 /**
+ * The reference's outline thumb, for the trigger only.
+ *
+ * Reaction *chips* keep GitHub's emoji (they are the point of the eight-type
+ * picker); the trigger is the "like" pill of the design, so it uses the same
+ * quiet stroked glyph as `.act` rather than a yellow emoji.
+ */
+function ThumbsUpGlyph() {
+  return (
+    <span className="gt-reaction-glyph" aria-hidden="true">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M7 22V11l5-9 1.5 1a3 3 0 0 1 1 3l-.5 3H19a2 2 0 0 1 2 2.2l-1 7A2 2 0 0 1 18 22H7z" />
+      </svg>
+    </span>
+  )
+}
+
+/**
  * Reaction control for one comment: a chip per type that has been used, plus a
  * picker carrying all eight GitHub reaction types.
  *
@@ -76,14 +104,12 @@ export function ReactionPicker({
     return (
       <button
         type="button"
-        className="gt-comment-like gt-reaction-trigger"
+        className="gt-comment-like gt-reaction-trigger act"
         aria-label={addLabel}
         title={addLabel}
         onClick={onLoginRequired}
       >
-        <span className="gt-reaction-glyph" aria-hidden="true">
-          🙂
-        </span>
+        <ThumbsUpGlyph />
         {reactions.totalCount ? (
           <span className="gt-reaction-count">{reactions.totalCount}</span>
         ) : null}
@@ -114,7 +140,7 @@ export function ReactionPicker({
         <button
           type="button"
           ref={trigger}
-          className="gt-comment-like gt-reaction-trigger"
+          className="gt-comment-like gt-reaction-trigger act"
           aria-label={addLabel}
           title={addLabel}
           aria-haspopup="listbox"
@@ -129,9 +155,7 @@ export function ReactionPicker({
             setOpen((v) => !v)
           }}
         >
-          <span className="gt-reaction-glyph" aria-hidden="true">
-            🙂
-          </span>
+          <ThumbsUpGlyph />
           {!chips.length && reactions.totalCount ? (
             <span className="gt-reaction-count">{reactions.totalCount}</span>
           ) : null}

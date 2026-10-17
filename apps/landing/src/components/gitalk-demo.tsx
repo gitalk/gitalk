@@ -1,50 +1,42 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Gitalk } from './gitalk'
 import { useI18n } from '../i18n'
 
 /**
- * The two token endpoints the demo can talk to.
+ * The live widget, mounted straight into the hero's single `.demo` box.
  *
- * Both stay deployed on purpose: the Cloudflare worker is the default every
- * widget uses, and the CloudBase function exists because `*.workers.dev` is
- * unreachable from mainland China. Letting visitors switch shows what that
- * difference actually buys instead of only describing it.
+ * The box only positions and sizes it; the component itself is now the panel
+ * (radius, border, glass, shadow, header, list and composer all ship from
+ * `@aifire/gitalk`). There is deliberately no browser chrome, no stage and no
+ * endpoint switcher: anything around the widget would be a second frame around
+ * the frame the component already paints.
  *
- * Labels come from the dictionary; only the ids and URLs live here.
+ * The Cloudflare worker is the endpoint shown here — the same one the default
+ * widget uses. The CloudBase mirror still exists for mainland China; pointing
+ * the demo at it is a one-line change in `options.proxy`, not a UI.
  */
-const DEMO_ENDPOINTS = [
-  { id: 'cloudflare', proxy: 'https://gitalk-proxy.aispin-abf.workers.dev' },
-  { id: 'cloudbase', proxy: 'https://gitalk.xsin.work' }
-] as const
+const DEMO_PROXY = 'https://gitalk-proxy.aispin-abf.workers.dev'
 
-/**
- * The live widget, dressed as a small browser window so it can sit in the
- * hero's right column. Kept in one place: the hero wraps this in the CSS
- * frame, and nothing else on the page mounts a second copy.
- */
 export function GitalkDemo() {
-  const { t, lang } = useI18n()
-  const [endpoint, setEndpoint] = useState<(typeof DEMO_ENDPOINTS)[number]>(DEMO_ENDPOINTS[0])
+  const { lang } = useI18n()
 
   const options = useMemo(
     () => ({
       clientID: 'Iv23liM54pLB6TIqnqb6',
-      proxy: endpoint.proxy,
+      proxy: DEMO_PROXY,
       owner: 'gitalk',
       repo: 'gitalk',
       admin: ['booxood'],
-      id: 'gitalk-demo-thread',
+      id: 'landing-comments',
       number: 442,
       backend: 'discussions' as const,
       perPage: 10,
       /*
-       * The demo lives in a fixed-height frame with its own flex layout: the
+       * The demo lives in a fixed-height box with its own flex layout: the
        * comment list scrolls and the composer is pinned to the bottom of that
-       * frame. The widget's viewport-fixed docking assumes a full-page embed,
-       * so inside this nested scroll container it would escape the frame
-       * (fixed positioning resolves against the frame's backdrop-filter
-       * containing block) and cover the page instead. Core ships the option
-       * for exactly this case.
+       * box. The widget's viewport-fixed docking assumes a full-page embed, so
+       * inside this nested scroll container it would escape the box and cover
+       * the page. Core ships the option for exactly this case.
        */
       stickyComposer: false,
       // The widget localises its own chrome and relative dates; keep it in
@@ -52,46 +44,8 @@ export function GitalkDemo() {
       // browser locale.
       language: lang === 'zh' ? 'zh-CN' : 'en'
     }),
-    [endpoint, lang]
+    [lang]
   )
 
-  return (
-    <div className="gitalk-demo">
-      <div className="demo-chrome" aria-hidden="true">
-        <span className="demo-dots">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span className="demo-url">gitalk.github.io/comments</span>
-        <span className="demo-live">
-          <span className="demo-live-dot" />
-          {t.demo.live}
-        </span>
-      </div>
-
-      <div className="demo-stage">
-        {/* Keyed on the endpoint: changing `options` alone would not
-            re-initialise the widget, so the switch would appear to do nothing. */}
-        <Gitalk key={endpoint.proxy} options={options} className="demo-widget" />
-      </div>
-
-      <div className="demo-status">
-        <span className="demo-status-label">{t.demo.endpointsLabel}</span>
-        <div className="demo-endpoints" role="group" aria-label={t.demo.endpointsLabel}>
-          {DEMO_ENDPOINTS.map((candidate) => (
-            <button
-              key={candidate.id}
-              type="button"
-              className={candidate.id === endpoint.id ? 'is-active' : ''}
-              aria-pressed={candidate.id === endpoint.id}
-              onClick={() => setEndpoint(candidate)}
-            >
-              {t.demo.endpoints[candidate.id]}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
+  return <Gitalk options={options} />
 }

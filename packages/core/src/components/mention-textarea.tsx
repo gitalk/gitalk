@@ -1,5 +1,5 @@
 import type { TargetedInputEvent, TargetedKeyboardEvent, TargetedMouseEvent } from 'preact'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { MentionCandidate } from '../mentions'
 import { filterCandidates, insertMention, mentionQueryAt } from '../mentions'
 import { Avatar } from './avatar'
@@ -97,13 +97,20 @@ export function MentionTextarea({
   )
   const open = token !== null && matches.length > 0
 
-  useEffect(() => {
+  /*
+   * Layout effect, not a passive one: the caret has to be placed in the same
+   * commit that writes the new value. A deferred effect can run after the
+   * browser (or jsdom) has already reset the selection to the end of the
+   * controlled textarea, which loses the insertion point for the next paste or
+   * image upload.
+   */
+  useLayoutEffect(() => {
     if (pendingCaret.current == null) return
     const caret = pendingCaret.current
     const el = ref.current
     if (!el) return
     // Wait for the render that actually carries the inserted text (see
-    // `pendingValue`); an older deferred effect must not consume the caret.
+    // `pendingValue`); an older commit must not consume the caret.
     if (pendingValue.current !== null && el.value !== pendingValue.current) return
     pendingCaret.current = null
     pendingValue.current = null

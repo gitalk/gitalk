@@ -37,7 +37,9 @@ export function Hero() {
           </div>
         </section>
 
-        <div className="hero-widget">
+        {/* The only wrapper around the widget: positioning and size, nothing
+            else. The component ships its own panel shape. */}
+        <div className="demo">
           <GitalkDemo />
         </div>
       </div>
