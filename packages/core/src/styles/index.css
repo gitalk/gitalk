@@ -216,15 +216,21 @@
 
 /* icons */
 .gt-container .gt-svg {
-  display: inline-block;
+  /* Flex, not a text-aligned inline-block: an inline-block participates in the
+     line box, so its baseline lands wherever the glyph's does and the icon
+     drifts a pixel or two below the label it belongs to. Centring the child
+     inside an em box makes the icon independent of the surrounding text. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
   width: 1em;
   height: 1em;
-  /* `sub` pushed every icon below the text baseline, which read as a rendering
-     bug wherever a glyph sat next to a label. */
   vertical-align: middle;
 }
 
 .gt-container .gt-svg svg {
+  display: block;
   width: 100%;
   height: 100%;
   fill: var(--gt-color-accent);
