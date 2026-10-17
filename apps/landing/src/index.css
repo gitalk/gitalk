@@ -568,7 +568,7 @@ a {
 /* ---------- headline numbers ---------- */
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   margin: 20px 0 0;
   padding: 22px 0;
   border: 1px solid var(--border);
@@ -895,5 +895,13 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .demo-live-dot {
     animation: none;
+  }
+}
+
+@media (max-width: 480px) {
+  /* The group still carries the "token endpoint" aria-label; dropping the
+     visible caption leaves room for both endpoint names on one line. */
+  .demo-status-label {
+    display: none;
   }
 }
