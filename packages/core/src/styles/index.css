@@ -572,12 +572,6 @@
   margin-left: 0.375em;
 }
 
-.gt-container .gt-copyright {
-  margin: 16px 0 0;
-  text-align: center;
-  font-size: 0.75em;
-  color: var(--gt-color-text-3);
-}
 
 /* popup */
 .gt-container .gt-popup {
@@ -4388,18 +4382,6 @@
 /* The reference has no footer; the attribution stays in the DOM (and in the
    accessibility tree for the project link) without adding a strip under the
    composer, which would break the "composer is the bottom edge" shape. */
-.gt-container .gt-copyright {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
 
 /* ---- responsive: the reference's 720px dock edge -------------------- */
 @media (max-width: 720px) {

@@ -63,7 +63,6 @@ describe('redesigned stylesheet', () => {
       '.gt-header-textarea',
       '.gt-meta',
       '.gt-user',
-      '.gt-copyright',
       '.gt-comment-actions',
       // v2.3 additions: @ mentions, reaction picker, upvote, inline reply,
       // optimistic rows. Same contract — hosts style against these.
@@ -245,7 +244,6 @@ describe('redesigned comment DOM', () => {
     const meta = container.querySelector('.gt-meta')!
     const header = container.querySelector('.gt-header')!
     expect(meta.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(container.querySelector('.gt-copyright')?.parentElement).toBe(container)
   })
 })
 

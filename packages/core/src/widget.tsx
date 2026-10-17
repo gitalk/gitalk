@@ -616,17 +616,6 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             </div>
           </div>
 
-          <div className="gt-copyright">
-            <a
-              className="gt-link gt-link-project"
-              href="https://github.com/gitalk/gitalk"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Gitalk
-            </a>
-            <span className="gt-version">{VERSION}</span>
-          </div>
         </>
       ) : null}
 

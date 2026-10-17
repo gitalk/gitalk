@@ -657,9 +657,6 @@ a {
 
 .demo .gt-container .gt-meta,
 .demo .gt-container .gt-header,
-.demo .gt-container .gt-copyright {
-  flex: 0 0 auto;
-}
 
 .demo .gt-container .gt-comments {
   flex: 1 1 auto;
