@@ -58,7 +58,7 @@ const zh = {
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
       stars: { label: 'Stars', note: 'GitHub 上的社区关注度。' }
     },
-    modeLabel: '布局模式', modeDefault: '默认', modeInline: 'Inline'
+    modeLabel: '布局模式', endpointLabel: '接口端点', modeDefault: '默认', modeInline: 'Inline'
   },
   features: {
     eyebrow: "// WHAT'S NEW",
@@ -240,7 +240,7 @@ const en: Messages = {
       },
       stars: { label: 'Stars', note: 'Community interest on GitHub.' }
     },
-    modeLabel: 'Layout mode', modeDefault: 'Default', modeInline: 'Inline'
+    modeLabel: 'Layout mode', endpointLabel: 'Endpoint', modeDefault: 'Default', modeInline: 'Inline'
   },
   features: {
     eyebrow: "// WHAT'S NEW",

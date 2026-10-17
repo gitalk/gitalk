@@ -17,13 +17,13 @@ import { useI18n } from '../i18n'
  */
 const DEMO_PROXY = 'https://gitalk-proxy.aispin-abf.workers.dev'
 
-export function GitalkDemo({ mode }: { mode: "default" | "inline" }) {
+export function GitalkDemo({ mode, proxy }: { mode: "default" | "inline"; proxy: string }) {
   const { lang } = useI18n()
 
   const options = useMemo(
     () => ({
       clientID: 'Iv23liM54pLB6TIqnqb6',
-      proxy: DEMO_PROXY,
+      proxy,
       owner: 'gitalk',
       repo: 'gitalk',
       admin: ['booxood'],

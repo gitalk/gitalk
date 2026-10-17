@@ -413,7 +413,6 @@ a {
 
 .hero-lede {
   margin: 16px 0 0;
-  max-width: 380px;
   font-size: 14.5px;
   line-height: 1.8;
   color: var(--dim);
@@ -1251,4 +1250,39 @@ a {
 .hero-mode button.is-active {
   background: var(--brand, #1e4fff);
   color: #fff;
+}
+
+/* Controls under the demo: layout mode and which proxy to talk to. */
+.demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.hero-endpoints {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+}
+
+.hero-endpoints button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--dim, #8a93a6);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.hero-endpoints button.is-active {
+  background: color-mix(in srgb, var(--brand, #1e4fff) 16%, transparent);
+  color: var(--brand-ink, #90a8ff);
 }
