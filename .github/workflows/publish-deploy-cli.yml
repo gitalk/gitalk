@@ -1,0 +1,77 @@
+name: Publish deploy CLI
+
+# Publishes the built `@aifire/gitalk-deploy` package to the gitalk/deploy
+# repository, so it can be run without npm:
+#
+#   npx github:gitalk/deploy -c .env -t cloudflare
+#
+# npm cannot install a subdirectory of a git repository, which is why the
+# artifacts live in their own repository rather than being installed from this
+# one. Nothing here is committed back to this repository.
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build the proxy the CLI deploys
+        run: |
+          pnpm --filter @gitalk/proxy-worker run build
+          pnpm --filter @gitalk/proxy-cloudbase run build
+
+      - name: Build the CLI into a runnable package
+        run: pnpm --filter @aifire/gitalk-deploy run bundle
+
+      - name: Assemble the publishable package
+        run: |
+          set -euo pipefail
+          out=.deploy-publish
+          rm -rf "$out"
+          mkdir -p "$out"
+          cp -R packages/gitalk-deploy/dist "$out/dist"
+          cp -R packages/gitalk-deploy/templates "$out/templates"
+          cp packages/gitalk-deploy/package.json packages/gitalk-deploy/README.md "$out/"
+          node -e "
+            const p = require('./$out/package.json')
+            p.version = process.env.GITHUB_REF_NAME?.replace(/^v/, '') || p.version
+            require('fs').writeFileSync('$out/package.json', JSON.stringify(p, null, 2) + '\n')
+          "
+
+      - name: Push to gitalk/deploy
+        env:
+          # A fine-grained PAT with contents:write on gitalk/deploy.
+          # Without it, the step fails loudly rather than silently skipping.
+          TOKEN: ${{ secrets.DEPLOY_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${TOKEN:-}" ]; then
+            echo "::error::DEPLOY_REPO_TOKEN is not set — add a fine-grained PAT with contents:write on gitalk/deploy"
+            exit 1
+          fi
+          cd .deploy-publish
+          git init -q -b main
+          git config user.name gitalk-bot
+          git config user.email bot@gitalk.invalid
+          git add -A
+          git commit -q -m "deploy CLI ${GITHUB_REF_NAME} (${GITHUB_SHA:0:7})"
+          git push -q --force "https://x-access-token:${TOKEN}@github.com/gitalk/deploy.git" main
+          echo "pushed $(git rev-parse --short HEAD) to gitalk/deploy"
