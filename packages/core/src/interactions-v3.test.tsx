@@ -386,12 +386,12 @@ describe('manual Markdown preview inside the composer', () => {
     expect(toggle().getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('keeps the reference placeholder and a single-row editor', async () => {
+  it('keeps a single-row editor with a placeholder', async () => {
     await mountWidget(host)
 
     const textarea = host.querySelector('.gt-header-textarea') as HTMLTextAreaElement
     expect(textarea.getAttribute('rows')).toBe('1')
-    expect(textarea.getAttribute('placeholder')).toBe('Write a comment, press Enter to post…')
+    expect(textarea.getAttribute('placeholder')).toBe('Write a comment…')
     expect(textarea.value).toBe('')
   })
 

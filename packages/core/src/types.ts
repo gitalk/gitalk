@@ -442,6 +442,14 @@ export interface GitalkOptions {
    *
    * @default 'default'
    */
+  /**
+   * Whether a bare Enter submits the comment.
+   *
+   * Off by default: Enter is how people start a new line in a multi-line
+   * comment, and submitting instead is an easy way to post something
+   * half-written. Cmd/Ctrl+Enter always submits regardless of this.
+   */
+  submitOnEnter?: boolean
   mode?: 'default' | 'inline'
   stickyComposer?: boolean
   updateCountCallback?: (count: number) => void

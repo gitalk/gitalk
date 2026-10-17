@@ -529,6 +529,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   */}
                   <div className={`gt-composer-body${state.previewing ? ' is--preview' : ''}`}>
                     <MentionTextarea
+                submitOnPlainEnter={options.submitOnEnter === true}
                       className="gt-header-textarea"
                       value={state.draft}
                       candidates={candidates}

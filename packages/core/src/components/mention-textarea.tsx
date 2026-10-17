@@ -33,6 +33,8 @@ interface MentionTextareaProps {
   ariaLabel?: string
   /** Cmd/Ctrl+Enter. Omitted when the host has hot keys switched off. */
   onSubmit?: () => void
+  /** Submit on a bare Enter. Off unless the host opts in. */
+  submitOnPlainEnter?: boolean
   onInput: (value: string) => void
   /** Esc pressed with no popup open (the reply box uses it to cancel). */
   onEscape?: () => void
@@ -62,6 +64,7 @@ export function MentionTextarea({
   listLabel,
   ariaLabel,
   onSubmit,
+  submitOnPlainEnter,
   onInput,
   onEscape,
   handleRef,
@@ -263,6 +266,21 @@ export function MentionTextarea({
     }
 
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault()
+      onSubmit?.()
+      return
+    }
+
+    // Opt-in only: Enter is how a multi-line comment gets its next line.
+    if (
+      submitOnPlainEnter &&
+      e.key === 'Enter' &&
+      !e.shiftKey &&
+      !e.metaKey &&
+      !e.ctrlKey &&
+      !e.altKey &&
+      !e.isComposing
+    ) {
       e.preventDefault()
       onSubmit?.()
     }
