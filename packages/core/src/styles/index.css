@@ -870,7 +870,11 @@
   border-radius: var(--gt-radius-pill);
   font-size: 0.78125em;
   line-height: 1;
-  color: var(--gt-color-text-2);
+  /* Brand, not muted: at text-2 the pill read as a disabled control
+     rather than the one action a reader is meant to take. */
+  color: var(--gt-color-accent);
+  background-color: var(--gt-color-main-soft);
+  font-weight: 500;
   text-decoration: none;
   cursor: pointer;
   transition: background-color 0.16s, color 0.16s;
@@ -879,7 +883,7 @@
 .gt-container .gt-comment-like:hover,
 .gt-container .gt-comment-edit:hover,
 .gt-container .gt-comment-reply:hover {
-  background-color: var(--gt-color-main-soft);
+  background-color: var(--gt-color-main-border);
   color: var(--gt-color-accent);
   border-color: transparent;
 }
