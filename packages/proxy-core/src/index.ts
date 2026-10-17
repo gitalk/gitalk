@@ -138,12 +138,17 @@ export async function handle(
       headers: {
         ...cors,
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-        // Every header the widget can send. Getting this list wrong fails the
-        // preflight silently for exactly the requests that carry the missing
-        // header, and anonymous reads carry almost none of them — which is how
-        // Authorization and then X-GitHub-Api-Version each broke sign-in and
-        // commenting in turn without any check noticing.
+        // Echo whatever the browser says it wants to send.
+        //
+        // A fixed list here is a bug generator: every header the client adds
+        // later fails the preflight for exactly the requests carrying it, while
+        // requests carrying none of them keep working. Authorization,
+        // X-GitHub-Api-Version and X-Github-Next-Global-ID each broke a
+        // different feature this way. The origin allow list is the real access
+        // control; which headers may accompany an allowed origin is not a
+        // boundary worth maintaining by hand.
         'Access-Control-Allow-Headers':
+          request.headers.get('Access-Control-Request-Headers') ??
           'Accept, Authorization, Content-Type, X-GitHub-Api-Version, X-Github-Next-Global-ID',
         'Access-Control-Max-Age': '86400'
       }

@@ -512,8 +512,10 @@ describe('/graphql', () => {
     })
 
     expect(response.status).toBe(204)
-    expect(response.headers.get('Access-Control-Allow-Headers')).toContain(
-      'X-Github-Next-Global-ID'
+    // The header is echoed as the browser wrote it, and header names are
+    // case-insensitive, so compare folded. What matters is that it is present.
+    expect(response.headers.get('Access-Control-Allow-Headers')!.toLowerCase()).toContain(
+      'x-github-next-global-id'
     )
   })
 })
