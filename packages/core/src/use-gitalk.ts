@@ -1055,6 +1055,7 @@ export function useGitalk(options: GitalkOptions) {
 
   return {
     state,
+    sortDir,
     t,
     actions: {
       login,
@@ -1062,6 +1063,7 @@ export function useGitalk(options: GitalkOptions) {
       setDraft,
       submit,
       refreshPreview,
+      toggleSort,
       closePreview,
       replyTo,
       cancelReply,

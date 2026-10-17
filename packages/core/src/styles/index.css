@@ -4823,3 +4823,20 @@
     animation: none;
   }
 }
+
+/*
+ * The sort segment is a pair of buttons now, so it needs the button defaults
+ * cleared — the active pill styling already exists for `.is-active`.
+ */
+.gt-container .gt-sort button {
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gt-container .gt-sort button.is-active {
+  cursor: default;
+}

@@ -22,7 +22,7 @@ export interface GitalkProps {
 }
 
 export function GitalkWidget({ options, className }: GitalkProps) {
-  const { state, t, actions, meta } = useGitalk(options)
+  const { state, t, actions, meta, sortDir } = useGitalk(options)
 
   /**
    * Collapse state is deliberately local and not persisted: the design
@@ -311,11 +311,24 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                 "Latest" stays as a static segment to keep the reference's
                 visual rhythm.
               */}
-              <div className="gt-sort p-sort" role="group" aria-label={t('latest')}>
-                <span className="is-active" aria-current="true">
-                  {t('latest')}
-                </span>
-              </div>
+              <div className="gt-sort p-sort" role="group" aria-label={t('sort-desc')}>
+          <button
+            type="button"
+            className={sortDir === 'last' ? 'is-active' : ''}
+            aria-pressed={sortDir === 'last'}
+            onClick={sortDir === 'last' ? undefined : actions.toggleSort}
+          >
+            {t('latest')}
+          </button>
+          <button
+            type="button"
+            className={sortDir === 'first' ? 'is-active' : ''}
+            aria-pressed={sortDir === 'first'}
+            onClick={sortDir === 'first' ? undefined : actions.toggleSort}
+          >
+            {t('oldest')}
+          </button>
+        </div>
               {meta.showMinimizable && !inline ? (
                 <button
                   type="button"
