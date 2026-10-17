@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import type { SortDirection } from './types'
 import type { Backend } from './api/backend'
 import type { ReactionState } from './api/backend'
 import type { BackendContext } from './api/backend'
@@ -162,6 +163,10 @@ export function useGitalk(options: GitalkOptions) {
     [opts.clientID, opts.proxy]
   )
 
+  // The header's sort segment flips this; `sortDirection` only provides the
+  // initial value. Flipping it reloads the thread, because the page window we
+  // ask the API for depends on which end we are reading from.
+  const [sortDir, setSortDir] = useState<SortDirection>(options.sortDirection ?? 'last')
   const [state, setState] = useState<GitalkState>({
     loading: true,
     ready: false,
@@ -376,7 +381,7 @@ export function useGitalk(options: GitalkOptions) {
         // GitHub ignores `direction` on the comments endpoints, so the
         // backends order the rows and pick the window themselves. It is still
         // passed so a transport that *does* honour it behaves the same way.
-        direction: opts.sortDirection,
+        direction: sortDir,
         page: nextPage,
         fresh
       })
@@ -415,7 +420,7 @@ export function useGitalk(options: GitalkOptions) {
       // this only sharpens the reaction chips.
       void hydrateReactions(nextComments)
     },
-    [backend, hydrateReactions, opts.perPage, opts.sortDirection, opts.updateCountCallback]
+    [backend, hydrateReactions, opts.perPage, sortDir, opts.updateCountCallback]
   )
 
   /**
@@ -851,6 +856,15 @@ export function useGitalk(options: GitalkOptions) {
    * GitHub's Markdown endpoint. A failed or superseded render leaves the
    * composer in source mode.
    */
+  /** Flip newest/oldest and reload from the first page. */
+  const toggleSort = useCallback(() => {
+    setSortDir((prev) => {
+      const next: SortDirection = prev === 'last' ? 'first' : 'last'
+      void load(false)
+      return next
+    })
+  }, [load])
+
   const refreshPreview = useCallback(async () => {
     if (!state.draft.trim()) {
       closePreview()
