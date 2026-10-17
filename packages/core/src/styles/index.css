@@ -4853,3 +4853,12 @@
   width: 14px;
   height: 14px;
 }
+
+/*
+ * Inline mode: the header keeps a top edge but drops its bottom one, so the
+ * comment list below reads as continuing from it rather than as a separate box.
+ */
+.gt-container.gt-mode-inline .gt-meta {
+  border-top: 1px solid var(--gt-color-border);
+  border-bottom-color: transparent;
+}
