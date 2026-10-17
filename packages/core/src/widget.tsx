@@ -177,16 +177,6 @@ export function GitalkWidget({ options, className }: GitalkProps) {
       className={shellClass}
       ref={containerRef}
       data-minimized={minimized ? 'true' : undefined}
-      style={
-        // The container isolates its own stacking context, so a high z-index on
-        // the FAB only wins against the widget's own content. While floating,
-        // it is the container that has to sit above the page.
-        minimized
-          ? { zIndex: options.minimizedZIndex ?? 9000 }
-          : docked
-            ? { zIndex: options.dockedZIndex ?? 8999 }
-            : undefined
-      }
     >
       {state.error ? (
         <div className="gt-error">
@@ -458,7 +448,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           <div
             ref={composerRef}
             className={`gt-header p-composer${docked && !minimized ? ' is--docked' : ''}`}
-            style={docked && options.dockedZIndex ? { zIndex: options.dockedZIndex } : undefined}
+            
             data-docked={docked && !minimized ? 'true' : undefined}
           >
             {state.user ? (
@@ -645,7 +635,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           ref={fabRef}
           type="button"
           className={`gt-fab gt-fab--${meta.fabPosition}`}
-            style={options.minimizedZIndex ? { zIndex: options.minimizedZIndex } : undefined}
+            
           title={t('open-comments')}
           aria-label={t('open-comments')}
           onClick={expand}
