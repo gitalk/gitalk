@@ -73,6 +73,35 @@ const zh = {
     },
     modeLabel: '布局模式', endpointLabel: '接口端点', modeDefault: '默认', modeInline: '内嵌'
   },
+  getStarted: {
+    eyebrow: '接入',
+    title: '四步接上评论',
+    lede: '三步是你亲自做的（创建 App、填变量、引入组件），一步是一条命令。顺序不能换 —— 第 3 步要等第 2 步的变量齐了才能跑。',
+    steps: [
+      {
+        title: '创建 GitHub App',
+        body: '在 Settings → Developer settings → GitHub Apps 新建。权限勾 Discussions: Read and write 与 Metadata: Read-only；Callback URL 填 <你的代理地址>/oauth/callback；Webhook 关掉（用不上）。',
+        code: ''
+      },
+      {
+        title: '准备环境变量',
+        body: '把 App ID、Client ID、Client Secret 和私钥（.pem 的全文，不是 SHA256 指纹）写进一个 .env；会话密钥用 openssl rand -hex 32 生成。',
+        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+      },
+      {
+        title: '一条命令部署',
+        body: 'CLI 会先校验所有变量（缺哪个会明确告诉你），再把凭据作为 secret 上传，然后部署并自检 /health，最后打印该填进 proxy 的地址。',
+        code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: '引入组件',
+        body: '把上一步打印的地址填进 proxy，评论就能用了。样式、暗色、多语言都由组件自己带。',
+        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+      }
+    ],
+    domainTitle: '自定义域名',
+    domainBody: '域名在 Cloudflare 时可以直接绑；在别处需要在域名商加一条 CNAME。CloudBase 的自定义域名还需要 ICP 备案 —— 这两件得人工做。GitHub App 的 callback URL 也只能在网页改（org 所有的 App 不能用 API 改）。'
+  },
   features: {
     eyebrow: "// WHAT'S NEW",
     // The English title is intentional in both locales; the user asked for it.
@@ -213,6 +242,19 @@ const options = {
 type Messages = typeof zh
 
 const en: Messages = {
+  getStarted: {
+    eyebrow: 'Setup',
+    title: 'Four steps to comments',
+    lede: 'Three are yours to do — create the App, fill the values, drop the component in — and one is a command. The order matters: step three needs the values from step two.',
+    steps: [
+      { title: 'Create a GitHub App', body: 'Settings → Developer settings → GitHub Apps. Grant Discussions: Read and write and Metadata: Read-only; set the callback URL to <your proxy>/oauth/callback; turn Webhooks off — they are unused.', code: '' },
+      { title: 'Fill in the values', body: 'Put the App ID, Client ID, Client Secret and the private key (the .pem contents, not the SHA256 fingerprint) in a .env, and generate a session key.', code: 'GITHUB_APP_ID=…' },
+      { title: 'Deploy with one command', body: 'The CLI checks every value first and names any that are missing, uploads the credentials as secrets, deploys, then calls /health and prints the URL to use as your proxy.', code: 'npx github:gitalk/deploy -c .env -t cloudflare' },
+      { title: 'Include the component', body: 'Pass the printed URL as proxy and the comments work. Styling, dark mode and translations come with the component.', code: "new Gitalk({ clientID, proxy: 'https://…' })" }
+    ],
+    domainTitle: 'Custom domains',
+    domainBody: 'A domain on Cloudflare can be bound directly; anywhere else needs a CNAME record added by hand. CloudBase additionally requires an ICP filing. The App callback URL always has to be edited in the web UI — organisation-owned Apps cannot be changed through the API.'
+  },
   meta: {
     title: 'Gitalk 2.0 — A comment component backed by GitHub Discussions',
     description:

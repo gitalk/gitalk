@@ -1361,3 +1361,92 @@ a {
   flex: none;
   flex-direction: row;
 }
+
+/* ---------- get started: four numbered steps ---------- */
+
+.steps {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card, transparent);
+}
+
+.step-number {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand, #1e4fff) 14%, transparent);
+  color: var(--brand-ink, #90a8ff);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.step-body h3 {
+  margin: 4px 0 6px;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.step-body p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--dim);
+}
+
+.step-code {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand, #1e4fff) 6%, transparent);
+  overflow-x: auto;
+}
+
+.step-code code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  color: var(--fg);
+  white-space: pre;
+}
+
+.step-note {
+  margin-top: 16px;
+  padding: 16px 20px;
+  border-left: 2px solid var(--brand, #1e4fff);
+  border-radius: 0 12px 12px 0;
+  background: color-mix(in srgb, var(--brand, #1e4fff) 5%, transparent);
+}
+
+.step-note h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 620;
+}
+
+.step-note p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--dim);
+}
+
+@media (max-width: 640px) {
+  .step {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}

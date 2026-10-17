@@ -6,6 +6,7 @@ import { GithubIcon } from './components/github-icon'
 import { AuroraShader } from './components/aurora-shader'
 import { AmbientToggle } from './components/ambient-toggle'
 import { Hero } from './components/hero'
+import { GetStarted } from './components/get-started'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
 import { CodeTabs } from './components/code-tabs'
@@ -99,6 +100,7 @@ export function App() {
         <Hero />
         <Features />
         <BackendExplainer />
+        <GetStarted />
         <CodeTabs />
       </main>
 
