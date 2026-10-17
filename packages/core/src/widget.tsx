@@ -544,17 +544,22 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           onClick={expand}
         >
           <span className="gt-fab-logo" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-              <path
-                d="M12 2.6 20.2 7v10L12 21.4 3.8 17V7L12 2.6Z"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-              <circle cx="12" cy="12" r="2.2" fill="currentColor" />
-            </svg>
-          </span>
-          <span className="gt-fab-text">{t('open-comments')}</span>
+              {/* The brand mark: a speech bubble whose two bars stand for a root
+                  comment and its reply. The mask id is static because the FAB
+                  renders once per widget. */}
+              <svg viewBox="0 0 1024 1024" width="18" height="18" focusable="false">
+                <mask id="gt-fab-mark">
+                  <rect width="1024" height="1024" fill="#fff" />
+                  <rect x="330" y="308" width="364" height="104" rx="52" fill="#000" />
+                  <rect x="330" y="476" width="228" height="104" rx="52" fill="#000" />
+                </mask>
+                <g fill="currentColor" mask="url(#gt-fab-mark)">
+                  <circle cx="512" cy="444" r="300" />
+                  <path d="M368 700H516L360 880Z" />
+                </g>
+              </svg>
+            </span>
+          <span className="gt-fab-text">{t('comments')}</span>
           <span className="gt-fab-count">{loadedCount}</span>
         </button>
       ) : null}
