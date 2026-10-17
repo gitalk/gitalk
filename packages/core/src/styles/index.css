@@ -41,6 +41,10 @@
   --gt-color-comment-bg: transparent;
   --gt-color-comment-adminbg: color-mix(in srgb, var(--gt-color-accent) 6%, transparent);
   --gt-color-comment-txt: #0f172a;
+  /* Comment prose is deliberately one step softer than the author name,
+     matching the reference's `.c-text` (not pure body text). */
+  --gt-color-body: #475569;
+  --gt-color-code-bg: #f1f5f9;
   --gt-color-link-active: #0f172a;
   --gt-color-btn: #fff;
   --gt-color-popbg: #ffffff;
@@ -71,11 +75,15 @@
   --gt-color-error-soft: color-mix(in srgb, var(--gt-color-error) 8%, #fff);
   --gt-color-error-border: color-mix(in srgb, var(--gt-color-error) 24%, #fff);
   --gt-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.35);
+  /* Floating panels (the Markdown preview) sit further off the page than a
+     card, so they get their own, deeper shadow. */
+  --gt-shadow-float: 0 26px 64px -18px rgba(15, 23, 42, 0.28),
+    0 1px 2px rgba(15, 23, 42, 0.08);
   --gt-shadow-focus: 0 0 0 3px var(--gt-color-main-soft);
-  --gt-radius-card: 16px;
+  --gt-radius-card: 18px;
   --gt-radius-control: 11px;
   --gt-radius-pill: 7px;
-  --gt-size-avatar: 36px;
+  --gt-size-avatar: 34px;
 }
 
 [data-theme='dark'] {
@@ -86,6 +94,8 @@
   --gt-color-input-bg: #0f172a;
   --gt-color-comment-adminbg: color-mix(in srgb, var(--gt-color-accent) 22%, transparent);
   --gt-color-comment-txt: #e5e7eb;
+  --gt-color-body: #c6cfe2;
+  --gt-color-code-bg: #0a0f1a;
   --gt-color-link-active: #e5e7eb;
   --gt-color-popbg: #111827;
 
@@ -108,6 +118,9 @@
   --gt-color-error-soft: color-mix(in srgb, var(--gt-color-error) 18%, #0b1220);
   --gt-color-error-border: color-mix(in srgb, var(--gt-color-error) 42%, #0b1220);
   --gt-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px -18px rgba(0, 0, 0, 0.9);
+  --gt-shadow-float: 0 26px 64px -18px rgba(0, 0, 0, 0.88),
+    0 0 0 1px color-mix(in srgb, var(--gt-color-accent) 6%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* Native widgets (textarea scrollbars, selection) follow the theme when it is
@@ -331,15 +344,13 @@
   margin-right: 0;
 }
 
-/* Ghost buttons: Preview / Login, matching the reference's .btn-ghost. */
-.gt-container .gt-btn-preview,
+/* Ghost button: Login, matching the reference's quiet secondary control. */
 .gt-container .gt-btn-login {
   background-color: transparent;
   border-color: var(--gt-color-border);
   color: var(--gt-color-text-2);
 }
 
-.gt-container .gt-btn-preview:hover,
 .gt-container .gt-btn-login:hover {
   background-color: var(--gt-color-surface-soft);
   border-color: var(--gt-color-text-3);
@@ -615,15 +626,6 @@
   margin: 12px 0 0;
 }
 
-.gt-container .gt-header-controls-tip {
-  /* float the markdown hint to the far left, buttons stay right */
-  margin-right: auto;
-  font-size: 0.875em;
-  color: var(--gt-color-accent);
-  text-decoration: none;
-  vertical-align: sub;
-}
-
 .gt-container .gt-header-controls .gt-btn {
   margin-left: 0;
 }
@@ -693,10 +695,6 @@
 }
 
 @media (max-width: 479px) {
-  .gt-container .gt-header-controls-tip {
-    display: none;
-  }
-
   .gt-container .gt-header-controls .gt-btn {
     width: 100%;
     margin: 0;
@@ -1977,6 +1975,12 @@
   box-shadow: var(--gt-shadow-focus);
 }
 
+/* The composer is a single-line bar in the reference; the inline reply box
+   follows it and drops the browser's resize grip. */
+.gt-container .gt-reply-textarea {
+  resize: none;
+}
+
 /* ---- @ mention popup ------------------------------------------------ */
 .gt-container .gt-mention-list {
   position: absolute;
@@ -2675,5 +2679,658 @@
   .gt-container .gt-minimize:active,
   .gt-container .gt-fab:active {
     transform: none;
+  }
+}
+
+/* =====================================================================
+ * v2.5 visual pass: match the comment-ui reference more literally.
+ *
+ * The reference is built around a 56px composer bar, 34px avatars, quiet
+ * 26px action pills, a 1px reply rail and a floating preview that appears
+ * on its own. Everything here is appearance only — no state or DOM contract
+ * changes — and it is written on top of the existing token set so both
+ * themes keep working.
+ * ===================================================================== */
+
+/* ---- section header: count as a compact mono badge ------------------ */
+.gt-container .gt-meta {
+  align-items: center;
+  margin: 0 0 10px;
+  padding: 0 2px;
+}
+
+.gt-container .gt-counts {
+  font-size: 0.8125em;
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--gt-color-text-2);
+}
+
+.gt-container .gt-counts .gt-link-counts {
+  display: inline-block;
+  margin-right: 1px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-main),
+    color-mix(in srgb, var(--gt-color-main) 62%, #4b5cff)
+  );
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.gt-container .gt-counts .gt-link-counts:hover {
+  color: #fff;
+  filter: brightness(1.08);
+}
+
+/* ---- comment list: one flat, hoverable row per comment -------------- */
+.gt-container .gt-comments {
+  padding: 6px 12px 20px;
+  border-radius: var(--gt-radius-card);
+}
+
+/* The reference separates rows with whitespace and a hover wash, never
+   with hairlines. */
+.gt-container .gt-comments > .gt-comment + .gt-comment {
+  border-top: 0;
+}
+
+.gt-container .gt-comments > .gt-comment {
+  margin-bottom: 2px;
+}
+
+.gt-container .gt-comments > .gt-comment:last-child {
+  margin-bottom: 0;
+}
+
+.gt-container .gt-comment {
+  gap: 11px;
+  padding: 13px 12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.gt-container .gt-comment:hover {
+  background-color: color-mix(in srgb, var(--gt-color-text) 3.2%, transparent);
+  border-color: var(--gt-color-border);
+}
+
+/* The avatar is a ringed circle, 34px, top-aligned with the name. */
+.gt-container .gt-comment-avatar {
+  align-self: flex-start;
+  margin-top: 1px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--gt-color-text) 10%, transparent);
+}
+
+.gt-container .gt-comment-content {
+  border-radius: 0;
+}
+
+/* ---- meta row: name + relative time, nothing else ------------------- */
+.gt-container .gt-comment-header {
+  gap: 7px;
+  margin-bottom: 0;
+}
+
+.gt-container .gt-comment-username {
+  font-size: 0.84375em;
+  font-weight: 620;
+  letter-spacing: 0.01em;
+  line-height: 1.3;
+}
+
+/* The reference's meta row is name + time; the localised "commented" verb
+   is kept for assistive tech but no longer takes visual space. */
+.gt-container .gt-comment-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gt-container .gt-comment-date {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.6875em;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--gt-color-text-3);
+}
+
+/* ---- prose: 13.5px / 1.75, one step softer than the name ------------ */
+.gt-container .gt-comment-body {
+  margin-top: 6px;
+  font-size: 0.84375em;
+  line-height: 1.75;
+}
+
+.gt-container .gt-comment-body.markdown-body {
+  color: var(--gt-color-body) !important;
+}
+
+/* Markdown prose follows the reference's tight rhythm: 6px paragraphs,
+   underlined links, 18px list indent and a 4px inline-code pill. */
+.gt-container .gt-comment-body p,
+.gt-container .preview-body p {
+  margin: 0 0 6px;
+}
+
+.gt-container .gt-comment-body p:last-child,
+.gt-container .preview-body p:last-child {
+  margin-bottom: 0;
+}
+
+.gt-container .gt-comment-body strong,
+.gt-container .preview-body strong {
+  color: var(--gt-color-text);
+  font-weight: 650;
+}
+
+.gt-container .gt-comment-body a,
+.gt-container .preview-body a {
+  color: var(--gt-color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+}
+
+.gt-container .gt-comment-body ul,
+.gt-container .gt-comment-body ol,
+.gt-container .preview-body ul,
+.gt-container .preview-body ol {
+  padding-left: 18px;
+}
+
+.gt-container .gt-comment-body li,
+.gt-container .preview-body li {
+  margin: 2px 0;
+}
+
+.gt-container .gt-comment-body pre,
+.gt-container .preview-body pre {
+  margin: 7px 0;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background-color: var(--gt-color-code-bg);
+  font-size: 0.75em;
+  line-height: 1.6;
+}
+
+.gt-container .gt-comment-body code,
+.gt-container .preview-body code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 8%, transparent);
+  font-size: 0.75em;
+}
+
+.gt-container .gt-comment-body code::before,
+.gt-container .gt-comment-body code::after,
+.gt-container .preview-body code::before,
+.gt-container .preview-body code::after {
+  content: none;
+}
+
+.gt-container .gt-comment-body pre code,
+.gt-container .preview-body pre code {
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+}
+
+/* The action row supplies its own 8px gap, as in the reference; the old
+   `:has()` rule added another 6px above it. */
+.gt-container .gt-comment-body:has(+ .gt-comment-actions) > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* ---- action row: quiet 26px pills, not brand-filled chips ----------- */
+.gt-container .gt-comment-actions {
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 8px 0 0;
+}
+
+.gt-container .gt-comment-like,
+.gt-container .gt-comment-edit,
+.gt-container .gt-comment-reply,
+.gt-container .gt-reaction-chip,
+.gt-container .gt-reaction-trigger {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 7px;
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--gt-color-text-2);
+  font-size: 0.75em;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.gt-container .gt-comment-like:hover,
+.gt-container .gt-comment-edit:hover,
+.gt-container .gt-comment-reply:hover,
+.gt-container .gt-reaction-chip:hover,
+.gt-container .gt-reaction-trigger:hover {
+  background-color: color-mix(in srgb, var(--gt-color-text) 5.5%, transparent);
+  border-color: transparent;
+  color: var(--gt-color-text);
+}
+
+.gt-container .gt-comment-like.is--liked,
+.gt-container .gt-reaction-chip.is--active,
+.gt-container .gt-comment-reply.is--active {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+  font-weight: 600;
+}
+
+/* Emoji chips read at the same size as the reply label. */
+.gt-container .gt-reaction-glyph {
+  font-size: 1em;
+}
+
+/* ---- nested replies: a 1px rail, 24px avatars, 13px prose ----------- */
+.gt-container .gt-comment-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 9px;
+  margin-left: 0;
+  padding-left: 12px;
+  border-left: 1px solid var(--gt-color-border);
+}
+
+.gt-container .gt-comment-replies .gt-comment-reply-item {
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 2px 0;
+}
+
+/* Nested rows are part of the parent's hover surface, not cards of their
+   own: the rail already carries the hierarchy. */
+.gt-container .gt-comment-replies .gt-comment-reply-item:hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+.gt-container .gt-comment-replies .gt-comment-avatar {
+  width: 24px;
+  height: 24px;
+  margin-top: 0;
+}
+
+.gt-container .gt-comment-replies .gt-comment-body {
+  margin-top: 3px;
+  font-size: 0.8125em;
+}
+
+.gt-container .gt-comment-replies .gt-comment-header {
+  gap: 6px;
+}
+
+.gt-container .gt-comment-replies .gt-comment-date {
+  font-size: 0.65625em;
+}
+
+/* Admin tint stays, but as a row wash rather than a padded inner box. */
+.gt-container .gt-comment-admin > .gt-comment-content {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.gt-container .gt-comment.gt-comment-admin {
+  background-color: color-mix(in srgb, var(--gt-color-accent) 7%, transparent);
+}
+
+/* ---- composer: a 56px bar (reference `.p-composer`) ----------------- */
+.gt-container .gt-header {
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  padding: 8px 12px;
+  margin: 12px 0 0;
+  border-radius: 16px;
+  background-color: var(--gt-color-surface-soft);
+  box-shadow: var(--gt-shadow-card),
+    inset 0 1px 0 color-mix(in srgb, var(--gt-color-text) 4%, transparent);
+  transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s;
+}
+
+.gt-container .gt-header:focus-within {
+  border-color: var(--gt-color-main-border);
+  box-shadow: var(--gt-shadow-card), 0 0 0 3px var(--gt-color-main-soft);
+}
+
+.gt-container .gt-header > .gt-avatar,
+.gt-container .gt-header > .gt-avatar-github {
+  width: 30px;
+  height: 30px;
+}
+
+.gt-container .gt-header > .gt-avatar-github {
+  border-radius: 50%;
+}
+
+/* The avatar and the action buttons now sit on the editor's line, so the
+   composer reads as one bar instead of a stacked form. */
+.gt-container .gt-header-comment {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.gt-container .gt-header-comment > .gt-editor {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gt-container .gt-header-comment > .gt-image-error {
+  flex: 1 0 100%;
+  margin-top: 2px;
+}
+
+.gt-container .gt-header-textarea {
+  /* The reference's composer is a single-line bar. Long drafts scroll inside
+     the 36px field rather than growing the bar. */
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+  font-size: 0.84375em;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+  caret-color: var(--gt-color-accent);
+}
+
+.gt-container .gt-header-textarea:hover,
+.gt-container .gt-header-textarea:focus {
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.gt-container .gt-header-textarea::placeholder {
+  color: color-mix(in srgb, var(--gt-color-text) 30%, transparent);
+}
+
+.gt-container .gt-header-controls {
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.gt-container .gt-header-controls .gt-btn {
+  margin: 0;
+}
+
+/* Icon buttons: 36px square, 10px radius, quiet wash (reference `.icon-btn`). */
+.gt-container .gt-btn-upload-image {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 6%, transparent);
+  color: var(--gt-color-text-2);
+}
+
+.gt-container .gt-btn-upload-image:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--gt-color-text) 13%, transparent);
+  border: 0;
+  color: var(--gt-color-text);
+}
+
+.gt-container .gt-btn-upload-image .gt-ico-image .gt-svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* The visible control is the icon; the label remains for the accessible
+   name (and the progress badge is overlaid on the corner). */
+.gt-container .gt-btn-upload-image .gt-btn-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gt-container .gt-image-progress {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  min-width: 16px;
+  padding: 1px 3px;
+  border-radius: 999px;
+  background-color: var(--gt-color-main);
+  color: #fff;
+  font-size: 0.6154em;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  opacity: 1;
+}
+
+.gt-container .gt-btn-upload-cancel {
+  height: 30px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.6875em;
+}
+
+/* Primary action: the reference's paper-plane icon button. The localised
+   label stays in the DOM as the accessible name. */
+.gt-container .gt-header-controls .gt-btn-public {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-main),
+    color-mix(in srgb, var(--gt-color-main) 58%, #4b5cff)
+  );
+  color: #fff;
+  box-shadow: 0 6px 18px -6px color-mix(in srgb, var(--gt-color-main) 55%, transparent);
+}
+
+.gt-container .gt-header-controls .gt-btn-public:hover {
+  border: 0;
+  background: linear-gradient(
+    120deg,
+    var(--gt-color-main),
+    color-mix(in srgb, var(--gt-color-main) 58%, #4b5cff)
+  );
+  filter: brightness(1.08);
+}
+
+.gt-container .gt-header-controls .gt-btn-public .gt-btn-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gt-container .gt-header-controls .gt-btn-public .gt-btn-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.gt-container .gt-header-controls .gt-btn-public .gt-ico-send .gt-svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+
+/* The new send glyph is a stroked outline, not a filled v1 icon. */
+.gt-container .gt-header-controls .gt-btn-public .gt-ico-send svg {
+  fill: none;
+  stroke: currentColor;
+}
+
+.gt-container .gt-header-controls .gt-btn-public .gt-btn-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -0.5em 0 0 -0.46em;
+  color: #fff;
+}
+
+.gt-container .gt-header-controls .gt-btn-login {
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  font-size: 0.75em;
+}
+
+/* ---- floating preview: deeper panel, body-sized prose --------------- */
+.gt-container .composer-preview {
+  background-color: color-mix(in srgb, var(--gt-color-surface-soft) 96%, transparent);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  backdrop-filter: blur(22px) saturate(1.4);
+  border-radius: 14px;
+  box-shadow: var(--gt-shadow-float);
+}
+
+.gt-container .composer-preview::after {
+  background-color: color-mix(in srgb, var(--gt-color-surface-soft) 96%, transparent);
+}
+
+.gt-container .preview-label {
+  opacity: 0.9;
+}
+
+.gt-container .preview-hint {
+  opacity: 0.75;
+}
+
+.gt-container .preview-body {
+  font-size: 0.84375em;
+  line-height: 1.72;
+}
+
+.gt-container .preview-body.markdown-body {
+  color: var(--gt-color-body);
+}
+
+/* ---- docked composer keeps the bar treatment ------------------------ */
+.gt-container .gt-header.is--docked {
+  border-radius: 16px;
+  box-shadow: var(--gt-shadow-float);
+}
+
+/* ---- upvote: same quiet control scale as the action pills ----------- */
+.gt-container .gt-upvote {
+  min-height: 26px;
+  padding: 3px 10px;
+  font-size: 0.75em;
+}
+
+.gt-container .gt-minimize {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 4%, transparent);
+}
+
+/* ---- small screens -------------------------------------------------- */
+@media (max-width: 479px) {
+  .gt-container .gt-header {
+    gap: 6px;
+    padding: 8px 9px;
+  }
+
+  .gt-container .gt-header-comment {
+    gap: 6px;
+  }
+
+  .gt-container .gt-header-controls {
+    gap: 5px;
+  }
+
+  .gt-container .gt-header-controls .gt-btn {
+    width: auto;
+    margin: 0;
+  }
+
+  .gt-container .gt-header > .gt-avatar,
+  .gt-container .gt-header > .gt-avatar-github {
+    width: 28px;
+    height: 28px;
+  }
+
+  .gt-container .gt-btn-upload-image,
+  .gt-container .gt-header-controls .gt-btn-public {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  .gt-container .gt-comments {
+    padding: 4px 8px 16px;
+  }
+
+  .gt-container .gt-comment {
+    gap: 10px;
+    padding: 11px 9px;
+  }
+
+  .gt-container .gt-comment-replies {
+    padding-left: 10px;
+  }
+
+  .gt-container .gt-header-controls .gt-btn-login {
+    padding: 0 9px;
+    font-size: 0.6875em;
   }
 }

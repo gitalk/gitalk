@@ -334,11 +334,20 @@ describe('floating Markdown preview', () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
   })
 
-  it('opens above the composer, reuses backend.preview() and keeps the draft editable', async () => {
+  it('opens above the composer automatically, reuses backend.preview() and keeps the draft editable', async () => {
     await mountWidget(host)
 
+    // No manual trigger exists any more (see the next test).
+    expect(host.querySelector('.gt-btn-preview')).toBeNull()
+
     await typeDraft(host, '**bold**')
-    ;(host.querySelector('.gt-btn-preview') as HTMLButtonElement).click()
+
+    // The 300ms debounce: nothing is requested while the visitor is still
+    // typing, so the panel cannot flicker once per keystroke.
+    expect(markdownCalls).toEqual([])
+    await flush(180)
+    expect(markdownCalls).toEqual([])
+
     await waitFor(() => host.querySelector('.composer-preview.show'))
 
     const panel = host.querySelector('.composer-preview') as HTMLElement
@@ -348,7 +357,6 @@ describe('floating Markdown preview', () => {
     // The editor stays in place: preview is an overlay, not a replacement.
     const textarea = host.querySelector('.gt-header-textarea') as HTMLTextAreaElement
     expect(textarea.value).toBe('**bold**')
-    expect((host.querySelector('.gt-btn-preview') as HTMLButtonElement).textContent).toContain('Edit')
     expect(markdownCalls).toEqual(['**bold**'])
 
     // Pausing while the panel is open re-renders the newer draft.
@@ -364,17 +372,27 @@ describe('floating Markdown preview', () => {
       '**bold** and *new*'
     )
 
-    ;(host.querySelector('.gt-btn-preview') as HTMLButtonElement).click()
-    await flush()
+    // Emptying the draft closes it again: "has content" *is* the open state.
+    await typeDraft(host, '')
+    await waitFor(() => (host.querySelector('.composer-preview.show') ? null : panel))
     expect(host.querySelector('.composer-preview.show')).toBeNull()
     expect(panel.getAttribute('aria-hidden')).toBe('true')
   })
 
-  it('drops the preview when the widget collapses, and does not restore it on expand', async () => {
+  it('has no Preview button and no "Markdown is supported" hint', async () => {
+    await mountWidget(host)
+
+    expect(host.querySelector('.gt-btn-preview')).toBeNull()
+    expect(host.querySelector('.gt-header-controls-tip')).toBeNull()
+    expect(host.textContent).not.toContain('Markdown is supported')
+    // "Edit" only ever existed as the Preview button's toggled label.
+    expect(host.textContent).not.toContain('Edit')
+  })
+
+  it('closes the preview when the widget collapses, and reopens it on expand while the draft has content', async () => {
     await mountWidget(host)
 
     await typeDraft(host, 'hello')
-    ;(host.querySelector('.gt-btn-preview') as HTMLButtonElement).click()
     await waitFor(() => host.querySelector('.composer-preview.show'))
 
     ;(host.querySelector('.gt-minimize') as HTMLButtonElement).click()
@@ -383,7 +401,9 @@ describe('floating Markdown preview', () => {
 
     ;(host.querySelector('.gt-fab') as HTMLButtonElement).click()
     await flush()
-    expect(host.querySelector('.composer-preview.show')).toBeNull()
+    // Automatic means "content is the open state": the preserved draft gets
+    // its preview back after the same 300ms pause.
+    await waitFor(() => host.querySelector('.composer-preview.show'))
     expect((host.querySelector('.gt-header-textarea') as HTMLTextAreaElement).value).toBe('hello')
   })
 

@@ -44,7 +44,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
     composerRef
   })
 
-  const { refreshPreview } = actions
+  const { refreshPreview, closePreview } = actions
 
   // A collapsed widget moves focus to the only control left on screen.
   useEffect(() => {
@@ -58,17 +58,33 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   }, [meta.showMinimizable, minimized])
 
   /**
-   * Live-refresh the floating preview after the visitor pauses typing. The
-   * initial render happens in `togglePreview`; this keeps the panel honest
-   * while it is open without one GitHub `/markdown` request per keystroke.
-   * `previewDraft` is the guard: it is only rendered content, not the draft,
-   * so it never retries a failed render in a loop.
+   * Automatic floating preview.
+   *
+   * There is no Preview button any more: the design reference shows the panel
+   * whenever the draft has content, and hides it when the draft is empty. The
+   * 300ms debounce is what keeps it from chasing every keystroke — one render
+   * per pause, not one per character. `previewDraft` is the guard for "this
+   * exact draft is already on screen", so a successful render does not loop.
    */
   useEffect(() => {
-    if (!state.previewing || state.previewDraft === state.draft) return
+    // Collapsing closes the panel (see the minimise button); while collapsed
+    // there is no composer to anchor it to.
+    if (minimized) return
+    if (!state.draft.trim()) {
+      if (state.previewing) closePreview()
+      return
+    }
+    if (state.previewing && state.previewDraft === state.draft) return
     const timer = setTimeout(() => void refreshPreview(), 300)
     return () => clearTimeout(timer)
-  }, [state.draft, state.previewDraft, state.previewing, refreshPreview])
+  }, [
+    closePreview,
+    minimized,
+    refreshPreview,
+    state.draft,
+    state.previewDraft,
+    state.previewing
+  ])
 
   /**
    * A new top-level comment is prepended to the list. With the composer now
@@ -431,6 +447,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                 className="gt-header-textarea"
                 value={state.draft}
                 candidates={candidates}
+                rows={1}
                 placeholder={t('leave-a-comment')}
                 ariaLabel={t('leave-a-comment')}
                 listLabel={t('mention-label')}
@@ -445,15 +462,6 @@ export function GitalkWidget({ options, className }: GitalkProps) {
               />
 
               <div className="gt-header-controls">
-                <a
-                  className="gt-header-controls-tip"
-                  href="https://docs.github.com/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Icon className="gt-ico-tip" name="tip" text={t('support-markdown')} />
-                </a>
-
                 {meta.canUploadImage ? (
                   <ImageUploadButton
                     uploading={state.imageUploading}
@@ -468,13 +476,12 @@ export function GitalkWidget({ options, className }: GitalkProps) {
 
                 {meta.authenticated ? (
                   <Button className="gt-btn-public" loading={state.submitting} onClick={() => void actions.submit()}>
-                    {t('comment')}
+                    {/* Icon-only in the reference (`.icon-btn.primary`); the
+                        text stays in the DOM for the accessible name. */}
+                    <Icon className="gt-ico-send" name="send" />
+                    <span className="gt-btn-label">{t('comment')}</span>
                   </Button>
                 ) : null}
-
-                <Button className="gt-btn-preview" onClick={() => void actions.togglePreview()}>
-                  {state.previewing ? t('edit') : t('preview')}
-                </Button>
 
                 {!meta.authenticated && meta.canLogin ? (
                   <Button className="gt-btn-login" onClick={actions.login}>

@@ -286,21 +286,22 @@ describe('image upload', () => {
     expect(textarea.value).toBe('unchanged')
   })
 
-  it('sends the inserted Markdown to the preview endpoint', async () => {
+  it('sends the inserted Markdown to the auto preview endpoint', async () => {
     const handler = vi.fn(async () => ['https://cdn.test/cat.png'])
     const textarea = await mountWidget({ onUploadImage: handler })
 
     await choose([file()])
     expect(textarea.value).toContain('https://cdn.test/cat.png')
 
-    ;(host.querySelector('.gt-btn-preview') as HTMLButtonElement).click()
+    // No Preview button: the draft insertion itself schedules the panel.
+    expect(host.querySelector('.gt-btn-preview')).toBeNull()
     await waitFor(() => (previewBodies.length ? host.querySelector('.preview-body') : null))
 
     expect(previewBodies.at(-1)).toContain('![cat.png](https://cdn.test/cat.png)')
     expect(host.querySelector('.preview-body')?.textContent).toContain('preview')
   })
 
-  it('appends to the end while the preview hides the caret', async () => {
+  it('appends to the end while the auto preview hides the caret', async () => {
     const handler = vi.fn(async () => ['https://cdn.test/cat.png'])
     const textarea = await mountWidget({ onUploadImage: handler })
 
@@ -309,7 +310,8 @@ describe('image upload', () => {
     await flush()
     textarea.setSelectionRange(5, 5)
 
-    ;(host.querySelector('.gt-btn-preview') as HTMLButtonElement).click()
+    // Wait for the debounced auto preview, which is what makes the caret
+    // unavailable to the insertion path.
     await waitFor(() => host.querySelector('.preview-body'))
 
     await choose([file()])

@@ -26,6 +26,8 @@ interface MentionTextareaProps {
   className?: string
   placeholder?: string
   autoFocus?: boolean
+  /** Visible rows; the top composer passes 1 for its single-line bar. */
+  rows?: number
   /** Label for the popup, e.g. "Mention a participant". */
   listLabel: string
   ariaLabel?: string
@@ -56,6 +58,7 @@ export function MentionTextarea({
   className,
   placeholder,
   autoFocus,
+  rows,
   listLabel,
   ariaLabel,
   onSubmit,
@@ -258,6 +261,7 @@ export function MentionTextarea({
         ref={ref}
         className={className}
         value={value}
+        rows={rows}
         placeholder={placeholder}
         aria-label={ariaLabel}
         // Preact's intrinsic types narrow `role` on a textarea to "textbox",

@@ -841,24 +841,21 @@ export function useGitalk(options: GitalkOptions) {
   }, [patch])
 
   /**
-   * Open/close the floating preview. Opening waits for the first render so the
-   * panel never flashes an empty box; closing invalidates any in-flight
-   * request.
+   * Render the draft and open the floating preview.
+   *
+   * The preview has no manual toggle: the design reference shows it whenever
+   * there is content, so "has something to preview" *is* the open state. The
+   * UI debounces this call (300ms after the last keystroke), and a failed or
+   * superseded render never opens an empty panel.
    */
-  const togglePreview = useCallback(async () => {
-    if (state.previewing) {
+  const refreshPreview = useCallback(async () => {
+    if (!state.draft.trim()) {
       closePreview()
       return
     }
     const html = await renderPreview(state.draft)
     if (html !== null) patch({ previewing: true })
-  }, [closePreview, patch, renderPreview, state.draft, state.previewing])
-
-  /** Re-render the open preview after the draft changed (debounced by the UI). */
-  const refreshPreview = useCallback(async () => {
-    if (!state.previewing) return
-    await renderPreview(state.draft)
-  }, [renderPreview, state.draft, state.previewing])
+  }, [closePreview, patch, renderPreview, state.draft])
 
   /**
    * Open the inline reply box for one comment.
@@ -1041,7 +1038,6 @@ export function useGitalk(options: GitalkOptions) {
       logout,
       setDraft,
       submit,
-      togglePreview,
       refreshPreview,
       closePreview,
       replyTo,
