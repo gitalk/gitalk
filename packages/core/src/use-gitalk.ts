@@ -159,6 +159,38 @@ export function useGitalk(options: GitalkOptions) {
   )
 
   /**
+   * One-shot circuit breaker for the anonymous read accelerator.
+   *
+   * If the configured proxy cannot serve a read (uninstalled App, private
+   * repository, unreachable host, missing installation token), every later
+   * read in this widget goes straight to api.github.com instead of paying the
+   * same failed round trip again. The fallback is the existing REST path, so
+   * the worst case is exactly the behaviour before this accelerator existed.
+   */
+  const proxyReadUnavailable = useRef(false)
+  const proxyRead = useCallback(
+    async <T,>(
+      body: { query: string; variables: Record<string, unknown> },
+      options?: { fresh?: boolean }
+    ): Promise<T | null> => {
+      // The accelerator is opt-in: without an explicit `proxy` option the
+      // widget keeps the browser's original REST read path. That avoids
+      // sending a site's read traffic to the hosted default endpoint just
+      // because it was used for sign-in.
+      if (!opts.proxy) return null
+      // Only anonymous reads are accelerated. A signed-in visitor already has
+      // a 5,000/hr GraphQL quota, and their existing REST read path carries
+      // viewer-specific behaviour that must not change underneath them.
+      if (auth.getToken()) return null
+      if (proxyReadUnavailable.current) return null
+      const result = await sendProxyRead<T>(body, auth, options)
+      if (result === null) proxyReadUnavailable.current = true
+      return result
+    },
+    [auth, opts.proxy]
+  )
+
+  /**
    * Login of the signed-in viewer, resolved at most once.
    *
    * `undefined` means "not looked up yet", `null` means "anonymous". The
@@ -206,7 +238,8 @@ export function useGitalk(options: GitalkOptions) {
       repo: opts.repo,
       getThread: () => threadRef.current,
       term: () => opts.id,
-      graphql: (body) => sendGraphql(body, auth)
+      graphql: (body) => sendGraphql(body, auth),
+      proxyRead
     }
     return opts.backend === 'issues'
       ? new IssuesBackend(ctx, {
@@ -220,7 +253,19 @@ export function useGitalk(options: GitalkOptions) {
           labels: opts.labels,
           category: opts.category
         })
-  }, [http, auth, opts.owner, opts.repo, opts.backend, opts.id, opts.labels, opts.title, opts.body, opts.category])
+  }, [
+    http,
+    auth,
+    proxyRead,
+    opts.owner,
+    opts.repo,
+    opts.backend,
+    opts.id,
+    opts.labels,
+    opts.title,
+    opts.body,
+    opts.category
+  ])
 
   const t = useMemo(() => createTranslator(options.language ?? navigator.language), [options.language])
 
@@ -1025,4 +1070,81 @@ async function sendGraphql<T>(
   if (response.status === 429) throw new RateLimitError()
   if (!response.ok) throw new GitalkError(await extractMessage(response), response.status)
   return (await response.json()) as T
+}
+
+/**
+ * Conditional-read cache for anonymous proxy reads.
+ *
+ * A browser does not HTTP-cache a POST response, so the proxy's `ETag` /
+ * `Cache-Control` headers alone would not save anything in the page. Keeping
+ * the last response body here lets a repeated identical read revalidate with
+ * `If-None-Match`: a 304 then costs one proxy hop and zero GitHub quota, and
+ * the browser's own cache (when the endpoint supplies cache headers) still
+ * works for the request itself. Signed-in reads are deliberately not cached:
+ * their body may contain viewer-specific reaction flags.
+ */
+const PROXY_READ_CACHE_LIMIT = 32
+const proxyReadCache = new Map<string, { etag: string; data: unknown }>()
+
+/** Run a read through the anonymous-capable proxy endpoint. Never throws. */
+async function sendProxyRead<T>(
+  body: { query: string; variables: Record<string, unknown> },
+  auth: Auth,
+  options: { fresh?: boolean } = {}
+): Promise<T | null> {
+  const endpoint = auth.proxy.replace(/\/$/, '')
+  if (!endpoint) return null
+
+  const token = auth.getToken()
+  const cacheKey = `${endpoint}\n${JSON.stringify(body)}`
+  const cached = token || options.fresh ? undefined : proxyReadCache.get(cacheKey)
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': API_VERSION,
+    [NEXT_GLOBAL_ID_HEADER]: '1'
+  }
+  if (token) headers.Authorization = `Bearer ${token}`
+  if (cached?.etag) headers['If-None-Match'] = cached.etag
+
+  let response: Response
+  try {
+    response = await fetch(`${endpoint}/graphql`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body)
+    })
+  } catch {
+    return null
+  }
+
+  if (response.status === 304) {
+    return cached ? (cached.data as T) : null
+  }
+  if (!response.ok) return null
+
+  let payload: { data?: T; errors?: unknown[] }
+  try {
+    payload = (await response.json()) as { data?: T; errors?: unknown[] }
+  } catch {
+    return null
+  }
+  if (payload.errors?.length || payload.data == null) return null
+
+  if (!token) {
+    const etag = response.headers.get('ETag')
+    if (etag) {
+      // Bound the cache: a long thread can walk through many cursor pages.
+      if (proxyReadCache.size >= PROXY_READ_CACHE_LIMIT) {
+        const oldest = proxyReadCache.keys().next().value
+        if (oldest !== undefined) proxyReadCache.delete(oldest)
+      }
+      proxyReadCache.set(cacheKey, { etag, data: payload.data })
+    } else {
+      proxyReadCache.delete(cacheKey)
+    }
+  }
+
+  return payload.data
 }

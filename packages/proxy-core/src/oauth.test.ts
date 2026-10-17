@@ -480,7 +480,7 @@ describe('/graphql', () => {
     expect(sent[0]?.nextId).toBe('1')
   })
 
-  it('refuses anonymous GraphQL instead of borrowing the installation token', async () => {
+  it('never lets an anonymous mutation borrow the installation token', async () => {
     let called = false
     vi.stubGlobal('fetch', async () => {
       called = true
@@ -494,8 +494,10 @@ describe('/graphql', () => {
     })
 
     expect(response.status).toBe(401)
-    // The installation token carries the App's write access, so falling back
-    // to it would let any caller mutate as the App. Nothing may reach GitHub.
+    // Anonymous *reads* may use the installation token (see
+    // anonymous-read.test.ts); writes still may not. The token carries the
+    // App's write access, so falling back to it here would let anyone mutate
+    // as the App. Nothing may reach GitHub.
     expect(called).toBe(false)
   })
 

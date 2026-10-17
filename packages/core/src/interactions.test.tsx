@@ -339,8 +339,11 @@ describe('reactions and upvotes', () => {
     expect(notice.getAttribute('role')).toBe('status')
     expect(notice.textContent).toContain('Sign in with GitHub to react')
     expect(notice.querySelector('.gt-btn-notice-login')).toBeTruthy()
-    // Nothing was sent to GitHub: anonymous GraphQL would only 403.
-    expect(graphql).toHaveLength(0)
+    // No write was attempted. The anonymous read path may legitimately talk
+    // to the configured proxy (that is the 60/hr -> 5,000/hr accelerator), but
+    // a reaction mutation must never be sent without a token.
+    expect(graphql.some((g) => g.query.includes('addReaction'))).toBe(false)
+    expect(graphql.some((g) => g.query.includes('removeReaction'))).toBe(false)
 
     // Dismissable.
     ;(notice.querySelector('.gt-notice-close') as HTMLElement).click()
@@ -354,7 +357,7 @@ describe('reactions and upvotes', () => {
     // this control. Showing it would be a promise the API cannot keep.
     await mountWidget({}, false)
     expect(host.querySelector('.gt-upvote')).toBeNull()
-    expect(graphql).toHaveLength(0)
+    expect(graphql.some((g) => g.query.includes('upvoteCount'))).toBe(false)
   })
 })
 

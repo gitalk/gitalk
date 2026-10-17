@@ -1,4 +1,11 @@
-import type { PageOptions, ReactionState, ReactionTarget } from './backend'
+import type {
+  GraphqlPageInfo,
+  GraphqlReadComment,
+  GraphqlReadCommentConnection,
+  PageOptions,
+  ReactionState,
+  ReactionTarget
+} from './backend'
 import {
   BaseBackend,
   fetchReactionStates,
@@ -7,6 +14,11 @@ import {
   sortComments
 } from './backend'
 import type { ReactionStateNode } from './backend'
+import {
+  DISCUSSION_COMMENTS_QUERY,
+  DISCUSSION_LIST_QUERY,
+  DISCUSSION_THREAD_QUERY
+} from './read-queries'
 import type {
   GitalkComment,
   GitalkReply,
@@ -191,6 +203,44 @@ interface GraphQLError {
   type?: string
 }
 
+/** A Discussion node in the anonymous-read queries. */
+interface GraphqlDiscussionNode {
+  id: string
+  number: number
+  title: string
+  url: string
+  locked?: boolean
+}
+
+interface DiscussionThreadData {
+  repository?: {
+    discussion?: GraphqlDiscussionNode | null
+  } | null
+}
+
+interface DiscussionListData {
+  repository?: {
+    discussions?: {
+      nodes?: GraphqlDiscussionNode[] | null
+      pageInfo?: GraphqlPageInfo | null
+    } | null
+  } | null
+}
+
+interface DiscussionCommentsData {
+  repository?: {
+    discussion?: {
+      comments?: GraphqlReadCommentConnection | null
+    } | null
+  } | null
+}
+
+/** A cursor pair remembered for one logical page, so page N+1 can continue. */
+interface PageCursor {
+  start: string | null
+  end: string | null
+}
+
 /** GitHub caps REST per_page at 100. */
 const MAX_PER_PAGE = 100
 
@@ -207,9 +257,242 @@ export class DiscussionsBackend extends BaseBackend {
 
   async resolveThread({ number, term }: { number?: number; term: string }): Promise<ThreadInfo | null> {
     if (typeof number === 'number' && number > 0) {
+      // The proxy path is an accelerator, not a dependency: `null` means it
+      // could not answer and REST runs exactly as before.
+      const proxied = await this.fetchByNumberViaProxy(number)
+      if (proxied) return proxied.thread
       return this.fetchByNumber(number)
     }
+
+    const proxied = await this.findByTitleViaProxy(term)
+    if (proxied) return proxied.thread
     return this.findByTitle(term)
+  }
+
+  /**
+   * Read one discussion through the proxy's anonymous GraphQL path.
+   *
+   * Returns `null` when the proxy cannot answer (unavailable, private repo,
+   * network/GraphQL error) and a wrapper around `null` when the repository
+   * answered definitively that the discussion does not exist. The distinction
+   * matters: only the former should spend a REST request.
+   */
+  private async fetchByNumberViaProxy(
+    number: number
+  ): Promise<{ thread: ThreadInfo | null } | null> {
+    const read = this.ctx.proxyRead
+    if (!read) return null
+
+    try {
+      const data = await read<DiscussionThreadData>({
+        query: DISCUSSION_THREAD_QUERY,
+        variables: { owner: this.ctx.owner, repo: this.ctx.repo, number }
+      })
+      const repository = data?.repository
+      if (!repository || !('discussion' in repository)) return null
+      return { thread: repository.discussion ? this.toGraphqlThread(repository.discussion) : null }
+    } catch (err) {
+      warnProxyRead(err)
+      return null
+    }
+  }
+
+  /**
+   * Title -> discussion lookup over the proxy.
+   *
+   * GitHub's REST `search/issues` does not index Discussions, so the REST
+   * fallback walks the repository's discussion list. GraphQL can do the same
+   * with cursor pagination; the five-page cap mirrors the REST scan's 5 x 100.
+   */
+  private async findByTitleViaProxy(
+    term: string
+  ): Promise<{ thread: ThreadInfo | null } | null> {
+    const read = this.ctx.proxyRead
+    if (!read) return null
+
+    const titles = new Set([term, this.opts.title].filter((t): t is string => Boolean(t)))
+    const MAX_PAGES = 5
+    let after: string | null = null
+
+    try {
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const data: DiscussionListData | null = await read<DiscussionListData>({
+          query: DISCUSSION_LIST_QUERY,
+          variables: {
+            owner: this.ctx.owner,
+            repo: this.ctx.repo,
+            first: 100,
+            after
+          }
+        })
+
+        const discussions: {
+          nodes?: GraphqlDiscussionNode[] | null
+          pageInfo?: GraphqlPageInfo | null
+        } | null | undefined = data?.repository?.discussions
+        if (!discussions || !Array.isArray(discussions.nodes)) return null
+
+        const hit = discussions.nodes.find((d: GraphqlDiscussionNode) => titles.has(d.title))
+        if (hit) return { thread: this.toGraphqlThread(hit) }
+
+        const next: string | null | undefined = discussions.pageInfo?.endCursor
+        if (!discussions.pageInfo?.hasNextPage || !next) return { thread: null }
+        after = next
+      }
+      return { thread: null }
+    } catch (err) {
+      warnProxyRead(err)
+      return null
+    }
+  }
+
+  /** Normalise a read-query Discussion node, keeping `commentCount` unset. */
+  private toGraphqlThread(d: GraphqlDiscussionNode): ThreadInfo {
+    return {
+      kind: 'discussions',
+      number: d.number,
+      title: d.title,
+      url: d.url,
+      nodeId: d.id ?? null,
+      locked: d.locked ?? false
+      // `commentCount` is intentionally omitted: GraphQL counts top-level
+      // comments only, while the REST reader needs the all-comments count to
+      // find its last offset page. Leaving it unset makes a mid-stream REST
+      // fallback probe its own `Link` header instead of trusting the wrong
+      // number.
+    }
+  }
+
+  /**
+   * One page of comments over the proxy.
+   *
+   * Logical page numbers are translated to cursors from the previous page.
+   * If that cursor is missing (first call is page 2, or a previous read fell
+   * back to REST) `null` is returned and the caller uses REST, so a mixed-mode
+   * stream never silently skips or repeats a window.
+   */
+  private async readCommentsViaProxy(opts: PageOptions): Promise<ThreadPage | null> {
+    const read = this.ctx.proxyRead
+    if (!read) return null
+
+    const thread = this.ctx.getThread()
+    if (!thread) return null
+
+    const perPage = Math.min(Math.max(opts.first, 1), MAX_PER_PAGE)
+    const currentPage = Math.max(opts.page ?? 1, 1)
+    const order = opts.direction === 'first' ? 'first' : 'last'
+    const cacheKey = `${thread.number}:${order}`
+
+    if (opts.fresh) {
+      for (const key of this.proxyCursors.keys()) {
+        if (key.startsWith(`${cacheKey}:`)) this.proxyCursors.delete(key)
+      }
+    }
+
+    let cursor: string | null = null
+    if (currentPage > 1) {
+      const previous = this.proxyCursors.get(`${cacheKey}:${currentPage - 1}`)
+      if (!previous) return null
+      cursor = order === 'first' ? previous.end : previous.start
+      if (!cursor) return null
+    }
+
+    try {
+      const data = await read<DiscussionCommentsData>(
+        {
+          query: DISCUSSION_COMMENTS_QUERY,
+          variables: {
+            owner: this.ctx.owner,
+            repo: this.ctx.repo,
+            number: thread.number,
+            first: order === 'first' ? perPage : null,
+            last: order === 'last' ? perPage : null,
+            after: order === 'first' ? cursor : null,
+            before: order === 'last' ? cursor : null
+          }
+        },
+        { fresh: opts.fresh }
+      )
+
+      const connection = data?.repository?.discussion?.comments
+      if (!connection || !Array.isArray(connection.nodes)) return null
+
+      const pageInfo = connection.pageInfo ?? {}
+      this.proxyCursors.set(`${cacheKey}:${currentPage}`, {
+        start: pageInfo.startCursor ?? null,
+        end: pageInfo.endCursor ?? null
+      })
+
+      const comments = sortComments(
+        connection.nodes.map((node) => this.fromGraphqlReadComment(node)),
+        order
+      )
+      const replyTotal = connection.nodes.reduce(
+        (sum, node) => sum + (node.replies?.totalCount ?? 0),
+        0
+      )
+
+      return {
+        comments,
+        // The connection counts top-level comments; replies are a separate
+        // connection. Sum both so this matches the REST metric (every row the
+        // widget can render), which is also what `.gt-counts` uses.
+        totalCount: (connection.totalCount ?? connection.nodes.length) + replyTotal,
+        // `hasNextPage` means "load more in the direction the UI renders":
+        // for newest-first that is the *previous* slice of the connection.
+        hasNextPage:
+          order === 'last'
+            ? Boolean(pageInfo.hasPreviousPage)
+            : Boolean(pageInfo.hasNextPage),
+        hasPreviousPage: currentPage > 1,
+        endCursor: pageInfo.endCursor ?? null,
+        startCursor: pageInfo.startCursor ?? null,
+        page: currentPage
+      }
+    } catch (err) {
+      warnProxyRead(err)
+      return null
+    }
+  }
+
+  /** One top-level comment plus its nested replies, from a read query. */
+  private fromGraphqlReadComment(node: GraphqlReadComment): GitalkComment {
+    const thread = this.ctx.getThread()
+    if (thread && node.databaseId != null) {
+      this.replyNodeIds.set(`${thread.number}:${node.databaseId}`, node.id)
+    }
+
+    return {
+      ...this.fromGraphqlReadReply(node),
+      replies: (node.replies?.nodes ?? []).map((reply) => {
+        if (thread && reply.databaseId != null) {
+          this.replyNodeIds.set(`${thread.number}:${reply.databaseId}`, reply.id)
+        }
+        return this.fromGraphqlReadReply(reply)
+      })
+    }
+  }
+
+  /** The shared comment fields; GraphQL already nests replies separately. */
+  private fromGraphqlReadReply(node: GraphqlReadComment): GitalkReply {
+    const { counts, viewerReactions } = reactionsFromGroups(node.reactionGroups)
+    const totalCount = Object.values(counts).reduce((sum, n) => sum + (n ?? 0), 0)
+
+    return {
+      id: Number(node.databaseId ?? 0),
+      nodeId: node.id ?? null,
+      user: this.normalizeGraphqlUser(node.author),
+      bodyHtml: node.bodyHTML ?? '',
+      createdAt: node.createdAt,
+      htmlUrl: node.url,
+      reactions: {
+        totalCount,
+        viewerHasReacted: Object.keys(viewerReactions).length > 0,
+        counts,
+        viewerReactions
+      },
+      isAuthor: false
+    }
   }
 
   private async fetchByNumber(number: number): Promise<ThreadInfo | null> {
@@ -239,20 +522,18 @@ export class DiscussionsBackend extends BaseBackend {
   }
 
   /**
-   * Anonymous title -> thread lookup.
+   * Anonymous title -> thread lookup, REST fallback.
    *
-   * IMPORTANT (verified empirically): GitHub's REST `search/issues` does NOT
-   * index Discussions -- `repo:X/Y type:discussions` returns 0 total even on
-   * repositories that demonstrably have hundreds of discussions. GraphQL *can*
-   * search them (`search(type: DISCUSSION)`, which is what giscus uses), but
-   * GraphQL rejects anonymous callers outright (`x-ratelimit-limit: 0`).
-   *
-   * With GraphQL gated behind auth for the *finding* step too, an anonymous
-   * visitor therefore has exactly one option: walk the REST discussion list
-   * and match titles client-side. `per_page=100` makes this a couple of
-   * requests for typical blogs. Passing an explicit `number` bypasses the
-   * scan entirely and is the recommended production configuration.
-   * See docs/tech.md §2.7.
+   * Used only when the proxy GraphQL read is unavailable (see
+   * {@link findByTitleViaProxy}). IMPORTANT (verified empirically): GitHub's
+   * REST `search/issues` does NOT index Discussions --
+   * `repo:X/Y type:discussions` returns 0 total even on repositories that
+   * demonstrably have hundreds of discussions. Direct anonymous GraphQL is
+   * also refused (`x-ratelimit-limit: 0`), so this fallback walks the REST
+   * discussion list and matches titles client-side. `per_page=100` makes this
+   * a couple of requests for typical blogs. Passing an explicit `number`
+   * bypasses the scan entirely and is the recommended production
+   * configuration. See docs/tech.md §2.7.
    */
   private async findByTitle(term: string): Promise<ThreadInfo | null> {
     // Two titles can legitimately address this page, because the creation
@@ -470,9 +751,10 @@ export class DiscussionsBackend extends BaseBackend {
   /**
    * Load comments over REST.
    *
-   * REST is the only anonymous-capable read path (60 req/hr per IP), so this
-   * is deliberately chosen over GraphQL for display. Four wrinkles are
-   * handled here, all verified against the live API:
+   * This is the fallback when no proxy is configured, or when the proxy's
+   * anonymous GraphQL read cannot answer. It is the original 60 req/hr per IP
+   * path, kept byte-for-byte compatible in ordering, paging and counts. Four
+   * wrinkles are handled here, all verified against the live API:
    *
    *  1. REST returns replies *interleaved* with top-level comments, whereas
    *     GraphQL nests them under `replies`. We regroup by `parent_id` so the
@@ -491,7 +773,11 @@ export class DiscussionsBackend extends BaseBackend {
    * REST does expose `node_id`, and it equals the GraphQL node id, so the ids
    * needed for later mutations are available even anonymously.
    */
-  async getComments({ first, direction, page, fresh }: PageOptions): Promise<ThreadPage> {
+  async getComments(options: PageOptions): Promise<ThreadPage> {
+    const proxied = await this.readCommentsViaProxy(options)
+    if (proxied) return proxied
+
+    const { first, direction, page, fresh } = options
     const thread = this.ctx.getThread()
     if (!thread) throw new GitalkError('Thread has not been resolved yet')
 
@@ -660,6 +946,9 @@ export class DiscussionsBackend extends BaseBackend {
   /** Numeric id -> node id map populated during reads. */
   private replyNodeIds = new Map<string, string>()
 
+  /** Logical page -> GraphQL cursors, per thread and direction. */
+  private readonly proxyCursors = new Map<string, PageCursor>()
+
   private toReply(item: RawComment): GitalkReply {
     if (item.id != null) {
       this.replyNodeIds.set(`${this.ctx.getThread()?.number ?? 0}:${item.id}`, item.node_id)
@@ -740,6 +1029,14 @@ export class DiscussionsBackend extends BaseBackend {
     if (!response.data) throw new GitalkError('Empty GraphQL response')
     return response.data
   }
+}
+
+/**
+ * The proxy read is best-effort. A logged warning is enough: the caller falls
+ * back to REST and the visitor still sees the thread.
+ */
+function warnProxyRead(err: unknown): void {
+  console.warn('gitalk: proxy read failed; falling back to api.github.com', err)
 }
 
 /**

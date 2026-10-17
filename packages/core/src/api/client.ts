@@ -95,8 +95,10 @@ export function parsePageLinks(header: string | null): PageLinks {
  * Thin fetch wrapper over the GitHub REST API.
  *
  * Anonymous requests are legitimate here: REST discussions/issue reads are
- * CORS-enabled (`access-control-allow-origin: *`) while GraphQL is NOT
- * available anonymously at all (`x-ratelimit-limit: 0`). See docs/tech.md §2.1.
+ * CORS-enabled (`access-control-allow-origin: *`) while a direct GraphQL call
+ * is NOT available anonymously (`x-ratelimit-limit: 0`). GraphQL reads can
+ * still happen anonymously through a configured token proxy; that path is
+ * `BackendContext.proxyRead`, not this REST client. See docs/tech.md §2.1.
  */
 export class HttpClient {
   constructor(

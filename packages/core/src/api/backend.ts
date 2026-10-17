@@ -121,6 +121,59 @@ export interface BackendContext {
     query: string
     variables: Record<string, unknown>
   }) => Promise<T>
+  /**
+   * Anonymous-capable GraphQL read through the configured proxy.
+   *
+   * Returns `null` when the proxy cannot serve the read (not configured, no
+   * installation token, private repository, network failure, GraphQL error).
+   * Backends treat that as "use the REST fallback", never as a hard failure:
+   * the accelerated path must not make an unconfigured or misconfigured proxy
+   * worse than the 60/hr browser limit it replaces.
+   *
+   * Deliberately separate from `graphql`, which is the visitor-token path used
+   * by mutations and by signed-in viewers.
+   */
+  proxyRead?: <T>(
+    body: { query: string; variables: Record<string, unknown> },
+    options?: { fresh?: boolean }
+  ) => Promise<T | null>
+}
+
+/** The `PageInfo` fields both comment connections expose. */
+export interface GraphqlPageInfo {
+  hasNextPage?: boolean
+  hasPreviousPage?: boolean
+  startCursor?: string | null
+  endCursor?: string | null
+}
+
+/** One `ReactionGroup` in a read response. */
+export interface GraphqlReactionGroup {
+  content: Reaction
+  viewerHasReacted?: boolean
+  reactors?: { totalCount?: number } | null
+}
+
+/** A comment node as returned by the anonymous read queries. */
+export interface GraphqlReadComment {
+  id: string
+  databaseId?: number | null
+  author?: unknown
+  createdAt: string
+  url: string
+  bodyHTML?: string | null
+  reactionGroups?: GraphqlReactionGroup[] | null
+  replies?: {
+    totalCount?: number
+    nodes?: GraphqlReadComment[] | null
+  } | null
+}
+
+/** A comment connection as returned by the anonymous read queries. */
+export interface GraphqlReadCommentConnection {
+  totalCount?: number
+  pageInfo?: GraphqlPageInfo | null
+  nodes?: GraphqlReadComment[] | null
 }
 
 export const GHOST_USER: GitalkUser = {

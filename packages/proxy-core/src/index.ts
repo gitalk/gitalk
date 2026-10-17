@@ -20,8 +20,11 @@
  *   GET  /oauth/authorize       -> 302 to GitHub's consent screen
  *   GET  /oauth/callback        -> exchange code, redirect back with session
  *   POST /oauth/token           -> session -> access token
- *   *    /graphql               -> proxied GraphQL using the visitor's token,
- *                                 or the installation token when anonymous
+ *   *    /graphql               -> proxied GraphQL using the visitor's token;
+ *                                 anonymous callers may run a fixed allowlist
+ *                                 of public-repository read queries with the
+ *                                 installation token (5,000/hr). Mutations and
+ *                                 unknown operations stay 401.
  *
  * ## Deploy
  *
@@ -81,10 +84,182 @@ const TOKEN_REFRESH_MARGIN_MS = 5 * 60 * 1000
 /** Session lifetime. A month is a safer default than giscus's year. */
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60
 
+/**
+ * How long a repository's public/private verdict is reused.
+ *
+ * The visibility lookup costs one installation-token request. Caching it
+ * keeps a comment-heavy page from paying that for every comment page, while
+ * the short TTL bounds the window in which a repository that was just made
+ * private could still be served from cache.
+ */
+const REPO_VISIBILITY_TTL_MS = 5 * 60 * 1000
+
+/** Bound each in-isolate cache; a proxy may see many repositories. */
+const REPO_CACHE_LIMIT = 500
+
+/** Refuse oversized anonymous bodies before parsing them. */
+const ANONYMOUS_BODY_LIMIT = 16 * 1024
+
+/** GraphQL cursors are opaque; this is only a sanity bound. */
+const CURSOR_LIMIT = 4096
+
+/**
+ * Canonical anonymous-read documents.
+ *
+ * The operation name is the capability, but the document that actually runs is
+ * **this copy**, never the caller's body. Operation-name-only checks are not a
+ * security boundary: a caller can name a query `gitalkDiscussionComments` and
+ * put arbitrary fields (another repository, `viewer`, a mutation-shaped
+ * payload) inside it. Substituting the trusted document removes that class of
+ * bypass entirely; the caller only chooses a name and validated variables.
+ *
+ * Keep in sync with `packages/core/src/api/read-queries.ts`. Drift is safe —
+ * the widget sees a shape it does not understand and falls back to REST — but
+ * costs the 5,000/hr path.
+ */
+export const ANONYMOUS_READ_QUERIES = {
+  gitalkDiscussion: `
+query gitalkDiscussion($owner: String!, $repo: String!, $number: Int!) {
+  repository(owner: $owner, name: $repo) {
+    discussion(number: $number) {
+      id
+      number
+      title
+      url
+      locked
+    }
+  }
+}`,
+  gitalkDiscussionList: `
+query gitalkDiscussionList($owner: String!, $repo: String!, $first: Int!, $after: String) {
+  repository(owner: $owner, name: $repo) {
+    discussions(first: $first, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
+      nodes {
+        id
+        number
+        title
+        url
+        locked
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}`,
+  gitalkDiscussionComments: `
+query gitalkDiscussionComments($owner: String!, $repo: String!, $number: Int!, $first: Int, $last: Int, $after: String, $before: String) {
+  repository(owner: $owner, name: $repo) {
+    discussion(number: $number) {
+      comments(first: $first, last: $last, after: $after, before: $before) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
+        nodes {
+          id
+          databaseId
+          author { login avatarUrl url }
+          createdAt
+          url
+          bodyHTML
+          reactionGroups { content viewerHasReacted reactors(first: 0) { totalCount } }
+          replies(first: 100) {
+            totalCount
+            nodes {
+              id
+              databaseId
+              author { login avatarUrl url }
+              createdAt
+              url
+              bodyHTML
+              reactionGroups { content viewerHasReacted reactors(first: 0) { totalCount } }
+            }
+          }
+        }
+      }
+    }
+  }
+}`,
+  gitalkIssue: `
+query gitalkIssue($owner: String!, $repo: String!, $number: Int!) {
+  repository(owner: $owner, name: $repo) {
+    issue(number: $number) {
+      id
+      number
+      title
+      url
+      locked
+    }
+  }
+}`,
+  gitalkIssueByLabel: `
+query gitalkIssueByLabel($owner: String!, $repo: String!, $labels: [String!]!) {
+  repository(owner: $owner, name: $repo) {
+    issues(first: 1, labels: $labels, states: [OPEN, CLOSED]) {
+      nodes {
+        id
+        number
+        title
+        url
+        locked
+      }
+    }
+  }
+}`,
+  gitalkIssueComments: `
+query gitalkIssueComments($owner: String!, $repo: String!, $number: Int!, $first: Int, $last: Int, $after: String, $before: String) {
+  repository(owner: $owner, name: $repo) {
+    issue(number: $number) {
+      comments(first: $first, last: $last, after: $after, before: $before) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+          startCursor
+          endCursor
+        }
+        nodes {
+          id
+          databaseId
+          author { login avatarUrl url }
+          createdAt
+          url
+          bodyHTML
+          reactionGroups { content viewerHasReacted reactors(first: 0) { totalCount } }
+        }
+      }
+    }
+  }
+}`
+} as const
+
+type AnonymousReadOperation = keyof typeof ANONYMOUS_READ_QUERIES
+
 interface InstallationToken {
   token: string
   expiresAt: number
 }
+
+/** A cached public/private verdict for one repository. */
+interface RepoVisibility {
+  isPublic: boolean
+  expiresAt: number
+}
+
+/**
+ * In-isolate caches. Workers may evict an isolate at any time, so a miss only
+ * costs one extra API request; there is deliberately no KV dependency.
+ *
+ * The installation token is keyed by App + explicit installation id, which
+ * keeps tests and multi-App deployments from sharing the wrong credential.
+ */
+const installationTokenCache = new Map<string, InstallationToken>()
+const repoVisibilityCache = new Map<string, RepoVisibility>()
 
 interface SessionPayload {
   accessToken: string
@@ -149,7 +324,8 @@ export async function handle(
         // boundary worth maintaining by hand.
         'Access-Control-Allow-Headers':
           request.headers.get('Access-Control-Request-Headers') ??
-          'Accept, Authorization, Content-Type, X-GitHub-Api-Version, X-Github-Next-Global-ID',
+          'Accept, Authorization, Content-Type, If-None-Match, X-GitHub-Api-Version, X-Github-Next-Global-ID',
+        'Access-Control-Expose-Headers': 'ETag, Cache-Control, Last-Modified, Expires',
         'Access-Control-Max-Age': '86400'
       }
     })
@@ -276,16 +452,31 @@ async function handleTokenExchange(
 /**
  * Proxy a GraphQL request.
  *
- * Authenticated callers send their own token and we forward verbatim, so
- * writes are attributed to the real user. Anonymous callers get the
- * installation token, which is what lifts the read limit to 5,000/hr.
+ * Two very different caller classes share this endpoint:
  *
- * There is deliberately NO per-operation allowlist here: the body is forwarded
- * as-is, which is why `createDiscussion` (the only way to create a Discussion —
- * there is no REST equivalent) needs no proxy change. The widget is what keeps
- * this least-privilege: `DiscussionsBackend` refuses to issue any mutation
- * without a visitor token, so creations run as the signed-in user and never as
- * the installation. Keep it that way rather than widening the forwarder.
+ *  - **Authenticated** (a visitor token in `Authorization`): forwarded
+ *    verbatim, exactly as before. Writes are attributed to the real user, and
+ *    that is the only way any mutation can run.
+ *  - **Anonymous**: only a small, fixed set of repository-scoped read queries
+ *    is allowed. The caller picks an operation name; the proxy substitutes its
+ *    own canonical document, checks that `$owner`/`$repo` name a **public**
+ *    repository, and executes it with the App installation token (5,000/hr).
+ *
+ * Why the substitution and the visibility check:
+ *
+ *  - An operation-name whitelist alone is not a boundary. A caller can name an
+ *    arbitrary document `gitalkDiscussionComments` and put another repository,
+ *    `viewer`, or a write-shaped selection inside it. Running the canonical
+ *    copy means the request only ever describes the data shape we audited.
+ *  - An installation token can read every repository the App is installed on,
+ *    including private ones. Self-hosters may install the App on a private
+ *    repository, so the target's public flag is checked out-of-band before the
+ *    token is used. The verdict is cached briefly (see
+ *    `isPublicRepository`).
+ *
+ * A mutation — or any operation not in the allowlist — never reaches GitHub
+ * anonymously; it gets 401 without spending a token. Authenticated mutations
+ * are untouched.
  */
 async function handleGraphql(
   request: Request,
@@ -294,27 +485,351 @@ async function handleGraphql(
   cors: Record<string, string>
 ): Promise<Response> {
   const body = await request.text()
-
-  // No anonymous fallback to the installation token.
-  //
-  // That token carries the App's write access, so falling back to it let
-  // anyone who could reach this endpoint run arbitrary GraphQL — mutations
-  // included — as the App, with no GitHub account. Anonymous reads never come
-  // through here: the widget reads straight from api.github.com, so the only
-  // callers of /graphql are signed-in ones. Rejecting the rest costs nothing
-  // legitimate and closes the endpoint to drive-by writes.
   const token = bearerFrom(request)
 
-  if (!token) {
-    return json({ error: 'Sign in with GitHub to perform this request' }, { status: 401, headers: cors })
+  if (token) {
+    // Authenticated: forward the caller's document, including mutations. The
+    // installation token is never involved, so there is nothing to allowlist.
+    return forwardGraphql(request, body, token, cors)
   }
 
-  // The widget opts into GitHub's next-generation global node IDs. This proxy
-  // rebuilds the upstream headers below, so without forwarding the opt-in the
-  // GraphQL response would revert to legacy ids (for example a freshly created
-  // comment's `id`, which the widget then sends back in the next mutation and
-  // gets a DEPRECATION warning for).
+  const anonymous = await authorizeAnonymousRead(body, env)
+  if (!anonymous.ok) {
+    return json({ error: anonymous.error }, { status: anonymous.status, headers: cors })
+  }
+
+  return forwardGraphql(
+    request,
+    JSON.stringify({ query: anonymous.query, variables: anonymous.variables }),
+    anonymous.token,
+    cors
+  )
+}
+
+/**
+ * Decide whether an anonymous request may use the installation token.
+ *
+ * Order matters: reject malformed/unknown documents *before* acquiring a
+ * token, so probes cannot consume installation requests, and check visibility
+ * *before* executing anything, so a private repository is never queried.
+ */
+async function authorizeAnonymousRead(
+  body: string,
+  env: Env
+): Promise<
+  | { ok: true; token: string; query: string; variables: Record<string, unknown> }
+  | { ok: false; status: number; error: string }
+> {
+  if (body.length > ANONYMOUS_BODY_LIMIT) {
+    return deny(413, 'Request body is too large')
+  }
+
+  let payload: { query?: unknown; variables?: unknown }
+  try {
+    payload = JSON.parse(body) as { query?: unknown; variables?: unknown }
+  } catch {
+    return deny(400, 'Invalid JSON body')
+  }
+
+  if (typeof payload.query !== 'string') return deny(401, '`query` is required')
+
+  const operation = parseOperation(payload.query)
+  // Anonymous GraphQL has no HTTP-method escape hatch: a document that is not
+  // exactly one `query` operation cannot borrow the installation token, even
+  // if it is named like an allowed read. Checked before the variables shape so
+  // a mutation is always 401, whatever else its body contains.
+  if (!operation || operation.type !== 'query' || !operation.name) {
+    return deny(401, 'Anonymous reads require an allowlisted read query')
+  }
+
+  const canonical = (ANONYMOUS_READ_QUERIES as Record<string, string | undefined>)[operation.name]
+  if (!canonical) {
+    return deny(401, 'Anonymous reads require an allowlisted read query')
+  }
+
+  if (!isPlainObject(payload.variables)) return deny(400, '`variables` must be an object')
+
+  const owner = payload.variables.owner
+  const repo = payload.variables.repo
+  if (!isRepoPart(owner) || !isRepoPart(repo)) {
+    return deny(400, '`variables.owner` and `variables.repo` must be repository names')
+  }
+  if (!validReadVariables(operation.name as AnonymousReadOperation, payload.variables)) {
+    return deny(400, 'Invalid variables for this read operation')
+  }
+
+  const token = await installationToken(env)
+  if (!token) return deny(503, 'Anonymous reads are unavailable')
+
+  // The only gate that prevents an installation token from exposing a private
+  // repository. A failed lookup is treated as "not public" (fail closed).
+  if (!(await isPublicRepository(owner, repo, token))) {
+    return deny(403, 'Anonymous reads are only available for public repositories')
+  }
+
+  return { ok: true, token, query: canonical, variables: payload.variables }
+}
+
+const deny = (status: number, error: string) => ({ ok: false as const, status, error })
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+/** A GitHub owner/repository path segment. Rejects `/`, `.` and `..`. */
+function isRepoPart(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    value.length > 0 &&
+    value.length <= 100 &&
+    value !== '.' &&
+    value !== '..' &&
+    /^[A-Za-z0-9_.-]+$/.test(value)
+  )
+}
+
+function isPositiveInt(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value > 0 && value <= 2_147_483_647
+}
+
+function isPageSize(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 100
+}
+
+function isCursor(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0 && value.length <= CURSOR_LIMIT
+}
+
+/**
+ * Validate the variables each canonical document declares.
+ *
+ * Unknown extra variables are harmless (GraphQL ignores them), but the ones
+ * that drive pagination are bounded so a caller cannot ask for a 100k-node
+ * connection or a cursor-sized payload.
+ */
+function validReadVariables(
+  operation: AnonymousReadOperation,
+  variables: Record<string, unknown>
+): boolean {
+  switch (operation) {
+    case 'gitalkDiscussion':
+    case 'gitalkIssue':
+      return isPositiveInt(variables.number)
+
+    case 'gitalkDiscussionList':
+      return (
+        isPageSize(variables.first) &&
+        (variables.after == null || isCursor(variables.after))
+      )
+
+    case 'gitalkIssueByLabel': {
+      const labels = variables.labels
+      return (
+        Array.isArray(labels) &&
+        labels.length > 0 &&
+        labels.length <= 10 &&
+        labels.every((label) => typeof label === 'string' && label.length > 0 && label.length <= 200)
+      )
+    }
+
+    case 'gitalkDiscussionComments':
+    case 'gitalkIssueComments': {
+      if (!isPositiveInt(variables.number)) return false
+      const hasFirst = variables.first != null
+      const hasLast = variables.last != null
+      // Exactly one end of the connection, mirroring what the widget sends.
+      if (hasFirst === hasLast) return false
+      if (hasFirst && !isPageSize(variables.first)) return false
+      if (hasLast && !isPageSize(variables.last)) return false
+      if (variables.after != null && !isCursor(variables.after)) return false
+      if (variables.before != null && !isCursor(variables.before)) return false
+      if (hasFirst && variables.before != null) return false
+      if (hasLast && variables.after != null) return false
+      return true
+    }
+
+    default:
+      return false
+  }
+}
+
+/**
+ * Parse the operation type and name out of a GraphQL document.
+ *
+ * This tokenizes enough of the language to ignore whitespace, commas, comments
+ * and string literals, then walks the one allowed top-level shape:
+ *
+ *   <query|mutation|subscription> <name>? (variables)? directives* selection
+ *
+ * Trailing tokens are rejected, so multiple operations and fragments cannot
+ * hide a second, differently-typed operation. Because the request body is
+ * ignored in favour of the canonical document anyway, this parser only has to
+ * be strict about *what kind* of operation the caller is asking for; aliases
+ * and comments cannot turn a `mutation` into a `query`.
+ */
+export function parseOperation(
+  document: string
+): { type: 'query' | 'mutation' | 'subscription'; name: string | null } | null {
+  const tokens = tokenizeGraphql(document)
+  if (!tokens || !tokens.length) return null
+
+  const first = tokens[0]!
+  let type: 'query' | 'mutation' | 'subscription'
+  let index = 1
+  let name: string | null = null
+
+  if (first === '{') {
+    // Anonymous shorthand query. Name stays null, so the allowlist rejects it
+    // later — but the type is still `query`, not a bypass.
+    type = 'query'
+    index = 0
+  } else if (first === 'query' || first === 'mutation' || first === 'subscription') {
+    type = first
+  } else {
+    return null
+  }
+
+  if (first !== '{') {
+    if (isNameToken(tokens[index])) {
+      name = tokens[index]!
+      index++
+    }
+    if (tokens[index] === '(') {
+      index = skipBalanced(tokens, index, '(', ')')
+      if (index < 0) return null
+    }
+    while (tokens[index] === '@') {
+      index++
+      if (!isNameToken(tokens[index])) return null
+      index++
+      if (tokens[index] === '(') {
+        index = skipBalanced(tokens, index, '(', ')')
+        if (index < 0) return null
+      }
+    }
+  }
+
+  if (tokens[index] !== '{') return null
+  index = skipBalanced(tokens, index, '{', '}')
+  if (index < 0 || index !== tokens.length) return null
+
+  return { type, name }
+}
+
+/** GraphQL names are ASCII; `true`/`false`/`null` are just names here. */
+function isNameToken(token: string | undefined): token is string {
+  return typeof token === 'string' && /^[_A-Za-z][_0-9A-Za-z]*$/.test(token)
+}
+
+/** Token-level view of a document: names and single-character punctuation. */
+function tokenizeGraphql(document: string): string[] | null {
+  const tokens: string[] = []
+  let index = 0
+
+  while (index < document.length) {
+    const char = document[index]!
+
+    if (char === ' ' || char === '\t' || char === '\n' || char === '\r' || char === ',' || char === '\ufeff') {
+      index++
+      continue
+    }
+
+    // Comments run to end of line and must not contribute tokens.
+    if (char === '#') {
+      while (index < document.length && document[index] !== '\n') index++
+      continue
+    }
+
+    // Strings (including block strings) are opaque; braces inside them are
+    // data, not structure.
+    if (char === '"') {
+      const triple = document.slice(index, index + 3) === '"""'
+      index += triple ? 3 : 1
+      while (index < document.length) {
+        if (triple) {
+          if (document.slice(index, index + 3) === '"""') {
+            index += 3
+            break
+          }
+          index++
+        } else {
+          if (document[index] === '\\') {
+            index += 2
+            continue
+          }
+          if (document[index] === '"') {
+            index++
+            break
+          }
+          index++
+        }
+      }
+      if (index > document.length) return null
+      tokens.push('STRING')
+      continue
+    }
+
+    if (/[_A-Za-z]/.test(char)) {
+      const start = index
+      while (index < document.length && /[_0-9A-Za-z]/.test(document[index]!)) index++
+      tokens.push(document.slice(start, index))
+      continue
+    }
+
+    if (/[0-9]/.test(char)) {
+      while (index < document.length && /[0-9.eE+-]/.test(document[index]!)) index++
+      tokens.push('NUMBER')
+      continue
+    }
+
+    if (document.slice(index, index + 3) === '...') {
+      tokens.push('...')
+      index += 3
+      continue
+    }
+
+    // Punctuation the structural parser cares about, plus the rest as single
+    // tokens (they do not affect the operation boundary).
+    tokens.push(char)
+    index++
+  }
+
+  return tokens
+}
+
+/**
+ * Return the index just past the matching close token, or -1 when unbalanced.
+ * Only parentheses/braces are tracked; brackets and strings cannot contain a
+ * stray `{`/`}` that matters here because strings became opaque tokens.
+ */
+function skipBalanced(tokens: string[], start: number, open: string, close: string): number {
+  let depth = 0
+  for (let index = start; index < tokens.length; index++) {
+    if (tokens[index] === open) depth++
+    else if (tokens[index] === close) {
+      depth--
+      if (depth === 0) return index + 1
+    }
+  }
+  return -1
+}
+
+/**
+ * Forward one GraphQL request, preserving the cache-related response headers.
+ *
+ * `cache-control` / `etag` are copied rather than dropped: browser caching is
+ * how anonymous readers spend fewer requests, and silently rewriting them
+ * would make every page view pay the read again. `If-None-Match` is forwarded
+ * so GitHub can answer 304 itself.
+ */
+async function forwardGraphql(
+  request: Request,
+  body: string,
+  token: string,
+  cors: Record<string, string>
+): Promise<Response> {
   const nextGlobalId = request.headers.get('X-Github-Next-Global-ID')
+  const ifNoneMatch = request.headers.get('If-None-Match')
 
   const upstream = await fetch(`${GITHUB_API}/graphql`, {
     method: 'POST',
@@ -324,14 +839,33 @@ async function handleGraphql(
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2026-03-10',
       ...(nextGlobalId ? { 'X-Github-Next-Global-ID': nextGlobalId } : {}),
+      ...(ifNoneMatch ? { 'If-None-Match': ifNoneMatch } : {}),
       'User-Agent': GITHUB_USER_AGENT
     },
     body
   })
 
-  return new Response(await upstream.text(), {
+  const headers = new Headers(cors)
+  headers.set('Content-Type', 'application/json')
+  headers.set('Access-Control-Expose-Headers', 'ETag, Cache-Control, Last-Modified, Expires')
+  for (const name of ['ETag', 'Cache-Control', 'Last-Modified', 'Expires'] as const) {
+    const value = upstream.headers.get(name)
+    if (value) headers.set(name, value)
+  }
+
+  // Merge rather than replace `Vary`: GitHub may mark a response as varying on
+  // Authorization (important for authenticated calls), while our CORS layer
+  // needs Origin. Dropping either one lets a shared cache mix responses.
+  const upstreamVary = upstream.headers.get('Vary')
+  if (upstreamVary) {
+    const merged = new Set(['Origin', ...upstreamVary.split(',').map((v) => v.trim())])
+    headers.set('Vary', [...merged].filter(Boolean).join(', '))
+  }
+
+  // A 304 must not carry a body, and the caller will use its cached copy.
+  return new Response(upstream.status === 304 ? null : await upstream.text(), {
     status: upstream.status,
-    headers: { 'Content-Type': 'application/json', ...cors }
+    headers
   })
 }
 
@@ -449,8 +983,9 @@ async function renewIfExpired(
  * time, so a miss simply costs one extra API round trip. That keeps the worker
  * stateless and free of any external KV dependency.
  */
-async function installationToken(env: Env, ctx: ExecutionContext): Promise<string | null> {
-  const cached = ctx.props?.installation as InstallationToken | undefined
+async function installationToken(env: Env): Promise<string | null> {
+  const cacheKey = `${env.GITHUB_APP_ID}\n${env.GITHUB_INSTALLATION_ID ?? ''}`
+  const cached = installationTokenCache.get(cacheKey)
   if (cached && cached.expiresAt - Date.now() > TOKEN_REFRESH_MARGIN_MS) {
     return cached.token
   }
@@ -482,14 +1017,69 @@ async function installationToken(env: Env, ctx: ExecutionContext): Promise<strin
   const data = (await response.json()) as { token?: string; expires_at?: string }
   if (!data.token) return null
 
-  ctx.props = {
-    installation: {
-      token: data.token,
-      expiresAt: new Date(data.expires_at ?? Date.now() + 60 * 60 * 1000).getTime()
-    } satisfies InstallationToken
-  }
+  installationTokenCache.set(cacheKey, {
+    token: data.token,
+    expiresAt: new Date(data.expires_at ?? Date.now() + 60 * 60 * 1000).getTime()
+  })
 
   return data.token
+}
+
+/**
+ * Whether `owner/repo` is a **public** repository.
+ *
+ * This is the boundary that stops an installation token — which can read every
+ * repository the App is installed on — from serving a private repository to an
+ * anonymous caller. A non-2xx response is treated as "not public": an App that
+ * is not installed on a public repository must fall back to REST, not be
+ * assumed harmless.
+ *
+ * Cached for `REPO_VISIBILITY_TTL_MS` so a thread's pages do not each pay this
+ * request. A repository that turns private keeps its public verdict for at
+ * most that TTL.
+ */
+async function isPublicRepository(owner: string, repo: string, token: string): Promise<boolean> {
+  const cacheKey = `${owner.toLowerCase()}/${repo.toLowerCase()}`
+  const cached = repoVisibilityCache.get(cacheKey)
+  if (cached && cached.expiresAt > Date.now()) return cached.isPublic
+
+  let isPublic = false
+  try {
+    const response = await fetch(
+      `${GITHUB_API}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2026-03-10',
+          'User-Agent': GITHUB_USER_AGENT
+        }
+      }
+    )
+    if (response.ok) {
+      const data = (await response.json()) as { private?: unknown; visibility?: unknown }
+      // `private: false` is the documented signal. On GitHub Enterprise the
+      // extra `visibility` field can be `internal`, which is still not public
+      // to anonymous visitors, so require it to be `public` when present.
+      isPublic =
+        data.private === false && (data.visibility === undefined || data.visibility === 'public')
+    }
+  } catch {
+    // Network failure: fail closed, but do not cache the negative verdict so
+    // the next request can try again.
+    return false
+  }
+
+  if (repoVisibilityCache.size >= REPO_CACHE_LIMIT) {
+    const oldest = repoVisibilityCache.keys().next().value
+    if (oldest !== undefined) repoVisibilityCache.delete(oldest)
+  }
+  repoVisibilityCache.set(cacheKey, {
+    isPublic,
+    expiresAt: Date.now() + REPO_VISIBILITY_TTL_MS
+  })
+
+  return isPublic
 }
 
 async function resolveInstallationId(env: Env): Promise<number | null> {
