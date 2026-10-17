@@ -30,10 +30,12 @@
 #   （死配置，去留待定）；也不再自动打 tag、建 GitHub Release、维护 CHANGELOG。
 #   要恢复 tag/Release 得另加步骤（需要 contents: write）。
 #
-# 认证：优先 npm Trusted Publishing（OIDC），仓库里不存任何 npm 令牌，provenance 自动生成。
-#   引导期例外：包在 npm 上**还不存在**时，没有 Settings 页可以绑 Trusted Publisher，
-#   所以第一次发布只能先用临时令牌。配了 NPM_TOKEN secret 就用它，没配就走 OIDC。
-#   首次发布成功后请补上绑定并删掉 secret：
+# 认证：只用 npm Trusted Publishing（OIDC），仓库里**不存任何 npm 令牌**，
+#   provenance 自动生成。工作流**不读**任何 npm 令牌 —— 曾经有过一条
+#   「有 NPM_TOKEN 就用它」的引导期分支，已随 Trusted Publisher 绑好而删除。
+#
+#   仓库里还留着一个来自 v1 维护者、权限不明的 NPM_TOKEN secret。它已不被任何
+#   工作流引用，建议删除以免误以为仍在生效：
 #     gh secret delete NPM_TOKEN -R gitalk/gitalk
 #   ⚠️ 三个包**各自**都要在 npmjs.com 的包 Settings → Trusted Publisher 绑一次：
 #        Organization or user : gitalk
@@ -82,7 +84,7 @@ jobs:
           node-version: 24
           cache: pnpm
           # 不传 registry-url：避免 .npmrc 里出现空的 ${NODE_AUTH_TOKEN} 干扰 OIDC。
-          # 认证方式在下面按「有没有 NPM_TOKEN」决定。
+          # 认证方式固定为 OIDC，见文件头部。
 
       # Trusted Publishing 要 npm CLI ≥ 11.5.1，Node 自带的 npm 不保证够新。
       - name: Install latest npm
@@ -126,25 +128,6 @@ jobs:
             console.log(`  ${dir}: workspace:* -> ${core.version}`)
           }
           NODE
-
-      # 认证二选一，按有没有配 NPM_TOKEN 决定：
-      #   设了 → 用 token。这是引导期需要的：包在 npm 上还不存在时，压根没有
-      #          Settings 页可以配 Trusted Publisher，第一次发布只能靠令牌手动过。
-      #   没设 → 交给 npm CLI 用 OIDC 换临时凭证，仓库里不留任何长期令牌。
-      # 首次发布成功后，请去三个包的 Settings → Trusted Publisher 绑好，
-      # 再删掉这个 secret（`gh secret delete NPM_TOKEN -R gitalk/gitalk`）和令牌本身。
-      - name: Configure npm auth
-        run: |
-          set -euo pipefail
-          if [ -n "${NPM_TOKEN:-}" ]; then
-            # 只写进文件，不回显。
-            echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> "$HOME/.npmrc"
-            echo "认证方式：NPM_TOKEN"
-          else
-            echo "认证方式：OIDC Trusted Publishing"
-          fi
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # OIDC 只有在 id-token: write 生效时才会注入这两个变量；缺了它们，
       # npm CLI 会直接跳过 OIDC 并报 ENEEDAUTH，而日志里看不出区别。
