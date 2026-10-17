@@ -171,7 +171,7 @@ export async function handle(
 
 /** 302 to GitHub's consent screen, remembering where to return the user. */
 function handleAuthorize(url: URL, env: Env): Response {
-  const returnTo = url.searchParams.get('return_to') ?? '/'
+  const returnTo = safeReturnTo(url.searchParams.get('return_to'))
 
   const target = new URL(GITHUB_AUTHORIZE)
   target.searchParams.set('client_id', env.GITHUB_CLIENT_ID)
@@ -199,7 +199,7 @@ async function handleCallback(
   const state = url.searchParams.get('state')
   const error = url.searchParams.get('error')
 
-  const returnTo = state ? safeDecode(state) : '/'
+  const returnTo = safeReturnTo(state ? safeDecode(state) : '/')
   if (error) return redirectBack(returnTo, { error }, url.origin)
   if (!code) return json({ error: '`code` is required' }, { status: 400, headers: cors })
 
@@ -642,6 +642,38 @@ function redirectBack(
   const target = new URL(returnTo, origin)
   for (const [k, v] of Object.entries(params)) target.searchParams.set(k, v)
   return Response.redirect(target.toString(), 302)
+}
+
+/**
+ * Constrain `return_to` to a same-origin relative path.
+ *
+ * `redirectBack()` resolves `return_to` with `new URL(returnTo, origin)`,
+ * which happily accepts an absolute URL (or a protocol-relative `//host`
+ * one) and uses it as-is instead of resolving it against `origin`. Since
+ * the callback redirect carries the sealed session in its query string,
+ * an unvalidated absolute `return_to` is an open redirect that hands a
+ * signed-in visitor's session straight to an attacker-controlled origin.
+ * Only a path that is allow-listed (or, with no allowlist configured,
+ * genuinely relative with no scheme/host component) is accepted; anything
+ * else falls back to `/`.
+ */
+function safeReturnTo(value: string | null): string {
+  const returnTo = value ?? '/'
+
+  // Resolve against a fixed sentinel origin and require the result to
+  // still be on that origin. This relies on the URL parser itself (rather
+  // than string prefix checks) to catch every way WHATWG URL parsing can
+  // turn a "relative" string into a different origin — protocol-relative
+  // `//host`, backslash-as-slash normalization on special schemes,
+  // embedded credentials, etc.
+  const sentinel = 'https://return-to.invalid'
+  try {
+    const resolved = new URL(returnTo, sentinel)
+    if (resolved.origin !== sentinel) return '/'
+    return resolved.pathname + resolved.search + resolved.hash
+  } catch {
+    return '/'
+  }
 }
 
 function safeEncode(value: string): string {
