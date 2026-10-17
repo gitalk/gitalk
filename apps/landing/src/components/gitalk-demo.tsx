@@ -17,7 +17,7 @@ import { useI18n } from '../i18n'
  */
 const DEMO_PROXY = 'https://gitalk-proxy.aispin-abf.workers.dev'
 
-export function GitalkDemo() {
+export function GitalkDemo({ mode }: { mode: "default" | "inline" }) {
   const { lang } = useI18n()
 
   const options = useMemo(
@@ -41,7 +41,8 @@ export function GitalkDemo() {
       // The widget localises its own chrome and relative dates; keep it in
       // step with the page language instead of letting it fall back to the
       // browser locale.
-      language: lang === 'zh' ? 'zh-CN' : 'en'
+      language: lang === 'zh' ? 'zh-CN' : 'en',
+      mode
     }),
     [lang]
   )

@@ -1220,3 +1220,35 @@ a {
   }
 
 }
+
+/* Layout mode switch in the hero: shows the widget as a panel or as part of
+   the page, by flipping the component's own `mode` option. */
+.hero-mode {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.12));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg, #07080d) 55%, transparent);
+}
+
+.hero-mode button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--dim, #8a93a6);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.hero-mode button:hover {
+  color: var(--fg, #e8edf7);
+}
+
+.hero-mode button.is-active {
+  background: var(--brand, #1e4fff);
+  color: #fff;
+}

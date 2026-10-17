@@ -58,7 +58,7 @@ const zh = {
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
       stars: { label: 'Stars', note: 'GitHub 上的社区关注度。' }
     },
-    chips: ['⚡ 零后端', '✍️ Markdown', '🖼️ 图片上传', '🔍 全屏预览', '🌗 暗色自适应']
+    modeLabel: '布局模式', modeDefault: '默认', modeInline: 'Inline'
   },
   features: {
     eyebrow: "// WHAT'S NEW",
@@ -240,7 +240,7 @@ const en: Messages = {
       },
       stars: { label: 'Stars', note: 'Community interest on GitHub.' }
     },
-    chips: ['⚡ No backend', '✍️ Markdown', '🖼️ Image upload', '🔍 Image Preview', '🌗 Dark mode']
+    modeLabel: 'Layout mode', modeDefault: 'Default', modeInline: 'Inline'
   },
   features: {
     eyebrow: "// WHAT'S NEW",
