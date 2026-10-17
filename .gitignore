@@ -16,3 +16,7 @@ coverage/
 *.pem
 packages/proxy-cloudbase/.env
 packages/proxy-cloudbase/functions/*/server.js
+
+# Built by packages/gitalk-deploy/scripts/bundle.mjs (CI regenerates before publishing)
+packages/gitalk-deploy/templates/
+packages/gitalk-deploy/dist/
