@@ -2,6 +2,21 @@ export const GITHUB_API = 'https://api.github.com'
 export const API_VERSION = '2026-03-10'
 
 /**
+ * Opt-in for GitHub's next-generation global node IDs.
+ *
+ * Without it GitHub replies with the legacy format (`MDEwOkRpc2N1c3Npb24…`,
+ * which decodes to `010:Discussion3288936`) and GraphQL appends a DEPRECATION
+ * warning telling you to switch. REST honours the header too — verified
+ * against api.github.com on 2026-10-17: a discussion's `node_id` comes back as
+ * `D_kwDOFPp0Jc4AM14u` with the header and as the legacy base64 string
+ * without it. This matters because every mutation below is sent the id that
+ * the REST read produced.
+ *
+ * Docs: https://docs.github.com/en/graphql/guides/migrating-graphql-global-node-ids
+ */
+export const NEXT_GLOBAL_ID_HEADER = 'X-Github-Next-Global-ID'
+
+/**
  * `full+json` makes GitHub return the *server-rendered* `body_html` /
  * `body_text` fields over plain REST, which is how we avoid bundling a
  * markdown parser. Verified against both Discussions and Issues endpoints.
@@ -107,6 +122,7 @@ export class HttpClient {
     const headers: Record<string, string> = {
       Accept: HTML_MEDIA_TYPE,
       'X-GitHub-Api-Version': API_VERSION,
+      [NEXT_GLOBAL_ID_HEADER]: '1',
       ...init.headers
     }
 

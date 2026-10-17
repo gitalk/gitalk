@@ -2057,9 +2057,15 @@
   transition: background-color 0.16s, color 0.16s, border-color 0.16s;
 }
 
-.gt-container .gt-upvote:hover {
+.gt-container .gt-upvote:hover:not(:disabled) {
   border-color: var(--gt-color-main-border);
   color: var(--gt-color-accent);
+}
+
+/* GitHub rejects upvotes from App tokens; keep the count, show it is inert. */
+.gt-container .gt-upvote:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* Filled brand pill when the viewer has upvoted: white on #1E4FFF is 5.8:1. */

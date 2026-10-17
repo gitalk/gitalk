@@ -277,6 +277,12 @@ export interface GitalkOptions {
    * Upvotes are a Discussions-only concept — GitHub exposes no equivalent for
    * Issues — so the control is never rendered on the `issues` backend, and no
    * request is made for it either.
+   *
+   * It also requires a signed-in viewer, and with a GitHub App user token
+   * (`ghu_`, what this widget's login flow mints) the control is rendered
+   * disabled with an explanation: GitHub rejects the upvote mutations for
+   * app-issued tokens regardless of the App's `Discussions: write` permission.
+   * Set this to `false` to omit it entirely.
    */
   upvote?: boolean
   updateCountCallback?: (count: number) => void

@@ -143,6 +143,30 @@ describe('Auth', () => {
     })
   })
 
+  describe('token kind', () => {
+    it('recognizes GitHub App user-to-server tokens by their documented prefix', () => {
+      localStorage.setItem('GT_ACCESS_TOKEN', 'ghu_app-token')
+      expect(new Auth({ clientID: 'cid' }).isAppUserToken()).toBe(true)
+    })
+
+    it('does not mistake OAuth App or personal access tokens for App tokens', () => {
+      // These are the token kinds for which addUpvote is known to work, so the
+      // upvote control must stay enabled.
+      for (const token of ['gho_oauth', 'ghp_classic', 'github_pat_fine', 'test-token']) {
+        localStorage.setItem('GT_ACCESS_TOKEN', token)
+        expect(new Auth({ clientID: 'cid' }).isAppUserToken()).toBe(false)
+      }
+    })
+
+    it('is false without a token, including an expired one', () => {
+      expect(new Auth({ clientID: 'cid' }).isAppUserToken()).toBe(false)
+
+      localStorage.setItem('GT_ACCESS_TOKEN', 'ghu_expired')
+      localStorage.setItem('GT_TOKEN_EXPIRES_AT', String(Date.now() - 1000))
+      expect(new Auth({ clientID: 'cid' }).isAppUserToken()).toBe(false)
+    })
+  })
+
   it('round-trips a draft through storage', () => {
     const auth = new Auth({ clientID: 'cid' })
     auth.saveDraft('hello world')

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, afterEach, vi } from 'vitest'
-import { handle } from './index'
+import { handle, type Env } from './index'
 
 /**
  * These drive the real handler with GitHub stubbed out, so the whole
@@ -10,13 +10,17 @@ import { handle } from './index'
  * tokens.
  */
 
-const ENV = {
+const PROXY_ORIGIN = 'https://proxy.example'
+/** The site the widget is embedded on — a different origin from the proxy. */
+const BLOG_ORIGIN = 'https://site.example'
+
+const ENV: Env = {
   GITHUB_APP_ID: '1',
   GITHUB_APP_PRIVATE_KEY: 'unused-in-these-tests',
   GITHUB_CLIENT_ID: 'Iv23liTestClient',
   GITHUB_CLIENT_SECRET: 'client-secret',
   SESSION_ENCRYPTION_KEY: 'ab'.repeat(32),
-  GITALK_ALLOWED_ORIGINS: 'https://site.example'
+  GITALK_ALLOWED_ORIGINS: BLOG_ORIGIN
 }
 
 // The worker keeps its ExecutionContext interface private, so borrow the type
@@ -25,8 +29,11 @@ type WorkerContext = Parameters<typeof handle>[2]
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as WorkerContext
 
-const call = (path: string, init?: RequestInit) =>
-  handle(new Request(`https://proxy.example${path}`, init), ENV, ctx)
+const call = (path: string, init?: RequestInit, env: Env = ENV) =>
+  handle(new Request(`${PROXY_ORIGIN}${path}`, init), env, ctx)
+
+/** The `state` value /oauth/authorize mints for a given return target. */
+const encodeState = (value: string) => btoa(encodeURIComponent(value)).replace(/=+$/, '')
 
 const json = (body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -48,7 +55,7 @@ function mockGitHub(...responses: unknown[]) {
 /** Run the callback with stubbed GitHub and return the sealed session. */
 async function obtainSession(tokenResponse: unknown): Promise<string> {
   mockGitHub(tokenResponse)
-  const state = btoa(encodeURIComponent('https://site.example/post')).replace(/=+$/, '')
+  const state = encodeState(`${BLOG_ORIGIN}/post`)
   const response = await call(`/oauth/callback?code=abc&state=${state}`)
 
   const location = new URL(response.headers.get('Location') as string)
@@ -68,17 +75,41 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('/oauth/authorize', () => {
   it('sends the visitor to GitHub with the callback this worker serves', async () => {
-    const response = await call('/oauth/authorize?return_to=https%3A%2F%2Fsite.example%2Fpost')
+    // What the widget actually sends: `window.location.href`, i.e. an absolute
+    // URL on the blog's origin. The blog is cross-origin from the proxy, so
+    // this has to survive as an absolute target in `state`.
+    const returnTo = `${BLOG_ORIGIN}/post`
+    const response = await call(`/oauth/authorize?return_to=${encodeURIComponent(returnTo)}`)
     expect(response.status).toBe(302)
 
     const location = new URL(response.headers.get('Location') as string)
     expect(location.origin + location.pathname).toBe('https://github.com/login/oauth/authorize')
     expect(location.searchParams.get('client_id')).toBe(ENV.GITHUB_CLIENT_ID)
-    expect(location.searchParams.get('redirect_uri')).toBe('https://proxy.example/oauth/callback')
+    expect(location.searchParams.get('redirect_uri')).toBe(`${PROXY_ORIGIN}/oauth/callback`)
     // `state` is opaque to GitHub; what matters is that the callback can
     // recover the original page from it.
     const state = location.searchParams.get('state') as string
-    expect(decodeURIComponent(atob(state))).toBe('https://site.example/post')
+    expect(decodeURIComponent(atob(state))).toBe(returnTo)
+  })
+
+  it('mints a relative state for a target on its own origin', async () => {
+    // `redirectBack` resolves against the proxy, so its own origin must not be
+    // serialized into `state` — and the target must not be degraded to `/`.
+    const returnTo = `${PROXY_ORIGIN}/post?x=1#y`
+    const response = await call(`/oauth/authorize?return_to=${encodeURIComponent(returnTo)}`)
+
+    const location = new URL(response.headers.get('Location') as string)
+    const state = location.searchParams.get('state') as string
+    expect(decodeURIComponent(atob(state))).toBe('/post?x=1#y')
+  })
+
+  it('rejects a return_to whose origin is not allowlisted', async () => {
+    const response = await call(
+      `/oauth/authorize?return_to=${encodeURIComponent('https://evil.example/x')}`
+    )
+
+    const location = new URL(response.headers.get('Location') as string)
+    expect(decodeURIComponent(atob(location.searchParams.get('state') as string))).toBe('/')
   })
 
   it('omits scope, which a GitHub App ignores anyway', async () => {
@@ -102,6 +133,205 @@ describe('/oauth/callback', () => {
     const response = await call('/oauth/callback?error=access_denied&state=')
     const location = response.headers.get('Location') as string
     expect(location).toContain('error=access_denied')
+  })
+})
+
+/* ------------------------------------------------------------------ *
+ * `return_to` may only point at this worker or an allowlisted blog origin
+ * ------------------------------------------------------------------ */
+
+/**
+ * Drive /oauth/callback with `state` carrying `returnTo` and return the
+ * redirect target. Passing `null` omits `state` entirely.
+ *
+ * The assertions below check `Location`'s origin rather than the status code:
+ * every branch answers 302, and the sealed `gitalk_session` rides in that
+ * redirect, so the origin is the security boundary.
+ */
+async function callbackLocation(returnTo: string | null, env: Env = ENV): Promise<URL> {
+  mockGitHub({ access_token: 'gho_test' })
+  const query = returnTo === null ? '' : `&state=${encodeURIComponent(encodeState(returnTo))}`
+  const response = await call(`/oauth/callback?code=abc${query}`, undefined, env)
+  expect(response.status).toBe(302)
+
+  const location = response.headers.get('Location')
+  expect(location).toBeTruthy()
+  return new URL(location as string)
+}
+
+const backslashTargets: Array<[string, string]> = [
+  ['two leading backslashes', '\\\\evil.com'],
+  ['slash then backslash', '/\\evil.com'],
+  ['backslashes after the scheme', 'https://evil.com\\x']
+]
+
+const missingTargets: Array<[string, string | null]> = [
+  ['missing', null],
+  ['empty', '']
+]
+
+describe('return_to validation', () => {
+  it('returns to an absolute URL on an allowlisted blog origin', async () => {
+    // This is exactly what the widget sends (`window.location.href`). The blog
+    // and the proxy are different origins, so a strict same-origin check would
+    // drop the visitor on the proxy's `/` instead of their own page — the bug
+    // this policy exists to avoid.
+    const location = await callbackLocation(`${BLOG_ORIGIN}/post?x=1#y`)
+
+    expect(location.origin).toBe(BLOG_ORIGIN)
+    expect(location.pathname).toBe('/post')
+    expect(location.searchParams.get('x')).toBe('1')
+    expect(location.hash).toBe('#y')
+    // The session must land on the blog, where the widget can redeem it.
+    expect(location.searchParams.get('gitalk_session')).toBeTruthy()
+  })
+
+  it('trims allowlist entries the way the CORS check does', async () => {
+    // Production value shape: several origins, comma separated. `corsHeaders`
+    // trims each entry, so this must too — otherwise an origin listed after a
+    // space is accepted by CORS but rejected here, breaking its sign-in.
+    const env: Env = {
+      ...ENV,
+      GITALK_ALLOWED_ORIGINS: 'https://gitalk.github.io, http://127.0.0.1:4181'
+    }
+    const location = await callbackLocation('http://127.0.0.1:4181/post', env)
+
+    expect(location.origin).toBe('http://127.0.0.1:4181')
+    expect(location.pathname).toBe('/post')
+  })
+
+  it('does not redirect an absolute off-site target', async () => {
+    const location = await callbackLocation('https://evil.com/x')
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.hostname).not.toBe('evil.com')
+    expect(location.pathname).toBe('/')
+    // The session is still handed back — to us, not to the attacker.
+    expect(location.searchParams.get('gitalk_session')).toBeTruthy()
+  })
+
+  it('does not accept an origin that merely starts with an allowlisted one', async () => {
+    // Guards against a prefix/`startsWith` check drifting in: the comparison
+    // has to be on the parsed origin, not on the raw string.
+    const location = await callbackLocation(`${BLOG_ORIGIN}.evil.example/x`)
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.pathname).toBe('/')
+  })
+
+  it('does not redirect a protocol-relative target', async () => {
+    const location = await callbackLocation('//evil.com/x')
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.hostname).not.toBe('evil.com')
+  })
+
+  // A browser normalizes backslashes to slashes for special schemes, so a
+  // prefix check that treats them as ordinary path characters is bypassable.
+  it.each(backslashTargets)('does not redirect a target hidden behind %s', async (_label, returnTo) => {
+    const location = await callbackLocation(returnTo)
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+  })
+
+  // These are same-origin by `URL.origin`, but their path starts with `//`, so
+  // the relative form handed to `redirectBack` would re-resolve as a
+  // network-path reference and leave the origin.
+  it.each([
+    ['a double slash', `${PROXY_ORIGIN}//evil.com`],
+    ['a backslash path', `${PROXY_ORIGIN}/\\evil.com`]
+  ])('does not let a proxy-origin URL escape via %s', async (_label, returnTo) => {
+    const location = await callbackLocation(returnTo)
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.hostname).not.toBe('evil.com')
+  })
+
+  // The absolute branch is parsed a second time by `redirectBack`, so it needs
+  // the same leading-slash fold as the relative branch.
+  it.each([
+    ['a double slash', `${BLOG_ORIGIN}//evil.com`],
+    ['a backslash path', `${BLOG_ORIGIN}/\\evil.com`]
+  ])('does not let an allowlisted URL escape via %s', async (_label, returnTo) => {
+    const location = await callbackLocation(returnTo)
+
+    expect(location.origin).toBe(BLOG_ORIGIN)
+    expect(location.hostname).not.toBe('evil.com')
+    expect(location.pathname).toBe('/evil.com')
+  })
+
+  it('returns to a URL on its own origin in relative form', async () => {
+    // Relative-vs-absolute is pinned directly on the value authorize mints for
+    // `state` (see above); this only checks the return trip still works.
+    const location = await callbackLocation(`${PROXY_ORIGIN}/post?x=1#y`)
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.pathname).toBe('/post')
+    expect(location.searchParams.get('x')).toBe('1')
+    expect(location.hash).toBe('#y')
+    expect(location.searchParams.get('gitalk_session')).toBeTruthy()
+  })
+
+  it('keeps the path, query and hash of a relative target', async () => {
+    const location = await callbackLocation('/foo?x=1#y')
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.pathname).toBe('/foo')
+    expect(location.searchParams.get('x')).toBe('1')
+    expect(location.hash).toBe('#y')
+  })
+
+  it('only trusts its own origin when GITALK_ALLOWED_ORIGINS is unset', async () => {
+    // Fail closed: an empty configuration must not mean "any site is a valid
+    // return target", or a missing variable turns into an open redirect that
+    // leaks the sealed session.
+    const env: Env = { ...ENV, GITALK_ALLOWED_ORIGINS: undefined }
+
+    const denied = await callbackLocation(`${BLOG_ORIGIN}/post`, env)
+    expect(denied.origin).toBe(PROXY_ORIGIN)
+    expect(denied.pathname).toBe('/')
+
+    const allowed = await callbackLocation(`${PROXY_ORIGIN}/post`, env)
+    expect(allowed.origin).toBe(PROXY_ORIGIN)
+    expect(allowed.pathname).toBe('/post')
+  })
+
+  it('does not treat the CORS wildcard as a redirect permit', async () => {
+    // `*` lets any site embed the widget; it must not let any site receive the
+    // session, which is what honouring it here would do.
+    const env: Env = { ...ENV, GITALK_ALLOWED_ORIGINS: '*' }
+
+    const location = await callbackLocation(`${BLOG_ORIGIN}/post`, env)
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.pathname).toBe('/')
+  })
+
+  it.each(missingTargets)('falls back to / when return_to is %s', async (_label, returnTo) => {
+    const location = await callbackLocation(returnTo)
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.pathname).toBe('/')
+    expect(location.searchParams.get('gitalk_session')).toBeTruthy()
+  })
+
+  it('scrubs the target in authorize and re-checks a forged state on the way back', async () => {
+    // Gate one: what /oauth/authorize puts in `state` is already sanitized.
+    const authorize = await call(
+      `/oauth/authorize?return_to=${encodeURIComponent('https://evil.com/x')}`
+    )
+    const github = new URL(authorize.headers.get('Location') as string)
+    expect(decodeURIComponent(atob(github.searchParams.get('state') as string))).toBe('/')
+
+    // Gate two: `state` is unsigned, so an attacker can mint one carrying an
+    // off-site target without ever calling /oauth/authorize. The callback must
+    // reject it on its own.
+    mockGitHub({ access_token: 'gho_test' })
+    const forged = encodeState('https://evil.com/x')
+    const response = await call(`/oauth/callback?code=abc&state=${encodeURIComponent(forged)}`)
+    const location = new URL(response.headers.get('Location') as string)
+
+    expect(location.origin).toBe(PROXY_ORIGIN)
+    expect(location.hostname).not.toBe('evil.com')
   })
 })
 
@@ -208,12 +438,14 @@ describe('/oauth/token', () => {
 
 describe('/graphql', () => {
   it('forwards createDiscussion verbatim, authenticated as the visitor', async () => {
-    const sent: Array<{ url: string; auth: string | null; body: unknown }> = []
+    const sent: Array<{ url: string; auth: string | null; body: unknown; nextId: string | null }> = []
     vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
+      const headers = (init?.headers as Record<string, string> | undefined) ?? {}
       sent.push({
         url: String(input),
-        auth: (init?.headers as Record<string, string> | undefined)?.Authorization ?? null,
-        body: init?.body ? JSON.parse(String(init.body)) : null
+        auth: headers.Authorization ?? null,
+        body: init?.body ? JSON.parse(String(init.body)) : null,
+        nextId: headers['X-Github-Next-Global-ID'] ?? null
       })
       return json({ data: { createDiscussion: { discussion: { number: 7 } } } })
     })
@@ -230,7 +462,11 @@ describe('/graphql', () => {
 
     const response = await call('/graphql', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer gho_visitor' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer gho_visitor',
+        'X-Github-Next-Global-ID': '1'
+      },
       body: JSON.stringify(body)
     })
 
@@ -239,6 +475,9 @@ describe('/graphql', () => {
     expect(sent[0]?.url).toBe('https://api.github.com/graphql')
     expect(sent[0]?.auth).toBe('Bearer gho_visitor')
     expect(sent[0]?.body).toEqual(body)
+    // The opt-in must survive the proxy hop, otherwise GraphQL responses go
+    // back to legacy ids even though the widget asked for new ones.
+    expect(sent[0]?.nextId).toBe('1')
   })
 
   it('refuses anonymous GraphQL instead of borrowing the installation token', async () => {
@@ -260,4 +499,21 @@ describe('/graphql', () => {
     expect(called).toBe(false)
   })
 
+  it('lets the next-global-id opt-in through CORS preflight', async () => {
+    // The widget sends this custom header on every GraphQL request. A missing
+    // entry here fails the preflight silently, so the request never reaches
+    // this handler at all.
+    const response = await call('/graphql', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'https://site.example',
+        'Access-Control-Request-Headers': 'authorization,x-github-next-global-id'
+      }
+    })
+
+    expect(response.status).toBe(204)
+    expect(response.headers.get('Access-Control-Allow-Headers')).toContain(
+      'X-Github-Next-Global-ID'
+    )
+  })
 })

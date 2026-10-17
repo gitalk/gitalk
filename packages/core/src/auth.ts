@@ -67,6 +67,23 @@ export class Auth {
   }
 
   /**
+   * Whether the stored token is a GitHub App user-to-server token (`ghu_`).
+   *
+   * Token prefixes are documented at
+   * https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/about-authentication-to-github#githubs-token-formats
+   * (`ghu_` App user token, `gho_` OAuth App token, `ghp_`/`github_pat_` PAT).
+   *
+   * The distinction is load-bearing for upvotes: GitHub rejects `addUpvote` /
+   * `removeUpvote` for app-issued user tokens with "Resource not accessible by
+   * integration", even when the App holds `Discussions: write`. GitHub staff
+   * confirmed the limitation, and it is still open:
+   * https://github.com/orgs/community/discussions/3968
+   */
+  isAppUserToken(): boolean {
+    return (this.getToken() ?? '').startsWith('ghu_')
+  }
+
+  /**
    * Whether signing in can actually be attempted.
    *
    * The UI uses this to hide the login affordance instead of throwing at click

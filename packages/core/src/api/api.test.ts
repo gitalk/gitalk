@@ -807,6 +807,16 @@ describe('HttpClient', () => {
     expect((init.headers as Record<string, string>).Accept).toContain('full+json')
   })
 
+  it('opts into next-generation global node ids on every request', async () => {
+    // Without this header GitHub answers with legacy ids (`MDEwOk…`), and the
+    // very next GraphQL mutation using them gets a DEPRECATION warning. The
+    // header is what makes `node_id` come back as `D_kw…` / `DC_kw…`.
+    vi.mocked(globalThis.fetch).mockImplementation(async () => new Response('{}', { status: 200 }))
+    await new HttpClient(() => null).get('/x')
+    const init = vi.mocked(globalThis.fetch).mock.calls[0]![1] as RequestInit
+    expect((init.headers as Record<string, string>)['X-Github-Next-Global-ID']).toBe('1')
+  })
+
   it('asks for a network read when fresh is set', async () => {
     const get = vi.fn().mockResolvedValue([])
     const http = {

@@ -150,6 +150,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   upvote={state.upvote}
                   authenticated={meta.authenticated}
                   label={t('upvote')}
+                  disabledReason={meta.canToggleUpvote ? undefined : t('upvote-unavailable')}
                   onToggle={(next) => void actions.setUpvote(next)}
                   onLoginRequired={() => actions.requireLogin('upvote')}
                 />

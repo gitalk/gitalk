@@ -5,7 +5,15 @@ import type { BackendContext } from './api/backend'
 import { DiscussionsBackend } from './api/discussions'
 import { IssuesBackend } from './api/issues'
 import { Auth } from './auth'
-import { API_VERSION, GITHUB_API, GitalkError, HttpClient, RateLimitError, extractMessage } from './api/client'
+import {
+  API_VERSION,
+  GITHUB_API,
+  GitalkError,
+  HttpClient,
+  NEXT_GLOBAL_ID_HEADER,
+  RateLimitError,
+  extractMessage
+} from './api/client'
 import { createTranslator } from './i18n'
 import type {
   BackendKind,
@@ -732,8 +740,10 @@ export function useGitalk(options: GitalkOptions) {
   /**
    * Toggle the discussion upvote.
    *
-   * Optimistic like reactions, and gated the same way: an anonymous click is
-   * answered with the sign-in notice rather than a rejected request.
+   * Optimistic like reactions, and gated the same way. The extra `ghu_` check
+   * is a hard stop for GitHub App user tokens: GitHub answers those mutations
+   * with FORBIDDEN even with `Discussions: write`, so the UI never offers the
+   * click (see `Auth.isAppUserToken`).
    */
   const setUpvote = useCallback(
     async (next: boolean) => {
@@ -742,6 +752,9 @@ export function useGitalk(options: GitalkOptions) {
         requireLogin('upvote')
         return
       }
+      // App-issued user tokens cannot upvote at all; don't even try and turn a
+      // GitHub limitation into an error banner.
+      if (auth.isAppUserToken()) return
       const previous = state.upvote ?? { count: 0, viewerHasUpvoted: false }
       patch({
         upvote: {
@@ -806,7 +819,21 @@ export function useGitalk(options: GitalkOptions) {
       /** Discussions have threaded replies; issues do not. */
       canReply: backend.kind === 'discussions',
       /** Upvotes exist on Discussions only — never render the control otherwise. */
-      canUpvote: backend.supportsUpvote && opts.upvote,
+      canUpvote: backend.supportsUpvote && opts.upvote && Boolean(auth.getToken()),
+      /**
+       * Whether that control may actually be pressed.
+       *
+       * GitHub App user tokens (`ghu_`) cannot call `addUpvote`/`removeUpvote`
+       * — GitHub returns FORBIDDEN regardless of the App's permissions — so
+       * the widget shows the count but disables the button and explains why.
+       * Anonymous visitors get no control at all: the only sign-in path this
+       * widget owns mints an App token, so there is nothing to log in *to*.
+       */
+      canToggleUpvote:
+        backend.supportsUpvote &&
+        opts.upvote &&
+        Boolean(auth.getToken()) &&
+        !auth.isAppUserToken(),
       showMentions: opts.mentions,
       showReactions: opts.reactions,
       sortDirection: opts.sortDirection,
@@ -977,7 +1004,11 @@ async function sendGraphql<T>(
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     Accept: 'application/vnd.github+json',
-    'X-GitHub-Api-Version': API_VERSION
+    'X-GitHub-Api-Version': API_VERSION,
+    // Ask for the same id format the REST reads now return, so ids that come
+    // back *from* GraphQL (a freshly created comment/discussion) are usable in
+    // later mutations without a deprecation warning.
+    [NEXT_GLOBAL_ID_HEADER]: '1'
   }
   if (token) headers.Authorization = `Bearer ${token}`
 

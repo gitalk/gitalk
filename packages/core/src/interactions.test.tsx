@@ -31,7 +31,10 @@ const COMMENTS = [
 
 const THREAD = {
   number: 442,
-  node_id: 'D442',
+  // Next-generation global id, the format GitHub returns when the
+  // `X-Github-Next-Global-ID: 1` opt-in header is sent. The legacy format is
+  // `MDEwOkRpc2N1c3Npb24zMjg4OTM2` (decodes to `010:Discussion3288936`).
+  node_id: 'D_kwDOBctmZs4AMi9o',
   title: 'demo',
   html_url: 'u',
   locked: false,
@@ -41,11 +44,15 @@ const THREAD = {
 interface Harness {
   host: HTMLElement
   graphql: Array<{ query: string; variables: Record<string, unknown> }>
+  graphqlHeaders: Array<Record<string, string>>
+  restRequests: Array<{ url: string; headers: Record<string, string> }>
 }
 
 describe('reactions and upvotes', () => {
   let host: HTMLElement
   let graphql: Harness['graphql']
+  let graphqlHeaders: Harness['graphqlHeaders']
+  let restRequests: Harness['restRequests']
   /** What the `gitalkReactionStates` query answers with. */
   let reactionStates: Array<{ id: string; reactionGroups: unknown[] }>
   const originalFetch = globalThis.fetch
@@ -54,16 +61,20 @@ describe('reactions and upvotes', () => {
     host = document.createElement('div')
     document.body.appendChild(host)
     graphql = []
+    graphqlHeaders = []
+    restRequests = []
     reactionStates = []
 
     globalThis.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
+      const headers = { ...((init?.headers as Record<string, string> | undefined) ?? {}) }
       if (url.includes('/graphql')) {
         const body = JSON.parse(String(init?.body)) as {
           query: string
           variables: Record<string, unknown>
         }
         graphql.push(body)
+        graphqlHeaders.push(headers)
         if (body.query.includes('upvoteCount')) {
           return json({ data: { node: { upvoteCount: 5, viewerHasUpvoted: false } } })
         }
@@ -72,6 +83,7 @@ describe('reactions and upvotes', () => {
         }
         return json({ data: {} })
       }
+      restRequests.push({ url, headers })
       if (url.includes('/issues/442/comments')) return json(COMMENTS)
       if (url.includes('/issues/442')) {
         return json({ ...THREAD, number: 442 })
@@ -97,8 +109,10 @@ describe('reactions and upvotes', () => {
     })
   }
 
-  async function mountWidget(extra: Partial<GitalkOptions> = {}, signedIn = true) {
-    if (signedIn) localStorage.setItem(TOKEN_STORAGE_KEY, 'test-token')
+  async function mountWidget(extra: Partial<GitalkOptions> = {}, signedIn: boolean | string = true) {
+    if (signedIn) {
+      localStorage.setItem(TOKEN_STORAGE_KEY, typeof signedIn === 'string' ? signedIn : 'test-token')
+    }
     mount(host, {
       clientID: 'c',
       owner: 'gitalk',
@@ -245,17 +259,23 @@ describe('reactions and upvotes', () => {
     expect(upvote).toBeTruthy()
     expect(upvote.textContent).toContain('Upvote')
     expect(upvote.textContent).toContain('5')
+    expect(upvote.disabled).toBe(false)
     expect(upvote.getAttribute('aria-pressed')).toBe('false')
 
     upvote.click()
     await flush()
-    expect(graphql.some((g) => g.query.includes('addUpvote'))).toBe(true)
+    const add = graphql.find((g) => g.query.includes('addUpvote'))!
+    expect(add).toBeTruthy()
+    // The id GitHub is given must be the next-generation format, not the
+    // legacy `010:Discussion…` string that triggered the DEPRECATION warning.
+    expect(add.variables).toEqual({ subjectId: 'D_kwDOBctmZs4AMi9o' })
     expect(upvote.getAttribute('aria-pressed')).toBe('true')
     expect(upvote.textContent).toContain('6')
 
     upvote.click()
     await flush()
-    expect(graphql.some((g) => g.query.includes('removeUpvote'))).toBe(true)
+    const remove = graphql.find((g) => g.query.includes('removeUpvote'))!
+    expect(remove.variables).toEqual({ subjectId: 'D_kwDOBctmZs4AMi9o' })
     expect(upvote.getAttribute('aria-pressed')).toBe('false')
     expect(upvote.textContent).toContain('5')
   })
@@ -264,7 +284,38 @@ describe('reactions and upvotes', () => {
     await mountWidget()
     const query = graphql.find((g) => g.query.includes('upvoteCount'))!
     expect(query.query).toContain('viewerHasUpvoted')
-    expect(query.variables).toEqual({ id: 'D442' })
+    expect(query.variables).toEqual({ id: 'D_kwDOBctmZs4AMi9o' })
+  })
+
+  it('opts REST and GraphQL into next-generation global node ids', async () => {
+    await mountWidget()
+    // REST is where the widget gets the discussion/comment ids it later sends
+    // to GraphQL; without this header they come back in the legacy format.
+    const rest = restRequests.find((r) => r.url.includes('/discussions/442'))!
+    expect(rest.headers['X-Github-Next-Global-ID']).toBe('1')
+
+    // GraphQL must opt in too, so ids in its *responses* (a new comment, a
+    // repository id used by createDiscussion) are new-format as well.
+    expect(graphqlHeaders.length).toBeGreaterThan(0)
+    for (const headers of graphqlHeaders) {
+      expect(headers['X-Github-Next-Global-ID']).toBe('1')
+    }
+  })
+
+  it('disables upvote for GitHub App user tokens instead of letting GitHub reject it', async () => {
+    // GitHub App user-to-server tokens (`ghu_`) cannot call addUpvote even
+    // with `Discussions: write`; the count is still readable.
+    await mountWidget({}, 'ghu_test')
+    const upvote = host.querySelector('.gt-upvote') as HTMLButtonElement
+    expect(upvote).toBeTruthy()
+    expect(upvote.disabled).toBe(true)
+    expect(upvote.title).toContain('GitHub App')
+    expect(upvote.textContent).toContain('5')
+
+    upvote.click()
+    await flush()
+    expect(graphql.some((g) => g.query.includes('addUpvote'))).toBe(false)
+    expect(host.querySelector('.gt-error')).toBeNull()
   })
 
   it('does not render the upvote control on the Issues backend', async () => {
@@ -297,11 +348,12 @@ describe('reactions and upvotes', () => {
     expect(host.querySelector('.gt-notice')).toBeNull()
   })
 
-  it('tells an anonymous visitor to sign in before upvoting too', async () => {
+  it('does not render an upvote control an anonymous visitor could never use', async () => {
+    // The widget's only sign-in path mints a GitHub App user token, which
+    // GitHub forbids from upvoting — so there is no login that would enable
+    // this control. Showing it would be a promise the API cannot keep.
     await mountWidget({}, false)
-    ;(host.querySelector('.gt-upvote') as HTMLElement).click()
-    await flush()
-    expect(host.querySelector('.gt-notice')?.textContent).toContain('to upvote')
+    expect(host.querySelector('.gt-upvote')).toBeNull()
     expect(graphql).toHaveLength(0)
   })
 })

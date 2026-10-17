@@ -48,8 +48,15 @@ export interface Env {
   GITHUB_CLIENT_SECRET: string
   /** Hex-encoded 32-byte key used to seal session blobs. */
   SESSION_ENCRYPTION_KEY: string
-  /** Comma-separated origin allowlist, or `*`. */
-  GITALK_ALLOWED_ORIGINS: string
+  /**
+   * Comma-separated origin allowlist, or `*`.
+   *
+   * Doubles as the set of blog origins the OAuth callback may hand the session
+   * back to, so leaving it unset keeps the return trip on this proxy's own
+   * origin rather than opening it to everyone. `*` widens CORS only — see
+   * `safeReturnTo`.
+   */
+  GITALK_ALLOWED_ORIGINS?: string
   /** Optional: skip installation discovery when the app has one install. */
   GITHUB_INSTALLATION_ID?: string
 }
@@ -136,7 +143,8 @@ export async function handle(
         // header, and anonymous reads carry almost none of them — which is how
         // Authorization and then X-GitHub-Api-Version each broke sign-in and
         // commenting in turn without any check noticing.
-        'Access-Control-Allow-Headers': 'Accept, Authorization, Content-Type, X-GitHub-Api-Version',
+        'Access-Control-Allow-Headers':
+          'Accept, Authorization, Content-Type, X-GitHub-Api-Version, X-Github-Next-Global-ID',
         'Access-Control-Max-Age': '86400'
       }
     })
@@ -171,7 +179,13 @@ export async function handle(
 
 /** 302 to GitHub's consent screen, remembering where to return the user. */
 function handleAuthorize(url: URL, env: Env): Response {
-  const returnTo = url.searchParams.get('return_to') ?? '/'
+  // Validate here as well as in the callback: `state` is opaque to GitHub but
+  // anyone can mint one, so the callback cannot be the only gate.
+  const returnTo = safeReturnTo(
+    url.searchParams.get('return_to'),
+    url.origin,
+    env.GITALK_ALLOWED_ORIGINS
+  )
 
   const target = new URL(GITHUB_AUTHORIZE)
   target.searchParams.set('client_id', env.GITHUB_CLIENT_ID)
@@ -199,7 +213,11 @@ async function handleCallback(
   const state = url.searchParams.get('state')
   const error = url.searchParams.get('error')
 
-  const returnTo = state ? safeDecode(state) : '/'
+  // Defence in depth: `state` round-trips through GitHub but is not signed, so
+  // it may have been forged. Re-validate instead of trusting `handleAuthorize`.
+  const returnTo = state
+    ? safeReturnTo(safeDecode(state), url.origin, env.GITALK_ALLOWED_ORIGINS)
+    : '/'
   if (error) return redirectBack(returnTo, { error }, url.origin)
   if (!code) return json({ error: '`code` is required' }, { status: 400, headers: cors })
 
@@ -286,6 +304,13 @@ async function handleGraphql(
     return json({ error: 'Sign in with GitHub to perform this request' }, { status: 401, headers: cors })
   }
 
+  // The widget opts into GitHub's next-generation global node IDs. This proxy
+  // rebuilds the upstream headers below, so without forwarding the opt-in the
+  // GraphQL response would revert to legacy ids (for example a freshly created
+  // comment's `id`, which the widget then sends back in the next mutation and
+  // gets a DEPRECATION warning for).
+  const nextGlobalId = request.headers.get('X-Github-Next-Global-ID')
+
   const upstream = await fetch(`${GITHUB_API}/graphql`, {
     method: 'POST',
     headers: {
@@ -293,6 +318,7 @@ async function handleGraphql(
       'Content-Type': 'application/json',
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2026-03-10',
+      ...(nextGlobalId ? { 'X-Github-Next-Global-ID': nextGlobalId } : {}),
       'User-Agent': GITHUB_USER_AGENT
     },
     body
@@ -613,11 +639,28 @@ function fromBase64Url(value: string): Uint8Array {
  * helpers
  * ------------------------------------------------------------------ */
 
-function corsHeaders(origin: string | null, allowed: string): Record<string, string> {
-  const list = (allowed ?? '')
+/**
+ * Split `GITALK_ALLOWED_ORIGINS` into entries.
+ *
+ * This is deliberately the one and only parser for that value, shared with the
+ * CORS check: comma-separated, whitespace-trimmed, empty entries dropped.
+ * Entries are compared verbatim — both `URL.origin` and the browser's `Origin`
+ * header are already normalized (lowercase scheme/host, no default port), and
+ * docs/guide.md tells operators to write bare origins. Do not add a second set
+ * of separator/case rules here.
+ */
+function allowedOriginList(allowed: string | undefined): string[] {
+  return (allowed ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
+}
+
+function corsHeaders(
+  origin: string | null,
+  allowed: string | undefined
+): Record<string, string> {
+  const list = allowedOriginList(allowed)
 
   const permit =
     !list.length || list.includes('*') || (origin && list.includes(origin))
@@ -625,6 +668,78 @@ function corsHeaders(origin: string | null, allowed: string): Record<string, str
       : list[0]!
 
   return { 'Access-Control-Allow-Origin': permit, Vary: 'Origin' }
+}
+
+/**
+ * Resolve a caller-supplied `return_to` to the target the callback may send the
+ * visitor back to.
+ *
+ * `return_to` is the page that started the sign-in: the widget passes
+ * `window.location.href` (see `packages/core/src/use-gitalk.ts`), i.e. an
+ * absolute URL on the *blog's* origin. That origin is normally NOT this
+ * worker's — the proxy runs on e.g. `gitalk-proxy.…workers.dev` while the
+ * widget is embedded on `gitalk.github.io`. Requiring a match with `origin`
+ * alone therefore rejects every legitimate return trip, the same mistake the
+ * external PR made with a sentinel origin.
+ *
+ * Two kinds of target are trusted:
+ *
+ *   1. this proxy's own origin, returned as a relative form because
+ *      `redirectBack` resolves it against `origin` again;
+ *   2. an origin listed in `GITALK_ALLOWED_ORIGINS` — the existing "which
+ *      sites may embed the widget" config. Those sites are cross-origin by
+ *      definition, so the origin has to be serialized too, or `redirectBack`
+ *      would resolve the path back onto the proxy.
+ *
+ * Everything else — off-list origins, protocol-relative or backslash tricks,
+ * unparseable or absent values — falls back to `/` on this proxy.
+ *
+ * `GITALK_ALLOWED_ORIGINS`'s `*` wildcard is deliberately NOT honoured here.
+ * It governs who may read CORS responses; treating it as a redirect allowlist
+ * would let anyone mint a `state` and receive the sealed session in the
+ * redirect. With the variable unset, only the proxy's own origin is accepted.
+ *
+ * Use a URL parser rather than a string-prefix check: the parser normalizes
+ * `//host`, backslashes, embedded credentials and percent-encoding exactly the
+ * way a browser will, which is the only comparison that reflects what the
+ * browser actually navigates to.
+ *
+ * `origin` must be the same origin `redirectBack` will resolve against — i.e.
+ * `url.origin` from the request being handled, which already reflects
+ * `PUBLIC_ORIGIN` / forwarded headers at the platform adapter.
+ */
+function safeReturnTo(
+  value: string | null,
+  origin: string,
+  allowed: string | undefined
+): string {
+  try {
+    const target = new URL(value ?? '/', origin)
+
+    // Fold leading slashes before serializing, in BOTH branches. A pathname
+    // starting with `//` is a network-path reference, not a path:
+    // `redirectBack` re-resolves whatever string comes back, so
+    // `https://proxy.example//evil.com` (same-origin as a URL) would be handed
+    // over as `//evil.com` and jump hosts. The same applies to the absolute
+    // branch, where the string is parsed once more by `redirectBack`.
+    const path = `${target.pathname.replace(/^\/+/, '/')}${target.search}${target.hash}`
+
+    // This worker's own origin: relative form, resolved again by
+    // `redirectBack`. Not serializing the origin also keeps the redirect
+    // portable when the proxy is reached through a forwarded host.
+    if (target.origin === origin) return path
+
+    // An allowlisted blog origin: keep the origin, because `redirectBack`
+    // resolves against the proxy and a bare path would land here instead of on
+    // the page the visitor came from.
+    if (allowedOriginList(allowed).includes(target.origin)) {
+      return `${target.origin}${path}`
+    }
+
+    return '/'
+  } catch {
+    return '/'
+  }
 }
 
 /**
