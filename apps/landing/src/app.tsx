@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useFx } from './use-fx'
 import { Moon, Sun } from 'lucide-react'
 import { Logo } from './components/logo'
 import { GithubIcon } from './components/github-icon'
@@ -19,6 +20,7 @@ const VERSION = `v${__GITALK_VERSION__}`
 export function App() {
   const { lang, setLang, t } = useI18n()
   const [dark, setDark] = useState<boolean>(() => prefersDark())
+  useFx()
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light'

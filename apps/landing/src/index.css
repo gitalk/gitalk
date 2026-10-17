@@ -1161,3 +1161,60 @@ a {
     transform: none;
   }
 }
+
+/* ---------- motion the design has, and a static page does not ---------- */
+
+/* Frosted header once content scrolls beneath it. */
+.nav {
+  transition: background-color 0.3s, backdrop-filter 0.3s, border-color 0.3s;
+  border-bottom: 1px solid transparent;
+}
+
+.nav.is-scrolled {
+  background: color-mix(in srgb, var(--bg, #07080d) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(1.35);
+  border-bottom-color: var(--line, rgba(255, 255, 255, 0.12));
+}
+
+/* Cards lean towards the pointer, with the comment row's easing. */
+.stat-card,
+.feature-card {
+  transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1), background-color 0.3s,
+    border-color 0.3s;
+}
+
+.stat-card:hover,
+.feature-card:hover {
+  transition-duration: 0.1s, 0.3s, 0.3s;
+}
+
+/* Pointer-tinted glow over the aurora. */
+.aurora::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    380px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(30, 79, 255, 0.2),
+    transparent 68%
+  );
+  transition: background 0.2s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav {
+    transition: none;
+  }
+
+  .stat-card,
+  .feature-card {
+    transform: none;
+    transition: none;
+  }
+
+  .aurora::after {
+    display: none;
+  }
+}
