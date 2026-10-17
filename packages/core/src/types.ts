@@ -442,6 +442,18 @@ export interface GitalkOptions {
    *
    * @default 'default'
    */
+  /**
+   * z-index for the minimised floating button. Defaults to 9000: it has to sit
+   * above whatever the host page puts in a corner (cookie bars, chat widgets,
+   * back-to-top buttons) or it becomes unclickable.
+   */
+  minimizedZIndex?: number
+  /**
+   * z-index for the composer while it is docked to the viewport bottom.
+   * Defaults to 8999 — one below the minimised button, so collapsing it never
+   * lands underneath itself.
+   */
+  dockedZIndex?: number
   mode?: 'default' | 'inline'
   stickyComposer?: boolean
   updateCountCallback?: (count: number) => void

@@ -2468,7 +2468,7 @@
 
 .gt-container .gt-fab {
   position: fixed;
-  z-index: 40;
+  z-index: 9000;
   display: inline-flex;
   align-items: center;
   gap: 8px;
