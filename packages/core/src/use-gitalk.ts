@@ -856,14 +856,23 @@ export function useGitalk(options: GitalkOptions) {
    * GitHub's Markdown endpoint. A failed or superseded render leaves the
    * composer in source mode.
    */
-  /** Flip newest/oldest and reload from the first page. */
+  /** Flip newest/oldest. The reload happens in the effect below, once `sortDir`
+   *  has actually changed — calling `load` from inside the updater would use the
+   *  previous direction and reload the same order. */
   const toggleSort = useCallback(() => {
-    setSortDir((prev) => {
-      const next: SortDirection = prev === 'last' ? 'first' : 'last'
-      void load(false)
-      return next
-    })
-  }, [load])
+    setSortDir((prev) => (prev === 'last' ? 'first' : 'last'))
+  }, [])
+
+  // Skip the first run: the initial load already happened with the initial
+  // direction, and reloading here would double-fetch on mount.
+  const sortSettled = useRef(false)
+  useEffect(() => {
+    if (!sortSettled.current) {
+      sortSettled.current = true
+      return
+    }
+    void load(false)
+  }, [load, sortDir])
 
   const refreshPreview = useCallback(async () => {
     if (!state.draft.trim()) {
