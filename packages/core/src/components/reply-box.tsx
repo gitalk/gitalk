@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'preact/hooks'
 import type { MentionCandidate } from '../mentions'
 import { Button } from './button'
 import { MentionTextarea } from './mention-textarea'
@@ -37,8 +38,21 @@ export function ReplyBox({
   onSubmit,
   onCancel
 }: ReplyBoxProps) {
+// Opening a reply near the bottom of the scrollable list can leave the
+// submit button below the fold. Bring the box into view on mount;
+// `nearest` leaves it alone when it is already visible.
+const rootRef = useRef<HTMLDivElement>(null)
+useEffect(() => {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  rootRef.current?.scrollIntoView({
+    block: 'nearest',
+    behavior: reduced ? 'auto' : 'smooth'
+  })
+}, [])
+
   return (
-    <div className="gt-reply-box" role="group" aria-label={placeholder}>
+    <div ref={rootRef}
+        className="gt-reply-box" role="group" aria-label={placeholder}>
       <MentionTextarea
         className="gt-reply-textarea"
         value={value}
