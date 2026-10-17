@@ -38,7 +38,6 @@ export function GitalkDemo() {
        * inside this nested scroll container it would escape the box and cover
        * the page. Core ships the option for exactly this case.
        */
-      stickyComposer: false,
       // The widget localises its own chrome and relative dates; keep it in
       // step with the page language instead of letting it fall back to the
       // browser locale.
