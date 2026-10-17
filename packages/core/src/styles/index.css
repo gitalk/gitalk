@@ -437,8 +437,7 @@
 .gt-container .gt-initing-logo {
   display: inline-flex;
   color: var(--gt-color-accent);
-  opacity: 0.9;
-  animation: gt-kf-breathe 2.4s ease-in-out infinite;
+  animation: gt-kf-pulse 2.4s ease-in-out infinite;
 }
 
 .gt-container .gt-initing-text {
@@ -2325,6 +2324,17 @@
 }
 
 /* ---- optimistic comments -------------------------------------------- */
+/* Opacity only: this is used on the brand mark, which must not gain a fill. */
+@keyframes gt-kf-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @keyframes gt-kf-breathe {
   0%,
   100% {
