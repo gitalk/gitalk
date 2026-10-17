@@ -12,7 +12,11 @@ import { LANGS, useI18n } from './i18n'
  * page loads (see vite.config.ts) and the star count from the deploy workflow;
  * both were literals once and both drifted.
  */
-const stars = __GITALK_STARS__
+// CI injects the real count; a dev server has no workflow to read it, so fall
+// back to the value that was current when this was written. It exists so the
+// strip can be laid out and reviewed locally, and it is never what production
+// shows — the deploy overwrites it.
+const stars = __GITALK_STARS__ || '7.2k'
 const COUNTS: HeroCounts = {
   size: { value: __GITALK_RAW__, unit: 'kB' },
   gzip: { value: __GITALK_GZIP__, unit: 'kB' },
