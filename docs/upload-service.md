@@ -278,3 +278,192 @@ uploads/YYYY/MM/<sha256-of-bytes>.<ext>
 | postimages / imgur | 第三方账号 | 第三方 | 无 | ❌ 无 API 或需第三方账号 |
 | PicX 模式 | **宽权限 App**（`administration`/`actions`/`deployments`…） | 用户仓库 | 无 | ❌ 权限过大；且它是 SPA 不是库、AGPL |
 | **本项目** | **仅 `contents: write`，单仓库** | 指定仓库 | 中（需配额+删除） | ✅ 权限最小、可自托管、可复用 |
+
+---
+
+## 14. 部署示例
+
+以下步骤假设你已经完成 §3 的 App 与仓库准备。
+
+### 14.0 共同前置
+
+```bash
+# 1. 新建上传 App，只勾选：
+#    Repository permissions → Contents: Read and write
+#    （Metadata: Read-only 自动带上）
+# 2. 生成并下载私钥（.pem），保存到服务端，不要提交进仓库
+# 3. 新建 public 仓库 `assets`（关闭 Actions / Pages / Issues / Wiki）
+# 4. 把 App 安装到这个仓库，记下 installation id
+#    在安装页 URL 里能看到：.../installations/<installation_id>
+```
+
+### 14.1 Cloudflare Workers
+
+**目录结构**
+
+```
+upload-worker/
+├── wrangler.toml
+├── src/index.ts          # 平台无关的 handle(request, env, ctx)
+└── src/platform.ts       # CF 适配层：export default { fetch: handle }
+```
+
+**配额计数器用 KV**
+
+```bash
+wrangler kv namespace create UPLOAD_QUOTA
+# 把输出的 id 填进 wrangler.toml
+```
+
+**`wrangler.toml`**
+
+```toml
+name = "repo-uploads"
+main = "src/platform.ts"
+compatibility_date = "2026-01-01"
+
+[[kv_namespaces]]
+binding = "QUOTA"
+id = "<上一步输出的 id>"
+
+[vars]
+ASSETS_OWNER = "<owner>"
+ASSETS_REPO = "assets"
+ASSETS_BRANCH = "main"
+AUTH_MODE = "api-key"
+MAX_FILE_BYTES = "5242880"
+MAX_FILES = "4"
+```
+
+**私钥与凭据用 secret，不要写进 toml**
+
+```bash
+wrangler secret put GITHUB_APP_PRIVATE_KEY   # 粘贴 .pem 全文
+wrangler secret put GITHUB_APP_ID
+wrangler secret put GITHUB_APP_INSTALLATION_ID
+wrangler secret put API_KEYS                 # 逗号分隔
+```
+
+**部署与验证**
+
+```bash
+wrangler deploy
+curl -s https://repo-uploads.<account>.workers.dev/health
+# → {"ok":true,"repo":"assets","branch":"main"}
+```
+
+**参考限额**：免费版 100,000 请求/天；单次请求体上限约 100 MB（远高于我们的 5 MB 限制）。
+
+### 14.2 腾讯云 CloudBase（HTTP 云函数）
+
+CloudBase 的 HTTP 函数由三个硬性要求决定：**监听 9000 端口**、用 `scf_bootstrap` 启动、部署时必须 `--force`。
+
+**目录结构**
+
+```
+upload-cloudbase/
+├── cloudbaserc.json
+├── functions/upload/
+│   ├── scf_bootstrap        # 可执行，内容见下
+│   ├── index.js             # 打包产物（esbuild 输出）
+│   └── package.json
+└── scripts/build.mjs
+```
+
+**`scf_bootstrap`**（必须可执行：`chmod +x`）
+
+```sh
+#!/bin/sh
+export PORT=9000
+exec node index.js
+```
+
+**`cloudbaserc.json`**
+
+```json
+{
+  "envId": "{{env.CLOUDBASE_ENV_ID}}",
+  "framework": { "name": "upload", "plugins": {} },
+  "functionRoot": "./functions",
+  "functions": [{
+    "name": "upload",
+    "type": "HTTP",
+    "handler": "index.main",
+    "runtime": "Nodejs18.15",
+    "memorySize": 256,
+    "timeout": 20,
+    "envVariables": {
+      "ASSETS_OWNER": "{{env.ASSETS_OWNER}}",
+      "ASSETS_REPO": "assets",
+      "ASSETS_BRANCH": "main",
+      "AUTH_MODE": "api-key"
+    }
+  }]
+}
+```
+
+> `{{env.X}}` 会在部署时从**当前目录的 `.env`** 插值。**secrets 不要写进 `cloudbaserc.json`**，用控制台环境变量或 `.env`（并 .gitignore）。
+
+**部署**
+
+```bash
+tcb login
+cd upload-cloudbase
+npm run build            # esbuild 打成单文件 index.js
+tcb fn deploy upload --force     # ⚠️ 不带 --force 会静默跳过，看起来"成功"但没更新
+```
+
+**踩过的坑（都是真实遇到的）**
+
+| 坑 | 现象 | 正确做法 |
+| --- | --- | --- |
+| 不带 `--force` | 命令成功但函数没更新 | 永远 `--force` |
+| 在仓库根目录执行 | 找不到 `cloudbaserc.json`，可能新建出错误的函数 | `cd` 到 `cloudbaserc.json` 所在目录 |
+| 监听 8080/3000 | 函数健康检查失败 | 必须 `PORT=9000` |
+| 同步请求体超 6 MB | 大文件上传失败 | 单文件 ≤ 5 MB（本项目默认值） |
+| 默认域名 | 只能测试用，不能手工加路由 | 绑自定义域名（需备案 + 证书） |
+
+**验证**
+
+```bash
+curl -s https://<env-id>.service.tcloudbase.com/upload/health
+```
+
+### 14.3 自托管 Node
+
+```bash
+node src/server.js
+# 监听 PORT（默认 8787），核心逻辑与上面完全相同
+```
+
+需要额外的环境变量 `PUBLIC_ORIGIN`（如果服务在反向代理后面，用于拼对外 URL）。
+
+### 14.4 冒烟测试（三种部署通用）
+
+```bash
+# 1. 健康检查
+curl -s $BASE/health
+
+# 2. 上传一张小图
+curl -s -X POST $BASE/upload \
+  -H "Authorization: Bearer $API_KEY" \
+  -F "files=@./test.png"
+# → 200，返回 url / path / sha
+
+# 3. 再传一次同一张图
+# → 相同 path，且 assets 仓库不产生第二个 commit（内容哈希去重）
+
+# 4. 拒绝 SVG
+curl -s -X POST $BASE/upload -H "Authorization: Bearer $API_KEY" \
+  -F "files=@./test.svg"
+# → 415
+
+# 5. 拒绝超额
+curl -s -X POST $BASE/upload -H "Authorization: Bearer $API_KEY" \
+  -F "files=@./6mb.png"
+# → 413
+
+# 6. 无凭据
+curl -s -X POST $BASE/upload -F "files=@./test.png"
+# → 401
+```
