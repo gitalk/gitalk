@@ -122,6 +122,29 @@ export function MentionTextarea({
     }
   })
 
+  /**
+   * Grow the editor with its content, up to the CSS `max-height`.
+   *
+   * The composer used to be a fixed 36px single-line bar; the merged
+   * source/preview component lets a draft breathe instead of scrolling inside
+   * one line. Measuring after the value render keeps the height in step with
+   * controlled updates (typing, mention insertion, image Markdown) without a
+   * second state variable. A hidden textarea reports 0 — the preview state —
+   * and is left alone.
+   */
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || el.scrollHeight <= 0) return
+    // `height: auto` first: scrollHeight is clamped to the current box, so a
+    // draft that shrank would otherwise never give the height back.
+    el.style.height = 'auto'
+    const content = el.scrollHeight
+    const max = Number.parseFloat(getComputedStyle(el).maxHeight)
+    const next = Number.isFinite(max) ? Math.min(content, max) : content
+    el.style.height = `${next}px`
+    el.style.overflowY = content > next ? 'auto' : 'hidden'
+  })
+
   useEffect(() => {
     if (autoFocus) ref.current?.focus()
     // eslint-disable-next-line react-hooks/exhaustive-deps

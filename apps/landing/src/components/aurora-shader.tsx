@@ -35,6 +35,15 @@ export type AuroraTheme = 'dark' | 'light'
 
 const DPR_MAX = 1.5
 
+/**
+ * Slow the aurora to two thirds of the design's speed.
+ *
+ * Applied to the `uTime` uniform rather than the shader's `t` coefficient, so
+ * the whole field (all three noise layers and the mouse drift) advances in
+ * step; the shader source stays the reference's verbatim maths.
+ */
+const TIME_SCALE = 2 / 3
+
 /** Design palette, verbatim: mint #5eead4, indigo #818cf8, pink #f472b6. */
 const DARK_PALETTE: AuroraPalette = {
   mint: [0.369, 0.918, 0.831],
@@ -310,7 +319,7 @@ export function AuroraShader({ theme }: { theme: AuroraTheme }) {
       mouseSmooth.y += (mouseTarget.y - mouseSmooth.y) * 0.045
 
       timer.update()
-      uniforms.uTime.value = timer.getElapsed()
+      uniforms.uTime.value = timer.getElapsed() * TIME_SCALE
       uniforms.uMouse.value.copy(mouseSmooth)
 
       render()

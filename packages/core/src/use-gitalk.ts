@@ -841,12 +841,12 @@ export function useGitalk(options: GitalkOptions) {
   }, [patch])
 
   /**
-   * Render the draft and open the floating preview.
+   * Render the draft and show it inside the composer.
    *
-   * The preview has no manual toggle: the design reference shows it whenever
-   * there is content, so "has something to preview" *is* the open state. The
-   * UI debounces this call (300ms after the last keystroke), and a failed or
-   * superseded render never opens an empty panel.
+   * The preview is manual: the composer's source/preview button is the only
+   * caller. Nothing watches the draft, so typing never spends a request on
+   * GitHub's Markdown endpoint. A failed or superseded render leaves the
+   * composer in source mode.
    */
   const refreshPreview = useCallback(async () => {
     if (!state.draft.trim()) {
@@ -1063,6 +1063,16 @@ export function useGitalk(options: GitalkOptions) {
       authenticated: Boolean(auth.getToken()),
       /** False when no clientID is configured: the UI hides login affordances. */
       canLogin: auth.canLogin(),
+      /**
+       * OAuth entry point, or null when sign-in is unavailable.
+       *
+       * The composer prompt and the notice render this as a real `href`, so
+       * both the sentence and the button are links; the click is intercepted
+       * only to run the same draft-saving path as `actions.login`.
+       */
+      loginUrl: auth.canLogin()
+        ? auth.loginUrl(typeof window === 'undefined' ? '' : window.location.href)
+        : null,
       /** Discussions have threaded replies; issues do not. */
       canReply: backend.kind === 'discussions',
       /** Upvotes exist on Discussions only — never render the control otherwise. */

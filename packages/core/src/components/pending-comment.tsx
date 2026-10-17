@@ -1,6 +1,6 @@
 import { formatRelativeTime } from '../time'
 import type { PendingComment } from '../types'
-import { LetterAvatar } from './letter-avatar'
+import { Avatar } from './avatar'
 
 interface PendingCommentProps {
   pending: PendingComment
@@ -58,7 +58,11 @@ export function PendingCommentRow({
       aria-busy={!failed}
     >
       <div className="gt-comment-main c-main">
-        <LetterAvatar className="gt-comment-avatar c-avatar" login={pending.user.login} />
+        <Avatar
+          className="gt-comment-avatar c-avatar"
+          src={pending.user.avatarUrl}
+          alt={pending.user.login}
+        />
 
         <div className="gt-comment-content c-body">
           <div className="gt-comment-header c-meta">

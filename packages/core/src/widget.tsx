@@ -6,9 +6,9 @@ import { collectParticipants } from './mentions'
 import { Button } from './components/button'
 import { Comment } from './components/comment'
 import type { CommentLabels } from './components/comment'
+import { Avatar } from './components/avatar'
 import { Icon } from './components/icon'
 import { ImageUploadButton, ImageUploadError } from './components/image-upload'
-import { LetterAvatar } from './components/letter-avatar'
 import { MentionTextarea } from './components/mention-textarea'
 import type { MentionTextareaHandle } from './components/mention-textarea'
 import { buildImageMarkdown } from './images'
@@ -56,35 +56,6 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   useEffect(() => {
     if (!meta.showMinimizable && minimized) setMinimized(false)
   }, [meta.showMinimizable, minimized])
-
-  /**
-   * Automatic floating preview.
-   *
-   * There is no Preview button any more: the design reference shows the panel
-   * whenever the draft has content, and hides it when the draft is empty. The
-   * 300ms debounce is what keeps it from chasing every keystroke — one render
-   * per pause, not one per character. `previewDraft` is the guard for "this
-   * exact draft is already on screen", so a successful render does not loop.
-   */
-  useEffect(() => {
-    // Collapsing closes the panel (see the minimise button); while collapsed
-    // there is no composer to anchor it to.
-    if (minimized) return
-    if (!state.draft.trim()) {
-      if (state.previewing) closePreview()
-      return
-    }
-    if (state.previewing && state.previewDraft === state.draft) return
-    const timer = setTimeout(() => void refreshPreview(), 300)
-    return () => clearTimeout(timer)
-  }, [
-    closePreview,
-    minimized,
-    refreshPreview,
-    state.draft,
-    state.previewDraft,
-    state.previewing
-  ])
 
   /**
    * A new top-level comment is prepended to the list. With the composer now
@@ -155,6 +126,32 @@ export function GitalkWidget({ options, className }: GitalkProps) {
     const images = await actions.uploadImage(files)
     if (!images) return
     editorRef.current?.insertAtCaret(images.map(buildImageMarkdown).join('\n\n'))
+    // The preview is a rendered snapshot of the draft; after an insertion it
+    // would be stale, so return to the source rather than calling the
+    // Markdown endpoint behind the visitor's back.
+    if (state.previewing) closePreview()
+  }
+
+  /**
+   * Toggle the composer between source and rendered Markdown.
+   *
+   * The preview costs one `backend.preview()` call, so it is manual: the
+   * button next to Send is the only thing that opens it. There is no debounce
+   * and no effect watching the draft — typing never triggers a request.
+   */
+  const togglePreview = () => {
+    if (!state.draft.trim()) return
+    if (state.previewing) {
+      closePreview()
+      return
+    }
+    void refreshPreview()
+  }
+
+  const loginHref = meta.loginUrl ?? '#'
+  const onLoginClick = (event: { preventDefault: () => void }) => {
+    event.preventDefault()
+    actions.login()
   }
 
   const expand = () => {
@@ -195,11 +192,25 @@ export function GitalkWidget({ options, className }: GitalkProps) {
       */}
       {state.notice ? (
         <div className="gt-notice" role="status">
-          <span className="gt-notice-text">{state.notice}</span>
           {!meta.authenticated && meta.canLogin ? (
-            <Button className="gt-btn-login gt-btn-notice-login" onClick={actions.login}>
-              {t('login-with-github')}
-            </Button>
+            <a
+              className="gt-notice-text gt-notice-login-link"
+              href={loginHref}
+              onClick={onLoginClick}
+            >
+              {state.notice}
+            </a>
+          ) : (
+            <span className="gt-notice-text">{state.notice}</span>
+          )}
+          {!meta.authenticated && meta.canLogin ? (
+            <a
+              className="gt-btn gt-btn-login gt-btn-notice-login"
+              href={loginHref}
+              onClick={onLoginClick}
+            >
+              <span className="gt-btn-text">{t('login-with-github')}</span>
+            </a>
           ) : null}
           <button
             type="button"
@@ -212,7 +223,26 @@ export function GitalkWidget({ options, className }: GitalkProps) {
         </div>
       ) : null}
 
-      {state.loading ? <div className="gt-initing">{t('init')}</div> : null}
+      {state.loading ? (
+        <div className="gt-initing">
+          {/* The brand mark, then the word: a spinner says "wait", this says
+              "Gitalk is starting". */}
+          <span className="gt-initing-logo" aria-hidden="true">
+            <svg viewBox="0 0 1024 1024" width="40" height="40" focusable="false">
+              <mask id="gt-initing-mark">
+                <rect width="1024" height="1024" fill="#fff" />
+                <rect x="330" y="308" width="364" height="104" rx="52" fill="#000" />
+                <rect x="330" y="476" width="228" height="104" rx="52" fill="#000" />
+              </mask>
+              <g fill="currentColor" mask="url(#gt-initing-mark)">
+                <circle cx="512" cy="444" r="300" />
+                <path d="M368 700H516L360 880Z" />
+              </g>
+            </svg>
+          </span>
+          <span className="gt-initing-text">{t('init')}</span>
+        </div>
+      ) : null}
 
       {/*
         Admin auto-creation (createIssueManually: false) keeps `creatingThread`
@@ -247,7 +277,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           */}
           <div className="gt-meta p-head">
             <div className="gt-meta-title p-title">
-              <span className="gt-title">{t('comment')}</span>
+              <span className="gt-title">{t('comments')}</span>
               <span
                 className="gt-counts p-count"
                 title={t('counts', { counts: String(loadedCount) }, loadedCount)}
@@ -402,46 +432,17 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             className={`gt-header p-composer${docked && !minimized ? ' is--docked' : ''}`}
             data-docked={docked && !minimized ? 'true' : undefined}
           >
-            {/*
-              Floating Markdown preview (reference `.composer-preview`): it is
-              anchored to the composer rather than replacing the textarea, so
-              the draft stays editable while it is open.
-            */}
-            <div
-              className={`composer-preview${state.previewing ? ' show' : ''}`}
-              aria-hidden={state.previewing ? 'false' : 'true'}
-              role="region"
-              aria-label={t('preview')}
-            >
-              <div className="preview-head">
-                <span className="preview-label">{t('preview')}</span>
-                <span className="preview-hint">Markdown</span>
-                <span className="preview-count">
-                  {t('preview-chars', { count: String(state.draft.length) })}
-                </span>
-              </div>
-              {state.previewing ? (
-                state.draft.trim() ? (
-                  <div
-                    className="preview-body markdown-body"
-                    dangerouslySetInnerHTML={{ __html: state.previewHtml }}
-                  />
-                ) : (
-                  <p className="preview-empty">{t('preview-empty')}</p>
-                )
-              ) : null}
-            </div>
-
             {state.user ? (
-              <LetterAvatar className="gt-header-avatar" login={state.user.login} />
+              <Avatar
+                className="gt-header-avatar"
+                src={state.user.avatarUrl}
+                alt={state.user.login}
+              />
             ) : meta.canLogin ? (
               <a
                 className="gt-avatar-github"
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  actions.login()
-                }}
+                href={loginHref}
+                onClick={onLoginClick}
               >
                 <Icon className="gt-ico-github" name="github" />
               </a>
@@ -452,55 +453,138 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             )}
 
             <div className="gt-header-comment">
-              <MentionTextarea
-                className="gt-header-textarea"
-                value={state.draft}
-                candidates={candidates}
-                rows={1}
-                placeholder={t('leave-a-comment')}
-                ariaLabel={t('leave-a-comment')}
-                listLabel={t('mention-label')}
-                onSubmit={
-                  (options.enableHotKey ?? true) ? () => void actions.submit() : undefined
-                }
-                onInput={actions.setDraft}
-                handleRef={editorRef}
-                // The floating preview hides the textarea's caret from us;
-                // insertion then appends rather than guessing a position.
-                caretAvailable={!state.previewing}
-              />
-
-              <div className="gt-header-controls">
-                {meta.canUploadImage ? (
-                  <ImageUploadButton
-                    uploading={state.imageUploading}
-                    progress={state.imageUploadProgress}
-                    label={t('upload-image')}
-                    uploadingLabel={t('uploading-image')}
-                    cancelLabel={t('cancel')}
-                    onFiles={(files) => void uploadFiles(files)}
-                    onCancel={actions.cancelImageUpload}
-                  />
-                ) : null}
-
-                {meta.authenticated || meta.canLogin ? (
-                  <Button
-                    /* Signed-in visitors get the real submit control. Anonymous
-                       ones get the same paper-plane affordance under its own
-                       class: the click routes through `actions.submit`, which
-                       answers with the sign-in notice. `.gt-btn-public` stays
-                       reserved for a control that can actually post. */
-                    className={meta.authenticated ? 'gt-btn-public' : 'gt-btn-send'}
-                    loading={state.submitting}
-                    onClick={() => void actions.submit()}
+              {!meta.authenticated && meta.canLogin ? (
+                /*
+                 * Signed out: the composer is a sign-in prompt, not an editor.
+                 * It is deliberately not dismissible — there is nothing else
+                 * this row can do until the visitor signs in — and both the
+                 * sentence and the button are links, so either click starts the
+                 * same OAuth round trip the header notice uses.
+                 */
+                <div
+                  className="gt-composer-login"
+                  role="group"
+                  aria-label={t('login-to-comment')}
+                >
+                  <a
+                    className="gt-composer-login-text"
+                    href={loginHref}
+                    onClick={onLoginClick}
                   >
-                    {/* Icon-only in the reference (`.icon-btn.primary`); the
-                        text stays in the DOM for the accessible name. */}
-                    <Icon className="gt-ico-send" name="send" />
-                    <span className="gt-btn-label">{t('comment')}</span>
-                  </Button>
-                ) : null}
-              </div>
+                    {t('login-to-comment')}
+                  </a>
+                  <a
+                    className="gt-btn gt-btn-login gt-composer-login-btn"
+                    href={loginHref}
+                    onClick={onLoginClick}
+                  >
+                    <span className="gt-btn-text">{t('login-with-github')}</span>
+                  </a>
+                </div>
+              ) : (
+                <>
+                  {/*
+                    Source and preview share one body: the preview replaces the
+                    editor *inside* the composer instead of floating above it,
+                    so the composer's height follows whichever state is showing.
+                  */}
+                  <div className={`gt-composer-body${state.previewing ? ' is--preview' : ''}`}>
+                    <MentionTextarea
+                      className="gt-header-textarea"
+                      value={state.draft}
+                      candidates={candidates}
+                      rows={1}
+                      placeholder={t('leave-a-comment')}
+                      ariaLabel={t('leave-a-comment')}
+                      listLabel={t('mention-label')}
+                      onSubmit={
+                        (options.enableHotKey ?? true) ? () => void actions.submit() : undefined
+                      }
+                      onInput={actions.setDraft}
+                      handleRef={editorRef}
+                      // While the preview is shown the editor is hidden; an
+                      // insertion then appends instead of guessing a caret.
+                      caretAvailable={!state.previewing}
+                    />
+
+                    {state.previewing ? (
+                      <div
+                        className="gt-composer-preview"
+                        role="region"
+                        aria-label={t('preview')}
+                      >
+                        <div className="preview-head">
+                          <span className="preview-label">{t('preview')}</span>
+                          <span className="preview-hint">Markdown</span>
+                          <span className="preview-count">
+                            {t('preview-chars', { count: String(state.draft.length) })}
+                          </span>
+                        </div>
+                        <div
+                          className="preview-body markdown-body"
+                          dangerouslySetInnerHTML={{ __html: state.previewHtml }}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="gt-header-controls">
+                    {meta.canUploadImage ? (
+                      <ImageUploadButton
+                        uploading={state.imageUploading}
+                        progress={state.imageUploadProgress}
+                        label={t('upload-image')}
+                        uploadingLabel={t('uploading-image')}
+                        cancelLabel={t('cancel')}
+                        onFiles={(files) => void uploadFiles(files)}
+                        onCancel={actions.cancelImageUpload}
+                      />
+                    ) : null}
+
+                    {/*
+                      Manual source/preview switch, next to Send. It is the only
+                      trigger: no draft watcher, no debounce, one request per
+                      click.
+                    */}
+                    <button
+                      type="button"
+                      className="gt-btn gt-btn-preview-toggle"
+                      title={state.previewing ? t('edit') : t('preview')}
+                      aria-label={state.previewing ? t('edit') : t('preview')}
+                      aria-pressed={state.previewing}
+                      disabled={!state.draft.trim()}
+                      onClick={togglePreview}
+                    >
+                      <Icon
+                        className="gt-ico-preview"
+                        name={state.previewing ? 'code' : 'preview'}
+                      />
+                      <span className="gt-btn-label">
+                        {state.previewing ? t('edit') : t('preview')}
+                      </span>
+                    </button>
+
+                    {meta.authenticated || meta.canLogin ? (
+                      <Button
+                        /* Signed-in visitors get the real submit control.
+                           Anonymous ones get the same paper-plane affordance
+                           under its own class: the click routes through
+                           `actions.submit`, which answers with the sign-in
+                           notice. `.gt-btn-public` stays reserved for a control
+                           that can actually post. */
+                        className={meta.authenticated ? 'gt-btn-public' : 'gt-btn-send'}
+                        loading={state.submitting}
+                        onClick={() => void actions.submit()}
+                      >
+                        {/* Icon-only in the reference (`.icon-btn.primary`);
+                            the text stays in the DOM for the accessible name. */}
+                        <Icon className="gt-ico-send" name="send" />
+                        <span className="gt-btn-label">{t('comment')}</span>
+                      </Button>
+                    ) : null}
+                  </div>
+                </>
+              )}
 
               {/*
                 Failures are never silent: the reason and a retry sit directly

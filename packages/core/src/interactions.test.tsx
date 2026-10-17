@@ -338,7 +338,13 @@ describe('reactions and upvotes', () => {
     expect(notice).toBeTruthy()
     expect(notice.getAttribute('role')).toBe('status')
     expect(notice.textContent).toContain('Sign in with GitHub to react')
-    expect(notice.querySelector('.gt-btn-notice-login')).toBeTruthy()
+    const noticeButton = notice.querySelector('.gt-btn-notice-login') as HTMLAnchorElement
+    expect(noticeButton?.tagName).toBe('A')
+    expect(noticeButton.getAttribute('href')).toContain('/oauth/authorize')
+    // The sentence is a link too, not just the button.
+    const noticeText = notice.querySelector('.gt-notice-login-link') as HTMLAnchorElement
+    expect(noticeText?.tagName).toBe('A')
+    expect(noticeText.getAttribute('href')).toContain('/oauth/authorize')
     // No write was attempted. The anonymous read path may legitimately talk
     // to the configured proxy (that is the 60/hr -> 5,000/hr accelerator), but
     // a reaction mutation must never be sent without a token.

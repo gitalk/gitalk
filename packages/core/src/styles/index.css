@@ -423,14 +423,32 @@
 
 /* initing */
 .gt-container .gt-initing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 220px;
   padding: 32px 0;
   text-align: center;
   color: var(--gt-color-text-3);
 }
 
+.gt-container .gt-initing-logo {
+  display: inline-flex;
+  color: var(--gt-color-accent);
+  opacity: 0.9;
+  animation: gt-kf-breathe 2.4s ease-in-out infinite;
+}
+
 .gt-container .gt-initing-text {
-  margin: 10px auto;
   font-size: 0.875em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-container .gt-initing-logo {
+    animation: none;
+  }
 }
 
 /* no init */
@@ -3388,8 +3406,8 @@
  * a separate floating card. All chrome uses #1E4FFF and its derivatives —
  * no mint/green from the reference.
  *
- * The tilt/glow values are copied 1:1 from the reference (8deg max, 0.5s
- * cubic-bezier(.2,.8,.3,1) settle, 0.1s linear while tracking).
+ * The tilt/glow values follow the reference at half strength (4deg max,
+ * 0.5s cubic-bezier(.2,.8,.3,1) settle, 0.1s linear while tracking).
  * ===================================================================== */
 
 .gt-container .gt-sr-only {
@@ -4470,5 +4488,265 @@
 
   .gt-container .composer-preview {
     transition: none;
+  }
+}
+
+/* =====================================================================
+ * v4: the fixes round.
+ *
+ *  - one badge, not two nested brand fills (.gt-counts + .gt-link-counts)
+ *  - composer source/preview merged into one body; the editor grows with the
+ *    draft and its first line is the vertical centre line for the avatar,
+ *    the GitHub mark and the action buttons
+ *  - signed-out composer is a permanent sign-in prompt (no close control)
+ *  - comment tilt halved to ±4deg (the JS lives in comment.tsx)
+ * ===================================================================== */
+
+/* ---- counts: the gradient belongs to the badge only ----------------- */
+.gt-container .gt-counts .gt-link-counts {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-decoration: none;
+}
+
+.gt-container .gt-counts .gt-link-counts:hover {
+  color: inherit;
+  filter: none;
+  border-bottom: 0;
+}
+
+/* ---- composer: one line of type is the alignment line --------------- */
+.gt-container .gt-header {
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 56px;
+  padding: 10px 12px;
+}
+
+/* 30px avatar + 3px offset = the centre of a 36px first line. */
+.gt-container .gt-header > .gt-avatar,
+.gt-container .gt-header > .gt-avatar-github {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  margin-top: 3px;
+}
+
+.gt-container .gt-header-comment {
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* The merged body owns the editor and the preview; both are siblings, only
+   one is visible at a time. */
+.gt-container .gt-composer-body {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.gt-container .gt-composer-body.is--preview > .gt-editor {
+  display: none;
+}
+
+.gt-container .gt-header-textarea {
+  /* 8px padding + 20px line = 36px: the caret sits exactly on the avatar's
+     centre line, and the same line is the first line after the draft grows. */
+  height: 36px;
+  min-height: 36px;
+  max-height: 160px;
+  padding: 8px 0;
+  line-height: 20px;
+  overflow-y: hidden;
+}
+
+/* ---- preview replaces the editor inside the composer ---------------- */
+.gt-container .gt-composer-preview {
+  padding: 7px 11px 9px;
+  border: 1px solid var(--gt-color-panel-line-strong);
+  border-radius: 11px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 4%, transparent);
+}
+
+.gt-container .gt-composer-preview .preview-head {
+  padding: 0 0 5px;
+}
+
+.gt-container .gt-composer-preview .preview-body {
+  max-height: min(240px, 34dvh);
+  padding: 0;
+  overflow-y: auto;
+}
+
+.gt-container .gt-composer-preview .preview-body.markdown-body {
+  background: transparent;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ---- controls: first-line aligned, with the manual preview toggle ---- */
+.gt-container .gt-header-controls {
+  align-self: flex-start;
+  align-items: center;
+}
+
+.gt-container .gt-btn-preview-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--gt-color-text) 6%, transparent);
+  color: var(--gt-color-text-2);
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.gt-container .gt-btn-preview-toggle:hover {
+  background-color: color-mix(in srgb, var(--gt-color-text) 12%, transparent);
+  color: var(--gt-color-text);
+}
+
+.gt-container .gt-btn-preview-toggle[aria-pressed='true'] {
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-btn-preview-toggle:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.gt-container .gt-btn-preview-toggle .gt-ico-preview .gt-svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+
+.gt-container .gt-btn-preview-toggle .gt-ico-preview svg {
+  fill: none;
+  stroke: currentColor;
+}
+
+.gt-container .gt-btn-preview-toggle .gt-btn-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- signed-out composer: permanent sign-in prompt ------------------ */
+.gt-container .gt-composer-login {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 36px;
+}
+
+.gt-container .gt-composer-login-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--gt-color-text-2);
+  font-size: 13px;
+  line-height: 1.45;
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--gt-color-text) 24%, transparent);
+}
+
+.gt-container .gt-composer-login-text:hover {
+  color: var(--gt-color-accent);
+  border-bottom-color: var(--gt-color-main-border);
+}
+
+.gt-container .gt-composer-login-btn {
+  flex: 0 0 auto;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.gt-container .gt-notice .gt-notice-login-link {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.gt-container .gt-notice .gt-notice-login-link:hover {
+  color: var(--gt-color-accent);
+}
+
+/* ---- replies keep the smaller real avatar --------------------------- */
+.gt-container .gt-comment-replies .gt-comment-avatar {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin-top: 0;
+}
+
+/* ---- narrow screens ------------------------------------------------- */
+@media (max-width: 479px) {
+  .gt-container .gt-header {
+    gap: 6px;
+    min-height: 52px;
+    padding: 8px 9px;
+  }
+
+  .gt-container .gt-header-comment {
+    gap: 6px;
+  }
+
+  /* 28px avatar + 4px = the centre of the same 36px first line. */
+  .gt-container .gt-header > .gt-avatar,
+  .gt-container .gt-header > .gt-avatar-github {
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
+    margin-top: 4px;
+  }
+
+  .gt-container .gt-btn-preview-toggle {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  .gt-container .gt-composer-login {
+    gap: 8px;
+  }
+
+  .gt-container .gt-composer-login-text {
+    font-size: 12.5px;
+  }
+
+  .gt-container .gt-composer-login-btn {
+    height: 30px;
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 11.5px;
   }
 }

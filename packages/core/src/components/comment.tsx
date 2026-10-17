@@ -2,7 +2,7 @@ import type { TargetedPointerEvent } from 'preact'
 import { formatRelativeTime } from '../time'
 import type { GitalkComment, GitalkReply, PendingComment, Reaction } from '../types'
 import type { MentionCandidate } from '../mentions'
-import { LetterAvatar } from './letter-avatar'
+import { Avatar } from './avatar'
 import { PendingCommentRow } from './pending-comment'
 import { ReactionPicker } from './reaction-picker'
 import { ReplyBox } from './reply-box'
@@ -57,11 +57,21 @@ export interface CommentProps {
 /**
  * Tilt the row towards the pointer and move the glow to it.
  *
- * The values are the reference's: at most 8deg on either axis, expressed as
- * CSS variables so the transition stays in the stylesheet (and so
- * `prefers-reduced-motion` can switch the whole effect off without JS
- * branching).
+ * The reference's factor of 8 actually peaks at ±4deg (the offset is ±0.5),
+ * so 4deg is the ceiling here. The response is quadratic instead of linear:
+ * the corners still reach the cap, but half-way across the row the movement is
+ * about half of what the old linear mapping produced — the "slight" tilt the
+ * design calls for. Expressed as CSS variables so the transition stays in the
+ * stylesheet (and so `prefers-reduced-motion` can switch the effect off
+ * without JS branching).
  */
+const MAX_TILT = 2
+
+/** Map [-1, 1] to [-MAX_TILT, MAX_TILT], quadratic near the centre. */
+function tiltFor(normalised: number): number {
+  return Math.sign(normalised) * normalised * normalised * MAX_TILT
+}
+
 function trackPointer(event: TargetedPointerEvent<HTMLDivElement>): void {
   const row = event.currentTarget
   const rect = row.getBoundingClientRect()
@@ -69,9 +79,11 @@ function trackPointer(event: TargetedPointerEvent<HTMLDivElement>): void {
 
   const x = (event.clientX - rect.left) / rect.width
   const y = (event.clientY - rect.top) / rect.height
+  const nx = (x - 0.5) * 2
+  const ny = (0.5 - y) * 2
 
-  row.style.setProperty('--ry', `${((x - 0.5) * 8).toFixed(2)}deg`)
-  row.style.setProperty('--rx', `${((0.5 - y) * 8).toFixed(2)}deg`)
+  row.style.setProperty('--ry', `${tiltFor(nx).toFixed(2)}deg`)
+  row.style.setProperty('--rx', `${tiltFor(ny).toFixed(2)}deg`)
   row.style.setProperty('--mx', `${(x * 100).toFixed(1)}%`)
   row.style.setProperty('--my', `${(y * 100).toFixed(1)}%`)
 }
@@ -118,7 +130,11 @@ export function Comment({
         onPointerLeave={resetPointer}
       >
         <div className="gt-comment-glow c-glow" aria-hidden="true" />
-        <LetterAvatar className="gt-comment-avatar c-avatar" login={comment.user.login} />
+        <Avatar
+          className="gt-comment-avatar c-avatar"
+          src={comment.user.avatarUrl}
+          alt={comment.user.login}
+        />
 
         <div className="gt-comment-content c-body">
           <div className="gt-comment-header c-meta">
@@ -197,9 +213,10 @@ export function Comment({
                     onPointerLeave={resetPointer}
                   >
                     <div className="gt-comment-glow c-glow" aria-hidden="true" />
-                    <LetterAvatar
+                    <Avatar
                       className="gt-comment-avatar c-avatar r-avatar"
-                      login={reply.user.login}
+                      src={reply.user.avatarUrl}
+                      alt={reply.user.login}
                     />
                     <div className="gt-comment-content c-body r-body">
                       <div className="gt-comment-header c-meta">

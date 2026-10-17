@@ -147,7 +147,11 @@ describe('redesigned comment DOM', () => {
     {
       id: 900,
       node_id: 'n900',
-      user: { login: 'alice', avatar_url: 'a', html_url: 'u' },
+      user: {
+        login: 'alice',
+        avatar_url: 'https://avatars.githubusercontent.com/u/9919?v=4',
+        html_url: 'u'
+      },
       body_html: '<p>TOP</p>',
       created_at: new Date(Date.now() - 7200000).toISOString(),
       html_url: 'h',
@@ -221,6 +225,16 @@ describe('redesigned comment DOM', () => {
     expect(actions.querySelector('.gt-comment-reply')).toBeTruthy()
     // The reply button carries the reference's visible label, not only an icon.
     expect(actions.querySelector('.gt-comment-reply')?.textContent).toContain('Reply')
+
+    // Real GitHub avatars, not the old hashed-initial circles.
+    const avatar = comment.querySelector('.gt-comment-avatar img') as HTMLImageElement
+    expect(avatar).toBeTruthy()
+    expect(avatar.getAttribute('src')).toContain('avatars.githubusercontent.com')
+    expect(avatar.getAttribute('src')).toContain('avatar')
+    expect(comment.querySelector('.gt-avatar-letter')).toBeNull()
+    // The heading is the plural noun; the submit button keeps the singular.
+    expect(container.querySelector('.gt-title')?.textContent).toBe('Comments')
+    expect(container.querySelector('.gt-btn-public')?.textContent).toContain('Comment')
 
     // Replies stay nested in the parent's column (the tinted rail).
     const replies = comment.querySelector('.gt-comment-content > .gt-comment-replies')

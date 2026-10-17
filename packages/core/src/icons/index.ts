@@ -11,6 +11,8 @@ export type IconName =
   | 'image'
   | 'reply'
   | 'send'
+  | 'preview'
+  | 'code'
   | 'tip'
 
 export const icons: Record<IconName, string> = {
@@ -22,5 +24,7 @@ export const icons: Record<IconName, string> = {
   image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"> <rect x="3" y="4" width="18" height="16" rx="2.5" fill="none"></rect> <circle cx="8.5" cy="9.5" r="1.5" fill="none"></circle> <path d="m3.8 17.2 4.6-4.6a2 2 0 0 1 2.8 0l2.3 2.3 1.9-1.9a2 2 0 0 1 2.8 0l2.1 2.1" fill="none"></path> </svg>',
   reply: '<svg viewBox="0 0 1332 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"> <path d="M529.066665 273.066666 529.066665 0 51.2 477.866666 529.066665 955.733335 529.066665 675.84C870.4 675.84 1109.333335 785.066665 1280 1024 1211.733335 682.666665 1006.933335 341.333334 529.066665 273.066666"></path> </svg>',
   send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"> <path d="M21.5 2.5 10.8 13.2" fill="none"></path> <path d="M21.5 2.5 14.8 21.5 10.8 13.2 2.5 9.2 21.5 2.5Z" fill="none"></path> </svg>',
+  preview: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"> <path d="M2.2 12S5.8 5.2 12 5.2 21.8 12 21.8 12 18.2 18.8 12 18.8 2.2 12 2.2 12Z" fill="none"></path> <circle cx="12" cy="12" r="3.1" fill="none"></circle> </svg>',
+  code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"> <path d="m8.2 6.4-5.4 5.6 5.4 5.6" fill="none"></path> <path d="m15.8 6.4 5.4 5.6-5.4 5.6" fill="none"></path> </svg>',
   tip: '<svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"> <path d="M512 366.949535c-16.065554 0-29.982212 13.405016-29.982212 29.879884l0 359.070251c0 16.167882 13.405016 29.879884 29.982212 29.879884 15.963226 0 29.879884-13.405016 29.879884-29.879884L541.879884 396.829419C541.879884 380.763865 528.474868 366.949535 512 366.949535L512 366.949535z" p-id="3083"></path> <path d="M482.017788 287.645048c0-7.776956 3.274508-15.553912 8.80024-21.181973 5.525732-5.525732 13.302688-8.80024 21.181973-8.80024 7.776956 0 15.553912 3.274508 21.079644 8.80024 5.525732 5.62806 8.80024 13.405016 8.80024 21.181973 0 7.776956-3.274508 15.656241-8.80024 21.181973-5.525732 5.525732-13.405016 8.697911-21.079644 8.697911-7.879285 0-15.656241-3.274508-21.181973-8.697911C485.292295 303.301289 482.017788 295.524333 482.017788 287.645048L482.017788 287.645048z" p-id="3084"></path> <path d="M512 946.844409c-239.8577 0-434.895573-195.037873-434.895573-434.895573 0-239.8577 195.037873-434.895573 434.895573-434.895573 239.755371 0 434.895573 195.037873 434.895573 434.895573C946.895573 751.806535 751.755371 946.844409 512 946.844409zM512 126.17088c-212.740682 0-385.880284 173.037274-385.880284 385.777955 0 212.740682 173.037274 385.777955 385.880284 385.777955 212.740682 0 385.777955-173.037274 385.777955-385.777955C897.777955 299.208154 724.740682 126.17088 512 126.17088z" p-id="3085"></path> </svg>',
 }

@@ -93,6 +93,37 @@ describe('GitalkWidget', () => {
     expect(host.querySelector('.gt-comment-replies')).toBeTruthy()
   })
 
+  it('replaces the composer with a permanent sign-in prompt for anonymous visitors', async () => {
+    stubFetch((url) => {
+      if (url.includes('/graphql')) return {}
+      if (url.includes('/comments')) return REST_COMMENTS
+      if (url.includes('/discussions/442')) {
+        return { number: 442, node_id: 'D_442', title: 'demo', html_url: 'https://github.com/x', locked: false }
+      }
+      return {}
+    })
+
+    mount(host, OPTIONS)
+    await waitForComment(host)
+
+    const prompt = host.querySelector('.gt-composer-login')
+    expect(prompt).toBeTruthy()
+    // No dismiss control: this is the composer, not the transient notice.
+    expect(prompt!.querySelector('.gt-notice-close')).toBeNull()
+    expect(prompt!.querySelector('button.gt-composer-login-close')).toBeNull()
+    expect(host.querySelector('.gt-composer-login-close')).toBeNull()
+
+    const text = prompt!.querySelector('.gt-composer-login-text') as HTMLAnchorElement
+    const button = prompt!.querySelector('.gt-composer-login-btn') as HTMLAnchorElement
+    expect(text?.tagName).toBe('A')
+    expect(button?.tagName).toBe('A')
+    // Both the sentence and the button start the OAuth round trip.
+    expect(text.getAttribute('href')).toContain('/oauth/authorize')
+    expect(button.getAttribute('href')).toContain('/oauth/authorize')
+    expect(text.textContent).toBe('Sign in with GitHub to comment')
+    expect(button.textContent).toContain('Login with GitHub')
+  })
+
   it('shows the empty state instead of a blank box when there are no comments', async () => {
     stubFetch((url) => {
       if (url.includes('/comments')) return []

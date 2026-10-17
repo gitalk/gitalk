@@ -48,7 +48,7 @@ const zh = {
     titleLine1: '评论区，',
     titleLine2: '轻得像',
     titleEm: '一行代码',
-    lede: '把 GitHub Discussions 变成你的评论区。零后端、零数据库，评论实时同步，接入成本低到几乎无感。',
+    lede: '把 GitHub Discussions 或 Issues 变成你的评论区。零后端、零数据库，评论实时同步，接入成本低到几乎无感。',
     statsTitle: '关键指标',
     stats: {
       backend: { value: '0', label: '后端服务', note: '无需自建服务器，也无需数据库。' },
@@ -218,7 +218,7 @@ const en: Messages = {
     titleLine1: 'Comments,',
     titleLine2: 'light as ',
     titleEm: 'one line',
-    lede: 'Turn GitHub Discussions into your comment section. No backend, no database, comments sync in real time — setup costs almost nothing.',
+    lede: 'Turn GitHub Discussions or Issues into your comment section. No backend, no database, comments sync in real time — setup costs almost nothing.',
     statsTitle: 'Key numbers',
     stats: {
       backend: {
@@ -240,7 +240,7 @@ const en: Messages = {
       },
       stars: { label: 'Stars', note: 'Community interest on GitHub.' }
     },
-    chips: ['⚡ No backend', '✍️ Markdown', '🖼️ Image upload', '🔍 Fullscreen', '🌗 Dark mode']
+    chips: ['⚡ No backend', '✍️ Markdown', '🖼️ Image upload', '🔍 Image Preview', '🌗 Dark mode']
   },
   features: {
     eyebrow: "// WHAT'S NEW",

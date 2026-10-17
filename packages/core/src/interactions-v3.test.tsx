@@ -15,7 +15,9 @@ describe('new interaction states are backed by CSS', () => {
     expect(CSS).toContain('.gt-container.gt-minimized > :not(.gt-fab)')
     expect(CSS).toMatch(/\.gt-container \.gt-header\.is--docked \{[^}]*position: fixed/s)
     expect(CSS).toContain('.gt-container .gt-header-placeholder')
-    expect(CSS).toContain('.gt-container .composer-preview')
+    expect(CSS).toContain('.gt-container .gt-composer-preview')
+    expect(CSS).toContain('.gt-container .gt-composer-body')
+    expect(CSS).toContain('.gt-container .gt-btn-preview-toggle')
     expect(CSS).toContain('.gt-container .gt-fab--bottom-right')
     expect(CSS).toContain('.gt-container .gt-fab--top-left')
   })
@@ -202,7 +204,8 @@ describe('design-reference layout', () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
   })
 
-  it('puts the composer under the list, with the preview anchored inside it', async () => {
+  it('puts the composer under the list, with source and preview in one body', async () => {
+    localStorage.setItem(TOKEN_STORAGE_KEY, 'test-token')
     await mountWidget(host)
 
     const list = host.querySelector('.gt-comments')!
@@ -210,9 +213,11 @@ describe('design-reference layout', () => {
     expect(
       list.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBeTruthy()
-    // Anchored (absolute) to the composer, like `.p-composer` +
-    // `.composer-preview` in the reference.
-    expect(composer.querySelector('.composer-preview')).toBeTruthy()
+    // One body owns both states; there is no second floating panel.
+    const body = composer.querySelector('.gt-composer-body')
+    expect(body).toBeTruthy()
+    expect(body?.querySelector('.gt-header-textarea')).toBeTruthy()
+    expect(composer.querySelector('.composer-preview')).toBeNull()
   })
 })
 
@@ -317,7 +322,7 @@ describe('sticky composer through the widget', () => {
   })
 })
 
-describe('floating Markdown preview', () => {
+describe('manual Markdown preview inside the composer', () => {
   let host: HTMLElement
   let markdownCalls: string[]
 
@@ -325,7 +330,7 @@ describe('floating Markdown preview', () => {
     host = document.createElement('div')
     document.body.appendChild(host)
     markdownCalls = []
-    localStorage.removeItem(TOKEN_STORAGE_KEY)
+    localStorage.setItem(TOKEN_STORAGE_KEY, 'test-token')
   })
 
   afterEach(() => {
@@ -334,77 +339,120 @@ describe('floating Markdown preview', () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY)
   })
 
-  it('opens above the composer automatically, reuses backend.preview() and keeps the draft editable', async () => {
+  const toggle = () => host.querySelector('.gt-btn-preview-toggle') as HTMLButtonElement
+  const preview = () => host.querySelector('.gt-composer-preview') as HTMLElement | null
+
+  it('opens only when the toggle is clicked, calls backend.preview() once and returns to source', async () => {
     await mountWidget(host)
 
-    // No manual trigger exists any more (see the next test).
-    expect(host.querySelector('.gt-btn-preview')).toBeNull()
+    expect(toggle()).toBeTruthy()
+    expect(toggle().getAttribute('aria-pressed')).toBe('false')
+    expect(preview()).toBeNull()
 
     await typeDraft(host, '**bold**')
 
-    // The 300ms debounce: nothing is requested while the visitor is still
-    // typing, so the panel cannot flicker once per keystroke.
+    // Nothing watches the draft: no debounce, no request while typing.
     expect(markdownCalls).toEqual([])
-    await flush(180)
+    await flush(450)
     expect(markdownCalls).toEqual([])
+    expect(preview()).toBeNull()
 
-    await waitFor(() => host.querySelector('.composer-preview.show'))
+    toggle().click()
+    await waitFor(() => preview())
 
-    const panel = host.querySelector('.composer-preview') as HTMLElement
-    expect(panel.getAttribute('aria-hidden')).toBe('false')
-    expect(panel.querySelector('.preview-label')?.textContent).toBe('Preview')
-    expect(panel.querySelector('.preview-body')?.innerHTML).toContain('<strong>bold</strong>')
-    // The editor stays in place: preview is an overlay, not a replacement.
-    const textarea = host.querySelector('.gt-header-textarea') as HTMLTextAreaElement
-    expect(textarea.value).toBe('**bold**')
+    expect(markdownCalls).toEqual(['**bold**'])
+    expect(host.querySelector('.gt-composer-body')?.classList.contains('is--preview')).toBe(true)
+    expect(toggle().getAttribute('aria-pressed')).toBe('true')
+    expect(preview()?.querySelector('.preview-label')?.textContent).toBe('Preview')
+    expect(preview()?.querySelector('.preview-body')?.innerHTML).toContain('<strong>bold</strong>')
+    // The draft is preserved; only the view changed.
+    expect((host.querySelector('.gt-header-textarea') as HTMLTextAreaElement).value).toBe('**bold**')
+
+    // Toggle back: source returns without another request.
+    toggle().click()
+    await waitFor(() => (preview() ? null : true))
+    expect(preview()).toBeNull()
+    expect(toggle().getAttribute('aria-pressed')).toBe('false')
     expect(markdownCalls).toEqual(['**bold**'])
 
-    // Pausing while the panel is open re-renders the newer draft.
+    // A new draft is rendered by the next explicit toggle.
     await typeDraft(host, '**bold** and *new*')
+    toggle().click()
     await waitFor(
-      () => (host.querySelector('.preview-body')?.innerHTML.includes('<strong>bold</strong>') ?? false),
+      () => (preview()?.querySelector('.preview-body')?.innerHTML.includes('<em>new</em>') ?? false),
       1200
     )
-    await flush(400)
-    expect(markdownCalls.at(-1)).toBe('**bold** and *new*')
-    expect(host.querySelector('.preview-body')?.innerHTML).toContain('<em>new</em>')
-    expect((host.querySelector('.gt-header-textarea') as HTMLTextAreaElement).value).toBe(
-      '**bold** and *new*'
-    )
-
-    // Emptying the draft closes it again: "has content" *is* the open state.
-    await typeDraft(host, '')
-    await waitFor(() => (host.querySelector('.composer-preview.show') ? null : panel))
-    expect(host.querySelector('.composer-preview.show')).toBeNull()
-    expect(panel.getAttribute('aria-hidden')).toBe('true')
+    expect(markdownCalls).toEqual(['**bold**', '**bold** and *new*'])
+    expect(toggle().getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('has no Preview button and no "Markdown is supported" hint', async () => {
+  it('keeps the reference placeholder and a single-row editor', async () => {
+    await mountWidget(host)
+
+    const textarea = host.querySelector('.gt-header-textarea') as HTMLTextAreaElement
+    expect(textarea.getAttribute('rows')).toBe('1')
+    expect(textarea.getAttribute('placeholder')).toBe('Write a comment, press Enter to post…')
+    expect(textarea.value).toBe('')
+  })
+
+  it('grows (and shrinks) the editor with the draft', async () => {
+    await mountWidget(host)
+    const textarea = host.querySelector('.gt-header-textarea') as HTMLTextAreaElement
+
+    Object.defineProperty(textarea, 'scrollHeight', { configurable: true, value: 120 })
+    textarea.value = 'line one\nline two\nline three'
+    textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+    expect(textarea.style.height).toBe('120px')
+
+    Object.defineProperty(textarea, 'scrollHeight', { configurable: true, value: 36 })
+    textarea.value = 'one line'
+    textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    await flush()
+    expect(textarea.style.height).toBe('36px')
+  })
+
+  it('has no legacy floating preview and no "Markdown is supported" hint', async () => {
     await mountWidget(host)
 
     expect(host.querySelector('.gt-btn-preview')).toBeNull()
+    expect(host.querySelector('.composer-preview')).toBeNull()
     expect(host.querySelector('.gt-header-controls-tip')).toBeNull()
     expect(host.textContent).not.toContain('Markdown is supported')
-    // "Edit" only ever existed as the Preview button's toggled label.
-    expect(host.textContent).not.toContain('Edit')
+    // The icon-only toggle still carries an accessible name.
+    expect(toggle().getAttribute('aria-label')).toBe('Preview')
   })
 
-  it('closes the preview when the widget collapses, and reopens it on expand while the draft has content', async () => {
+  it('disables the toggle while the draft is empty', async () => {
+    await mountWidget(host)
+
+    expect(toggle().disabled).toBe(true)
+    toggle().click()
+    await flush()
+    expect(markdownCalls).toEqual([])
+    expect(preview()).toBeNull()
+  })
+
+  it('closes the preview when the widget collapses and does not reopen it automatically', async () => {
     await mountWidget(host)
 
     await typeDraft(host, 'hello')
-    await waitFor(() => host.querySelector('.composer-preview.show'))
+    toggle().click()
+    await waitFor(() => preview())
 
     ;(host.querySelector('.gt-minimize') as HTMLButtonElement).click()
     await flush()
-    expect(host.querySelector('.composer-preview.show')).toBeNull()
+    expect(preview()).toBeNull()
 
     ;(host.querySelector('.gt-fab') as HTMLButtonElement).click()
-    await flush()
-    // Automatic means "content is the open state": the preserved draft gets
-    // its preview back after the same 300ms pause.
-    await waitFor(() => host.querySelector('.composer-preview.show'))
+    await flush(450)
+    // Manual means manual: expanding keeps source mode until asked again.
+    expect(preview()).toBeNull()
     expect((host.querySelector('.gt-header-textarea') as HTMLTextAreaElement).value).toBe('hello')
+
+    toggle().click()
+    await waitFor(() => preview())
+    expect(markdownCalls).toEqual(['hello', 'hello'])
   })
 
   async function mountWidget(target: HTMLElement, extra: Partial<GitalkOptions> = {}) {
@@ -421,6 +469,7 @@ describe('floating Markdown preview', () => {
       if (url.includes('/comments')) return json(COMMENTS)
       if (url.includes('/discussions/442')) return json(THREAD)
       if (url.includes('/graphql')) return json({ data: { nodes: [], node: null } })
+      if (url.includes('/user')) return json({ login: 'alice', avatar_url: 'a' })
       return json({})
     }) as typeof fetch
 
@@ -458,6 +507,7 @@ async function mountWidget(host: HTMLElement, extra: Partial<GitalkOptions> = {}
     if (url.includes('/comments')) return json(COMMENTS)
     if (url.includes('/discussions/442')) return json(THREAD)
     if (url.includes('/graphql')) return json({ data: { nodes: [], node: null } })
+    if (url.includes('/user')) return json({ login: 'alice', avatar_url: 'a' })
     return json({})
   }) as typeof fetch
 

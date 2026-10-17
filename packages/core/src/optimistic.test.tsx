@@ -302,10 +302,14 @@ describe('optimistic comment posting', () => {
   it('switches the breathing cue off under prefers-reduced-motion', () => {
     const css = readFileSync(resolve(__dirname, 'styles/index.css'), 'utf8')
     expect(css).toContain('@keyframes gt-kf-breathe')
-    const block = css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/)
+    // There is more than one reduced-motion block (the init logo has its own);
+    // the one under test is the one that mentions the pending row.
+    const blocks = [
+      ...css.matchAll(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/g)
+    ].map((match) => match[1]!)
+    const block = blocks.find((text) => text.includes('.gt-comment--pending'))
     expect(block).toBeTruthy()
-    expect(block![1]).toContain('.gt-comment--pending')
-    expect(block![1]).toContain('animation: none')
+    expect(block).toContain('animation: none')
   })
 })
 
