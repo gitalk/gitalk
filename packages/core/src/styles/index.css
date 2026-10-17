@@ -4772,3 +4772,38 @@
     font-size: 11.5px;
   }
 }
+
+/* ---- inline mode: the widget stops being a panel --------------------- */
+
+/*
+ * `mode: 'inline'` is for hosts that want the comments to be part of the page
+ * rather than a card sitting on it. Everything that draws a surface is removed,
+ * the composer moves above the list, and the dock is neutralised — a docked bar
+ * would be a surface again by another name.
+ */
+.gt-container.gt-mode-inline {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.gt-container.gt-mode-inline::before {
+  display: none;
+}
+
+.gt-container.gt-mode-inline .gt-header,
+.gt-container.gt-mode-inline .gt-header.is--docked {
+  position: static;
+  order: 1;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  animation: none;
+}
+
+.gt-container.gt-mode-inline .gt-comments {
+  order: 2;
+}

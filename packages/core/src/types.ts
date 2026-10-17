@@ -432,6 +432,17 @@ export interface GitalkOptions {
    * earlier 2.x releases. Inline reply boxes inside individual comments are
    * unaffected: they always stay attached to their comment.
    */
+  /**
+   * How much of a surface the widget draws around itself.
+   *
+   * `default` is a self-contained panel with its own border, background and
+   * shadow. `inline` removes all of it, hides the minimise control, moves the
+   * composer above the list and never docks it — so the comments read as part
+   * of the host page rather than as a widget embedded in it.
+   *
+   * @default 'default'
+   */
+  mode?: 'default' | 'inline'
   stickyComposer?: boolean
   updateCountCallback?: (count: number) => void
 }

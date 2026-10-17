@@ -72,8 +72,10 @@ export function GitalkWidget({ options, className }: GitalkProps) {
     if (list) list.scrollTop = 0
   }, [state.pending])
 
+  const inline = options.mode === 'inline'
   const shellClass = [
     'gt-container',
+    inline ? 'gt-mode-inline' : '',
     meta.authenticated ? 'gt-authenticated' : '',
     minimized ? 'gt-minimized' : '',
     className ?? ''
@@ -314,7 +316,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   {t('latest')}
                 </span>
               </div>
-              {meta.showMinimizable ? (
+              {meta.showMinimizable && !inline ? (
                 <button
                   type="button"
                   className="gt-minimize p-min"
