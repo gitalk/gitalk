@@ -19,7 +19,12 @@ const coreVersion = JSON.parse(
  */
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  define: { __GITALK_VERSION__: JSON.stringify(coreVersion) },
+  define: {
+    __GITALK_VERSION__: JSON.stringify(coreVersion),
+    // Injected by the deploy workflow (see .github/workflows/deploy-pages.yml);
+    // empty locally, where the page falls back to a placeholder.
+    __GITALK_STARS__: JSON.stringify(process.env.GITALK_STARS ?? '')
+  },
   // The site is served from the bare domain (gitalk.github.io). A relative
   // base keeps the same build valid if it ever moves back under a subpath.
   base: './',

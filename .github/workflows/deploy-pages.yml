@@ -53,6 +53,26 @@ jobs:
         run: pnpm install --no-frozen-lockfile
       - name: Build core
         run: pnpm --filter @aifire/gitalk run build
+      # Baked in at build time. Reading it in the browser would spend every
+      # visitor's anonymous GitHub quota (60/hour per IP) on a number that
+      # changes a few times a week — and would show a stale or empty value
+      # whenever that quota ran out.
+      - name: Read the star count
+        run: |
+          set -euo pipefail
+          stars=$(curl -fsSL --max-time 20 https://api.github.com/repos/gitalk/gitalk | jq -r '.stargazers_count // empty')
+          if [ -z "$stars" ]; then
+            echo "::warning::could not read the star count; the page will use its fallback"
+            exit 0
+          fi
+          if [ "$stars" -lt 1000 ]; then
+            value="$stars"
+          else
+            value=$(awk -v n="$stars" 'BEGIN { printf "%.1fk", n / 1000 }')
+          fi
+          echo "GITALK_STARS=$value" >> "$GITHUB_ENV"
+          echo "stars: $stars -> $value"
+
       - name: Build landing
         run: pnpm build:landing
 
