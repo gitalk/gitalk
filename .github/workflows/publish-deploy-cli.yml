@@ -60,11 +60,11 @@ jobs:
         env:
           # A fine-grained PAT with contents:write on gitalk/deploy.
           # Without it, the step fails loudly rather than silently skipping.
-          TOKEN: ${{ secrets.DEPLOY_REPO_TOKEN }}
+          TOKEN: ${{ secrets.DEPLOY_REPO_TOKEN_GITALK }}
         run: |
           set -euo pipefail
           if [ -z "${TOKEN:-}" ]; then
-            echo "::error::DEPLOY_REPO_TOKEN is not set — add a fine-grained PAT with contents:write on gitalk/deploy"
+            echo "::error::DEPLOY_REPO_TOKEN_GITALK is not set — add a fine-grained PAT with contents:write on gitalk/deploy"
             exit 1
           fi
           cd .deploy-publish
