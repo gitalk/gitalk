@@ -113,15 +113,13 @@ describe('GitalkWidget', () => {
     expect(prompt!.querySelector('button.gt-composer-login-close')).toBeNull()
     expect(host.querySelector('.gt-composer-login-close')).toBeNull()
 
-    const text = prompt!.querySelector('.gt-composer-login-text') as HTMLAnchorElement
+    // The sentence next to the button was removed: only the button remains,
+    // and it is what starts the OAuth round trip.
+    expect(prompt!.querySelector('.gt-composer-login-text')).toBeNull()
     const button = prompt!.querySelector('.gt-composer-login-btn') as HTMLAnchorElement
-    expect(text?.tagName).toBe('A')
     expect(button?.tagName).toBe('A')
-    // Both the sentence and the button start the OAuth round trip.
-    expect(text.getAttribute('href')).toContain('/oauth/authorize')
     expect(button.getAttribute('href')).toContain('/oauth/authorize')
-    expect(text.textContent).toBe('Sign in with GitHub to comment')
-    expect(button.textContent).toContain('Login with GitHub')
+    expect(button.textContent).toBe('Login')
   })
 
   it('shows the empty state instead of a blank box when there are no comments', async () => {

@@ -467,18 +467,11 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   aria-label={t('login-to-comment')}
                 >
                   <a
-                    className="gt-composer-login-text"
-                    href={loginHref}
-                    onClick={onLoginClick}
-                  >
-                    {t('login-to-comment')}
-                  </a>
-                  <a
                     className="gt-btn gt-btn-login gt-composer-login-btn"
                     href={loginHref}
                     onClick={onLoginClick}
                   >
-                    <span className="gt-btn-text">{t('login-with-github')}</span>
+                    <span className="gt-btn-text">{t('login')}</span>
                   </a>
                 </div>
               ) : (

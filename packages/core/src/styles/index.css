@@ -3513,14 +3513,18 @@
 
 .gt-container .gt-counts {
   margin: 0;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: linear-gradient(
+  padding: 0;
+  border-radius: 0;
+  /* A number, not a chip: paint the figure with the brand gradient
+       instead of filling a rounded box behind it. */
+    background: linear-gradient(
     120deg,
     var(--gt-color-brand-grad-a),
     var(--gt-color-brand-grad-b)
   );
-  color: #fff;
+  -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
   font-weight: 700;
