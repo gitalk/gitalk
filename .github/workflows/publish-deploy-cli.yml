@@ -38,8 +38,12 @@ jobs:
           pnpm --filter @gitalk/proxy-worker run build
           pnpm --filter @gitalk/proxy-cloudbase run build
 
-      - name: Build the CLI into a runnable package
-        run: pnpm --filter @aifire/gitalk-deploy run bundle
+      # Two artifacts, from two scripts: `build` produces the CLI itself,
+      # `bundle` produces the proxy templates it deploys.
+      - name: Build the CLI and its templates
+        run: |
+          pnpm --filter @aifire/gitalk-deploy run build
+          pnpm --filter @aifire/gitalk-deploy run bundle
 
       - name: Assemble the publishable package
         run: |
