@@ -4283,7 +4283,7 @@
   bottom: calc(100% + 12px);
   border-radius: 14px;
   background-color: var(--gt-color-panel-solid);
-  border-color: var(--gt-color-panel-line-strong);
+  border-color: var(--gt-color-panel-line);
   box-shadow: var(--gt-shadow-float);
 }
 
