@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { checkHealth, deployCloudflare } from './deploy/cloudflare.js'
+import { deployCloudbase } from './deploy/cloudbase.js'
 import { COMMON, missing, parseEnvFile } from './env.js'
 
 const USAGE = `gitalk-deploy — deploy the Gitalk proxy
@@ -76,14 +77,41 @@ function main(argv: string[]): void {
   const here = dirname(fileURLToPath(import.meta.url))
   const templates = join(here, '..', 'templates')
 
+  const required = existsSync(join(templates, 'worker', 'index.js'))
+
   if (target === 'cloudbase') {
-    fail(
-      'cloudbase deployment is not wired up in this build\n' +
-        '  deploy it with `tcb fn deploy --force` from a checkout of gitalk/gitalk for now'
-    )
+    if (!existsSync(join(templates, 'cloudbase'))) {
+      fail(`no CloudBase bundle at ${join(templates, 'cloudbase')} — rebuild with scripts/bundle.mjs`)
+    }
+    deployCloudbase({
+      templateDir: templates,
+      // `{{env.X}}` reads these from the .env written beside cloudbaserc.json;
+      // the Tencent Cloud keys are for the CLI itself and are excluded.
+      runtime: Object.fromEntries(
+        (platform.required as readonly { key: string }[])
+          .map((v) => v.key)
+          .filter((key) => !key.startsWith('CLOUDBASE_'))
+          .map((key) => [key, env[key] ?? ''])
+      ),
+      env,
+      dryRun
+    })
+      .then(async (url) => {
+        if (dryRun) {
+          console.log('\n✓ dry run complete — rerun without -n to deploy')
+          return
+        }
+        if (await checkHealth(url)) {
+          console.log(`\n✓ healthy: ${url}`)
+        } else {
+          console.log('\n⚠ deployed, but /health did not answer ok — check the function logs')
+        }
+      })
+      .catch((error: unknown) => fail(error instanceof Error ? error.message : String(error)))
+    return
   }
 
-  if (!existsSync(join(templates, 'worker', 'index.js'))) {
+  if (!required) {
     fail(
       `no worker bundle at ${join(templates, 'worker')}\n` +
         '  this build was packaged without templates — rebuild with scripts/bundle.mjs'
