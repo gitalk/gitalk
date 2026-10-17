@@ -3,13 +3,18 @@ import { Moon, Sun } from 'lucide-react'
 import { Logo } from './components/logo'
 import { GithubIcon } from './components/github-icon'
 import { Hero } from './components/hero'
-import { LiveDemo } from './components/live-demo'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
 import { CodeTabs } from './components/code-tabs'
 import { LANGS, useI18n } from './i18n'
 
 const REPO_URL = 'https://github.com/gitalk/gitalk'
+
+/**
+ * Injected by vite from packages/core/package.json, so the bubble always names
+ * the version the page is actually shipping rather than one typed into copy.
+ */
+const VERSION = `v${__GITALK_VERSION__}`
 
 export function App() {
   const { lang, setLang, t } = useI18n()
@@ -28,7 +33,8 @@ export function App() {
       <header className="nav">
         <a className="brand" href="#top" aria-label="Gitalk">
           <Logo className="brand-mark" />
-          <span>Gitalk</span>
+          <span className="brand-name">Gitalk</span>
+          <span className="version-pill">{VERSION}</span>
         </a>
 
         <nav className="nav-links" aria-label="Gitalk">
@@ -83,7 +89,6 @@ export function App() {
 
       <main id="top">
         <Hero />
-        <LiveDemo />
         <Features />
         <BackendExplainer />
         <CodeTabs />
@@ -91,7 +96,11 @@ export function App() {
 
       <footer className="footer">
         <div className="footer-inner">
-          <span>{t.footer.note}</span>
+          <div className="footer-left">
+            <span className="footer-name">Gitalk</span>
+            <span className="version-pill">{VERSION}</span>
+            <span className="footer-note">{t.footer.note}</span>
+          </div>
           <a className="footer-link" href={REPO_URL} target="_blank" rel="noopener noreferrer">
             <GithubIcon size={14} />
             {t.footer.repo}

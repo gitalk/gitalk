@@ -1,45 +1,83 @@
 import { useI18n } from '../i18n'
 
-export interface CountValue {
+export interface StatItem {
+  id: 'backend' | 'lines' | 'comments' | 'size' | 'deps' | 'stars'
   value: string
   unit?: string
-}
-
-export interface HeroCounts {
-  size: CountValue
-  deps: CountValue
-  stars: CountValue
+  label: string
+  note: string
 }
 
 /**
- * The three headline numbers, shown as a full-width strip under the hero.
+ * The six headline numbers, in one place so the compact row in the hero and
+ * the heavier cards underneath can never drift apart.
  *
- * Kept out of the hero panel on purpose: inside it they competed with the
- * CTAs. The type pairing (22px/700 number, 13px muted label) mirrors the
- * widget's own `.gt-counts`, so the marketing page and the product share the
- * same way of presenting a count.
+ * Two of the values are build facts, not copy:
+ * — `__GITALK_GZIP__` is measured from the widget artifact in vite.config.ts.
+ * — `__GITALK_STARS__` is injected by the deploy workflow. It is empty in a
+ *   local build, and the `'7.2k'` below is a layout placeholder only — never a
+ *   claim about the repository's current star count.
  */
-export function Stats({ counts }: { counts: HeroCounts }) {
+export function useStats(): StatItem[] {
   const { t } = useI18n()
+  const { stats } = t.hero
 
-  const items = [
-    { id: 'size', label: t.hero.size, ...counts.size },
-    { id: 'deps', label: t.hero.runtimeDeps, ...counts.deps },
-    { id: 'stars', label: t.hero.stars, ...counts.stars }
-    // A figure the build could not measure is omitted rather than shown blank.
-  ].filter((item) => item.value)
+  // An unbuilt core means no measurement; an em dash is honest where a stale
+  // number would not be.
+  const gzip = __GITALK_GZIP__
+  const stars = __GITALK_STARS__ || '7.2k'
 
+  return [
+    { id: 'backend', ...stats.backend },
+    { id: 'lines', ...stats.lines },
+    { id: 'comments', ...stats.comments },
+    { id: 'size', ...stats.size, value: gzip || '—', unit: gzip ? 'kB' : undefined },
+    { id: 'deps', ...stats.deps },
+    { id: 'stars', ...stats.stars, value: stars }
+  ]
+}
+
+/** Compact three-column pair of rows that sits under the hero copy. */
+export function HeroStats({ items }: { items: StatItem[] }) {
   return (
-    <dl className="stats">
+    <div className="hero-stats">
       {items.map((item) => (
-        <div className="stat" key={item.id}>
-          <dt>{item.label}</dt>
-          <dd>
-            <span className="stat-number">{item.value}</span>
-            {item.unit ? <span className="stat-unit">{item.unit}</span> : null}
-          </dd>
+        <div key={item.id}>
+          <b>
+            {item.value}
+            {item.unit ? <small>{item.unit}</small> : null}
+          </b>
+          <span>{item.label}</span>
         </div>
       ))}
-    </dl>
+    </div>
+  )
+}
+
+/**
+ * The same six metrics as full-width cards. Deliberately heavier than the hero
+ * row: a large figure, an index, and a sentence of context.
+ */
+export function StatCards({ items }: { items: StatItem[] }) {
+  const { t } = useI18n()
+
+  return (
+    <section className="stats-band" aria-label={t.hero.statsTitle}>
+      <div className="stat-cards">
+        {items.map((item, index) => (
+          <article className="stat-card" key={item.id}>
+            <span className="stat-card-index" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <b className="stat-card-value">
+              {item.value}
+              {item.unit ? <small>{item.unit}</small> : null}
+            </b>
+            <span className="stat-card-label">{item.label}</span>
+            <p className="stat-card-note">{item.note}</p>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }

@@ -18,9 +18,9 @@ const DEMO_ENDPOINTS = [
 ] as const
 
 /**
- * The live widget, dressed as a small browser window so it can sit inside the
- * hero's laptop mockup. Kept in one place: the hero wraps this in the CSS
- * device frame, and nothing else on the page mounts a second copy.
+ * The live widget, dressed as a small browser window so it can sit in the
+ * hero's right column. Kept in one place: the hero wraps this in the CSS
+ * frame, and nothing else on the page mounts a second copy.
  */
 export function GitalkDemo() {
   const { t, lang } = useI18n()
@@ -37,6 +37,16 @@ export function GitalkDemo() {
       number: 442,
       backend: 'discussions' as const,
       perPage: 10,
+      /*
+       * The demo lives in a fixed-height frame with its own flex layout: the
+       * comment list scrolls and the composer is pinned to the bottom of that
+       * frame. The widget's viewport-fixed docking assumes a full-page embed,
+       * so inside this nested scroll container it would escape the frame
+       * (fixed positioning resolves against the frame's backdrop-filter
+       * containing block) and cover the page instead. Core ships the option
+       * for exactly this case.
+       */
+      stickyComposer: false,
       // The widget localises its own chrome and relative dates; keep it in
       // step with the page language instead of letting it fall back to the
       // browser locale.
