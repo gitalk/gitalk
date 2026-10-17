@@ -39,7 +39,10 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   // The composer only docks while the widget is expanded; collapsing it
   // undocks first, so the FAB is never covered by a fixed composer.
   const { docked, placeholderHeight } = useStickyComposer({
-    enabled: meta.stickyComposer && !minimized,
+    // Inline mode has no panel to lift the composer out of: the widget is
+    // part of the document, and docking would make it jump as the page
+    // reaches the viewport bottom and then release again.
+    enabled: meta.stickyComposer && !minimized && options.mode !== 'inline',
     containerRef,
     composerRef
   })
