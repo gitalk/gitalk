@@ -4824,25 +4824,17 @@
 }
 
 
-/* Attribution: visible on purpose. A hidden credit earns nothing, while a link
-   on every embedding site is what spreads the project. */
-.gt-container .gt-copyright {
-  display: flex;
-  flex-wrap: wrap;
+
+/* Brand mark beside the panel title; its accessible name carries the product
+   name and slogan, which is what crawlers and screen readers actually read. */
+.gt-container .gt-brand-mark {
+  display: inline-flex;
+  flex: none;
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-meta-title {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: 14px 0 2px;
-  font-size: 0.72em;
-  color: var(--gt-color-text-3);
-}
-
-.gt-container .gt-copyright .gt-link-project {
-  font-weight: 600;
-  color: var(--gt-color-text-2);
-}
-
-.gt-container .gt-copyright .gt-version {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  opacity: 0.7;
+  gap: 8px;
 }

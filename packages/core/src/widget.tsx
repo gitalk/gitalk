@@ -282,6 +282,23 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           */}
           <div className="gt-meta p-head">
             <div className="gt-meta-title p-title">
+              {/* The mark carries the product name and slogan in its accessible
+                  name, which is what search engines and screen readers read. */}
+              <span className="gt-brand-mark" title={`Gitalk · ${t('copyright-tagline')}`}>
+                <svg viewBox="0 0 1024 1024" width="20" height="20" role="img"
+                     aria-label={`Gitalk · ${t('copyright-tagline')}`}>
+                  <title>{`Gitalk · ${t('copyright-tagline')}`}</title>
+                  <mask id="gt-title-mark">
+                    <rect width="1024" height="1024" fill="#fff" />
+                    <rect x="330" y="308" width="364" height="104" rx="52" fill="#000" />
+                    <rect x="330" y="476" width="228" height="104" rx="52" fill="#000" />
+                  </mask>
+                  <g fill="currentColor" mask="url(#gt-title-mark)">
+                    <circle cx="512" cy="444" r="300" />
+                    <path d="M368 700H516L360 880Z" />
+                  </g>
+                </svg>
+              </span>
               <span className="gt-title">{t('comments')}</span>
               <span
                 className="gt-counts p-count"
@@ -651,20 +668,6 @@ export function GitalkWidget({ options, className }: GitalkProps) {
       ) : null}
       {/* Visible, linked attribution: a hidden credit helps nobody, while a
           link on every site that embeds the widget is what actually spreads it. */}
-      <div className="gt-copyright">
-        <a
-          className="gt-link gt-link-project"
-          href="https://github.com/gitalk/gitalk"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Gitalk
-        </a>
-        <span className="gt-copyright-tagline">
-          {t('copyright-tagline')}
-        </span>
-        <span className="gt-version">{VERSION}</span>
-      </div>
     </div>
   )
 }
