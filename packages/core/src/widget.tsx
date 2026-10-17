@@ -649,6 +649,22 @@ export function GitalkWidget({ options, className }: GitalkProps) {
           <span className="gt-fab-count">{loadedCount}</span>
         </button>
       ) : null}
+      {/* Visible, linked attribution: a hidden credit helps nobody, while a
+          link on every site that embeds the widget is what actually spreads it. */}
+      <div className="gt-copyright">
+        <a
+          className="gt-link gt-link-project"
+          href="https://github.com/gitalk/gitalk"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Gitalk
+        </a>
+        <span className="gt-copyright-tagline">
+          {t('copyright-tagline')}
+        </span>
+        <span className="gt-version">{VERSION}</span>
+      </div>
     </div>
   )
 }
