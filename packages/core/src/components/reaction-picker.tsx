@@ -67,6 +67,9 @@ export function ReactionPicker({
   // to the bottom of the viewport, in which case it flips up. Doing the same
   // keeps the picker off the comment text it would otherwise cover.
   const [placement, setPlacement] = useState<'up' | 'down'>('down')
+  // Viewport coordinates: the picker is fixed, so it can escape the
+  // scrolling comment list instead of being clipped by it.
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
   const root = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
 
@@ -151,6 +154,19 @@ export function ReactionPicker({
                 ? window.innerHeight - trigger.current.getBoundingClientRect().bottom
                 : Number.POSITIVE_INFINITY
               setPlacement(room < 220 ? 'up' : 'down')
+              const rect = trigger.current?.getBoundingClientRect()
+              if (rect) {
+                // Keep it on screen: the picker is wider than a narrow comment row.
+                const width = 232
+                const left = Math.min(
+                  Math.max(8, rect.left),
+                  Math.max(8, window.innerWidth - width - 8)
+                )
+                setPos({
+                  top: room < 220 ? rect.top - 6 : rect.bottom + 6,
+                  left
+                })
+              }
             }
             setOpen((v) => !v)
           }}
@@ -164,6 +180,13 @@ export function ReactionPicker({
         {open ? (
           <div
             className={`gt-reaction-picker is--${placement}`}
+              style={
+                pos
+                  ? placement === 'up'
+                    ? { top: undefined, bottom: window.innerHeight - pos.top, left: pos.left }
+                    : { top: pos.top, left: pos.left }
+                  : undefined
+              }
             role="listbox"
             aria-label={label}
           >

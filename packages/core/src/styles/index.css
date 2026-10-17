@@ -2157,12 +2157,12 @@
 }
 
 .gt-container .gt-reaction-picker {
-  position: absolute;
-  z-index: 30;
+  position: fixed;
+  
   /* Drops below the trigger by default; `.is--up` flips it when there is no
      room underneath (see ReactionPicker). */
-  top: calc(100% + 6px);
-  left: 0;
+  /* top/left come from the trigger rect, inline. */
+  z-index: 60;
   display: flex;
   gap: 2px;
   padding: 6px;
