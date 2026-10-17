@@ -8,7 +8,10 @@ import { Button } from './components/button'
 import { Comment } from './components/comment'
 import type { CommentLabels } from './components/comment'
 import { Icon } from './components/icon'
+import { ImageUploadButton, ImageUploadError } from './components/image-upload'
 import { MentionTextarea } from './components/mention-textarea'
+import type { MentionTextareaHandle } from './components/mention-textarea'
+import { buildImageMarkdown } from './images'
 import { PendingCommentRow } from './components/pending-comment'
 import { Upvote } from './components/upvote'
 import { VERSION } from './version'
@@ -30,6 +33,8 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const composerRef = useRef<HTMLDivElement>(null)
   const fabRef = useRef<HTMLButtonElement>(null)
+  /** Imperative access to the composer editor, for image insertion. */
+  const editorRef = useRef<MentionTextareaHandle | null>(null)
 
   // The composer only docks while the widget is expanded; collapsing it
   // undocks first, so the FAB is never covered by a fixed composer.
@@ -121,6 +126,19 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   )
 
   const topLevelPending = state.pending.filter((p) => p.parentId == null)
+
+  /**
+   * Upload the selection, then insert the generated Markdown as ONE edit.
+   *
+   * Inserting once (rather than once per file against a stale `value`) keeps
+   * the images in selection order and makes the "all-or-nothing" rule literal:
+   * a failed upload never leaves half a selection in the draft.
+   */
+  const uploadFiles = async (files: File[]) => {
+    const images = await actions.uploadImage(files)
+    if (!images) return
+    editorRef.current?.insertAtCaret(images.map(buildImageMarkdown).join('\n\n'))
+  }
 
   const expand = () => {
     setMinimized(false)
@@ -420,6 +438,10 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   (options.enableHotKey ?? true) ? () => void actions.submit() : undefined
                 }
                 onInput={actions.setDraft}
+                handleRef={editorRef}
+                // The floating preview hides the textarea's caret from us;
+                // insertion then appends rather than guessing a position.
+                caretAvailable={!state.previewing}
               />
 
               <div className="gt-header-controls">
@@ -431,6 +453,18 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                 >
                   <Icon className="gt-ico-tip" name="tip" text={t('support-markdown')} />
                 </a>
+
+                {meta.canUploadImage ? (
+                  <ImageUploadButton
+                    uploading={state.imageUploading}
+                    progress={state.imageUploadProgress}
+                    label={t('upload-image')}
+                    uploadingLabel={t('uploading-image')}
+                    cancelLabel={t('cancel')}
+                    onFiles={(files) => void uploadFiles(files)}
+                    onCancel={actions.cancelImageUpload}
+                  />
+                ) : null}
 
                 {meta.authenticated ? (
                   <Button className="gt-btn-public" loading={state.submitting} onClick={() => void actions.submit()}>
@@ -448,6 +482,22 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   </Button>
                 ) : null}
               </div>
+
+              {/*
+                Failures are never silent: the reason and a retry sit directly
+                below the controls. Cancellation is the one code the hook
+                swallows, so a visitor-requested abort produces no row.
+              */}
+              {state.imageUploadError ? (
+                <ImageUploadError
+                  error={state.imageUploadError}
+                  t={t}
+                  onRetry={() => {
+                    const failed = state.imageUploadError
+                    if (failed) void uploadFiles(failed.files)
+                  }}
+                />
+              ) : null}
             </div>
           </div>
 

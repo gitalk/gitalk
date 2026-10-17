@@ -8,7 +8,7 @@ export { default as Gitalk } from './standalone'
 export { createTranslator, locales } from './i18n'
 export type { Messages, Translator } from './i18n'
 export { formatRelativeTime } from './time'
-export { REACTIONS } from './types'
+export { GitalkImageUploadError, REACTIONS } from './types'
 export { REACTION_EMOJI, REACTION_LABEL, reactionChips } from './reactions'
 export type { ReactionChip } from './reactions'
 export {
@@ -29,9 +29,13 @@ export type {
   BackendKind,
   FabPosition,
   GitalkComment,
+  GitalkImageUploadContext,
+  GitalkImageUploadErrorCode,
   GitalkOptions,
   GitalkReactions,
   GitalkReply,
+  GitalkUploadedImage,
+  GitalkUploadImageHandler,
   GitalkUser,
   PendingComment,
   Reaction,

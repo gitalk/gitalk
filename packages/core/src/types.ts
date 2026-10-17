@@ -74,6 +74,73 @@ export interface GitalkUser {
   htmlUrl: string
 }
 
+/**
+ * One image the host site's upload handler placed somewhere.
+ *
+ * `url` must be an absolute `http(s)` URL. `data:`, `blob:`, `javascript:`,
+ * relative paths and URLs carrying credentials are rejected before anything is
+ * written into the draft — GitHub's own Markdown sanitizer strips `data:` image
+ * sources, so accepting them here would only produce a comment with a broken
+ * image in it.
+ */
+export interface GitalkUploadedImage {
+  /** Absolute http(s) URL. Other schemes are rejected. */
+  url: string
+  /** Optional alt text. Defaults to the source file's name. */
+  alt?: string
+}
+
+/** Context handed to {@link GitalkUploadImageHandler}. */
+export interface GitalkImageUploadContext {
+  /**
+   * Aborted on timeout, widget unmount, or when the visitor cancels. The host
+   * is encouraged — not obliged — to honour it and stop its own request.
+   */
+  signal: AbortSignal
+  /** Optional byte/step progress. The widget only displays the percentage. */
+  onProgress?: (loaded: number, total: number) => void
+}
+
+/**
+ * Host-provided upload callback. Receive the selected files and return one
+ * uploaded image per file, in the same order. Plain strings are accepted as a
+ * shorthand for `{ url }`.
+ *
+ * The widget never treats the return value as Markdown: it validates every URL
+ * and builds `![alt](url)` itself.
+ */
+export type GitalkUploadImageHandler = (
+  files: File[],
+  ctx: GitalkImageUploadContext
+) => Promise<Array<GitalkUploadedImage | string>>
+
+export type GitalkImageUploadErrorCode =
+  | 'invalid-url'
+  | 'count-mismatch'
+  | 'timeout'
+  | 'aborted'
+  | 'rejected'
+
+/**
+ * Why an image upload did not produce anything insertable.
+ *
+ * `files` always carries the original selection so the UI can offer "retry"
+ * without asking the visitor to pick the images again.
+ */
+export class GitalkImageUploadError extends Error {
+  readonly code: GitalkImageUploadErrorCode
+  readonly files: File[]
+  override readonly cause?: unknown
+
+  constructor(code: GitalkImageUploadErrorCode, files: File[] = [], cause?: unknown) {
+    super(cause instanceof Error ? cause.message : cause === undefined ? code : String(cause))
+    this.name = 'GitalkImageUploadError'
+    this.code = code
+    this.files = files
+    this.cause = cause
+  }
+}
+
 export interface GitalkComment {
   /**
    * Stable numeric identifier (REST `id` / GraphQL `databaseId`).
@@ -273,6 +340,27 @@ export interface GitalkOptions {
    * thread, so the list never advertises someone the visitor cannot see.
    */
   mentions?: boolean
+  /**
+   * Pluggable image upload.
+   *
+   * Gitalk never stores images itself: GitHub has no public image-upload API,
+   * base64 `data:` URLs are stripped by GitHub's Markdown sanitizer, and the
+   * widget's GitHub App token is deliberately read-only. The host site supplies
+   * the storage backend and returns the resulting absolute URLs; the widget
+   * validates them and inserts `![alt](url)` at the caret.
+   *
+   * When omitted the upload control is not rendered at all.
+   */
+  onUploadImage?: GitalkUploadImageHandler
+  /**
+   * How long to wait for {@link GitalkOptions.onUploadImage}, in milliseconds.
+   * Defaults to `30000`. `0` disables the timeout.
+   *
+   * On expiry the handler's `signal` is aborted and the upload fails with a
+   * `timeout` error, so a handler that ignores its signal cannot wedge the
+   * button in a busy state forever.
+   */
+  imageUploadTimeout?: number
   /**
    * Render the per-comment reaction control (the eight GitHub reaction types,
    * with per-type counts). Defaults to `true`. Set to `false` to leave the

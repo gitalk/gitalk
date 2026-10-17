@@ -15,12 +15,15 @@ import {
   extractMessage
 } from './api/client'
 import { createTranslator } from './i18n'
+import { normalizeUploadResult, withTimeout } from './images'
+import { GitalkImageUploadError } from './types'
 import type {
   BackendKind,
   GitalkComment,
   GitalkComment as Comment,
   GitalkOptions,
   GitalkReply,
+  GitalkUploadedImage,
   PendingComment,
   Reaction,
   ThreadInfo,
@@ -68,6 +71,12 @@ interface GitalkState {
    * letting the click do nothing.
    */
   notice: string | null
+  /** True while a host `onUploadImage` call is in flight. */
+  imageUploading: boolean
+  /** Handler-reported progress; null until it calls `onProgress`. */
+  imageUploadProgress: { loaded: number; total: number } | null
+  /** Last upload failure. Holds the original files for "retry". */
+  imageUploadError: GitalkImageUploadError | null
 }
 
 const DEFAULTS = {
@@ -87,6 +96,7 @@ const DEFAULTS = {
    */
   maxHeight: 'min(700px, calc(100dvh - 200px))' as string | null,
   stickyComposer: true,
+  imageUploadTimeout: 30000,
   /**
    * Manual by default. v1 treated an omitted `createIssueManually` as
    * "auto-create"; 2.0 inverts that on purpose (see `GitalkOptions`).
@@ -109,6 +119,8 @@ function normalizeOptions(raw: GitalkOptions) {
     enableHotKey: raw.enableHotKey ?? DEFAULTS.enableHotKey,
     distractionFreeMode: raw.distractionFreeMode ?? DEFAULTS.distractionFreeMode,
     mentions: raw.mentions ?? DEFAULTS.mentions,
+    onUploadImage: raw.onUploadImage,
+    imageUploadTimeout: raw.imageUploadTimeout ?? DEFAULTS.imageUploadTimeout,
     reactions: raw.reactions ?? DEFAULTS.reactions,
     upvote: raw.upvote ?? DEFAULTS.upvote,
     minimizable: raw.minimizable ?? DEFAULTS.minimizable,
@@ -170,12 +182,30 @@ export function useGitalk(options: GitalkOptions) {
     replySubmitting: false,
     pending: [],
     upvote: null,
-    notice: null
+    notice: null,
+    imageUploading: false,
+    imageUploadProgress: null,
+    imageUploadError: null
   })
 
   const patch = useCallback((next: Partial<GitalkState>) => {
     setState((prev) => ({ ...prev, ...next }))
   }, [])
+
+  /**
+   * The host callback lives in a ref so the upload action never captures a
+   * stale closure after `mount.update()` swaps the handler.
+   */
+  const uploadHandlerRef = useRef(opts.onUploadImage)
+  uploadHandlerRef.current = opts.onUploadImage
+  /** Cancels the upload in flight (visitor cancel or widget unmount). */
+  const uploadAbortRef = useRef<AbortController | null>(null)
+  /**
+   * Monotonic upload token. A late handler result may resolve after a cancel
+   * or a newer upload; comparing the token is what keeps that result from
+   * being inserted.
+   */
+  const uploadSeq = useRef(0)
 
   const http = useMemo(
     () => new HttpClient(() => auth.getToken()),
@@ -522,6 +552,19 @@ export function useGitalk(options: GitalkOptions) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  /**
+   * Unmounting aborts an in-flight upload: the handler's signal fires, and the
+   * token bump makes any result that still arrives a no-op.
+   */
+  useEffect(
+    () => () => {
+      uploadSeq.current++
+      uploadAbortRef.current?.abort()
+      uploadAbortRef.current = null
+    },
+    []
+  )
+
   const login = useCallback(() => {
     if (!auth.canLogin()) {
       // Already hidden in the UI; keep this as a hard stop for direct callers.
@@ -668,6 +711,98 @@ export function useGitalk(options: GitalkOptions) {
     await postComment(body, null)
     patch({ submitting: false })
   }, [auth, patch, postComment, requireLogin, state.draft])
+
+  /**
+   * Hand the selected files to the site's `onUploadImage` and validate what it
+   * returns. Resolves to the images to insert, or null on any failure.
+   *
+   * All-or-nothing: if one file fails validation the whole call fails, so the
+   * widget never inserts a partial selection. The Markdown itself is built by
+   * the caller from the returned URLs — the handler never gets to inject text.
+   */
+  const uploadImage = useCallback(
+    async (files: File[]): Promise<GitalkUploadedImage[] | null> => {
+      const handler = uploadHandlerRef.current
+      if (!handler || files.length === 0) return null
+
+      // A second call supersedes the first; the old controller is aborted and
+      // its late result ignored via the token.
+      uploadAbortRef.current?.abort()
+      const controller = new AbortController()
+      uploadAbortRef.current = controller
+      const seq = ++uploadSeq.current
+
+      patch({ imageUploading: true, imageUploadProgress: null, imageUploadError: null })
+
+      try {
+        // Validated before the handler runs, so a non-image selection never
+        // reaches site code at all.
+        if (files.some((file) => !file.type?.startsWith('image/'))) {
+          throw new GitalkImageUploadError(
+            'rejected',
+            files,
+            new Error('only image files can be uploaded')
+          )
+        }
+
+        const work = Promise.resolve().then(() =>
+          handler(files, {
+            signal: controller.signal,
+            onProgress: (loaded, total) => {
+              if (seq !== uploadSeq.current || controller.signal.aborted) return
+              patch({ imageUploadProgress: { loaded, total } })
+            }
+          })
+        )
+
+        const result = await withTimeout(work, opts.imageUploadTimeout, {
+          signal: controller.signal,
+          files,
+          // A handler that ignores its signal cannot wedge the button: the
+          // timeout wins and the controller is aborted anyway.
+          onTimeout: () => controller.abort()
+        })
+
+        if (seq !== uploadSeq.current || controller.signal.aborted) return null
+        const images = normalizeUploadResult(result, files)
+        patch({ imageUploading: false, imageUploadProgress: null, imageUploadError: null })
+        return images
+      } catch (err) {
+        // Superseded or cancelled: the visitor asked not to see a failure.
+        if (seq !== uploadSeq.current) return null
+        if (err instanceof GitalkImageUploadError && err.code === 'aborted') {
+          patch({ imageUploading: false, imageUploadProgress: null })
+          return null
+        }
+
+        const base =
+          err instanceof GitalkImageUploadError
+            ? err
+            : new GitalkImageUploadError('rejected', files, err)
+        const error = base.files.length
+          ? base
+          : new GitalkImageUploadError(base.code, files, base.cause ?? new Error(base.message))
+        patch({ imageUploading: false, imageUploadProgress: null, imageUploadError: error })
+        return null
+      } finally {
+        if (uploadAbortRef.current === controller) uploadAbortRef.current = null
+      }
+    },
+    [opts.imageUploadTimeout, patch]
+  )
+
+  /**
+   * Cancel an in-flight upload. This is the only failure path that never
+   * raises an error row; the token bump discards a handler that resolves later.
+   */
+  const cancelImageUpload = useCallback(() => {
+    const controller = uploadAbortRef.current
+    if (!controller) return
+    uploadSeq.current++
+    uploadAbortRef.current = null
+    controller.abort()
+    patch({ imageUploading: false, imageUploadProgress: null, imageUploadError: null })
+  }, [patch])
 
   /**
    * Monotonic token for preview requests. Typing while the floating preview is
@@ -920,7 +1055,9 @@ export function useGitalk(options: GitalkOptions) {
       dismissNotice,
       requireLogin,
       loadMore,
-      createThread
+      createThread,
+      uploadImage,
+      cancelImageUpload
     },
     meta: {
       owner: opts.owner,
@@ -950,6 +1087,13 @@ export function useGitalk(options: GitalkOptions) {
         !auth.isAppUserToken(),
       showMentions: opts.mentions,
       showReactions: opts.reactions,
+      /**
+       * Image upload is opt-in AND signed-in only. Without a handler there is
+       * nothing to call, so the control is not rendered at all; anonymous
+       * visitors follow `gt-btn-public`'s rule because inserting Markdown
+       * without being able to post it would only lose the draft.
+       */
+      canUploadImage: Boolean(opts.onUploadImage) && Boolean(auth.getToken()),
       sortDirection: opts.sortDirection,
       /** Collapse-to-FAB is on by default; the widget owns the open state. */
       showMinimizable: opts.minimizable,

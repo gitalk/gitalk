@@ -4,6 +4,22 @@ import type { MentionCandidate } from '../mentions'
 import { filterCandidates, insertMention, mentionQueryAt } from '../mentions'
 import { Avatar } from './avatar'
 
+/**
+ * Imperative editor handle.
+ *
+ * Host UI (currently image upload) needs to insert generated Markdown at the
+ * caret without reaching into the textarea's DOM node. The component owns the
+ * caret bookkeeping, so it exposes the one operation instead.
+ */
+export interface MentionTextareaHandle {
+  /**
+   * Insert `text` at the caret, replacing the selection when there is one.
+   * Appends to the end when the editor is hidden (the Markdown preview) and
+   * therefore cannot report a trustworthy caret.
+   */
+  insertAtCaret: (text: string) => void
+}
+
 interface MentionTextareaProps {
   value: string
   candidates: MentionCandidate[]
@@ -18,6 +34,10 @@ interface MentionTextareaProps {
   onInput: (value: string) => void
   /** Esc pressed with no popup open (the reply box uses it to cancel). */
   onEscape?: () => void
+  /** Filled with the imperative handle for the lifetime of the component. */
+  handleRef?: { current: MentionTextareaHandle | null }
+  /** False while a preview hides the editor; insertion then appends. */
+  caretAvailable?: boolean
 }
 
 let listSeq = 0
@@ -40,7 +60,9 @@ export function MentionTextarea({
   ariaLabel,
   onSubmit,
   onInput,
-  onEscape
+  onEscape,
+  handleRef,
+  caretAvailable = true
 }: MentionTextareaProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
   const [token, setToken] = useState<{ start: number; query: string } | null>(null)
@@ -48,6 +70,16 @@ export function MentionTextarea({
   // Restored after the controlled value re-renders: without it the caret jumps
   // to the end of the text every time a mention is inserted.
   const pendingCaret = useRef<number | null>(null)
+  /**
+   * Text the pending caret belongs to.
+   *
+   * Effects are deferred and may fire from an *older* render after an async
+   * insertion has already queued the next one. Applying the caret then would
+   * set it against stale content (and clear it before the real render lands).
+   * When this is set, the effect waits until the DOM value is the inserted
+   * text. Mention insertion leaves it null and behaves exactly as before.
+   */
+  const pendingValue = useRef<string | null>(null)
   const tokenKey = useRef<string | null>(null)
   // The token the visitor explicitly dismissed (Escape, or a pick). It is not
   // allowed to reopen until the token itself changes — otherwise the keyup
@@ -65,9 +97,13 @@ export function MentionTextarea({
   useEffect(() => {
     if (pendingCaret.current == null) return
     const caret = pendingCaret.current
-    pendingCaret.current = null
     const el = ref.current
     if (!el) return
+    // Wait for the render that actually carries the inserted text (see
+    // `pendingValue`); an older deferred effect must not consume the caret.
+    if (pendingValue.current !== null && el.value !== pendingValue.current) return
+    pendingCaret.current = null
+    pendingValue.current = null
     el.focus()
     try {
       el.setSelectionRange(caret, caret)
@@ -126,6 +162,39 @@ export function MentionTextarea({
     },
     [closeMenu, onInput, token]
   )
+
+  /**
+   * Insert externally generated text (image Markdown) at the caret.
+   *
+   * Reuses `pendingCaret`, so the controlled value re-render restores the
+   * caret after the inserted text instead of jumping to the end. When the host
+   * says the caret is unavailable — the floating preview hides the editor —
+   * the text is appended instead.
+   */
+  const insertAtCaret = useCallback(
+    (text: string) => {
+      const el = ref.current
+      const current = el?.value ?? value
+      const start =
+        caretAvailable && el ? (el.selectionStart ?? current.length) : current.length
+      const end = caretAvailable && el ? (el.selectionEnd ?? start) : current.length
+      const next = current.slice(0, start) + text + current.slice(end)
+      pendingCaret.current = start + text.length
+      pendingValue.current = next
+      onInput(next)
+    },
+    [caretAvailable, onInput, value]
+  )
+
+  // Keep the host's handle pointed at the latest closure (latest `value`), and
+  // clear it on unmount so a late upload result cannot write into a dead node.
+  useEffect(() => {
+    if (!handleRef) return
+    handleRef.current = { insertAtCaret }
+    return () => {
+      handleRef.current = null
+    }
+  }, [handleRef, insertAtCaret])
 
   const handleKeyDown = (e: TargetedKeyboardEvent<HTMLTextAreaElement>) => {
     if (open) {
