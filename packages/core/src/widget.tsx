@@ -543,11 +543,11 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                     */}
                     <button
                       type="button"
-                      className="gt-btn gt-btn-preview-toggle"
+                      className={`gt-btn gt-btn-preview-toggle${state.previewBusy ? ' is-loading' : ''}`}
                       title={state.previewing ? t('edit') : t('preview')}
                       aria-label={state.previewing ? t('edit') : t('preview')}
                       aria-pressed={state.previewing}
-                      disabled={!state.draft.trim()}
+                      disabled={!state.draft.trim() || state.previewBusy}
                       onClick={togglePreview}
                     >
                       <Icon

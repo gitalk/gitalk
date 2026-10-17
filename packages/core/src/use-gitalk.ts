@@ -51,6 +51,8 @@ interface GitalkState {
   user: { login: string; avatarUrl: string } | null
   draft: string
   previewing: boolean
+  /** True while a Markdown render is in flight, so the toggle can say so. */
+  previewBusy: boolean
   previewHtml: string
   /** Draft the current `previewHtml` was rendered from (live-preview guard). */
   previewDraft: string
@@ -172,6 +174,7 @@ export function useGitalk(options: GitalkOptions) {
     user: null,
     draft: '',
     previewing: false,
+    previewBusy: false,
     previewHtml: '',
     previewDraft: '',
     submitting: false,
@@ -853,8 +856,14 @@ export function useGitalk(options: GitalkOptions) {
       closePreview()
       return
     }
-    const html = await renderPreview(state.draft)
-    if (html !== null) patch({ previewing: true })
+    patch({ previewBusy: true })
+    try {
+      const html = await renderPreview(state.draft)
+      if (html !== null) patch({ previewing: true })
+    } finally {
+      // Always clear: a failed render must not leave the toggle spinning.
+      patch({ previewBusy: false })
+    }
   }, [closePreview, patch, renderPreview, state.draft])
 
   /**

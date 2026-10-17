@@ -4807,3 +4807,19 @@
 .gt-container.gt-mode-inline .gt-comments {
   order: 2;
 }
+
+/*
+ * A preview render is a network round trip. While it is in flight the toggle is
+ * disabled and breathes, so it reads as busy rather than as broken.
+ */
+.gt-container .gt-btn-preview-toggle.is-loading {
+  opacity: 0.75;
+  cursor: progress;
+  animation: gt-kf-pulse 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-container .gt-btn-preview-toggle.is-loading {
+    animation: none;
+  }
+}
