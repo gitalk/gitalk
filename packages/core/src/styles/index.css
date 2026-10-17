@@ -4838,3 +4838,18 @@
   align-items: center;
   gap: 8px;
 }
+
+/* Sort segments are icon buttons now: square, with the glyph centred. */
+.gt-container .gt-sort button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+}
+
+.gt-container .gt-sort button svg {
+  width: 14px;
+  height: 14px;
+}

@@ -337,16 +337,26 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             className={sortDir === 'last' ? 'is-active' : ''}
             aria-pressed={sortDir === 'last'}
             onClick={sortDir === 'last' ? undefined : actions.toggleSort}
+            title={t('latest')}
+            aria-label={t('latest')}
           >
-            {t('latest')}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+              <path d="M4 6h10" /><path d="M4 12h7" /><path d="M4 18h4" />
+              <path d="M18 7v10" /><path d="m15 14 3 3 3-3" />
+            </svg>
           </button>
           <button
             type="button"
             className={sortDir === 'first' ? 'is-active' : ''}
             aria-pressed={sortDir === 'first'}
             onClick={sortDir === 'first' ? undefined : actions.toggleSort}
+            title={t('oldest')}
+            aria-label={t('oldest')}
           >
-            {t('oldest')}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+              <path d="M4 6h4" /><path d="M4 12h7" /><path d="M4 18h10" />
+              <path d="M18 17V7" /><path d="m15 10 3-3 3 3" />
+            </svg>
           </button>
         </div>
               {meta.showMinimizable && !inline ? (
