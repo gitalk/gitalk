@@ -7,3 +7,5 @@
  */
 declare const __GITALK_VERSION__: string
 declare const __GITALK_STARS__: string
+declare const __GITALK_GZIP__: string
+declare const __GITALK_RAW__: string

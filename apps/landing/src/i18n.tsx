@@ -50,6 +50,7 @@ const zh = {
     getStarted: '开始使用',
     viewSource: '查看源码',
     size: '体积',
+    gzip: '压缩后',
     runtimeDeps: '运行时依赖',
     stars: 'Star'
   },
@@ -178,8 +179,8 @@ const options = {
     note: '登录需要在 `proxy` 里指向你自己部署的 edge function——因为 `github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。源码在 `packages/proxy-worker`，支持 Cloudflare Workers / Vercel / Netlify 一键部署。'
   },
   demo: {
-    title: '实时 Demo',
-    lede: '下面的评论框就是 `@aifire/gitalk` 本身。它直接读取 `gitalk/gitalk` 的 Discussions，匿名即可查看，登录后可评论。',
+    live: '实时',
+    liveNote: '真实组件 · 匿名可读，登录即可评论',
     endpointsLabel: '令牌端点',
     endpoints: {
       cloudflare: 'Cloudflare',
@@ -212,6 +213,7 @@ const en: Messages = {
     getStarted: 'Get started',
     viewSource: 'View source',
     size: 'Size',
+    gzip: 'Gzip',
     runtimeDeps: 'Runtime deps',
     stars: 'Stars'
   },
@@ -339,8 +341,8 @@ const options = {
     note: 'Signing in needs `proxy` pointed at an edge function you deploy yourself — `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange on its own. The source is in `packages/proxy-worker`, with one-command deploys for Cloudflare Workers / Vercel / Netlify.'
   },
   demo: {
-    title: 'Live demo',
-    lede: 'The comment box below is `@aifire/gitalk` itself. It reads the Discussions of `gitalk/gitalk` directly: anyone can browse anonymously and sign in to comment.',
+    live: 'Live',
+    liveNote: 'The real widget — read anonymously, sign in to comment',
     endpointsLabel: 'Token endpoint',
     endpoints: {
       cloudflare: 'Cloudflare',
