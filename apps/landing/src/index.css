@@ -370,7 +370,7 @@ a {
 /* ---------- stage ---------- */
 .stage {
   position: relative;
-  z-index: 10;
+  z-index: 20;
   min-height: 100dvh;
   max-width: 1360px;
   margin: 0 auto;
