@@ -57,8 +57,8 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   // `mount.update()` can turn the option off while the widget is collapsed.
   // Expanding it here avoids leaving the widget hidden with no FAB to click.
   useEffect(() => {
-    if (!meta.showMinimizable && minimized) setMinimized(false)
-  }, [meta.showMinimizable, minimized])
+    if ((!meta.showMinimizable || options.mode === 'inline') && minimized) setMinimized(false)
+  }, [meta.showMinimizable, minimized, options.mode])
 
   /**
    * A new top-level comment is prepended to the list. With the composer now
