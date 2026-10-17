@@ -1304,4 +1304,5 @@ a {
 
 .demo-controls {
   flex: none;
+  flex-direction: row;
 }

@@ -44,7 +44,7 @@ export function GitalkDemo({ mode, proxy }: { mode: "default" | "inline"; proxy:
       language: lang === 'zh' ? 'zh-CN' : 'en',
       mode
     }),
-    [lang]
+    [lang, mode, proxy]
   )
 
   return <Gitalk options={options} />
