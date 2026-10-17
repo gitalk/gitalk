@@ -15,7 +15,8 @@
     "node": ">=20.19"
   },
   "scripts": {
-    "build": "esbuild src/cli.ts --bundle --format=esm --platform=node --target=node20 --outfile=dist/cli.js"
+    "build": "esbuild src/cli.ts --bundle --format=esm --platform=node --target=node20 --outfile=dist/cli.js",
+    "bundle": "node scripts/bundle.mjs"
   },
   "license": "MIT",
   "publishConfig": {
