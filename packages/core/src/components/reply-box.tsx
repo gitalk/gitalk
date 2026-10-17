@@ -44,7 +44,9 @@ export function ReplyBox({
 const rootRef = useRef<HTMLDivElement>(null)
 useEffect(() => {
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  rootRef.current?.scrollIntoView({
+  // jsdom and older engines do not implement scrollIntoView; a convenience
+    // scroll must never throw and turn into an unhandled rejection.
+    rootRef.current?.scrollIntoView?.({
     block: 'nearest',
     behavior: reduced ? 'auto' : 'smooth'
   })
