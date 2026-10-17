@@ -48,17 +48,17 @@ const zh = {
     titleLine1: '评论区，',
     titleLine2: '轻得像',
     titleEm: '一行代码',
-    lede: '把 GitHub Discussions 或 Issues 变成你的评论区。零后端、零数据库，评论实时同步，接入成本低到几乎无感。',
+    lede: '把 GitHub Discussions 或 Issues 变成你的评论区。一条命令部署轻量代理，无需数据库，评论实时同步。',
     statsTitle: '关键指标',
     stats: {
-      backend: { value: '0', label: '后端服务', note: '无需自建服务器，也无需数据库。' },
-      lines: { value: '1', label: '行接入', note: '一个容器，加一行初始化。' },
+      backend: { value: '1', label: '键无痛部署', note: '一条命令拉起代理，不需要数据库。' },
+      lines: { value: '5', label: '秒快速接入', note: '一个容器，加一行初始化即可。' },
       comments: { value: '∞', label: '评论容量', note: '由 GitHub Discussions 承载。' },
       size: { label: '体积', note: 'gzip 压缩后的实际传输体积。' },
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
       stars: { label: 'Stars', note: 'GitHub 上的社区关注度。' }
     },
-    modeLabel: '布局模式', endpointLabel: '接口端点', modeDefault: '默认', modeInline: 'Inline'
+    modeLabel: '布局模式', endpointLabel: '接口端点', modeDefault: '默认', modeInline: '内嵌'
   },
   features: {
     eyebrow: "// WHAT'S NEW",
@@ -218,15 +218,15 @@ const en: Messages = {
     titleLine1: 'Comments,',
     titleLine2: 'light as ',
     titleEm: 'one line',
-    lede: 'Turn GitHub Discussions or Issues into your comment section. No backend, no database, comments sync in real time — setup costs almost nothing.',
+    lede: 'Turn GitHub Discussions or Issues into your comment section. Deploy a lightweight proxy with one command. No database, and comments sync in real time.',
     statsTitle: 'Key numbers',
     stats: {
       backend: {
-        value: '0',
-        label: 'Backend services',
+        value: '1',
+        label: 'command',
         note: 'No server to run, no database to keep.'
       },
-      lines: { value: '1', label: 'Line to add', note: 'One container, one init line.' },
+      lines: { value: '5', label: 'seconds', note: 'One container and one init line.' },
       comments: {
         value: '∞',
         label: 'Comments',
