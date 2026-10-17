@@ -41,6 +41,9 @@ importers:
       '@aifire/gitalk':
         specifier: workspace:*
         version: link:../../packages/core
+      '@aifire/textural':
+        specifier: 1.3.1
+        version: 1.3.1
       react:
         specifier: 19.3.1
         version: 19.3.1
@@ -178,6 +181,10 @@ importers:
         version: 3.5.44(typescript@7.0.2)
 
 packages:
+
+  '@aifire/textural@1.3.1':
+    resolution: {integrity: sha512-qmDwSxDquezRNul0BTuBl4V63k6Eaw6gLqaBCElx3F0mhqllBkaQm9AexBIgkjlga3OIRB4+dBHP9L6a42RuIw==}
+    engines: {node: '>=18'}
 
   '@asamuzakjp/css-color@7.1.5':
     resolution: {integrity: sha512-jCpAvj8apa7SKHZYogk0rbXB3Kb0hLFrpkWF+Ap+vBA5rirItnpv9NKyAyEuDuFizvl0qwnj6JWR70RGJ0rOlw==}

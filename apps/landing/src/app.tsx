@@ -18,8 +18,9 @@ import { LANGS, useI18n } from './i18n'
 // shows — the deploy overwrites it.
 const stars = __GITALK_STARS__ || '7.2k'
 const COUNTS: HeroCounts = {
-  size: { value: __GITALK_RAW__, unit: 'kB' },
-  gzip: { value: __GITALK_GZIP__, unit: 'kB' },
+  // "Size" is the transfer size (gzip), which is what the old 18.3 kB figure
+  // claimed; the raw artifact stays available as __GITALK_RAW__ if needed.
+  size: { value: __GITALK_GZIP__, unit: 'kB' },
   deps: { value: '1' },
   stars: stars ? { value: stars.replace(/k$/, ''), unit: 'k' } : { value: '' }
 }

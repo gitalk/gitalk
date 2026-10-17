@@ -50,7 +50,6 @@ const zh = {
     getStarted: '开始使用',
     viewSource: '查看源码',
     size: '体积',
-    gzip: '压缩后',
     runtimeDeps: '运行时依赖',
     stars: 'Star'
   },
@@ -213,7 +212,6 @@ const en: Messages = {
     getStarted: 'Get started',
     viewSource: 'View source',
     size: 'Size',
-    gzip: 'Gzip',
     runtimeDeps: 'Runtime deps',
     stars: 'Stars'
   },

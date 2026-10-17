@@ -7,7 +7,6 @@ export interface CountValue {
 
 export interface HeroCounts {
   size: CountValue
-  gzip: CountValue
   deps: CountValue
   stars: CountValue
 }
@@ -25,7 +24,6 @@ export function Stats({ counts }: { counts: HeroCounts }) {
 
   const items = [
     { id: 'size', label: t.hero.size, ...counts.size },
-    { id: 'gzip', label: t.hero.gzip, ...counts.gzip },
     { id: 'deps', label: t.hero.runtimeDeps, ...counts.deps },
     { id: 'stars', label: t.hero.stars, ...counts.stars }
     // A figure the build could not measure is omitted rather than shown blank.
