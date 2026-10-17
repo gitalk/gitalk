@@ -182,6 +182,24 @@ a {
     radial-gradient(60% 50% at 50% 40%, var(--bg-deep), var(--bg) 75%);
 }
 
+/*
+ * The canvas is the WebGL aurora. It is opaque once a context exists, so the
+ * gradients above and the drifting layer below stay as the no-WebGL fallback
+ * and are switched off while the canvas is live.
+ */
+.aurora-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.aurora.has-webgl::before {
+  animation: none;
+  opacity: 0;
+}
+
 .aurora::before {
   content: '';
   position: absolute;
@@ -1189,19 +1207,6 @@ a {
   transition-duration: 0.1s, 0.3s, 0.3s;
 }
 
-/* Pointer-tinted glow over the aurora. */
-.aurora::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    380px circle at var(--mx, 50%) var(--my, 50%),
-    rgba(30, 79, 255, 0.2),
-    transparent 68%
-  );
-  transition: background 0.2s linear;
-}
 
 @media (prefers-reduced-motion: reduce) {
   .nav {
@@ -1214,7 +1219,4 @@ a {
     transition: none;
   }
 
-  .aurora::after {
-    display: none;
-  }
 }

@@ -1,21 +1,21 @@
 import { useEffect } from 'react'
 
 /**
- * Three behaviours the design has that a static page does not:
+ * Two behaviours the design has that a static page does not:
  *
  * - the header turns frosted once the page scrolls under it;
- * - cards tilt a few degrees towards the pointer, the way the comment rows do;
- * - the aurora picks up a soft brand-tinted glow that follows the pointer.
+ * - cards tilt a few degrees towards the pointer, the way the comment rows do.
  *
- * All three are skipped entirely under `prefers-reduced-motion: reduce`, which
- * is also the only reason this is worth a hook rather than CSS.
+ * The aurora's pointer response lives in its WebGL shader (`aurora-shader.tsx`)
+ * now, not here. Both behaviours are skipped entirely under
+ * `prefers-reduced-motion: reduce`, which is the only reason this is worth a
+ * hook rather than CSS.
  */
 export function useFx(): void {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
     const nav = document.querySelector('.nav')
-    const aurora = document.querySelector<HTMLElement>('.aurora')
     const CARDS = '.stat-card, .feature-card'
     let tilted: HTMLElement | null = null
 
@@ -25,8 +25,6 @@ export function useFx(): void {
     }
 
     const onMove = (event: PointerEvent) => {
-      aurora?.style.setProperty('--mx', `${((event.clientX / window.innerWidth) * 100).toFixed(1)}%`)
-      aurora?.style.setProperty('--my', `${((event.clientY / window.innerHeight) * 100).toFixed(1)}%`)
 
       const card = (event.target as Element | null)?.closest?.(CARDS) as HTMLElement | null
       if (card !== tilted) {

@@ -3,6 +3,7 @@ import { useFx } from './use-fx'
 import { Moon, Sun } from 'lucide-react'
 import { Logo } from './components/logo'
 import { GithubIcon } from './components/github-icon'
+import { AuroraShader } from './components/aurora-shader'
 import { Hero } from './components/hero'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
@@ -28,7 +29,9 @@ export function App() {
 
   return (
     <div className="page">
-      <div className="aurora" aria-hidden="true" />
+      <div className="aurora" aria-hidden="true">
+        <AuroraShader theme={dark ? 'dark' : 'light'} />
+      </div>
       <div className="grain" aria-hidden="true" />
       <div className="vignette" aria-hidden="true" />
 
