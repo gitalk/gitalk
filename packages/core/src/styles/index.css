@@ -543,13 +543,13 @@
   margin-top: -2px;
 }
 
-/* header -- the composer card */
+/* header -- the composer card, below the list (reference `.p-composer`) */
 .gt-container .gt-header {
   position: relative;
   display: flex;
   gap: 12px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin: 16px 0 0;
   background-color: var(--gt-color-surface);
   border: 1px solid var(--gt-color-border);
   border-radius: var(--gt-radius-card);
@@ -677,7 +677,23 @@
   border: 1px solid var(--gt-color-border);
   border-radius: var(--gt-radius-card);
   box-shadow: var(--gt-shadow-card);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gt-color-border) transparent;
   transition: background-color 0.25s, border-color 0.25s;
+}
+
+.gt-container .gt-comments::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gt-container .gt-comments::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gt-container .gt-comments::-webkit-scrollbar-thumb {
+  background-color: var(--gt-color-border);
+  border-radius: 99px;
 }
 
 .gt-container .gt-comments > .gt-comment + .gt-comment {
@@ -2240,6 +2256,315 @@
   background-color: var(--gt-color-error-soft);
 }
 
+/* =====================================================================
+ * v2.4 additions: collapse-to-FAB, floating Markdown preview, and the
+ * docked composer.
+ *
+ * Same token set as everything above, so light/dark and host overrides keep
+ * working without a second stylesheet.
+ * ===================================================================== */
+
+/* ---- section-header minimise control (reference `.p-min`) ----------- */
+.gt-container .gt-minimize {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-pill);
+  background-color: var(--gt-color-surface);
+  color: var(--gt-color-text-2);
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: color 0.16s, background-color 0.16s, border-color 0.16s, transform 0.12s;
+}
+
+.gt-container .gt-minimize:hover {
+  color: var(--gt-color-accent);
+  background-color: var(--gt-color-main-soft);
+  border-color: var(--gt-color-main-border);
+}
+
+.gt-container .gt-minimize:active {
+  transform: scale(0.92);
+}
+
+.gt-container .gt-minimize:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
+}
+
+/* ---- collapsed widget + floating button (reference `.fab`) ---------- */
+/* Only the FAB is left on screen; every other direct child is removed from
+   layout and from the accessibility tree, not merely faded out. */
+.gt-container.gt-minimized > :not(.gt-fab) {
+  display: none;
+}
+
+.gt-container .gt-fab {
+  position: fixed;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 14px 0 9px;
+  border: 1px solid var(--gt-color-border);
+  border-radius: 999px;
+  background-color: var(--gt-color-surface);
+  color: var(--gt-color-text);
+  font: inherit;
+  font-size: 0.8125em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: var(--gt-shadow-card);
+  animation: gt-fab-in 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.gt-container .gt-fab:hover {
+  border-color: var(--gt-color-main-border);
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-fab:active {
+  transform: scale(0.97);
+}
+
+.gt-container .gt-fab:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
+}
+
+.gt-container .gt-fab-logo {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--gt-color-main-soft);
+  color: var(--gt-color-accent);
+}
+
+.gt-container .gt-fab-text {
+  white-space: nowrap;
+}
+
+.gt-container .gt-fab-count {
+  min-width: 1.5em;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background-color: var(--gt-color-main);
+  color: #fff;
+  font-size: 0.6875em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.gt-container .gt-fab--bottom-right {
+  right: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.gt-container .gt-fab--bottom-left {
+  left: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.gt-container .gt-fab--top-right {
+  right: 24px;
+  top: calc(24px + env(safe-area-inset-top, 0px));
+}
+
+.gt-container .gt-fab--top-left {
+  left: 24px;
+  top: calc(24px + env(safe-area-inset-top, 0px));
+}
+
+@keyframes gt-fab-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- floating Markdown preview (reference `.composer-preview`) ------ */
+.gt-container .composer-preview {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: calc(100% + 12px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  max-height: min(360px, 46dvh);
+  background-color: var(--gt-color-surface);
+  border: 1px solid var(--gt-color-border);
+  border-radius: 14px;
+  box-shadow: var(--gt-shadow-card);
+  opacity: 0;
+  transform: translateY(8px) scale(0.985);
+  transform-origin: bottom center;
+  pointer-events: none;
+  overflow: hidden;
+  transition: opacity 0.18s ease, transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.gt-container .composer-preview.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Little tail pointing at the composer, as in the reference. */
+.gt-container .composer-preview::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background-color: var(--gt-color-surface);
+  border-right: 1px solid var(--gt-color-border);
+  border-bottom: 1px solid var(--gt-color-border);
+  border-radius: 0 0 3px 0;
+  transform: rotate(45deg);
+}
+
+.gt-container .preview-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  padding: 10px 14px 7px;
+}
+
+.gt-container .preview-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65625em;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gt-color-accent);
+}
+
+.gt-container .preview-hint {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.625em;
+  color: var(--gt-color-text-3);
+}
+
+.gt-container .preview-count {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65625em;
+  color: var(--gt-color-text-3);
+}
+
+.gt-container .preview-body {
+  padding: 0 14px 13px;
+  max-height: min(250px, 34dvh);
+  overflow-y: auto;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gt-color-border) transparent;
+}
+
+/* The vendored github-markdown-css sets 16px / #24292e; the reference preview
+   is body-sized and follows the theme tokens. */
+.gt-container .preview-body.markdown-body {
+  font-size: 0.84375em;
+  line-height: 1.72;
+  color: var(--gt-color-comment-txt);
+}
+
+.gt-container .preview-body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.gt-container .preview-body::-webkit-scrollbar-thumb {
+  background-color: var(--gt-color-border);
+  border-radius: 99px;
+}
+
+.gt-container .preview-empty {
+  margin: 0;
+  padding: 0 14px 14px;
+  font-size: 0.78125em;
+  color: var(--gt-color-text-3);
+}
+
+/* ---- docked composer (reference `.p-composer.is-fixed`) ------------ */
+.gt-container .gt-header.is--docked {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px) + var(--gt-kb, 0px));
+  border-radius: var(--gt-radius-card);
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.55), var(--gt-shadow-card);
+  animation: gt-dock-in 0.24s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+/* Reserves the composer's place while it is fixed, so the widget's own
+   height (and therefore the dock decision) does not oscillate. */
+.gt-container .gt-header-placeholder {
+  margin: 16px 0 0;
+}
+
+@keyframes gt-dock-in {
+  from {
+    opacity: 0.55;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 479px) {
+  .gt-container .gt-fab {
+    height: 46px;
+    padding: 0 13px 0 8px;
+    font-size: 0.78125em;
+  }
+
+  .gt-container .gt-fab--bottom-right {
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .gt-container .gt-fab--bottom-left {
+    left: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .gt-container .gt-fab--top-right {
+    right: 16px;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+
+  .gt-container .gt-fab--top-left {
+    left: 16px;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+
+  .gt-container .composer-preview {
+    max-height: min(300px, 40dvh);
+  }
+
+  .gt-container .preview-body {
+    max-height: min(200px, 28dvh);
+  }
+}
+
 /* ---- reduced motion -------------------------------------------------- */
 /* The breathing cue exists to point at where a comment landed; readers who
    asked their system not to animate things still get the row, just still. */
@@ -2254,6 +2579,20 @@
   }
 
   .gt-container .gt-reaction-option:hover {
+    transform: none;
+  }
+
+  .gt-container .gt-fab,
+  .gt-container .gt-header.is--docked {
+    animation: none;
+  }
+
+  .gt-container .composer-preview {
+    transition: none;
+  }
+
+  .gt-container .gt-minimize:active,
+  .gt-container .gt-fab:active {
     transform: none;
   }
 }

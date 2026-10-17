@@ -60,6 +60,14 @@ export type BackendKind = 'discussions' | 'issues'
 
 export type SortDirection = 'last' | 'first'
 
+/**
+ * Corner the collapsed widget parks in.
+ *
+ * Used by {@link GitalkOptions.fabPosition}; the floating button is only
+ * rendered when the visitor has collapsed the widget.
+ */
+export type FabPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+
 export interface GitalkUser {
   login: string
   avatarUrl: string
@@ -285,5 +293,57 @@ export interface GitalkOptions {
    * Set this to `false` to omit it entirely.
    */
   upvote?: boolean
+  /**
+   * Collapse the whole widget into a floating action button (the design
+   * reference's `.fab`), and expand it again on click.
+   *
+   * | value              | behaviour                                              |
+   * | ------------------ | ------------------------------------------------------ |
+   * | `true` (*default*) | the section header carries a minimise control;        |
+   * |                    | clicking it hides the widget and parks a FAB in        |
+   * |                    | `fabPosition`. Clicking the FAB restores the widget.   |
+   * | `false`            | no minimise control and no FAB — the widget stays      |
+   * |                    | expanded, exactly as in 2.x before this option.        |
+   *
+   * The widget starts expanded: the FAB is not shown until the visitor
+   * collapses it. Nothing is persisted, so every page load starts expanded.
+   */
+  minimizable?: boolean
+  /**
+   * Corner the collapsed floating button parks in. Defaults to
+   * `'bottom-right'` (the design reference's position).
+   *
+   * One of `'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'`.
+   * Safe-area insets are respected on every corner. Ignored when
+   * {@link GitalkOptions.minimizable} is `false`.
+   */
+  fabPosition?: FabPosition
+  /**
+   * Maximum height of the scrolling comment list.
+   *
+   * - `number` — pixels, e.g. `520` becomes `520px`;
+   * - `string` — any CSS length or expression, e.g. `'60vh'` or
+   *   `'min(700px, calc(100dvh - 200px))'`;
+   * - `null` — **no limit**: the list grows with the thread and the page
+   *   scrolls instead of the list.
+   *
+   * Defaults to `'min(700px, calc(100dvh - 200px))'`, the design reference's
+   * demo height. The count header, composer and footer sit outside this
+   * scroll area and stay visible.
+   */
+  maxHeight?: number | string | null
+  /**
+   * Keep the composer within reach while reading.
+   *
+   * When the widget's bottom edge reaches the bottom of the viewport, the
+   * composer detaches from the page flow and sticks to the bottom of the
+   * viewport (the design reference's `.p-composer.is-fixed`), until the widget
+   * scrolls out of view or the visitor collapses it. Defaults to `true`.
+   *
+   * Set to `false` to leave the composer in the normal document flow, as in
+   * earlier 2.x releases. Inline reply boxes inside individual comments are
+   * unaffected: they always stay attached to their comment.
+   */
+  stickyComposer?: boolean
   updateCountCallback?: (count: number) => void
 }

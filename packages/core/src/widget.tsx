@@ -1,6 +1,7 @@
-import { useMemo } from 'preact/hooks'
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { GitalkOptions } from './types'
 import { useGitalk } from './use-gitalk'
+import { useStickyComposer } from './use-sticky-composer'
 import { collectParticipants } from './mentions'
 import { Avatar } from './components/avatar'
 import { Button } from './components/button'
@@ -20,9 +21,69 @@ export interface GitalkProps {
 export function GitalkWidget({ options, className }: GitalkProps) {
   const { state, t, actions, meta } = useGitalk(options)
 
+  /**
+   * Collapse state is deliberately local and not persisted: the design
+   * reference starts expanded, and a visitor who reloads expects to see the
+   * comments they came for rather than a ball they have to re-open.
+   */
+  const [minimized, setMinimized] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLDivElement>(null)
+  const fabRef = useRef<HTMLButtonElement>(null)
+
+  // The composer only docks while the widget is expanded; collapsing it
+  // undocks first, so the FAB is never covered by a fixed composer.
+  const { docked, placeholderHeight } = useStickyComposer({
+    enabled: meta.stickyComposer && !minimized,
+    containerRef,
+    composerRef
+  })
+
+  const { refreshPreview } = actions
+
+  // A collapsed widget moves focus to the only control left on screen.
+  useEffect(() => {
+    if (minimized) fabRef.current?.focus({ preventScroll: true })
+  }, [minimized])
+
+  // `mount.update()` can turn the option off while the widget is collapsed.
+  // Expanding it here avoids leaving the widget hidden with no FAB to click.
+  useEffect(() => {
+    if (!meta.showMinimizable && minimized) setMinimized(false)
+  }, [meta.showMinimizable, minimized])
+
+  /**
+   * Live-refresh the floating preview after the visitor pauses typing. The
+   * initial render happens in `togglePreview`; this keeps the panel honest
+   * while it is open without one GitHub `/markdown` request per keystroke.
+   * `previewDraft` is the guard: it is only rendered content, not the draft,
+   * so it never retries a failed render in a loop.
+   */
+  useEffect(() => {
+    if (!state.previewing || state.previewDraft === state.draft) return
+    const timer = setTimeout(() => void refreshPreview(), 300)
+    return () => clearTimeout(timer)
+  }, [state.draft, state.previewDraft, state.previewing, refreshPreview])
+
+  /**
+   * A new top-level comment is prepended to the list. With the composer now
+   * below the list, posting while scrolled down would otherwise hide the
+   * optimistic row above the fold; the reference does the same scroll-to-top
+   * in its `publish()`.
+   */
+  const lastPendingComment = useRef<string | null>(null)
+  useEffect(() => {
+    const latest = state.pending.filter((p) => p.parentId == null).at(-1)
+    if (!latest || latest.key === lastPendingComment.current) return
+    lastPendingComment.current = latest.key
+    const list = containerRef.current?.querySelector<HTMLElement>('.gt-comments')
+    if (list) list.scrollTop = 0
+  }, [state.pending])
+
   const shellClass = [
     'gt-container',
     meta.authenticated ? 'gt-authenticated' : '',
+    minimized ? 'gt-minimized' : '',
     className ?? ''
   ]
     .filter(Boolean)
@@ -61,8 +122,25 @@ export function GitalkWidget({ options, className }: GitalkProps) {
 
   const topLevelPending = state.pending.filter((p) => p.parentId == null)
 
+  const expand = () => {
+    setMinimized(false)
+    // Restore focus to the editor the visitor collapsed from. Deferred one
+    // tick because the composer is hidden by CSS until this render commits.
+    setTimeout(() => {
+      // The visitor may have collapsed it again before this frame.
+      if (containerRef.current?.classList.contains('gt-minimized')) return
+      containerRef.current
+        ?.querySelector<HTMLTextAreaElement>('.gt-header-textarea')
+        ?.focus({ preventScroll: true })
+    }, 0)
+  }
+
   return (
-    <div className={shellClass}>
+    <div
+      className={shellClass}
+      ref={containerRef}
+      data-minimized={minimized ? 'true' : undefined}
+    >
       {state.error ? (
         <div className="gt-error">
           {state.error}
@@ -127,9 +205,10 @@ export function GitalkWidget({ options, className }: GitalkProps) {
       {state.ready && !state.missingThread ? (
         <>
           {/*
-            Counts + identity read as the section header above the composer,
-            which is where the design reference puts its "title + count" row.
-            The copyright line moved out to its own footer at the end.
+            Counts + identity read as the section header above the list, which
+            is where the design reference puts its "title + count" row. The
+            composer now sits below the list (reference: `.p-composer`), so it
+            can dock to the viewport bottom and hang its preview above it.
           */}
           <div className="gt-meta">
             <span
@@ -162,80 +241,43 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   <span className="gt-user-name">{t('anonymous')}</span>
                 )}
               </div>
-            </div>
-          </div>
-
-          <div className="gt-header">
-            {state.user ? (
-              <Avatar className="gt-header-avatar" src={state.user.avatarUrl} alt={state.user.login} />
-            ) : meta.canLogin ? (
-              <a
-                className="gt-avatar-github"
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault()
-                  actions.login()
-                }}
-              >
-                <Icon className="gt-ico-github" name="github" />
-              </a>
-            ) : (
-              <span className="gt-avatar-github gt-avatar-github-idle">
-                <Icon className="gt-ico-github" name="github" />
-              </span>
-            )}
-
-            <div className="gt-header-comment">
-              <MentionTextarea
-                className={`gt-header-textarea ${state.previewing ? 'hide' : ''}`}
-                value={state.draft}
-                candidates={candidates}
-                placeholder={t('leave-a-comment')}
-                ariaLabel={t('leave-a-comment')}
-                listLabel={t('mention-label')}
-                onSubmit={
-                  (options.enableHotKey ?? true) ? () => void actions.submit() : undefined
-                }
-                onInput={actions.setDraft}
-              />
-
-              {state.previewing ? (
-                <div
-                  className="gt-header-preview markdown-body"
-                  dangerouslySetInnerHTML={{ __html: state.previewHtml }}
-                />
-              ) : null}
-
-              <div className="gt-header-controls">
-                <a
-                  className="gt-header-controls-tip"
-                  href="https://docs.github.com/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              {meta.showMinimizable ? (
+                <button
+                  type="button"
+                  className="gt-minimize"
+                  title={t('minimize')}
+                  aria-label={t('minimize')}
+                  onClick={() => {
+                    actions.closePreview()
+                    setMinimized(true)
+                  }}
                 >
-                  <Icon className="gt-ico-tip" name="tip" text={t('support-markdown')} />
-                </a>
-
-                {meta.authenticated ? (
-                  <Button className="gt-btn-public" loading={state.submitting} onClick={() => void actions.submit()}>
-                    {t('comment')}
-                  </Button>
-                ) : null}
-
-                <Button className="gt-btn-preview" onClick={() => void actions.togglePreview()}>
-                  {state.previewing ? t('edit') : t('preview')}
-                </Button>
-
-                {!meta.authenticated && meta.canLogin ? (
-                  <Button className="gt-btn-login" onClick={actions.login}>
-                    {t('login-with-github')}
-                  </Button>
-                ) : null}
-              </div>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M5 12h14" />
+                  </svg>
+                </button>
+              ) : null}
             </div>
           </div>
 
-          <div className="gt-comments">
+          <div
+            className="gt-comments"
+            style={
+              meta.maxHeight == null
+                ? undefined
+                : { maxHeight: meta.maxHeight, overflowY: 'auto' }
+            }
+          >
             {/*
               Optimistic rows go on top: they are the newest comments, which is
               where the newest-first list would put them anyway.
@@ -298,6 +340,117 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             ) : null}
           </div>
 
+          {/*
+            When docked, the composer leaves the flow, so this spacer keeps the
+            widget exactly as tall as it was. Without it, fixing the composer
+            would shorten `.gt-container`, push its bottom above the viewport
+            edge, and immediately undock — a visible one-frame loop.
+          */}
+          {docked && !minimized ? (
+            <div
+              className="gt-header-placeholder"
+              style={{ height: `${placeholderHeight}px` }}
+              aria-hidden="true"
+            />
+          ) : null}
+
+          <div
+            ref={composerRef}
+            className={`gt-header${docked && !minimized ? ' is--docked' : ''}`}
+            data-docked={docked && !minimized ? 'true' : undefined}
+          >
+            {/*
+              Floating Markdown preview (reference `.composer-preview`): it is
+              anchored to the composer rather than replacing the textarea, so
+              the draft stays editable while it is open.
+            */}
+            <div
+              className={`composer-preview${state.previewing ? ' show' : ''}`}
+              aria-hidden={state.previewing ? 'false' : 'true'}
+              role="region"
+              aria-label={t('preview')}
+            >
+              <div className="preview-head">
+                <span className="preview-label">{t('preview')}</span>
+                <span className="preview-hint">Markdown</span>
+                <span className="preview-count">
+                  {t('preview-chars', { count: String(state.draft.length) })}
+                </span>
+              </div>
+              {state.previewing ? (
+                state.draft.trim() ? (
+                  <div
+                    className="preview-body markdown-body"
+                    dangerouslySetInnerHTML={{ __html: state.previewHtml }}
+                  />
+                ) : (
+                  <p className="preview-empty">{t('preview-empty')}</p>
+                )
+              ) : null}
+            </div>
+
+            {state.user ? (
+              <Avatar className="gt-header-avatar" src={state.user.avatarUrl} alt={state.user.login} />
+            ) : meta.canLogin ? (
+              <a
+                className="gt-avatar-github"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  actions.login()
+                }}
+              >
+                <Icon className="gt-ico-github" name="github" />
+              </a>
+            ) : (
+              <span className="gt-avatar-github gt-avatar-github-idle">
+                <Icon className="gt-ico-github" name="github" />
+              </span>
+            )}
+
+            <div className="gt-header-comment">
+              <MentionTextarea
+                className="gt-header-textarea"
+                value={state.draft}
+                candidates={candidates}
+                placeholder={t('leave-a-comment')}
+                ariaLabel={t('leave-a-comment')}
+                listLabel={t('mention-label')}
+                onSubmit={
+                  (options.enableHotKey ?? true) ? () => void actions.submit() : undefined
+                }
+                onInput={actions.setDraft}
+              />
+
+              <div className="gt-header-controls">
+                <a
+                  className="gt-header-controls-tip"
+                  href="https://docs.github.com/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon className="gt-ico-tip" name="tip" text={t('support-markdown')} />
+                </a>
+
+                {meta.authenticated ? (
+                  <Button className="gt-btn-public" loading={state.submitting} onClick={() => void actions.submit()}>
+                    {t('comment')}
+                  </Button>
+                ) : null}
+
+                <Button className="gt-btn-preview" onClick={() => void actions.togglePreview()}>
+                  {state.previewing ? t('edit') : t('preview')}
+                </Button>
+
+                {!meta.authenticated && meta.canLogin ? (
+                  <Button className="gt-btn-login" onClick={actions.login}>
+                    {t('login-with-github')}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <div className="gt-copyright">
             <a
               className="gt-link gt-link-project"
@@ -310,6 +463,31 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             <span className="gt-version">{VERSION}</span>
           </div>
         </>
+      ) : null}
+
+      {meta.showMinimizable && minimized ? (
+        <button
+          ref={fabRef}
+          type="button"
+          className={`gt-fab gt-fab--${meta.fabPosition}`}
+          title={t('open-comments')}
+          aria-label={t('open-comments')}
+          onClick={expand}
+        >
+          <span className="gt-fab-logo" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+              <path
+                d="M12 2.6 20.2 7v10L12 21.4 3.8 17V7L12 2.6Z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <circle cx="12" cy="12" r="2.2" fill="currentColor" />
+            </svg>
+          </span>
+          <span className="gt-fab-text">{t('open-comments')}</span>
+          <span className="gt-fab-count">{loadedCount}</span>
+        </button>
       ) : null}
     </div>
   )

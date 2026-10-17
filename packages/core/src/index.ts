@@ -27,6 +27,7 @@ export type {
 } from './api/backend'
 export type {
   BackendKind,
+  FabPosition,
   GitalkComment,
   GitalkOptions,
   GitalkReactions,

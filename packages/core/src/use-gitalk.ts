@@ -49,6 +49,8 @@ interface GitalkState {
   draft: string
   previewing: boolean
   previewHtml: string
+  /** Draft the current `previewHtml` was rendered from (live-preview guard). */
+  previewDraft: string
   submitting: boolean
   loadingMore: boolean
   hasMore: boolean
@@ -77,6 +79,14 @@ const DEFAULTS = {
   mentions: true,
   reactions: true,
   upvote: true,
+  minimizable: true,
+  fabPosition: 'bottom-right' as const,
+  /**
+   * The design reference's demo height: a fixed 700px ceiling on tall
+   * viewports, and 200px of breathing room on short ones.
+   */
+  maxHeight: 'min(700px, calc(100dvh - 200px))' as string | null,
+  stickyComposer: true,
   /**
    * Manual by default. v1 treated an omitted `createIssueManually` as
    * "auto-create"; 2.0 inverts that on purpose (see `GitalkOptions`).
@@ -101,6 +111,19 @@ function normalizeOptions(raw: GitalkOptions) {
     mentions: raw.mentions ?? DEFAULTS.mentions,
     reactions: raw.reactions ?? DEFAULTS.reactions,
     upvote: raw.upvote ?? DEFAULTS.upvote,
+    minimizable: raw.minimizable ?? DEFAULTS.minimizable,
+    fabPosition: raw.fabPosition ?? DEFAULTS.fabPosition,
+    // `undefined` means "use the demo height"; an explicit `null` means "no
+    // limit" and must survive normalisation. Numbers are pixels.
+    maxHeight:
+      raw.maxHeight === undefined
+        ? DEFAULTS.maxHeight
+        : raw.maxHeight === null
+          ? null
+          : typeof raw.maxHeight === 'number'
+            ? `${raw.maxHeight}px`
+            : raw.maxHeight,
+    stickyComposer: raw.stickyComposer ?? DEFAULTS.stickyComposer,
     // v1's `sortDirection` was documented but never wired up. `'last'` (newest
     // first) is both the v1 default and what people expect from a comment box.
     sortDirection: raw.sortDirection === 'first' ? ('first' as const) : ('last' as const),
@@ -138,6 +161,7 @@ export function useGitalk(options: GitalkOptions) {
     draft: '',
     previewing: false,
     previewHtml: '',
+    previewDraft: '',
     submitting: false,
     loadingMore: false,
     hasMore: false,
@@ -640,23 +664,66 @@ export function useGitalk(options: GitalkOptions) {
     }
     // The composer clears straight away: the optimistic row is the feedback,
     // and leaving the text behind would invite a double post.
-    patch({ draft: '', submitting: true, previewing: false, previewHtml: '' })
+    patch({ draft: '', submitting: true, previewing: false, previewHtml: '', previewDraft: '' })
     await postComment(body, null)
     patch({ submitting: false })
   }, [auth, patch, postComment, requireLogin, state.draft])
 
+  /**
+   * Monotonic token for preview requests. Typing while the floating preview is
+   * open fires one request per pause; without this, a slow earlier response
+   * could land after a newer one and show the wrong Markdown.
+   */
+  const previewSeq = useRef(0)
+
+  /**
+   * Render `body` through GitHub's Markdown endpoint and adopt the result.
+   * Returns the HTML, or null when the request failed or was superseded.
+   */
+  const renderPreview = useCallback(
+    async (body: string): Promise<string | null> => {
+      const seq = ++previewSeq.current
+      try {
+        const html = await backend.preview(body)
+        if (seq !== previewSeq.current) return null
+        patch({ previewHtml: html, previewDraft: body })
+        return html
+      } catch (err) {
+        if (seq === previewSeq.current) reportFailure(patch, err)
+        return null
+      }
+    },
+    [backend, patch]
+  )
+
+  /**
+   * Close the preview without toggling it open again. Collapsing the widget
+   * uses this so restoring it does not bring back a stale preview panel.
+   */
+  const closePreview = useCallback(() => {
+    previewSeq.current++
+    patch({ previewing: false })
+  }, [patch])
+
+  /**
+   * Open/close the floating preview. Opening waits for the first render so the
+   * panel never flashes an empty box; closing invalidates any in-flight
+   * request.
+   */
   const togglePreview = useCallback(async () => {
     if (state.previewing) {
-      patch({ previewing: false })
+      closePreview()
       return
     }
-    try {
-      const html = await backend.preview(state.draft)
-      patch({ previewing: true, previewHtml: html })
-    } catch (err) {
-      reportFailure(patch, err)
-    }
-  }, [backend, patch, state.draft, state.previewing])
+    const html = await renderPreview(state.draft)
+    if (html !== null) patch({ previewing: true })
+  }, [closePreview, patch, renderPreview, state.draft, state.previewing])
+
+  /** Re-render the open preview after the draft changed (debounced by the UI). */
+  const refreshPreview = useCallback(async () => {
+    if (!state.previewing) return
+    await renderPreview(state.draft)
+  }, [renderPreview, state.draft, state.previewing])
 
   /**
    * Open the inline reply box for one comment.
@@ -840,6 +907,8 @@ export function useGitalk(options: GitalkOptions) {
       setDraft,
       submit,
       togglePreview,
+      refreshPreview,
+      closePreview,
       replyTo,
       cancelReply,
       setReplyDraft,
@@ -882,6 +951,13 @@ export function useGitalk(options: GitalkOptions) {
       showMentions: opts.mentions,
       showReactions: opts.reactions,
       sortDirection: opts.sortDirection,
+      /** Collapse-to-FAB is on by default; the widget owns the open state. */
+      showMinimizable: opts.minimizable,
+      fabPosition: opts.fabPosition,
+      /** Normalised to a CSS value, or null for "no limit". */
+      maxHeight: opts.maxHeight,
+      /** Whether the composer may dock to the viewport bottom. */
+      stickyComposer: opts.stickyComposer,
       proxy: auth.proxy
     }
   }
