@@ -4,6 +4,7 @@ import { Moon, Sun } from 'lucide-react'
 import { Logo } from './components/logo'
 import { GithubIcon } from './components/github-icon'
 import { AuroraShader } from './components/aurora-shader'
+import { AmbientToggle } from './components/ambient-toggle'
 import { Hero } from './components/hero'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
@@ -89,6 +90,8 @@ export function App() {
           >
             {dark ? <Sun size={15} strokeWidth={1.8} /> : <Moon size={15} strokeWidth={1.8} />}
           </button>
+
+          <AmbientToggle />
         </nav>
       </header>
 

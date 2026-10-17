@@ -335,6 +335,69 @@ a {
   background: var(--control-wash);
 }
 
+/* Ambient sound switch, the last control in the nav. While the texture is on
+   the icon breathes and a slow ring fades out from behind it: motion that says
+   "running" without shifting the controls around it. Both are disabled under
+   prefers-reduced-motion, where the brand tint alone carries the state. */
+.ambient-toggle {
+  position: relative;
+  color: var(--dim);
+}
+
+.ambient-toggle.is-on,
+.ambient-toggle.is-on:hover {
+  color: var(--brand-ink);
+}
+
+.ambient-toggle .ambient-icon {
+  display: grid;
+  place-items: center;
+}
+
+.ambient-toggle::after {
+  content: '';
+  position: absolute;
+  inset: 1px 2px;
+  border: 1px solid color-mix(in srgb, var(--brand-ink) 45%, transparent);
+  border-radius: 7px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ambient-toggle.is-on .ambient-icon {
+  animation: ambient-breathe 3.4s ease-in-out infinite;
+}
+
+.ambient-toggle.is-on::after {
+  animation: ambient-ring 3.4s ease-out infinite;
+}
+
+@keyframes ambient-breathe {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.93);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ambient-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
 .lang-switch {
   display: inline-flex;
   gap: 1px;
@@ -1202,6 +1265,14 @@ a {
     transition: none;
   }
 
+  .ambient-toggle.is-on .ambient-icon,
+  .ambient-toggle.is-on::after {
+    animation: none;
+  }
+
+  .ambient-toggle.is-on::after {
+    opacity: 0;
+  }
 }
 
 /* Layout mode switch in the hero: shows the widget as a panel or as part of

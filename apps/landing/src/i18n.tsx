@@ -43,6 +43,19 @@ const zh = {
     language: '切换语言',
     github: 'GitHub 仓库'
   },
+  ambient: {
+    aria: '环境音：{season} · {state}',
+    stateOn: '已开启',
+    stateOff: '已关闭',
+    defaultTag: '（默认）',
+    hint: '点击开关 · 右键或 ← → 切换季节 · ↑ ↓ 调音量（{volume}%）',
+    seasons: {
+      spring: '春雨',
+      summer: '夏虫',
+      autumn: '秋火',
+      winter: '冬雪'
+    }
+  },
   hero: {
     eyebrow: '// GITHUB DISCUSSIONS POWERED COMMENTS',
     titleLine1: '评论区，',
@@ -212,6 +225,19 @@ const en: Messages = {
     theme: 'Toggle theme',
     language: 'Switch language',
     github: 'GitHub repository'
+  },
+  ambient: {
+    aria: 'Ambient: {season} · {state}',
+    stateOn: 'on',
+    stateOff: 'off',
+    defaultTag: ' (default)',
+    hint: 'Click to toggle · right-click or ← → for the season · ↑ ↓ for volume ({volume}%)',
+    seasons: {
+      spring: 'Spring rain',
+      summer: 'Summer insects',
+      autumn: 'Autumn fire',
+      winter: 'Winter snow'
+    }
   },
   hero: {
     eyebrow: '// GITHUB DISCUSSIONS POWERED COMMENTS',
