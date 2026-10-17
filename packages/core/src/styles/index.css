@@ -219,7 +219,9 @@
   display: inline-block;
   width: 1em;
   height: 1em;
-  vertical-align: sub;
+  /* `sub` pushed every icon below the text baseline, which read as a rendering
+     bug wherever a glyph sat next to a label. */
+  vertical-align: middle;
 }
 
 .gt-container .gt-svg svg {
