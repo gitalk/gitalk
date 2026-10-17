@@ -4779,8 +4779,8 @@
 .gt-container.gt-mode-inline .gt-header.is--docked {
   position: static;
   order: 1;
-  border: 0;
-  border-radius: 0;
+  border: 1px solid var(--gt-color-border);
+  border-radius: var(--gt-radius-control);
   background: none;
   box-shadow: none;
   animation: none;
