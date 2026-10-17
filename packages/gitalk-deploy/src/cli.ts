@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 import { existsSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { checkHealth, deployCloudflare } from './deploy/cloudflare.js'
 import { COMMON, missing, parseEnvFile } from './env.js'
 
 const USAGE = `gitalk-deploy — deploy the Gitalk proxy
@@ -9,6 +12,7 @@ const USAGE = `gitalk-deploy — deploy the Gitalk proxy
 Options
   -c, --config <file>   dotenv file holding the App credentials (required)
   -t, --target <name>   cloudflare | cloudbase
+  -n, --dry-run         print the steps without running them
   -h, --help            this message
 `
 
@@ -37,6 +41,7 @@ function fail(message: string): never {
 function main(argv: string[]): void {
   let config: string | undefined
   let target: string | undefined
+  let dryRun = false
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -46,6 +51,7 @@ function main(argv: string[]): void {
     }
     if (arg === '-c' || arg === '--config') config = argv[++i]
     else if (arg === '-t' || arg === '--target') target = argv[++i]
+    else if (arg === '-n' || arg === '--dry-run') dryRun = true
     else fail(`unknown argument: ${arg}\n${USAGE}`)
   }
 
@@ -65,7 +71,45 @@ function main(argv: string[]): void {
   }
 
   console.log(`✓ ${config} has every value ${target} needs`)
-  console.log('  next: deployment is not wired up yet in this build')
+
+  // The templates sit beside the built CLI, wherever npx unpacked it.
+  const here = dirname(fileURLToPath(import.meta.url))
+  const templates = join(here, '..', 'templates')
+
+  if (target === 'cloudbase') {
+    fail(
+      'cloudbase deployment is not wired up in this build\n' +
+        '  deploy it with `tcb fn deploy --force` from a checkout of gitalk/gitalk for now'
+    )
+  }
+
+  if (!existsSync(join(templates, 'worker', 'index.js'))) {
+    fail(
+      `no worker bundle at ${join(templates, 'worker')}\n` +
+        '  this build was packaged without templates — rebuild with scripts/bundle.mjs'
+    )
+  }
+
+  deployCloudflare({
+    templateDir: join(templates, 'worker'),
+    // Everything except the Cloudflare credential itself becomes a worker secret.
+    secrets: platform.required.map((v) => v.key).filter((key) => key !== 'CLOUDFLARE_API_TOKEN'),
+    env,
+    dryRun
+  })
+    .then(async (url) => {
+      if (dryRun) {
+        console.log('\n✓ dry run complete — rerun without -n to deploy')
+        return
+      }
+      if (await checkHealth(url)) {
+        console.log(`\n✓ healthy: ${url}`)
+        console.log(`  set proxy: '${url}' in your Gitalk options`)
+      } else {
+        console.log('\n⚠ deployed, but /health did not answer ok — check the worker logs')
+      }
+    })
+    .catch((error: unknown) => fail(error instanceof Error ? error.message : String(error)))
 }
 
 main(process.argv.slice(2))
