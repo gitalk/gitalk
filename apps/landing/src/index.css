@@ -398,36 +398,66 @@ a {
   }
 }
 
-.lang-switch {
+/* Language picker. A native <select> keeps keyboard and screen-reader
+   behaviour intact; the chevron is purely decorative. The control borrows the
+   nav controls' wash and radius so it reads as part of the same family in
+   both themes. Deliberately no colour transition: in Chrome, transitioning a
+   background fed by a theme custom property can leave the control showing the
+   previous theme's wash after the theme flips. */
+.lang-picker {
+  position: relative;
   display: inline-flex;
-  gap: 1px;
-  padding: 0;
+  align-items: center;
+  height: 22px;
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--control-wash);
 }
 
-.lang-switch button {
-  padding: 2px 6px;
-  border: 0;
-  border-radius: 5px;
-  background: transparent;
+.lang-picker:hover {
+  border-color: var(--line-2);
+  background: var(--control-wash-2);
+}
+
+.lang-picker:focus-within {
+  border-color: color-mix(in srgb, var(--brand) 50%, var(--line));
+}
+
+.lang-picker svg {
+  position: absolute;
+  right: 5px;
   color: var(--dim);
+  pointer-events: none;
+}
+
+.lang-picker select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: auto;
+  max-width: 86px;
+  height: 100%;
+  padding: 0 19px 0 7px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--fg);
   font-family: inherit;
   font-size: 11px;
-  line-height: 15px;
+  line-height: 1;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  text-overflow: ellipsis;
 }
 
-.lang-switch button:hover {
-  color: var(--fg-strong);
+.lang-picker select:focus-visible {
+  outline: 2px solid var(--brand-ink);
+  outline-offset: 2px;
 }
 
-.lang-switch button.is-active {
-  background: var(--control-wash-2);
-  color: var(--fg-strong);
-  font-weight: 600;
+/* The open list is drawn by the platform; these colours cover the browsers
+   that let the options be styled. color-scheme on :root handles the rest. */
+.lang-picker select option {
+  background: var(--panel-strong);
+  color: var(--fg);
 }
 
 /* ---------- stage ---------- */
@@ -1388,6 +1418,13 @@ a {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 14px;
   font-weight: 700;
+}
+
+/* Grid items default to min-width:auto, so the long GITHUB_APP_PRIVATE_KEY
+   line in step two would widen the whole page below 640px instead of
+   scrolling inside its own <pre>. */
+.step-body {
+  min-width: 0;
 }
 
 .step-body h3 {

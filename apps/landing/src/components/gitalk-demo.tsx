@@ -41,7 +41,7 @@ export function GitalkDemo({ mode, proxy }: { mode: "default" | "inline"; proxy:
       // The widget localises its own chrome and relative dates; keep it in
       // step with the page language instead of letting it fall back to the
       // browser locale.
-      language: lang === 'zh' ? 'zh-CN' : 'en',
+      language: lang === 'zh' ? 'zh-CN' : lang,
       mode
     }),
     [lang, mode, proxy]

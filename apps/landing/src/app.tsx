@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useFx } from './use-fx'
-import { Moon, Sun } from 'lucide-react'
+import { ChevronDown, Moon, Sun } from 'lucide-react'
 import { Logo } from './components/logo'
 import { GithubIcon } from './components/github-icon'
 import { AuroraShader } from './components/aurora-shader'
@@ -10,7 +10,7 @@ import { GetStarted } from './components/get-started'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
 import { CodeTabs } from './components/code-tabs'
-import { LANGS, useI18n } from './i18n'
+import { htmlLang, LANGS, useI18n } from './i18n'
 
 const REPO_URL = 'https://github.com/gitalk/gitalk'
 
@@ -68,19 +68,36 @@ export function App() {
             <GithubIcon size={15} />
           </a>
 
-          <div className="lang-switch" role="group" aria-label={t.nav.language}>
-            {LANGS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={option.id === lang ? 'is-active' : ''}
-                aria-pressed={option.id === lang}
-                onClick={() => setLang(option.id)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <span className="lang-picker">
+            <select
+              value={lang}
+              onChange={(event) => {
+                const next = LANGS.find((option) => option.id === event.target.value)?.id
+                if (next) setLang(next)
+              }}
+              onKeyDown={(event) => {
+                if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
+                // Chrome exposes the open list as :open; leave its own
+                // navigation alone once it is showing.
+                if (event.currentTarget.matches(':open')) return
+                event.preventDefault()
+                const index = LANGS.findIndex((option) => option.id === lang)
+                const step = event.key === 'ArrowDown' ? 1 : -1
+                const next = LANGS[(index + step + LANGS.length) % LANGS.length]
+                if (next) setLang(next.id)
+              }}
+              aria-label={t.nav.language}
+              title={t.nav.language}
+              lang={htmlLang(lang)}
+            >
+              {LANGS.map((option) => (
+                <option key={option.id} value={option.id} lang={htmlLang(option.id)}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={11} strokeWidth={2} aria-hidden="true" />
+          </span>
 
           <button
             type="button"

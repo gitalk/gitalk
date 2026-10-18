@@ -1,0 +1,210 @@
+import type { Messages } from '../i18n'
+
+/** German. Typed against `zh`, the source locale. */
+export const de: Messages = {
+  meta: {
+    title: 'Gitalk 2.0 — eine Kommentarkomponente auf Basis von GitHub Discussions',
+    description:
+      'Gitalk 2.0: eine Kommentarkomponente auf Basis von GitHub Discussions. Builds ohne Framework, für React und Vue.'
+  },
+  nav: {
+    features: 'Funktionen',
+    usage: 'Verwendung',
+    demo: 'Demo',
+    theme: 'Design wechseln',
+    language: 'Sprache wechseln',
+    github: 'GitHub-Repository'
+  },
+  ambient: {
+    aria: 'Klangkulisse: {season} · {state}',
+    stateOn: 'an',
+    stateOff: 'aus',
+    defaultTag: ' (Standard)',
+    hint: 'Klicken zum Umschalten · Rechtsklick oder ← → für die Jahreszeit · ↑ ↓ für die Lautstärke ({volume} %)',
+    seasons: {
+      spring: 'Frühlingsregen',
+      summer: 'Sommerinsekten',
+      autumn: 'Herbstfeuer',
+      winter: 'Winterschnee'
+    }
+  },
+  hero: {
+    eyebrow: '// GITHUB DISCUSSIONS POWERED COMMENTS',
+    titleLine1: 'Kommentare,',
+    titleLine2: 'leicht wie ',
+    titleEm: 'eine Zeile',
+    lede: 'Machen Sie GitHub Discussions oder Issues zu Ihrer Kommentarsektion. Ein Befehl deployt einen schlanken Proxy. Keine Datenbank, Kommentare synchronisieren in Echtzeit.',
+    statsTitle: 'Kennzahlen',
+    stats: {
+      lines: { value: '4', label: 'Schritte', note: 'App anlegen, Werte eintragen, deployen, einbinden.' },
+      comments: { value: '∞', label: 'Kommentare', note: 'Getragen von GitHub Discussions.' },
+      size: { label: 'nicht die kleinste', note: 'Tatsächliche Übertragungsgröße nach gzip.' },
+      deps: { value: '0', label: 'Laufzeitabhängigkeiten', note: 'Die Rendering-Schicht steckt im Bundle.' },
+      stars: { label: 'Stars', note: 'Interesse der Community auf GitHub.' }
+    },
+    modeLabel: 'Layout-Modus', endpointLabel: 'Endpunkt', modeDefault: 'Standard', modeInline: 'Inline'
+  },
+  getStarted: {
+    eyebrow: 'Einrichtung',
+    title: 'Vier Schritte zu Kommentaren',
+    lede: 'Drei davon machen Sie selbst — App anlegen, Werte eintragen, Komponente einbinden — und einer ist ein Befehl. Die Reihenfolge zählt: Schritt drei braucht die Werte aus Schritt zwei.',
+    steps: [
+      {
+        title: 'GitHub App anlegen',
+        body: 'Unter Settings → Developer settings → GitHub Apps. Erteilen Sie Discussions: Read and write und Metadata: Read-only; als Callback URL <Ihr Proxy>/oauth/callback eintragen; Webhooks abschalten (werden nicht gebraucht).',
+        code: ''
+      },
+      {
+        title: 'Variablen vorbereiten',
+        body: 'App ID, Client ID, Client Secret und den privaten Schlüssel (der Inhalt der .pem, nicht der SHA256-Fingerabdruck) in eine .env schreiben; den Sitzungsschlüssel mit openssl rand -hex 32 erzeugen.',
+        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+      },
+      {
+        title: 'Mit einem Befehl deployen',
+        body: 'Die CLI prüft zuerst alle Werte und benennt fehlende, lädt die Zugangsdaten als Secrets hoch, deployt, ruft /health auf und gibt die URL aus, die als proxy eingetragen wird.',
+        code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Komponente einbinden',
+        body: 'Die ausgegebene URL als proxy eintragen, dann funktionieren die Kommentare. Styling, Dark Mode und Übersetzungen bringt die Komponente mit.',
+        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+      }
+    ],
+    more: 'CloudBase, Selbsthosting und alle Variablen → README der Deploy-CLI',
+    domainTitle: 'Eigene Domains',
+    domainBody: 'Eine Domain bei Cloudflare lässt sich direkt verbinden; anderswo muss ein CNAME-Eintrag von Hand angelegt werden. Bei CloudBase kommt zusätzlich eine ICP-Registrierung hinzu — beides ist Handarbeit. Die Callback-URL der App lässt sich nur in der Weboberfläche ändern (Apps einer Organisation nicht per API).'
+  },
+  features: {
+    eyebrow: "// WHAT'S NEW",
+    title: "What's New",
+    lede: '2.0 schreibt den Kern neu: Discussions als Standard, OAuth fürs Schreiben, kein Secret mehr im Browser.',
+    items: [
+      {
+        title: 'Discussions als Standard',
+        body: 'Kommentare liegen in Discussions, verstopfen nicht die Issue-Liste, und der v1-Fehler bei Labels über 50 Zeichen ist weg.'
+      },
+      {
+        title: 'Issues optional',
+        body: 'Bestehende Seiten setzen backend: "issues" und behalten ihre Daten — die Migration kann Seite für Seite erfolgen.'
+      },
+      {
+        title: 'Ohne Framework / React / Vue',
+        body: 'Ein Kern, drei Verwendungen. Jeder Wrapper bleibt unter 1 kB und gerät nicht mit der Framework-Version Ihres Projekts aneinander.'
+      },
+      {
+        title: 'Keine Secrets im Browser',
+        body: 'v1 schrieb clientSecret in die Seite und schickte es an einen fremden Proxy. 2.0 nutzt eine Edge Function, die Sie selbst deployen — kein Secret im Browser.'
+      },
+      {
+        title: 'Null Laufzeitabhängigkeiten',
+        body: 'Die Rendering-Schicht ist nur Preact. Datumsangaben über das native Intl.RelativeTimeFormat, Markdown als von GitHub gerendertes HTML.'
+      },
+      {
+        title: 'Moderne Toolchain',
+        body: 'Vite 8 · TypeScript 7 · Vitest 5 · pnpm-Monorepo · automatische Releases mit release-please.'
+      }
+    ]
+  },
+  flow: {
+    eyebrow: '// DATA FLOW',
+    title: 'Wie die Daten fließen',
+    lede: 'Anonym lesen, angemeldet schreiben. Das ist keine Abkürzung: GitHubs APIs lassen keine andere Wahl.',
+    anonTitle: 'Anonyme Besucher',
+    anonBadge: 'Ohne Anmeldung',
+    anonPoints: [
+      'Liest Kommentare über die REST-API (60 Anfragen/Stunde pro IP)',
+      'Erhält das von GitHub gerenderte HTML direkt',
+      'Wiederholte Anfragen mit ETag zählen nicht ins Limit'
+    ],
+    authTitle: 'Angemeldete Nutzer',
+    authBadge: 'OAuth',
+    authPoints: [
+      'Kommentiert, antwortet und reagiert über GraphQL',
+      '5.000 Punkte/Stunde, ein Punkt pro Query',
+      'Das Token liegt in localStorage und lässt sich jederzeit widerrufen'
+    ],
+    note: 'Schreibvorgänge müssen über GraphQL laufen, denn GitHub bietet keine REST-Schreib-API für Discussions (die `POST`-Routen existieren schlicht nicht). Das anonyme GraphQL-Kontingent beträgt buchstäblich `0`; „anonym lesen + angemeldet schreiben“ erzwingt die Architektur, es ist keine Abkürzung.'
+  },
+  tabs: {
+    eyebrow: '// GET STARTED',
+    title: 'Drei Arten der Verwendung',
+    lede: 'Ein Kern, drei Einstiegspunkte. Nehmen Sie den, der zu Ihrem Projekt passt.',
+    items: {
+      vanilla: {
+        label: 'Ohne Framework',
+        hint: 'Ein script-Tag und eine Zeile Initialisierung',
+        code: `<!-- 1. Build laden -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.css">
+<script src="https://cdn.jsdelivr.net/npm/gitalk@2/dist/gitalk.js"></script>
+
+<!-- 2. Container -->
+<div id="gitalk-container"></div>
+
+<!-- 3. Initialisieren -->
+<script>
+  const gitalk = new Gitalk({
+    clientID: 'Iv1.xxxxxxxx',
+    owner: 'you',
+    repo: 'comments',
+    admin: ['you'],
+    id: location.pathname,   // eindeutige Seitenkennung
+    number: 42,              // Nummer der vorhandenen discussion (empfohlen)
+    backend: 'discussions',  // Standard; v1-Seiten können 'issues' übergeben
+    perPage: 10
+  })
+
+  gitalk.render('gitalk-container')
+</script>`
+      },
+      react: {
+        label: 'React',
+        hint: 'peerDependency: react >= 18',
+        code: `import { Gitalk } from '@aifire/gitalk-react'
+import '@aifire/gitalk/style.css'
+
+export function Comments() {
+  return (
+    <Gitalk
+      options={{
+        clientID: 'Iv1.xxxxxxxx',
+        owner: 'you',
+        repo: 'comments',
+        admin: ['you'],
+        number: 42,
+        backend: 'discussions',
+        perPage: 10
+      }}
+    />
+  )
+}`
+      },
+      vue: {
+        label: 'Vue',
+        hint: 'peerDependency: vue >= 3.4',
+        code: `<script setup lang="ts">
+import { Gitalk } from '@aifire/gitalk-vue'
+import '@aifire/gitalk/style.css'
+
+const options = {
+  clientID: 'Iv1.xxxxxxxx',
+  owner: 'you',
+  repo: 'comments',
+  admin: ['you'],
+  number: 42,
+  backend: 'discussions',
+  perPage: 10
+}
+</script>
+
+<template>
+  <Gitalk :options="options" />
+</template>`
+      }
+    },
+    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die vier Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
+  },
+  footer: {
+    note: 'MIT · auf Basis von GitHub Discussions',
+    repo: 'Repository ansehen'
+  }
+}

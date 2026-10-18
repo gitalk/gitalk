@@ -7,24 +7,61 @@ import {
   useState,
   type ReactNode
 } from 'react'
+import { de } from './locales/de'
+import { esES } from './locales/es-ES'
+import { fa } from './locales/fa'
+import { fr } from './locales/fr'
+import { ja } from './locales/ja'
+import { ko } from './locales/ko'
+import { pl } from './locales/pl'
+import { ru } from './locales/ru'
+import { zhTW } from './locales/zh-TW'
 
 /**
- * Landing-page copy, in the two locales the site ships.
+ * Landing-page copy, in the eleven locales the site ships.
  *
  * Deliberately a plain typed dictionary rather than a runtime i18n library:
- * the page has one screen's worth of text, and `typeof zh` makes the English
- * dictionary fail to compile if it ever drifts out of sync.
+ * the page has one screen's worth of text, and `typeof zh` makes every other
+ * dictionary fail to compile if it ever drifts out of sync — missing keys,
+ * extra keys and misplaced values are all type errors.
+ *
+ * `zh` below is the source dictionary. `en` lives here too, next to it; the
+ * other nine locales are in ./locales so this file stays readable.
  *
  * English wording follows readme.md (the counterpart of readme-cn.md) and the
  * terminology in docs/tech.md. Brand and product names (Gitalk, GitHub
  * Discussions, Cloudflare, CloudBase, React, Vue, …) stay untranslated.
  */
-export type Lang = 'zh' | 'en'
+export type Lang =
+  | 'zh'
+  | 'en'
+  | 'zh-TW'
+  | 'ja'
+  | 'ko'
+  | 'es-ES'
+  | 'fr'
+  | 'ru'
+  | 'de'
+  | 'pl'
+  | 'fa'
 
-/** In display order; each language names itself, so this never changes. */
+/**
+ * In display order; each language names itself, so this never changes.
+ * The ids match the widget's own locale keys, so the demo can pass them
+ * straight through (only `zh` is remapped, to `zh-CN`).
+ */
 export const LANGS: ReadonlyArray<{ id: Lang; label: string }> = [
-  { id: 'zh', label: '中' },
-  { id: 'en', label: 'EN' }
+  { id: 'zh', label: '中文' },
+  { id: 'en', label: 'English' },
+  { id: 'zh-TW', label: '繁體中文' },
+  { id: 'ja', label: '日本語' },
+  { id: 'ko', label: '한국어' },
+  { id: 'es-ES', label: 'Español' },
+  { id: 'fr', label: 'Français' },
+  { id: 'ru', label: 'Русский' },
+  { id: 'de', label: 'Deutsch' },
+  { id: 'pl', label: 'Polski' },
+  { id: 'fa', label: 'فارسی' }
 ]
 
 const STORAGE_KEY = 'gitalk-landing-lang'
@@ -239,7 +276,7 @@ const options = {
 }
 
 /** The Chinese dictionary is the shape every locale must match. */
-type Messages = typeof zh
+export type Messages = typeof zh
 
 const en: Messages = {
   getStarted: {
@@ -441,7 +478,19 @@ const options = {
   }
 }
 
-const MESSAGES: Record<Lang, Messages> = { zh, en }
+const MESSAGES: Record<Lang, Messages> = {
+  zh,
+  en,
+  'zh-TW': zhTW,
+  ja,
+  ko,
+  'es-ES': esES,
+  fr,
+  ru,
+  de,
+  pl,
+  fa
+}
 
 export interface I18n {
   lang: Lang
@@ -480,6 +529,14 @@ export function useI18n(): I18n {
 }
 
 /**
+ * BCP 47 tag for a locale id. Only `zh` needs translating: it is the
+ * Simplified dictionary, which the widget and BCP 47 both call zh-CN.
+ */
+export function htmlLang(lang: Lang): string {
+  return lang === 'zh' ? 'zh-CN' : lang
+}
+
+/**
  * Renders a dictionary string, turning each `backticked` run into <code>.
  * Keeps the dictionaries plain strings instead of JSX, and the inline-code
  * styling of the original markup intact.
@@ -496,7 +553,9 @@ export function RichText({ text }: { text: string }) {
 
 /**
  * Detection order: the choice remembered in localStorage, then the browser
- * language (`zh*` → Chinese, anything else → English), then Chinese.
+ * language — matched against all eleven locales by primary subtag — then
+ * Chinese. `zh-TW`, `zh-HK`, `zh-MO` and any `*-Hant*` tag resolve to
+ * Traditional; every other `zh-*` tag resolves to Simplified.
  */
 export function detectLang(): Lang {
   const stored = readStoredLang()
@@ -504,13 +563,33 @@ export function detectLang(): Lang {
 
   const preferred = typeof navigator === 'undefined' ? '' : navigator.language
   if (!preferred) return 'zh'
-  return preferred.toLowerCase().startsWith('zh') ? 'zh' : 'en'
+  return matchBrowserLang(preferred) ?? 'zh'
+}
+
+const BROWSER_BASE: Record<string, Lang> = {
+  en: 'en',
+  ja: 'ja',
+  ko: 'ko',
+  es: 'es-ES',
+  fr: 'fr',
+  ru: 'ru',
+  de: 'de',
+  pl: 'pl',
+  fa: 'fa'
+}
+
+function matchBrowserLang(preferred: string): Lang | null {
+  const lower = preferred.toLowerCase()
+  if (lower.startsWith('zh')) {
+    return /^zh-(tw|hk|mo)\b/.test(lower) || /-hant\b/.test(lower) ? 'zh-TW' : 'zh'
+  }
+  return BROWSER_BASE[lower.split('-')[0] ?? ''] ?? null
 }
 
 function readStoredLang(): Lang | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw === 'zh' || raw === 'en' ? raw : null
+    return LANGS.find((option) => option.id === raw)?.id ?? null
   } catch {
     return null
   }
@@ -519,7 +598,7 @@ function readStoredLang(): Lang | null {
 function applyDocumentLanguage(lang: Lang): void {
   if (typeof document === 'undefined') return
   const { title, description } = MESSAGES[lang].meta
-  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en'
+  document.documentElement.lang = htmlLang(lang)
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', description)
 }
