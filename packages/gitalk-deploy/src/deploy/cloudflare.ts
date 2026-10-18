@@ -62,7 +62,7 @@ export async function deployCloudflare(plan: CloudflarePlan): Promise<string> {
     return ''
   }
 
-  const stdout = await wrangler(['deploy', '--log-level', 'warn'])
+  const stdout = await wrangler(['deploy'])
   const url = /https:\/\/[A-Za-z0-9.-]+\.workers\.dev/.exec(stdout)?.[0] ?? ''
   if (!url) {
     log('deployed, but the URL was not in the output — check the Cloudflare dashboard')
@@ -76,12 +76,13 @@ export async function deployCloudflare(plan: CloudflarePlan): Promise<string> {
 export async function checkHealth(baseUrl: string): Promise<boolean> {
   if (!baseUrl) return false
   try {
-    const response = await fetch(`${baseUrl.replace(/\/$/, '')}/health`, {
+    // The proxy answers its identity at `/`; there is no `/health` route.
+    const response = await fetch(`${baseUrl.replace(/\/$/, '')}/`, {
       signal: AbortSignal.timeout(15_000)
     })
     if (!response.ok) return false
-    const body = (await response.json()) as { ok?: boolean }
-    return body.ok === true
+    const body = (await response.json()) as { ok?: boolean; service?: string }
+    return body.ok === true && body.service === 'gitalk-proxy'
   } catch {
     return false
   }

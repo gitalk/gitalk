@@ -21,7 +21,9 @@ export function parseEnvFile(path: string): Record<string, string> {
   const raw = readFileSync(path, 'utf8')
   const out: Record<string, string> = {}
   // PEM keys legitimately span lines, so a quoted value runs to its closing quote.
-  const re = /^\s*([A-Z0-9_]+)\s*=\s*(?:"([\s\S]*?)"|'([\s\S]*?)'|(.*))\s*$/gm
+    // [ \t] rather than \s around the value: \s matches newlines, so a key left
+    // empty would swallow the following line as if it were that key\'s value.
+    const re = /^[ \t]*([A-Z0-9_]+)[ \t]*=[ \t]*(?:"([\s\S]*?)"|\'([\s\S]*?)\'|([^\r\n]*))[ \t]*$/gm
   for (const m of raw.matchAll(re)) {
     out[m[1]] = (m[2] ?? m[3] ?? m[4] ?? '').replace(/\\n/g, '\n').trim()
   }
