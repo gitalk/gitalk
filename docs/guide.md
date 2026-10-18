@@ -180,6 +180,17 @@ https://github.com/apps/<你的后缀>/installations/new
 
 ## 先选一条路
 
+> **最快的路**：`npx github:gitalk/deploy -c .env -t cloudflare`（或 `-t cloudbase`）。
+> 它校验变量、上传凭据、部署并自检，一条命令完成。完整说明见
+> [`packages/gitalk-deploy/README-CN.md`](../packages/gitalk-deploy/README-CN.md)。
+>
+> 下面 **B / C / D** 是**手动**的等价做法 —— 想了解每一步在做什么、或者要在自己的
+> CI 里跑时看它们。跟着 B 走和跑那条命令，最终部署出来的东西是一样的。
+>
+> ⚠️ 无论走哪条，**GitHub App 的 Callback URL 都要在部署拿到地址之后再填** ——
+> 它依赖代理地址，而那时代理还不存在。
+
+
 | 方案 | 适合谁 | 花费 | 难度 |
 | --- | --- | --- | --- |
 | **A · 用官方提供的** | 只想先试试、本地开发 | 免费 | 不用做任何事 |
