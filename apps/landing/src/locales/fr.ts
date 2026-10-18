@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** French. Typed against `zh`, the source locale. */
 export const fr: Messages = {
@@ -11,6 +12,7 @@ export const fr: Messages = {
     features: 'Fonctionnalités',
     usage: 'Utilisation',
     demo: 'Démo',
+    faq: 'FAQ',
     theme: 'Changer de thème',
     language: 'Changer de langue',
     github: 'Dépôt GitHub'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: 'La connexion passe obligatoirement par un proxy : `github.com/login/oauth/access_token` n’envoie pas d’en-têtes CORS, le navigateur ne peut donc pas terminer l’échange du token seul. Le déploiement correspond aux cinq étapes ci-dessus ; CloudBase et l’auto-hébergement sont couverts par le README du dépôt.'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: 'Questions fréquentes',
+    items: [
+      {
+        q: 'Peut-on le charger directement depuis un CDN ?',
+        a: 'Le composant, oui. Mais la connexion et la publication de commentaires ne peuvent pas partager le proxy officiel : il ne fait confiance qu’à `gitalk.github.io` et tourne sur l’App de Gitalk. Votre site a besoin de son propre déploiement (une commande, cinq minutes environ).',
+        code: CDN_SCRIPT
+      },
+      {
+        q: 'Faut-il déployer un proxy ?',
+        a: 'Pas pour lire les commentaires : le navigateur appelle directement l’API REST de GitHub, dans la limite anonyme de 60 requêtes par heure. Il en faut un pour se connecter, commenter et réagir, car le point de terminaison de jeton de GitHub ne renvoie pas d’en-têtes CORS.',
+        code: ''
+      },
+      {
+        q: 'Où sont stockées les données ?',
+        a: 'Dans votre propre dépôt : Discussions ou Issues. Aucun serveur intermédiaire, et vous pouvez exporter ou migrer depuis GitHub à tout moment.',
+        code: ''
+      },
+      {
+        q: 'Comment migrer depuis la v1 ?',
+        a: "Remplacer `clientID` et ajouter `proxy` suffit. Les sites existants peuvent définir `backend: 'issues'` pour garder leur Issue d’origine, sans migrer de données.",
+        code: ''
+      },
+      {
+        q: 'Pourquoi le nom d’utilisateur s’affiche-t-il au lieu du pseudo ?',
+        a: 'Le pseudo GitHub (display name) s’affiche par défaut ; ceux qui n’en ont pas montrent leur nom d’utilisateur. Les mentions `@` utilisent toujours le nom d’utilisateur : GitHub ne sait pas résoudre un pseudo.',
+        code: ''
+      },
+      {
+        q: 'Quels frameworks sont pris en charge ?',
+        a: 'Sans framework (un `<div>` et un constructeur), React et Vue. Styles, mode sombre et 11 langues (dont le persan en RTL) sont fournis avec le composant.',
+        code: ''
+      },
+      {
+        q: 'Est-ce gratuit ?',
+        a: 'Le composant est sous MIT. Le proxy tient dans le quota gratuit de chaque plateforme pour la plupart des sites : pas de coût de serveur, pas d’offre payante.',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · propulsé par GitHub Discussions',

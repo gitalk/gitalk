@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** Korean. Typed against `zh`, the source locale. */
 export const ko: Messages = {
@@ -11,6 +12,7 @@ export const ko: Messages = {
     features: '기능',
     usage: '사용법',
     demo: '데모',
+    faq: 'FAQ',
     theme: '테마 전환',
     language: '언어 전환',
     github: 'GitHub 저장소'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 다섯 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: '자주 묻는 질문',
+    items: [
+      {
+        q: 'CDN으로 바로 불러올 수 있나요?',
+        a: '컴포넌트 자체는 가능합니다. 다만 로그인과 댓글 작성은 공식 proxy를 함께 쓸 수 없습니다 — 공식 proxy는 `gitalk.github.io`만 신뢰하며 Gitalk 자체 App에서 실행됩니다. 자기 사이트용으로 하나 더 배포하세요(명령 한 줄, 약 5분).',
+        code: CDN_SCRIPT
+      },
+      {
+        q: 'proxy를 꼭 배포해야 하나요?',
+        a: '댓글 읽기만 한다면 필요 없습니다 — 브라우저가 GitHub REST에 직접 접속하고 익명 한도는 시간당 60회입니다. 로그인, 댓글 작성, reaction에는 필요합니다. GitHub의 token 엔드포인트가 CORS 헤더를 반환하지 않기 때문입니다.',
+        code: ''
+      },
+      {
+        q: '데이터는 어디에 저장되나요?',
+        a: '자신의 저장소입니다 — Discussions 또는 Issues. 중간 서버가 없고 언제든 GitHub에서 내보내거나 옮길 수 있습니다.',
+        code: ''
+      },
+      {
+        q: 'v1에서 어떻게 이전하나요?',
+        a: "`clientID`를 바꾸고 `proxy`를 추가하면 됩니다. 기존 사이트는 `backend: 'issues'`를 설정해 원래 Issue를 그대로 쓸 수 있어 데이터 이전이 필요 없습니다.",
+        code: ''
+      },
+      {
+        q: '댓글에 닉네임 대신 사용자 이름이 표시되는 이유는?',
+        a: '기본값은 닉네임(GitHub display name)이고, 닉네임이 없으면 사용자 이름을 표시합니다. `@` 멘션은 항상 사용자 이름입니다 — 닉네임은 GitHub에서 확인할 수 없기 때문입니다.',
+        code: ''
+      },
+      {
+        q: '어떤 프레임워크를 지원하나요?',
+        a: '프레임워크 없음(`<div>` 하나 + 생성자 하나), React, Vue. 스타일, 다크 모드, 11개 언어(페르시아어 RTL 포함)는 컴포넌트에 포함되어 있습니다.',
+        code: ''
+      },
+      {
+        q: '무료인가요?',
+        a: '컴포넌트는 MIT입니다. proxy는 각 플랫폼의 무료 한도로 대부분 사이트에 충분합니다. 서버 비용도, 유료 플랜도 없습니다.',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · GitHub Discussions 기반',

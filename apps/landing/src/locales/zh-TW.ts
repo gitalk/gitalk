@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** Traditional Chinese (Taiwan). Typed against `zh`, the source locale. */
 export const zhTW: Messages = {
@@ -11,6 +12,7 @@ export const zhTW: Messages = {
     features: '功能',
     usage: '用法',
     demo: '示範',
+    faq: 'FAQ',
     theme: '切換主題',
     language: '切換語言',
     github: 'GitHub 儲存庫'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的五步，CloudBase 與自架見儲存庫 README。'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: '常見問題',
+    items: [
+      {
+        q: '能直接用 CDN 引入嗎？',
+        a: '元件本身可以。但登入和發留言不能共用官方 proxy —— 它只信任 `gitalk.github.io`，而且跑在 Gitalk 自己的 App 上。自己的站點要部署一份自己的（一條指令，約五分鐘）。',
+        code: CDN_SCRIPT
+      },
+      {
+        q: '一定要部署 proxy 嗎？',
+        a: '只是讀留言的話不需要 —— 瀏覽器直連 GitHub REST，匿名額度 60 次/小時。登入、發留言、reaction 才需要，因為 GitHub 的 token 端點不返回 CORS 標頭。',
+        code: ''
+      },
+      {
+        q: '資料存在哪裡？',
+        a: '在你自己的儲存庫裡 —— Discussions 或 Issues。沒有中間伺服器，隨時可以在 GitHub 上匯出或遷移。',
+        code: ''
+      },
+      {
+        q: '怎麼從 v1 遷過來？',
+        a: "換掉 `clientID`、加上 `proxy` 就夠。老站點設 `backend: 'issues'` 可沿用原來的 Issue，不用遷移資料。",
+        code: ''
+      },
+      {
+        q: '為什麼留言顯示的是使用者名稱而不是暱稱？',
+        a: '預設顯示暱稱（GitHub display name），沒設暱稱的人顯示使用者名稱。`@` 提及始終用使用者名稱 —— 暱稱在 GitHub 上無法被解析。',
+        code: ''
+      },
+      {
+        q: '支援哪些框架？',
+        a: '無框架（一個 `<div>` + 一個建構函式）、React、Vue。樣式、暗色模式、11 種語言（含波斯語 RTL）都由元件自帶。',
+        code: ''
+      },
+      {
+        q: '免費嗎？',
+        a: '元件是 MIT。proxy 用各平台免費額度就夠絕大多數站點；沒有伺服器成本，也沒有收費計畫。',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · 以 GitHub Discussions 為基礎',

@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** Japanese. Typed against `zh`, the source locale. */
 export const ja: Messages = {
@@ -11,6 +12,7 @@ export const ja: Messages = {
     features: '機能',
     usage: '使い方',
     demo: 'デモ',
+    faq: 'FAQ',
     theme: 'テーマを切り替え',
     language: '言語を切り替え',
     github: 'GitHub リポジトリ'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の5ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: 'よくある質問',
+    items: [
+      {
+        q: 'CDN から直接読み込めますか？',
+        a: 'コンポーネント自体は可能です。ただしログインとコメント投稿に公式 proxy は使えません —— 公式 proxy は `gitalk.github.io` しか信頼せず、Gitalk 自身の App で動いているためです。自分のサイト用に別途デプロイしてください（コマンド 1 つ、約 5 分）。',
+        code: CDN_SCRIPT
+      },
+      {
+        q: 'proxy のデプロイは必須ですか？',
+        a: 'コメントの閲覧だけなら不要です —— ブラウザが GitHub REST に直接アクセスし、匿名枠は 1 時間 60 回です。ログイン、コメント投稿、reaction には必要です。GitHub の token エンドポイントが CORS ヘッダーを返さないためです。',
+        code: ''
+      },
+      {
+        q: 'データはどこに保存されますか？',
+        a: '自分のリポジトリです —— Discussions または Issues。中間サーバーはなく、GitHub 上でいつでもエクスポートや移行ができます。',
+        code: ''
+      },
+      {
+        q: 'v1 からどう移行しますか？',
+        a: "`clientID` を差し替え、`proxy` を追加するだけで足ります。既存サイトは `backend: 'issues'` を設定すれば元の Issue をそのまま使え、データ移行は不要です。",
+        code: ''
+      },
+      {
+        q: 'コメントにニックネームではなくユーザー名が表示されるのはなぜですか？',
+        a: '既定ではニックネーム（GitHub display name）を表示し、未設定の場合はユーザー名を表示します。`@` メンションは常にユーザー名です —— ニックネームは GitHub 上で解決できないためです。',
+        code: ''
+      },
+      {
+        q: '対応しているフレームワークは？',
+        a: 'フレームワークなし（`<div>` 1 つとコンストラクター 1 つ）、React、Vue。スタイル、ダークモード、11 言語（ペルシア語の RTL を含む）はコンポーネントに同梱されています。',
+        code: ''
+      },
+      {
+        q: '無料ですか？',
+        a: 'コンポーネントは MIT です。proxy は各プラットフォームの無料枠でほとんどのサイトに足ります。サーバー費用も有料プランもありません。',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · GitHub Discussions ベース',

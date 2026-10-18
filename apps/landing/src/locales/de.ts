@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** German. Typed against `zh`, the source locale. */
 export const de: Messages = {
@@ -11,6 +12,7 @@ export const de: Messages = {
     features: 'Funktionen',
     usage: 'Verwendung',
     demo: 'Demo',
+    faq: 'FAQ',
     theme: 'Design wechseln',
     language: 'Sprache wechseln',
     github: 'GitHub-Repository'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die fünf Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: 'Häufige Fragen',
+    items: [
+      {
+        q: 'Lässt es sich direkt per CDN einbinden?',
+        a: 'Die Komponente selbst schon. Anmeldung und Kommentare können sich aber nicht den offiziellen Proxy teilen: Er vertraut nur `gitalk.github.io` und läuft auf Gitalks eigener App. Deine Seite braucht ein eigenes Deployment (ein Befehl, etwa fünf Minuten).',
+        code: CDN_SCRIPT
+      },
+      {
+        q: 'Muss ich einen Proxy deployen?',
+        a: 'Zum reinen Lesen nicht: Der Browser spricht direkt mit der GitHub-REST-API, anonym 60 Anfragen pro Stunde. Für Anmeldung, Kommentare und reaction ist er nötig, weil GitHubs Token-Endpunkt keine CORS-Header zurückgibt.',
+        code: ''
+      },
+      {
+        q: 'Wo liegen die Daten?',
+        a: 'In deinem eigenen Repository — Discussions oder Issues. Kein Zwischenserver, und du kannst jederzeit in GitHub exportieren oder migrieren.',
+        code: ''
+      },
+      {
+        q: 'Wie migriere ich von v1?',
+        a: "`clientID` austauschen und `proxy` ergänzen reicht. Bestehende Seiten setzen `backend: 'issues'` und nutzen ihr bisheriges Issue weiter — ohne Datenmigration.",
+        code: ''
+      },
+      {
+        q: 'Warum steht dort der Benutzername statt des Anzeigenamens?',
+        a: 'Standardmäßig wird der GitHub-Anzeigename gezeigt, ohne einen solchen der Benutzername. `@`-Erwähnungen nutzen immer den Benutzernamen — GitHub kann Anzeigenamen nicht auflösen.',
+        code: ''
+      },
+      {
+        q: 'Welche Frameworks werden unterstützt?',
+        a: 'Ohne Framework (ein `<div>` und ein Konstruktor), React und Vue. Styles, Dark Mode und 11 Sprachen (inklusive Persisch mit RTL) bringt die Komponente mit.',
+        code: ''
+      },
+      {
+        q: 'Ist es kostenlos?',
+        a: 'Die Komponente ist MIT. Der Proxy passt für die meisten Seiten in die kostenlosen Kontingente der Plattformen: keine Serverkosten, kein Bezahlplan.',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · auf Basis von GitHub Discussions',

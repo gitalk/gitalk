@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** Polish. Typed against `zh`, the source locale. */
 export const pl: Messages = {
@@ -11,6 +12,7 @@ export const pl: Messages = {
     features: 'Funkcje',
     usage: 'Sposób użycia',
     demo: 'Demo',
+    faq: 'FAQ',
     theme: 'Zmień motyw',
     language: 'Zmień język',
     github: 'Repozytorium GitHub'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: 'Logowanie musi przechodzić przez proxy: `github.com/login/oauth/access_token` nie zwraca nagłówków CORS, więc przeglądarka sama nie dokończy wymiany tokenu. Wdrożenie to pięć kroków powyżej; CloudBase i własny hosting opisuje README repozytorium.'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: 'Najczęstsze pytania',
+    items: [
+      {
+        q: 'Czy można wczytać go wprost z CDN?',
+        a: 'Sam komponent — tak. Logowanie i publikowanie komentarzy nie mogą jednak korzystać ze wspólnego oficjalnego proxy — ufa ono tylko `gitalk.github.io` i działa na własnej App Gitalka. Twoja strona potrzebuje własnego wdrożenia (jedna komenda, około pięciu minut).',
+        code: CDN_SCRIPT
+      },
+      {
+        q: 'Czy trzeba wdrażać proxy?',
+        a: 'Do samego czytania nie — przeglądarka łączy się bezpośrednio z REST GitHuba, a anonimowy limit to 60 żądań na godzinę. Jest potrzebne do logowania, publikowania i reaction, bo endpoint tokenów GitHuba nie zwraca nagłówków CORS.',
+        code: ''
+      },
+      {
+        q: 'Gdzie są przechowywane dane?',
+        a: 'W Twoim własnym repozytorium — Discussions albo Issues. Bez serwera pośredniczącego, a eksport lub migracja są dostępne w GitHubie w każdej chwili.',
+        code: ''
+      },
+      {
+        q: 'Jak przejść z v1?',
+        a: "Wystarczy podmienić `clientID` i dodać `proxy`. Starsze strony mogą ustawić `backend: 'issues'` i dalej korzystać z dotychczasowego Issue — bez migracji danych.",
+        code: ''
+      },
+      {
+        q: 'Dlaczego widać nazwę użytkownika, a nie nick?',
+        a: 'Domyślnie pokazywany jest nick (GitHub display name), a osoby bez nicka — nazwa użytkownika. Wzmianki `@` zawsze używają nazwy użytkownika — GitHub nie potrafi rozwiązać nicka.',
+        code: ''
+      },
+      {
+        q: 'Jakie frameworki są obsługiwane?',
+        a: 'Bez frameworka (jeden `<div>` i jeden konstruktor), React i Vue. Style, tryb ciemny i 11 języków (w tym perski RTL) dostarcza sam komponent.',
+        code: ''
+      },
+      {
+        q: 'Czy to darmowe?',
+        a: 'Komponent jest na MIT. Proxy mieści się w darmowych limitach platform dla większości stron: bez kosztów serwera i bez płatnego planu.',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · na bazie GitHub Discussions',

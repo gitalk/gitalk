@@ -1030,6 +1030,87 @@ a {
   scrollbar-width: thin;
 }
 
+/* ---------- FAQ ---------- */
+/*
+ * A definition list rendered as stacked cards. `minmax(0, 1fr)` is load-bearing:
+ * the CDN snippet is one very long line, and an auto-sized track would let its
+ * max-content width widen the card (and the page) below 390px instead of
+ * scrolling inside the <pre>.
+ */
+.faq {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  max-width: 1120px;
+  margin: 32px 0 0;
+  padding: 0;
+}
+
+.faq-item {
+  min-width: 0;
+  padding: 17px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-soft);
+  backdrop-filter: blur(16px);
+}
+
+.faq-q {
+  color: var(--fg);
+  font-size: 14.5px;
+  font-weight: 620;
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+}
+
+.faq-a {
+  /* <dd> carries a 40px inline-start margin by default; a definition in a card
+     sits directly under its term. */
+  margin: 8px 0 0;
+  color: var(--dim);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.faq-a p {
+  margin: 0;
+}
+
+.faq-a p code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--code-inline-bg);
+  color: var(--brand-ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * The one literal snippet in the section. Same rule as the large code block:
+ * the box takes part in the mirrored flow, the script tag inside it does not,
+ * and the long line scrolls rather than wrapping.
+ */
+.faq-code {
+  margin: 0 0 9px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--brand) 6%, transparent);
+  overflow-x: auto;
+  direction: ltr;
+  text-align: left;
+  scrollbar-color: var(--scroll-thumb) transparent;
+  scrollbar-width: thin;
+}
+
+.faq-code code {
+  color: var(--fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre;
+}
+
 /* ---------- footer ---------- */
 .footer {
   position: relative;
@@ -1143,6 +1224,19 @@ a {
 
   .footer-inner {
     padding: 24px 24px 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Between 721 and 760 the nav still shows all four links, and the longest
+     locale (Russian) needs a few pixels back before the controls reach the
+     edge. Links disappear entirely at 720, so this only covers that band. */
+  .nav {
+    padding: 16px 18px;
+  }
+
+  .nav-links {
+    gap: 12px;
   }
 }
 
@@ -1530,6 +1624,13 @@ a {
 
 [dir='rtl'] .note code {
   /* `POST`, `0` and similar tokens in the prose must not be reordered. */
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[dir='rtl'] .faq-a p code {
+  /* `clientID`, `backend: 'issues'` and `<div>` in the answers: the tokens keep
+     their own order while their surrounding sentence stays right-to-left. */
   direction: ltr;
   unicode-bidi: isolate;
 }

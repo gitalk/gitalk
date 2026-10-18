@@ -16,6 +16,7 @@ import { ko } from './locales/ko'
 import { pl } from './locales/pl'
 import { ru } from './locales/ru'
 import { zhTW } from './locales/zh-TW'
+import { CDN_SCRIPT } from './snippets'
 
 /**
  * Landing-page copy, in the eleven locales the site ships.
@@ -76,6 +77,7 @@ const zh = {
     features: '特性',
     usage: '用法',
     demo: '演示',
+    faq: 'FAQ',
     theme: '切换主题',
     language: '切换语言',
     github: 'GitHub 仓库'
@@ -274,6 +276,47 @@ const options = {
     },
     note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的五步，CloudBase 与自托管见仓库 README。'
   },
+  faq: {
+    eyebrow: '// FAQ',
+    title: '常见问题',
+    items: [
+      {
+        q: '能直接用 CDN 引入吗？',
+        a: '组件本身可以。但登录和发评论不能共用官方 proxy —— 它只信任 `gitalk.github.io`，而且跑在 Gitalk 自己的 App 上。自己的站点要部署一份自己的（一条命令，约五分钟）。',
+        code: CDN_SCRIPT
+      },
+      {
+        q: '必须部署 proxy 吗？',
+        a: '只读评论不需要 —— 浏览器直连 GitHub REST，匿名额度 60 次/小时。登录、发评论、reaction 才需要，因为 GitHub 的 token 端点不返回 CORS 头。',
+        code: ''
+      },
+      {
+        q: '数据存在哪？',
+        a: '在你自己的仓库里 —— Discussions 或 Issues。没有中间服务器，随时可以在 GitHub 上导出或迁移。',
+        code: ''
+      },
+      {
+        q: '怎么从 v1 迁过来？',
+        a: "换掉 `clientID`、加上 `proxy` 就够。老站点设 `backend: 'issues'` 可沿用原来的 Issue，不用迁移数据。",
+        code: ''
+      },
+      {
+        q: '为什么评论显示的是用户名而不是昵称？',
+        a: '默认显示昵称（GitHub display name），没设昵称的人显示用户名。`@` 提及始终用用户名 —— 昵称在 GitHub 上无法被解析。',
+        code: ''
+      },
+      {
+        q: '支持哪些框架？',
+        a: '无框架（一个 `<div>` + 一个构造函数）、React、Vue。样式、暗色模式、11 种语言（含波斯语 RTL）都由组件自带。',
+        code: ''
+      },
+      {
+        q: '免费吗？',
+        a: '组件是 MIT。proxy 用各平台免费额度就够绝大多数站点；没有服务器成本，也没有收费计划。',
+        code: ''
+      }
+    ]
+  },
   footer: {
     note: 'MIT · 基于 GitHub Discussions',
     repo: '查看仓库'
@@ -308,6 +351,7 @@ const en: Messages = {
     features: 'Features',
     usage: 'Usage',
     demo: 'Demo',
+    faq: 'FAQ',
     theme: 'Toggle theme',
     language: 'Switch language',
     github: 'GitHub repository'
@@ -477,6 +521,47 @@ const options = {
       }
     },
     note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deploying it is the five steps above; CloudBase and self-hosting are covered in the repository README.'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: 'Frequently asked questions',
+    items: [
+      {
+        q: 'Can I load it straight from a CDN?',
+        a: "The component itself, yes. But sign-in and posting comments cannot share the official proxy — it only trusts `gitalk.github.io` and runs on Gitalk's own App. Your site needs its own deployment (one command, about five minutes).",
+        code: CDN_SCRIPT
+      },
+      {
+        q: 'Do I have to deploy a proxy?',
+        a: 'Only reading comments does not need one — the browser talks to GitHub REST directly, with an anonymous quota of 60 requests per hour. Signing in, posting comments and reactions do, because GitHub’s token endpoint sends no CORS headers.',
+        code: ''
+      },
+      {
+        q: 'Where does the data live?',
+        a: 'In your own repository — Discussions or Issues. There is no server in between, and you can export or migrate on GitHub at any time.',
+        code: ''
+      },
+      {
+        q: 'How do I migrate from v1?',
+        a: "Replace `clientID` and add `proxy`, and that is enough. Existing sites can set `backend: 'issues'` to keep using their current Issue, with no data migration.",
+        code: ''
+      },
+      {
+        q: 'Why do comments show the username instead of the display name?',
+        a: 'The default is the GitHub display name, falling back to the username for anyone who has not set one. `@` mentions always use the username — GitHub cannot resolve a display name.',
+        code: ''
+      },
+      {
+        q: 'Which frameworks are supported?',
+        a: 'Framework-free (one `<div>` and one constructor), React and Vue. Styles, dark mode and all eleven languages (Persian RTL included) ship with the component.',
+        code: ''
+      },
+      {
+        q: 'Is it free?',
+        a: 'The component is MIT. For most sites the proxy fits inside each platform’s free tier: no server cost and no paid plan.',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · powered by GitHub Discussions',

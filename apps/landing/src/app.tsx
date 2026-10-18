@@ -10,6 +10,7 @@ import { GetStarted } from './components/get-started'
 import { Features } from './components/features'
 import { BackendExplainer } from './components/backend-explainer'
 import { CodeTabs } from './components/code-tabs'
+import { Faq } from './components/faq'
 import { htmlLang, LANGS, useI18n } from './i18n'
 
 const REPO_URL = 'https://github.com/gitalk/gitalk'
@@ -53,6 +54,9 @@ export function App() {
           </a>
           <a className="nav-link" href="#demo">
             {t.nav.demo}
+          </a>
+          <a className="nav-link" href="#faq">
+            {t.nav.faq}
           </a>
 
           <span className="nav-divider" aria-hidden="true" />
@@ -119,6 +123,7 @@ export function App() {
         <BackendExplainer />
         <GetStarted />
         <CodeTabs />
+        <Faq />
       </main>
 
       <footer className="footer">

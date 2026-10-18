@@ -1,4 +1,5 @@
 import type { Messages } from '../i18n'
+import { CDN_SCRIPT } from '../snippets'
 
 /** Spanish (Spain). Typed against `zh`, the source locale. */
 export const esES: Messages = {
@@ -11,6 +12,7 @@ export const esES: Messages = {
     features: 'Características',
     usage: 'Uso',
     demo: 'Demo',
+    faq: 'FAQ',
     theme: 'Cambiar tema',
     language: 'Cambiar idioma',
     github: 'Repositorio de GitHub'
@@ -207,6 +209,47 @@ const options = {
       }
     },
     note: 'El inicio de sesión debe pasar por un proxy: `github.com/login/oauth/access_token` no envía cabeceras CORS, así que el navegador no puede completar el intercambio del token por sí solo. Para desplegarlo, sigue los cinco pasos de arriba; CloudBase y el autohospedaje están en el README del repositorio.'
+  },
+  faq: {
+    eyebrow: '// FAQ',
+    title: 'Preguntas frecuentes',
+    items: [
+      {
+        q: '¿Se puede cargar directamente desde una CDN?',
+        a: 'El componente sí. Pero el inicio de sesión y la publicación de comentarios no pueden compartir el proxy oficial: solo confía en `gitalk.github.io` y se ejecuta en la App del propio Gitalk. Tu sitio necesita su propio despliegue (un comando, unos cinco minutos).',
+        code: CDN_SCRIPT
+      },
+      {
+        q: '¿Hay que desplegar un proxy?',
+        a: 'Para solo leer comentarios no: el navegador llama directamente a la REST de GitHub y el límite anónimo es de 60 peticiones por hora. Hace falta para iniciar sesión, comentar y reaccionar, porque el endpoint de token de GitHub no devuelve cabeceras CORS.',
+        code: ''
+      },
+      {
+        q: '¿Dónde se guardan los datos?',
+        a: 'En tu propio repositorio: Discussions o Issues. No hay servidor intermedio y puedes exportarlos o migrarlos en GitHub cuando quieras.',
+        code: ''
+      },
+      {
+        q: '¿Cómo migro desde la v1?',
+        a: "Basta con cambiar `clientID` y añadir `proxy`. Los sitios antiguos pueden poner `backend: 'issues'` para seguir usando su Issue, sin migrar datos.",
+        code: ''
+      },
+      {
+        q: '¿Por qué se muestra el nombre de usuario y no el alias?',
+        a: 'Por defecto se muestra el alias (GitHub display name); quien no lo tenga verá su nombre de usuario. Las menciones con `@` usan siempre el nombre de usuario: GitHub no puede resolver un alias.',
+        code: ''
+      },
+      {
+        q: '¿Qué frameworks admite?',
+        a: 'Sin framework (un `<div>` y un constructor), React y Vue. Los estilos, el modo oscuro y los 11 idiomas (incluido el persa RTL) vienen con el componente.',
+        code: ''
+      },
+      {
+        q: '¿Es gratis?',
+        a: 'El componente es MIT. El proxy cabe en el plan gratuito de cada plataforma para la mayoría de los sitios: sin coste de servidor y sin plan de pago.',
+        code: ''
+      }
+    ]
   },
   footer: {
     note: 'MIT · con GitHub Discussions',
