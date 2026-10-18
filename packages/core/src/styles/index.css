@@ -4854,6 +4854,33 @@
   border-bottom-color: var(--gt-color-main-border);
 }
 
+.gt-container .gt-composer-login-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 38px;
+  padding: 9px 12px;
+  border: 1px solid var(--gt-color-border);
+  border-radius: 9px;
+  background-color: var(--gt-color-surface);
+  color: var(--gt-color-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  resize: none;
+  /* Not disabled — a disabled field is skipped by screen readers and cannot be
+     focused, which hides the explanation from the people who need it most. */
+  cursor: text;
+}
+
+.gt-container .gt-composer-login-field::placeholder {
+  color: var(--gt-color-text-3);
+}
+
+.gt-container .gt-composer-login-field:focus-visible {
+  outline: none;
+  border-color: var(--gt-color-main-border);
+}
+
 .gt-container .gt-composer-login-btn {
   flex: 0 0 auto;
   height: 32px;

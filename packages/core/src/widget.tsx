@@ -550,6 +550,18 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   role="group"
                   aria-label={t('login-to-comment')}
                 >
+                  {/*
+                   * Show the editor read-only rather than hiding it. This is
+                   * what the visitor came to use; a box they cannot type in
+                   * explains why better than empty space does.
+                   */}
+                  <textarea
+                    className="gt-composer-login-field"
+                    readOnly
+                    rows={1}
+                    placeholder={t('login-placeholder')}
+                    aria-label={t('login-placeholder')}
+                  />
                   <a
                     className="gt-btn gt-btn-login gt-composer-login-btn"
                     href={loginHref}
