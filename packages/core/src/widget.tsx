@@ -7,7 +7,7 @@ import { collectParticipants } from './mentions'
 import { Button } from './components/button'
 import { Comment } from './components/comment'
 import type { CommentLabels } from './components/comment'
-import { Avatar } from './components/avatar'
+import { AvatarMenu } from './components/avatar-menu'
 import { MarkdownBody } from './components/markdown-body'
 import { Icon } from './components/icon'
 import { ImageUploadButton, ImageUploadError } from './components/image-upload'
@@ -513,10 +513,14 @@ export function GitalkWidget({ options, className }: GitalkProps) {
             data-docked={docked && !minimized ? 'true' : undefined}
           >
             {state.user ? (
-              <Avatar
-                className="gt-header-avatar"
-                src={state.user.avatarUrl}
-                alt={state.user.login}
+              <AvatarMenu
+                login={state.user.login}
+                displayName={state.user.displayName}
+                avatarUrl={state.user.avatarUrl}
+                label={t('account')}
+                logoutLabel={t('logout')}
+                rtl={direction === 'rtl'}
+                onLogout={actions.logout}
               />
             ) : meta.canLogin ? (
               <a

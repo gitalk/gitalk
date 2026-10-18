@@ -49,7 +49,7 @@ interface GitalkState {
   creatingThread: boolean
   thread: ThreadInfo | null
   comments: Comment[]
-  user: { login: string; avatarUrl: string } | null
+  user: { login: string; displayName?: string; avatarUrl: string } | null
   draft: string
   previewing: boolean
   /** True while a Markdown render is in flight, so the toggle can say so. */
@@ -267,9 +267,26 @@ export function useGitalk(options: GitalkOptions) {
       viewerRef.current = null
       return null
     }
-    const me = await http.get<{ login: string; avatar_url: string }>('/user')
+    const me = await http.get<{
+      login: string
+      avatar_url: string
+      /** GitHub's display name; nullable in the REST payload. */
+      name?: string | null
+    }>('/user')
+    // A sign-out can land while `/user` is in flight; the response must not
+    // put the avatar (and the account card) back on screen.
+    if (!auth.getToken()) {
+      viewerRef.current = null
+      return null
+    }
     viewerRef.current = me.login
-    patch({ user: { login: me.login, avatarUrl: me.avatar_url } })
+    patch({
+      user: {
+        login: me.login,
+        displayName: me.name ?? undefined,
+        avatarUrl: me.avatar_url
+      }
+    })
     return me.login
   }, [auth, http, patch])
 
@@ -357,6 +374,9 @@ export function useGitalk(options: GitalkOptions) {
         return
       }
       if (!states.size) return
+      // Signing out while this request was in flight must not re-flag the
+      // chips with the identity that just left.
+      if (!auth.getToken()) return
 
       setState((prev) => ({
         ...prev,
@@ -585,9 +605,42 @@ export function useGitalk(options: GitalkOptions) {
     window.location.href = auth.loginUrl(window.location.href)
   }, [auth, state.draft, patch])
 
+  /**
+   * Sign out locally, without reloading the page.
+   *
+   * `Auth.logout()` only forgets the token, session and expiry. GitHub's
+   * revoke endpoint is deliberately never called: the token may be authorised
+   * for other sites/apps, and signing out of one comment box must not revoke
+   * the visitor's authorisation everywhere.
+   *
+   * Everything the viewer owns in the current render is dropped in place:
+   * the identity, the open reply box, failed optimistic rows, the upvote
+   * state and above all the per-viewer reaction flags. Without that last bit
+   * the widget would look signed-out while still showing "you reacted"
+   * markers, which is the exact residual UI this path exists to avoid.
+   */
   const logout = useCallback(() => {
     auth.logout()
-    window.location.reload()
+    // A later `/user` response must not resurrect the old identity.
+    viewerRef.current = null
+    // An upload started by the signed-in viewer is no longer representable.
+    uploadSeq.current++
+    uploadAbortRef.current?.abort()
+    uploadAbortRef.current = null
+    setState((prev) => ({
+      ...prev,
+      user: null,
+      comments: prev.comments.map(clearViewerState),
+      pending: [],
+      replyTarget: null,
+      replyDraft: '',
+      replySubmitting: false,
+      upvote: null,
+      notice: null,
+      imageUploading: false,
+      imageUploadProgress: null,
+      imageUploadError: null
+    }))
   }, [auth])
 
   const setDraft = useCallback((draft: string) => patch({ draft }), [patch])
@@ -1233,6 +1286,29 @@ function updateCount(cb: ((n: number) => void) | undefined, count: number): void
  */
 function countLoadedComments(comments: GitalkComment[]): number {
   return comments.reduce((n, c) => n + 1 + (c.replies?.length ?? 0), 0)
+}
+
+/**
+ * Strip every "this viewer reacted" flag from a comment and its replies.
+ *
+ * Reaction counts are public and stay; only the viewer-specific half of
+ * {@link GitalkReactions} is removed, so a signed-out widget cannot keep
+ * highlighting chips for the account that just left.
+ */
+function clearViewerState(comment: GitalkComment): GitalkComment {
+  const clearReactions = (reactions: GitalkComment['reactions']) => {
+    const next = { ...reactions, viewerHasReacted: false }
+    delete next.viewerReactions
+    return next
+  }
+  return {
+    ...comment,
+    reactions: clearReactions(comment.reactions),
+    replies: comment.replies.map((reply) => ({
+      ...reply,
+      reactions: clearReactions(reply.reactions)
+    }))
+  }
 }
 
 /** The query parameter the worker appends after a successful sign-in. */

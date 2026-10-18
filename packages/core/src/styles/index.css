@@ -348,6 +348,134 @@
   background-color: var(--gt-color-main-soft);
 }
 
+/* ---- signed-in account card ----------------------------------------
+   The avatar is a button now. Its card is `position: fixed` for the same
+   reason the reaction picker is: the composer lives in the scrolling comment
+   region, and an absolutely positioned popup was clipped by
+   `overflow-y: auto`. Coordinates come from the trigger's client rect (see
+   AvatarMenu); this block is only responsible for the one-row shape. */
+.gt-container .gt-avatar-menu-root {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.gt-container .gt-avatar-trigger {
+  display: block;
+  width: var(--gt-size-avatar);
+  height: var(--gt-size-avatar);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+}
+
+.gt-container .gt-avatar-trigger .gt-avatar {
+  width: 100%;
+  height: 100%;
+}
+
+.gt-container .gt-avatar-trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-focus);
+}
+
+.gt-container .gt-avatar-menu {
+  position: fixed;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 260px;
+  max-width: calc(100vw - 16px);
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 1px solid var(--gt-color-border);
+  border-radius: 14px;
+  background-color: var(--gt-color-surface);
+  color: var(--gt-color-text);
+  box-shadow: var(--gt-shadow-float);
+  text-align: start;
+}
+
+.gt-container .gt-avatar-menu:focus-visible {
+  outline: none;
+  box-shadow: var(--gt-shadow-float), 0 0 0 3px var(--gt-color-main-soft);
+}
+
+.gt-container .gt-avatar-card-avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+}
+
+.gt-container .gt-avatar-card-user {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+/* The identity column points at the avatar: left in LTR, right in RTL. The
+   spans themselves keep their own direction (`dir="auto"` name, LTR login),
+   so only the alignment edge moves. */
+.gt-container .gt-avatar-menu[dir='rtl'] .gt-avatar-card-user {
+  align-items: flex-end;
+}
+
+.gt-container .gt-avatar-card-name,
+.gt-container .gt-avatar-card-login {
+  overflow: hidden;
+  color: var(--gt-color-text);
+  font-size: 0.8125em;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gt-container .gt-avatar-card-login.is--secondary {
+  color: var(--gt-color-text-3);
+  font-size: 0.6875em;
+  font-weight: 500;
+}
+
+/* A login is an ASCII identifier, not prose: keep the handle's own run
+   isolated inside an RTL card. */
+.gt-container .gt-avatar-card-login {
+  unicode-bidi: isolate;
+}
+
+.gt-container .gt-avatar-card-logout {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: none;
+  color: var(--gt-color-text-2);
+  cursor: pointer;
+  transition: background-color 0.16s, border-color 0.16s, color 0.16s;
+}
+
+.gt-container .gt-avatar-card-logout:hover,
+.gt-container .gt-avatar-card-logout:focus-visible {
+  outline: none;
+  border-color: var(--gt-color-error-border);
+  background-color: var(--gt-color-error-soft);
+  color: var(--gt-color-error);
+}
+
+.gt-container .gt-avatar-card-logout:focus-visible {
+  box-shadow: var(--gt-shadow-focus);
+}
+
 /* button */
 .gt-container .gt-btn {
   display: inline-flex;
@@ -3107,9 +3235,15 @@
 }
 
 .gt-container .gt-header > .gt-avatar,
-.gt-container .gt-header > .gt-avatar-github {
+.gt-container .gt-header > .gt-avatar-github,
+.gt-container .gt-header > .gt-avatar-menu-root .gt-avatar-trigger,
+.gt-container .gt-header > .gt-avatar-menu-root .gt-avatar-trigger .gt-avatar {
   width: 30px;
   height: 30px;
+}
+
+.gt-container .gt-header > .gt-avatar-menu-root {
+  flex: none;
 }
 
 .gt-container .gt-header > .gt-avatar-github {
@@ -3392,7 +3526,9 @@
   }
 
   .gt-container .gt-header > .gt-avatar,
-  .gt-container .gt-header > .gt-avatar-github {
+  .gt-container .gt-header > .gt-avatar-github,
+  .gt-container .gt-header > .gt-avatar-menu-root .gt-avatar-trigger,
+  .gt-container .gt-header > .gt-avatar-menu-root .gt-avatar-trigger .gt-avatar {
     width: 28px;
     height: 28px;
   }
@@ -4957,7 +5093,8 @@
  * arrow and the brand/FAB speech bubble must not be flipped.
  */
 .gt-container[dir='rtl'] .gt-ico-send svg,
-.gt-container[dir='rtl'] .gt-sort button svg {
+.gt-container[dir='rtl'] .gt-sort button svg,
+.gt-container[dir='rtl'] .gt-avatar-card-logout-icon {
   transform: scaleX(-1);
 }
 
