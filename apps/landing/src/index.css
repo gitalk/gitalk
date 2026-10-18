@@ -551,7 +551,9 @@ a {
 
 .stat-cards {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  /* As many as fit at a readable width, so the row adapts to how many
+     stats there are instead of leaving a hole where a fixed 6th would be. */
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 12px;
 }
 
@@ -1087,9 +1089,6 @@ a {
     padding: 0 24px 72px;
   }
 
-  .stat-cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 
   .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1164,10 +1163,6 @@ a {
     padding: 0 14px 64px;
   }
 
-  .stat-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
 
   .stat-card {
     padding: 16px 14px 15px;
