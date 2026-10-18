@@ -33,7 +33,7 @@ This is a web form; no script can do it.
    - Everything else: **No access**
 3. **Leave the Callback URL empty for now.** It has to be
    `https://<your proxy address>/oauth/callback`, and the proxy does not exist
-   yet — it is deployed in step 4, which is what produces that address. Step 5
+   yet — it is deployed in step 3, which is what produces that address. Step 4
    comes back to fill this in.
    - Editing it later is possible, but **only on this page**: organisation-owned
      Apps cannot be changed through the API (`PATCH /app` returns 404).
@@ -50,7 +50,7 @@ This is a web form; no script can do it.
 
 ---
 
-## Step 2 — Get the values for your platform
+## Step 2 — Get the credentials and write the .env
 
 ### Option A: Cloudflare Workers
 
@@ -104,7 +104,7 @@ CLOUDBASE_SECRET_KEY=…
 
 ---
 
-## Step 3 — Write the dotenv file
+### The .env file
 
 ```dotenv
 # Both platforms
@@ -125,20 +125,34 @@ Add the platform block from step 2.
 
 ---
 
-## Step 4 — Deploy
+## Step 3 — Deploy
 
 ```bash
 gitalk-deploy -c .env -t cloudflare     # or -t cloudbase
 gitalk-deploy -c .env -t cloudflare -n  # print the steps, run nothing
 ```
 
-On success it prints the URL and calls `/health`. **Note the address** — the next
+On success it prints the URL and calls `/health`. **Note that address** — the next step needs it.
 step needs it, and the last one puts it in your options:
 
 ```bash
 gitalk-deploy -c .env -t cloudflare     # or -t cloudbase
 gitalk-deploy -c .env -t cloudflare -n  # print the steps, run nothing
 ```
+
+
+## Step 4 — Go back and set the callback URL
+
+The address printed in step 3 is your proxy. Return to the App settings page and
+set **Callback URL** to `https://<that address>/oauth/callback`, for example
+`https://gitalk-proxy.myaccount.workers.dev/oauth/callback`.
+
+> ⚠️ Skipping this shows up as `redirect_uri_mismatch` when someone clicks
+> *Sign in*. It takes effect immediately; no redeploy is needed.
+
+---
+
+## Step 5 — Include the component
 
 ```js
 new Gitalk({
@@ -147,14 +161,7 @@ new Gitalk({
 })
 ```
 
-## Step 5 — Go back and set the callback URL
-
-The address printed in step 4 is your proxy. Return to the App settings page and
-set **Callback URL** to `https://<that address>/oauth/callback`, for example
-`https://gitalk-proxy.myaccount.workers.dev/oauth/callback`.
-
-> ⚠️ Skipping this shows up as `redirect_uri_mismatch` when someone clicks
-> *Sign in*. It takes effect immediately; no redeploy is needed.
+Styling, dark mode and all eleven languages ship with the component; nothing else to import.
 
 ---
 

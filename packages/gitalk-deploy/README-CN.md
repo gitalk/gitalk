@@ -30,7 +30,7 @@ npx github:gitalk/deploy -c .env -t cloudflare
    - 其余全部 **No access**
 3. **Callback URL 先留空** —— 现在**还填不了**：它要写成
    `https://<你的代理地址>/oauth/callback`，而代理要到**第 3 步**才部署出来、才有地址。
-   第 5 步会回来补上。
+   第 4 步会回来补上。
    - 之后修改**只能在这个页面做**：组织所有的 App 用 API 改会返回 404
 4. **Webhook**：取消勾选 *Active* —— Gitalk 不用 webhook
 5. 创建完成后记下四项：
@@ -44,7 +44,7 @@ npx github:gitalk/deploy -c .env -t cloudflare
 
 ---
 
-## 第 2 步 — 准备你所用平台的凭据
+## 第 2 步 — 准备凭据并写入 .env
 
 ### 方案 A：Cloudflare Workers
 
@@ -92,7 +92,7 @@ CLOUDBASE_SECRET_KEY=…
 
 ---
 
-## 第 3 步 — 写 dotenv 文件
+### 然后把它们写进 .env
 
 ```dotenv
 # 两个平台都要
@@ -113,14 +113,30 @@ GITALK_ALLOWED_ORIGINS=https://blog.example,http://127.0.0.1:4181
 
 ---
 
-## 第 4 步 — 部署
+## 第 3 步 — 部署
 
 ```bash
 gitalk-deploy -c .env -t cloudflare      # 或 -t cloudbase
 gitalk-deploy -c .env -t cloudflare -n   # 只打印步骤，什么都不执行
 ```
 
-成功后它会打印地址并自检 `/health`，把那个地址填进配置：
+成功后它会打印地址并自检 `/health`。**把这个地址记下来** —— 下一步要用。
+
+## 第 4 步 — 回来补上 callback URL
+
+第 3 步打印出来的地址就是你的代理地址。回到 App 设置页：
+
+**Callback URL** 填 `https://<第 3 步打印的地址>/oauth/callback`
+
+例如 `https://gitalk-proxy.myaccount.workers.dev/oauth/callback`。
+
+> ⚠️ 漏了这一步的表现是：点「登录」被 GitHub 拒绝，提示
+> `redirect_uri_mismatch`。填好立刻生效，不用重新部署。
+
+
+---
+
+## 第 5 步 — 引入组件
 
 ```js
 new Gitalk({
@@ -128,17 +144,8 @@ new Gitalk({
   proxy: 'https://gitalk-proxy.<account>.workers.dev'
 })
 ```
-## 第 5 步 — 回来补上 callback URL
 
-第 4 步打印出来的地址就是你的代理地址。回到 App 设置页：
-
-**Callback URL** 填 `https://<第 4 步打印的地址>/oauth/callback`
-
-例如 `https://gitalk-proxy.myaccount.workers.dev/oauth/callback`。
-
-> ⚠️ 漏了这一步的表现是：点「登录」被 GitHub 拒绝，提示
-> `redirect_uri_mismatch`。填好立刻生效，不用重新部署。
-
+样式、暗色模式与 11 种语言都由组件自带，不需要额外引入。
 
 ---
 
