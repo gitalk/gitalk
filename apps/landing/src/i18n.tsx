@@ -101,7 +101,7 @@ const zh = {
     lede: '把 GitHub Discussions 或 Issues 变成你的评论区。一条命令部署轻量代理，无需数据库，评论实时同步。',
     statsTitle: '关键指标',
     stats: {
-      lines: { value: '4', label: '步快速接入', note: '创建 App、填变量、部署、引入，四步完成。' },
+      lines: { value: '5', label: '步快速接入', note: '创建 App、填变量、部署、补 callback、引入组件。' },
       comments: { value: '∞', label: '评论容量', note: '由 GitHub Discussions 承载。' },
       size: { label: '不是最小但最强', note: 'gzip 压缩后的实际传输体积。' },
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
@@ -327,7 +327,7 @@ const en: Messages = {
     lede: 'Turn GitHub Discussions or Issues into your comment section. Deploy a lightweight proxy with one command. No database, and comments sync in real time.',
     statsTitle: 'Key numbers',
     stats: {
-      lines: { value: '4', label: 'steps', note: 'Create the App, fill the values, deploy, include.' },
+      lines: { value: '5', label: 'steps', note: 'Create the App, fill the values, deploy, set the callback, include.' },
       comments: {
         value: '∞',
         label: 'Comments',
@@ -537,6 +537,15 @@ export function htmlLang(lang: Lang): string {
 }
 
 /**
+ * Persian is the only right-to-left locale the page ships. The layout mirrors
+ * from logical CSS properties, so this only has to drive the document
+ * direction; no component needs a per-language flag.
+ */
+export function isRtlLang(lang: Lang): boolean {
+  return lang === 'fa'
+}
+
+/**
  * Renders a dictionary string, turning each `backticked` run into <code>.
  * Keeps the dictionaries plain strings instead of JSX, and the inline-code
  * styling of the original markup intact.
@@ -598,7 +607,12 @@ function readStoredLang(): Lang | null {
 function applyDocumentLanguage(lang: Lang): void {
   if (typeof document === 'undefined') return
   const { title, description } = MESSAGES[lang].meta
-  document.documentElement.lang = htmlLang(lang)
+  const root = document.documentElement
+  root.lang = htmlLang(lang)
+  // `dir` is set only for RTL: the ten LTR locales keep exactly the document
+  // they had before, with no attribute to inherit from.
+  if (isRtlLang(lang)) root.setAttribute('dir', 'rtl')
+  else root.removeAttribute('dir')
   document.title = title
   document.querySelector('meta[name="description"]')?.setAttribute('content', description)
 }
