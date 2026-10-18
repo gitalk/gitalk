@@ -28,7 +28,7 @@ export function GitalkDemo({ mode, proxy }: { mode: "default" | "inline"; proxy:
       repo: 'gitalk',
       admin: ['booxood'],
       id: 'landing-comments',
-      number: 442,
+      number: 607,
       backend: 'discussions' as const,
       perPage: 10,
       /*
