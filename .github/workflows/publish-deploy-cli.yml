@@ -53,7 +53,8 @@ jobs:
           mkdir -p "$out"
           cp -R packages/gitalk-deploy/dist "$out/dist"
           cp -R packages/gitalk-deploy/templates "$out/templates"
-          cp packages/gitalk-deploy/package.json packages/gitalk-deploy/README.md "$out/"
+          cp packages/gitalk-deploy/package.json "$out/"
+          cp packages/gitalk-deploy/README.md packages/gitalk-deploy/README-CN.md "$out/"
           node -e "
             const p = require('./$out/package.json')
             p.version = process.env.GITHUB_REF_NAME?.replace(/^v/, '') || p.version

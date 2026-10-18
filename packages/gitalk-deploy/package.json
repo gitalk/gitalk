@@ -9,7 +9,8 @@
   "files": [
     "dist",
     "templates",
-    "README.md"
+    "README.md",
+    "README-CN.md"
   ],
   "engines": {
     "node": ">=20.19"
