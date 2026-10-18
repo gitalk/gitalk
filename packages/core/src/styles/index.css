@@ -3239,7 +3239,9 @@
   min-height: 56px;
   padding: 8px 12px;
   margin: 12px 0 0;
-  border-radius: 16px;
+  /* Squared on top by default — see the note on the first .gt-header rule.
+     This later rule used to hard-code the full radius and silently won. */
+  border-radius: 0 0 var(--gt-radius-card) var(--gt-radius-card);
   background-color: var(--gt-color-surface-soft);
   box-shadow: var(--gt-shadow-card),
     inset 0 1px 0 color-mix(in srgb, var(--gt-color-text) 4%, transparent);
