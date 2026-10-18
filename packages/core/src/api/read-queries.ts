@@ -75,6 +75,12 @@ query gitalkDiscussionList($owner: String!, $repo: String!, $first: Int!, $after
  * the backend. `replies` keeps the one-level tree the UI renders, and
  * `reactionGroups` replaces the separate viewer-state query: an anonymous
  * viewer has no flags, but the per-type counts are what the picker shows.
+ *
+ * `... on User { name }` is the only transport that yields an author's profile
+ * display name: REST's comment payload has just `user.login`, and one
+ * `/users/{login}` request per comment would spend the anonymous 60/hr
+ * allowance. The field is nullable, so the renderer falls back to the login.
+ * The proxy's canonical copy must carry the same selection.
  */
 export const DISCUSSION_COMMENTS_QUERY = `
 query gitalkDiscussionComments($owner: String!, $repo: String!, $number: Int!, $first: Int, $last: Int, $after: String, $before: String) {
@@ -91,7 +97,7 @@ query gitalkDiscussionComments($owner: String!, $repo: String!, $number: Int!, $
         nodes {
           id
           databaseId
-          author { login avatarUrl url }
+          author { login avatarUrl url ... on User { name } }
           createdAt
           url
           bodyHTML
@@ -101,7 +107,7 @@ query gitalkDiscussionComments($owner: String!, $repo: String!, $number: Int!, $
             nodes {
               id
               databaseId
-              author { login avatarUrl url }
+              author { login avatarUrl url ... on User { name } }
               createdAt
               url
               bodyHTML
@@ -163,7 +169,7 @@ query gitalkIssueComments($owner: String!, $repo: String!, $number: Int!, $first
         nodes {
           id
           databaseId
-          author { login avatarUrl url }
+          author { login avatarUrl url ... on User { name } }
           createdAt
           url
           bodyHTML

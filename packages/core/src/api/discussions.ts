@@ -35,7 +35,7 @@ mutation addDiscussionComment($body: String!, $discussionId: ID!, $replyToId: ID
     comment {
       id
       databaseId
-      author { login avatarUrl url }
+      author { login avatarUrl url ... on User { name } }
       createdAt
       url
       bodyHTML

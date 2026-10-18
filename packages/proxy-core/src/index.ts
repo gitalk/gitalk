@@ -115,7 +115,10 @@ const CURSOR_LIMIT = 4096
  *
  * Keep in sync with `packages/core/src/api/read-queries.ts`. Drift is safe —
  * the widget sees a shape it does not understand and falls back to REST — but
- * costs the 5,000/hr path.
+ * costs the 5,000/hr path. In particular, the `... on User { name }` selection
+ * in the comment documents is what lets the widget render a GitHub nickname
+ * for anonymous readers; dropping it here silently degrades every anonymous
+ * thread to logins.
  */
 export const ANONYMOUS_READ_QUERIES = {
   gitalkDiscussion: `
@@ -163,7 +166,7 @@ query gitalkDiscussionComments($owner: String!, $repo: String!, $number: Int!, $
         nodes {
           id
           databaseId
-          author { login avatarUrl url }
+          author { login avatarUrl url ... on User { name } }
           createdAt
           url
           bodyHTML
@@ -173,7 +176,7 @@ query gitalkDiscussionComments($owner: String!, $repo: String!, $number: Int!, $
             nodes {
               id
               databaseId
-              author { login avatarUrl url }
+              author { login avatarUrl url ... on User { name } }
               createdAt
               url
               bodyHTML
@@ -226,7 +229,7 @@ query gitalkIssueComments($owner: String!, $repo: String!, $number: Int!, $first
         nodes {
           id
           databaseId
-          author { login avatarUrl url }
+          author { login avatarUrl url ... on User { name } }
           createdAt
           url
           bodyHTML

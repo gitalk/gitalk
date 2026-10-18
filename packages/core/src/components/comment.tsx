@@ -3,6 +3,7 @@ import { formatRelativeTime } from '../time'
 import type { GitalkComment, GitalkReply, PendingComment, Reaction } from '../types'
 import type { MentionCandidate } from '../mentions'
 import { Avatar } from './avatar'
+import { AuthorName } from './author-name'
 import { PendingCommentRow } from './pending-comment'
 import { ReactionPicker } from './reaction-picker'
 import { ReplyBox } from './reply-box'
@@ -138,9 +139,7 @@ export function Comment({
 
         <div className="gt-comment-content c-body">
           <div className="gt-comment-header c-meta">
-            <a className="gt-comment-username" href={comment.user.htmlUrl}>
-              {comment.user.login}
-            </a>
+            <AuthorName user={comment.user} href={comment.user.htmlUrl} />
             {isAdmin ? <span className="gt-comment-badge badge">{labels.author}</span> : null}
             <span className="gt-comment-text gt-sr-only">{labels.commented}</span>
             <span className="gt-comment-date c-time">
@@ -220,9 +219,7 @@ export function Comment({
                     />
                     <div className="gt-comment-content c-body r-body">
                       <div className="gt-comment-header c-meta">
-                        <a className="gt-comment-username" href={reply.user.htmlUrl}>
-                          {reply.user.login}
-                        </a>
+                        <AuthorName user={reply.user} href={reply.user.htmlUrl} />
                         <span className="gt-comment-text gt-sr-only">{labels.commented}</span>
                         <span className="gt-comment-date c-time">
                           {formatRelativeTime(reply.createdAt, locale)}

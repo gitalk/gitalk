@@ -190,6 +190,170 @@ describe('anonymous reads through the configured proxy', () => {
     expect(commentsRead.variables).toMatchObject({ owner: 'gitalk', repo: 'gitalk', number: 442 })
   })
 
+  it('renders the GraphQL display name and falls back to the login when it is null', async () => {
+    const named = {
+      data: {
+        repository: {
+          discussion: {
+            comments: {
+              totalCount: 3,
+              pageInfo: { hasNextPage: false, hasPreviousPage: false },
+              nodes: [
+                {
+                  id: 'DC_name_1',
+                  databaseId: 1,
+                  author: {
+                    login: 'booxood',
+                    name: 'Liucw',
+                    avatarUrl: 'a',
+                    url: 'https://github.com/booxood'
+                  },
+                  createdAt: '2024-01-01T00:00:00Z',
+                  url: 'h',
+                  bodyHTML: '<p>first</p>',
+                  reactionGroups: []
+                },
+                {
+                  id: 'DC_name_2',
+                  databaseId: 2,
+                  author: {
+                    login: 'cnrkuo',
+                    name: 'Conor Kuo',
+                    avatarUrl: 'a',
+                    url: 'https://github.com/cnrkuo'
+                  },
+                  createdAt: '2024-01-02T00:00:00Z',
+                  url: 'h',
+                  bodyHTML: '<p>second</p>',
+                  reactionGroups: []
+                },
+                {
+                  id: 'DC_name_3',
+                  databaseId: 3,
+                  author: {
+                    login: 'liyujie35',
+                    name: null,
+                    avatarUrl: 'a',
+                    url: 'https://github.com/liyujie35'
+                  },
+                  createdAt: '2024-01-03T00:00:00Z',
+                  url: 'h',
+                  bodyHTML: '<p>third</p>',
+                  reactionGroups: []
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+    stubFetch((call) => {
+      if (call.query?.includes('gitalkDiscussionComments')) return json(named)
+      if (call.query?.includes('gitalkDiscussion')) return json(GRAPHQL_THREAD)
+      return json({ data: {} })
+    })
+
+    mount(host, OPTIONS)
+    await waitForComment(host)
+
+    const names = [...host.querySelectorAll('.gt-comment-username')]
+    const texts = names.map((el) => el.textContent)
+    expect(texts).toEqual(expect.arrayContaining(['Liucw', 'Conor Kuo']))
+    // A null `name` must never print an empty username.
+    expect(texts).toContain('liyujie35')
+
+    // The login is still announced, so the nickname does not hide the handle.
+    const booxood = names.find((el) => el.textContent === 'Liucw')!
+    expect(booxood.getAttribute('aria-label')).toBe('Liucw (@booxood)')
+    expect(booxood.getAttribute('title')).toBe('@booxood')
+    // Fallback rows have nothing extra to announce.
+    const fallback = names.find((el) => el.textContent === 'liyujie35')!
+    expect(fallback.getAttribute('aria-label')).toBeNull()
+  })
+
+  it('keeps spaces, emoji and non-Latin characters in a display name intact', async () => {
+    const unicode = {
+      data: {
+        repository: {
+          discussion: {
+            comments: {
+              totalCount: 2,
+              pageInfo: { hasNextPage: false, hasPreviousPage: false },
+              nodes: [
+                {
+                  id: 'DC_unicode_1',
+                  databaseId: 1,
+                  author: {
+                    login: 'zhang',
+                    name: '张 三 🌟',
+                    avatarUrl: 'a',
+                    url: 'https://github.com/zhang'
+                  },
+                  createdAt: '2024-01-01T00:00:00Z',
+                  url: 'h',
+                  bodyHTML: '<p>unicode</p>',
+                  reactionGroups: []
+                },
+                {
+                  id: 'DC_unicode_2',
+                  databaseId: 2,
+                  author: {
+                    login: 'emoji',
+                    name: 'dev 🚀 builder',
+                    avatarUrl: 'a',
+                    url: 'https://github.com/emoji'
+                  },
+                  createdAt: '2024-01-02T00:00:00Z',
+                  url: 'h',
+                  bodyHTML: '<p>emoji</p>',
+                  reactionGroups: []
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+    stubFetch((call) => {
+      if (call.query?.includes('gitalkDiscussionComments')) return json(unicode)
+      if (call.query?.includes('gitalkDiscussion')) return json(GRAPHQL_THREAD)
+      return json({ data: {} })
+    })
+
+    mount(host, OPTIONS)
+    await waitForComment(host)
+
+    const texts = [...host.querySelectorAll('.gt-comment-username')].map((el) => el.textContent)
+    expect(texts).toEqual(expect.arrayContaining(['张 三 🌟', 'dev 🚀 builder']))
+    expect(host.textContent).not.toContain('undefined')
+  })
+
+  it('renders the login on the REST fallback path', async () => {
+    stubFetch((call) => {
+      if (call.url.startsWith('https://proxy.test/graphql')) {
+        return json({ error: 'Anonymous reads are unavailable' }, 503)
+      }
+      if (call.url.includes('/discussions/442/comments')) return json(REST_COMMENTS)
+      if (call.url.includes('/discussions/442')) {
+        return json({
+          number: 442,
+          node_id: 'D_442',
+          title: 'demo',
+          html_url: 'https://github.com/x',
+          locked: false
+        })
+      }
+      return json({})
+    })
+
+    mount(host, OPTIONS)
+    await waitForComment(host)
+
+    const name = host.querySelector('.gt-comment-username')!
+    expect(name.textContent).toBe('rest-reader')
+    expect(name.getAttribute('aria-label')).toBeNull()
+  })
+
   it('falls back to browser-direct REST when the proxy cannot serve the read', async () => {
     const calls = stubFetch((call) => {
       if (call.url.startsWith('https://proxy.test/graphql')) {

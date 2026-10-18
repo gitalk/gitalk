@@ -75,6 +75,18 @@ describe('collectParticipants', () => {
       'alice'
     ])
   })
+
+  it('offers the login, never the display name, as a mention target', () => {
+    const booxood = comment('booxood')
+    booxood.user.displayName = 'Liucw'
+    const participants = collectParticipants([booxood])
+
+    // `@Liucw` is not a GitHub account; the inserted token must be `@booxood`.
+    expect(participants).toEqual([{ login: 'booxood', avatarUrl: 'av/booxood' }])
+    expect(insertMention('@li', { start: 0, caret: 3 }, participants[0]!.login).text).toBe(
+      '@booxood '
+    )
+  })
 })
 
 describe('filterCandidates', () => {

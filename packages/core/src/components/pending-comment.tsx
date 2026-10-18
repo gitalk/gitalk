@@ -1,6 +1,7 @@
 import { formatRelativeTime } from '../time'
 import type { PendingComment } from '../types'
 import { Avatar } from './avatar'
+import { AuthorName } from './author-name'
 
 interface PendingCommentProps {
   pending: PendingComment
@@ -66,7 +67,7 @@ export function PendingCommentRow({
 
         <div className="gt-comment-content c-body">
           <div className="gt-comment-header c-meta">
-            <span className="gt-comment-username">{pending.user.login}</span>
+            <AuthorName user={pending.user} />
             <span className="gt-comment-text gt-sr-only">{commentedText}</span>
             <span className="gt-comment-date c-time">
               {formatRelativeTime(pending.createdAt, locale)}

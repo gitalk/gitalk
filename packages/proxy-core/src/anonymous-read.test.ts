@@ -485,4 +485,14 @@ describe('canonical query drift', () => {
       expect(normalize(proxyQuery!)).toBe(normalize(coreQuery))
     }
   })
+
+  it('requests the author display name in both comment documents', () => {
+    // The proxy substitutes its own document for anonymous reads, so a core
+    // copy that asks for `name` is not enough: without it here, every
+    // anonymous thread silently degrades to logins.
+    for (const name of ['gitalkDiscussionComments', 'gitalkIssueComments'] as const) {
+      expect(ANONYMOUS_READ_QUERIES[name]).toContain('... on User { name }')
+      expect(CORE_READ_QUERIES[name]).toContain('... on User { name }')
+    }
+  })
 })

@@ -522,16 +522,33 @@ export abstract class BaseBackend implements Backend {
       login: u.login ?? GHOST_USER.login,
       avatarUrl: u.avatar_url ?? GHOST_USER.avatarUrl,
       htmlUrl: u.html_url ?? GHOST_USER.htmlUrl
+      // No `displayName`: REST's comment payload has no profile name, and
+      // fetching one per author is exactly the per-comment request this
+      // feature must not add. The renderer falls back to `login`.
     }
   }
 
   protected normalizeGraphqlUser(author: unknown): GitalkUser {
     if (!author || typeof author !== 'object') return GHOST_USER
-    const a = author as { login?: string; avatarUrl?: string; url?: string }
+    const a = author as { login?: string; avatarUrl?: string; url?: string; name?: unknown }
     return {
       login: a.login ?? GHOST_USER.login,
+      displayName: normalizeDisplayName(a.name),
       avatarUrl: a.avatarUrl ?? GHOST_USER.avatarUrl,
       htmlUrl: a.url ?? GHOST_USER.htmlUrl
     }
   }
+}
+
+/**
+ * Keep a GraphQL `User.name` only when it carries visible text.
+ *
+ * `name` is nullable for the many accounts that never set one, and can be an
+ * empty/whitespace string. Both mean "no nickname"; storing `''` would make the
+ * renderer print an empty username instead of falling back to the login.
+ */
+export function normalizeDisplayName(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const name = value.trim()
+  return name.length ? name : undefined
 }

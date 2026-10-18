@@ -69,7 +69,20 @@ export type SortDirection = 'last' | 'first'
 export type FabPosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
 
 export interface GitalkUser {
+  /** GitHub login name. This is the identity every API call uses. */
   login: string
+  /**
+   * GitHub profile display name (`User.name`), when the transport reports it.
+   *
+   * Optional by design: GraphQL can return it (`... on User { name }`), REST's
+   * comment payload cannot — it only carries `user.login`, and looking each
+   * author up individually would cost one request per comment against the
+   * anonymous 60/hr allowance. Treat it as a **presentation hint only**:
+   * render {@link GitalkUser.displayName} when it is non-empty and fall back to
+   * {@link GitalkUser.login} otherwise. Never use it for `@` mentions,
+   * identity comparisons or permission checks.
+   */
+  displayName?: string
   avatarUrl: string
   htmlUrl: string
 }

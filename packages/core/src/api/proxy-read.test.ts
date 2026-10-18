@@ -219,6 +219,59 @@ describe('DiscussionsBackend anonymous proxy reads', () => {
     expect(String(vi.mocked(ctx.http.get).mock.calls[0]![0])).toContain('/comments')
   })
 
+  it('reads GraphQL profile names into displayName, keeping null/missing undefined', async () => {
+    const namedPage = {
+      repository: {
+        discussion: {
+          comments: {
+            totalCount: 3,
+            pageInfo: { hasNextPage: false, hasPreviousPage: false },
+            nodes: [
+              node({
+                id: 'DC_name',
+                databaseId: 31,
+                createdAt: '2024-01-01T00:00:00Z',
+                author: { login: 'booxood', name: 'Liucw', avatarUrl: 'a', url: 'u' }
+              }),
+              node({
+                id: 'DC_null',
+                databaseId: 32,
+                createdAt: '2024-02-01T00:00:00Z',
+                author: { login: 'cnrkuo', name: null, avatarUrl: 'a', url: 'u' }
+              }),
+              node({
+                id: 'DC_missing',
+                databaseId: 33,
+                createdAt: '2024-03-01T00:00:00Z',
+                author: { login: 'liyujie35', avatarUrl: 'a', url: 'u' }
+              })
+            ]
+          }
+        }
+      }
+    }
+    const ctx = makeCtx({ proxyRead: proxyReadMock(namedPage).read })
+
+    const page = await new DiscussionsBackend(ctx).getComments({ first: 10 })
+    const byId = new Map(page.comments.map((c) => [c.id, c.user]))
+
+    expect(byId.get(31)?.displayName).toBe('Liucw')
+    expect(byId.get(32)?.displayName).toBeUndefined()
+    expect(byId.get(33)?.displayName).toBeUndefined()
+  })
+
+  it('leaves displayName undefined on the REST fallback path', async () => {
+    const ctx = makeCtx({ proxyRead: proxyReadMock(null).read })
+    vi.mocked(ctx.http.get).mockResolvedValue([REST_ROW])
+
+    const page = await new DiscussionsBackend(ctx).getComments({ first: 10 })
+
+    // REST's comment payload has no profile name; the renderer must fall back
+    // to the login rather than issue a per-author lookup.
+    expect(page.comments[0]!.user.login).toBe('rest')
+    expect(page.comments[0]!.user.displayName).toBeUndefined()
+  })
+
   it('resolves a thread by number over the proxy without a REST lookup', async () => {
     const proxy = proxyReadMock({
       repository: {
@@ -297,6 +350,43 @@ describe('IssuesBackend anonymous proxy reads', () => {
     expect(page.comments[0]!.reactions.counts).toEqual({ ROCKET: 1 })
     expect(vi.mocked(ctx.http.get)).not.toHaveBeenCalled()
     expect(proxy.calls[0]!.body.query).toBe(ISSUE_COMMENTS_QUERY)
+  })
+
+  it('reads a GraphQL display name on issue comments too', async () => {
+    const proxy = proxyReadMock({
+      repository: {
+        issue: {
+          comments: {
+            totalCount: 1,
+            pageInfo: { hasNextPage: false, hasPreviousPage: false },
+            nodes: [
+              node({
+                id: 'IC_named',
+                databaseId: 22,
+                author: {
+                  login: 'booxood',
+                  name: 'Liucw',
+                  avatarUrl: 'a',
+                  url: 'u'
+                }
+              })
+            ]
+          }
+        }
+      }
+    })
+    const issueThread: ThreadInfo = { ...THREAD, kind: 'issues', nodeId: 'I_1' }
+    const ctx = makeCtx({ proxyRead: proxy.read, getThread: () => issueThread })
+
+    const page = await new IssuesBackend(ctx, {
+      labels: ['Gitalk'],
+      title: 't',
+      body: 'b'
+    }).getComments({ first: 10 })
+
+    // Shared with the Discussions backend through normalizeGraphqlUser.
+    expect(page.comments[0]!.user.login).toBe('booxood')
+    expect(page.comments[0]!.user.displayName).toBe('Liucw')
   })
 
   it('falls back to label REST lookup when the proxy declines', async () => {
