@@ -4826,6 +4826,10 @@
   display: flex;
   flex: 1 1 0;
   align-items: center;
+  /* The row holds only the sign-in button, so without this it sits at the
+     start of the flexible area — jammed against the avatar. flex-end mirrors
+     under RTL, which is what the direction of reading calls for. */
+  justify-content: flex-end;
   gap: 10px;
   min-width: 0;
   min-height: 36px;
