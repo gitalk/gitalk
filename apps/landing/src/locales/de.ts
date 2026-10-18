@@ -46,27 +46,32 @@ export const de: Messages = {
   },
   getStarted: {
     eyebrow: 'Einrichtung',
-    title: 'Vier Schritte zu Kommentaren',
-    lede: 'Drei davon machen Sie selbst — App anlegen, Werte eintragen, Komponente einbinden — und einer ist ein Befehl. Die Reihenfolge zählt: Schritt drei braucht die Werte aus Schritt zwei.',
+    title: 'Fünf Schritte zu Kommentaren',
+    lede: 'Vier davon machen Sie selbst — App anlegen, Werte eintragen, Callback setzen, Komponente einbinden — und einer ist ein Befehl. Die Reihenfolge zählt: Schritt drei braucht die Werte aus Schritt zwei, Schritt vier die Adresse, die Schritt drei ausgibt.',
     steps: [
       {
         title: 'GitHub App anlegen',
-        body: 'Unter Settings → Developer settings → GitHub Apps. Erteilen Sie Discussions: Read and write und Metadata: Read-only; als Callback URL <Ihr Proxy>/oauth/callback eintragen; Webhooks abschalten (werden nicht gebraucht).',
+        body: 'Unter Settings → Developer settings → GitHub Apps. Erteilen Sie Discussions: Read and write und Metadata: Read-only; lassen Sie die Callback URL vorerst leer — den Proxy gibt es erst, wenn Schritt drei ihn deployt, deshalb tragen Sie sie in Schritt vier nach; Webhooks abschalten (werden nicht gebraucht).',
         code: ''
       },
       {
         title: 'Variablen vorbereiten',
-        body: 'App ID, Client ID, Client Secret und den privaten Schlüssel (der Inhalt der .pem, nicht der SHA256-Fingerabdruck) in eine .env schreiben; den Sitzungsschlüssel mit openssl rand -hex 32 erzeugen.',
+        body: 'App ID, Client ID, Client Secret und den privaten Schlüssel (der Inhalt der .pem, nicht der SHA256-Fingerabdruck) in eine .env schreiben; den Sitzungsschlüssel mit openssl rand -hex 32 erzeugen. In GITALK_ALLOWED_ORIGINS gehört die Domain Ihres Blogs — sie hängt nicht vom Proxy ab, Schritt zwei kann sie also schon eintragen.',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: 'Mit einem Befehl deployen',
-        body: 'Die CLI prüft zuerst alle Werte und benennt fehlende, lädt die Zugangsdaten als Secrets hoch, deployt, ruft /health auf und gibt die URL aus, die als proxy eingetragen wird.',
+        body: 'Die CLI prüft zuerst alle Werte und benennt fehlende, lädt die Zugangsdaten als Secrets hoch, deployt, ruft /health auf und gibt die URL aus, die als proxy eingetragen wird. Notieren Sie diese Adresse — Schritt vier und fünf brauchen sie.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'Zurück und die Callback-URL setzen',
+        body: 'Kehren Sie zu den App-Einstellungen zurück und tragen Sie als Callback URL die Adresse aus Schritt drei plus /oauth/callback ein. Wer das überspringt, sieht beim Klick auf „Anmelden“ redirect_uri_mismatch; die Änderung wirkt sofort, ohne erneutes Deployment.',
+        code: 'Callback URL: https://<Ihr Proxy>/oauth/callback'
+      },
+      {
         title: 'Komponente einbinden',
-        body: 'Die ausgegebene URL als proxy eintragen, dann funktionieren die Kommentare. Styling, Dark Mode und Übersetzungen bringt die Komponente mit.',
+        body: 'Die in Schritt drei notierte Adresse als proxy eintragen, dann funktionieren die Kommentare. Styling, Dark Mode und Übersetzungen bringt die Komponente mit.',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die vier Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
+    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die fünf Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
   },
   footer: {
     note: 'MIT · auf Basis von GitHub Discussions',

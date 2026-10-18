@@ -46,27 +46,32 @@ export const fa: Messages = {
   },
   getStarted: {
     eyebrow: 'راه‌اندازی',
-    title: 'چهار گام تا دیدگاه‌ها',
-    lede: 'سه گام کار شماست — ساخت App، پر کردن مقادیر، افزودن کامپوننت — و یک گام یک فرمان است. ترتیب مهم است: گام سه به مقادیر گام دو نیاز دارد.',
+    title: 'پنج گام تا دیدگاه‌ها',
+    lede: 'چهار گام کار شماست — ساخت App، پر کردن مقادیر، تنظیم callback، افزودن کامپوننت — و یک گام یک فرمان است. ترتیب مهم است: گام سه به مقادیر گام دو نیاز دارد و گام چهار به نشانی‌ای که گام سه چاپ می‌کند.',
     steps: [
       {
         title: 'یک GitHub App بسازید',
-        body: 'در Settings → Developer settings → GitHub Apps. دسترسی‌های Discussions: Read and write و Metadata: Read-only را بدهید؛ در Callback URL بنویسید <نشانی پروکسی شما>/oauth/callback؛ Webhook را خاموش کنید (لازم نیست).',
+        body: 'در Settings ← Developer settings ← GitHub Apps. دسترسی‌های Discussions: Read and write و Metadata: Read-only را بدهید؛ Callback URL را فعلاً خالی بگذارید — پروکسی تا گام سه مستقر نمی‌شود، پس نشانی را در گام چهار وارد می‌کنید؛ Webhook را خاموش کنید (لازم نیست).',
         code: ''
       },
       {
         title: 'متغیرها را آماده کنید',
-        body: 'App ID، Client ID، Client Secret و کلید خصوصی (محتوای کامل .pem، نه اثر انگشت SHA256) را در یک .env بنویسید و کلید نشست را با openssl rand -hex 32 بسازید.',
+        body: 'App ID، Client ID، Client Secret و کلید خصوصی (محتوای کامل .pem، نه اثر انگشت SHA256) را در یک .env بنویسید و کلید نشست را با openssl rand -hex 32 بسازید. GITALK_ALLOWED_ORIGINS را با دامنه وبلاگ‌تان پر کنید — به پروکسی وابسته نیست، پس گام دو می‌تواند همین حالا آن را بنویسد.',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: 'با یک فرمان مستقر کنید',
-        body: 'CLI ابتدا همه مقادیر را بررسی می‌کند و هر مقدار گمشده را نام می‌برد، سپس اعتبارنامه‌ها را به‌عنوان secret بارگذاری می‌کند، استقرار می‌دهد، /health را بررسی می‌کند و در پایان نشانی‌ای را چاپ می‌کند که باید در proxy بگذارید.',
+        body: 'CLI ابتدا همه مقادیر را بررسی می‌کند و هر مقدار گمشده را نام می‌برد، سپس اعتبارنامه‌ها را به‌عنوان secret بارگذاری می‌کند، استقرار می‌دهد، /health را بررسی می‌کند و در پایان نشانی‌ای را چاپ می‌کند که باید در proxy بگذارید. آن نشانی را یادداشت کنید — گام چهار و پنج به آن نیاز دارند.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'برگردید و callback URL را بگذارید',
+        body: 'به صفحه تنظیمات App برگردید و Callback URL را برابر نشانی گام سه به‌علاوهٔ /oauth/callback بگذارید. اگر این را جا بیندازید، وقتی خواننده «ورود» را می‌زند خطای redirect_uri_mismatch می‌بیند؛ تغییر بی‌درنگ اعمال می‌شود و نیازی به استقرار دوباره نیست.',
+        code: ''
+      },
+      {
         title: 'کامپوننت را اضافه کنید',
-        body: 'نشانی چاپ‌شده را در proxy بگذارید و دیدگاه‌ها کار می‌کنند. پوسته، حالت تاریک و چندزبانی همراه خود کامپوننت می‌آید.',
+        body: 'نشانی‌ای را که در گام سه یادداشت کردید در proxy بگذارید و دیدگاه‌ها کار می‌کنند. پوسته، حالت تاریک و چندزبانی همراه خود کامپوننت می‌آید.',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: 'ورود باید از proxy بگذرد: `github.com/login/oauth/access_token` هدرهای CORS برنمی‌گرداند، پس مرورگر نمی‌تواند تبادل توکن را تنها انجام دهد. استقرار همان چهار گام بالاست؛ CloudBase و میزبانی شخصی در README مخزن آمده است.'
+    note: 'ورود باید از proxy بگذرد: `github.com/login/oauth/access_token` هدرهای CORS برنمی‌گرداند، پس مرورگر نمی‌تواند تبادل توکن را تنها انجام دهد. استقرار همان پنج گام بالاست؛ CloudBase و میزبانی شخصی در README مخزن آمده است.'
   },
   footer: {
     note: 'MIT · بر پایه GitHub Discussions',

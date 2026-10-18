@@ -46,27 +46,32 @@ export const pl: Messages = {
   },
   getStarted: {
     eyebrow: 'Konfiguracja',
-    title: 'Cztery kroki do komentarzy',
-    lede: 'Trzy kroki są po Twojej stronie — utworzenie App, wpisanie wartości, podłączenie komponentu — a jeden to polecenie. Kolejność ma znaczenie: krok trzeci potrzebuje wartości z kroku drugiego.',
+    title: 'Pięć kroków do komentarzy',
+    lede: 'Cztery kroki są po Twojej stronie — utworzenie App, wpisanie wartości, ustawienie callbacku, podłączenie komponentu — a jeden to polecenie. Kolejność ma znaczenie: krok trzeci potrzebuje wartości z drugiego, a czwarty adresu wypisanego przez trzeci.',
     steps: [
       {
         title: 'Utwórz GitHub App',
-        body: 'W Settings → Developer settings → GitHub Apps. Przyznaj Discussions: Read and write i Metadata: Read-only; w Callback URL wpisz <adres twojego proxy>/oauth/callback; Webhooks wyłącz (nie są używane).',
+        body: 'W Settings → Developer settings → GitHub Apps. Przyznaj Discussions: Read and write i Metadata: Read-only; pole Callback URL na razie zostaw puste — proxy powstaje dopiero w kroku trzecim, więc wrócisz do tego w kroku czwartym; Webhooks wyłącz (nie są używane).',
         code: ''
       },
       {
         title: 'Przygotuj zmienne',
-        body: 'Zapisz App ID, Client ID, Client Secret i klucz prywatny (treść .pem, nie odcisk SHA256) w pliku .env, a klucz sesji wygeneruj przez openssl rand -hex 32.',
+        body: 'Zapisz App ID, Client ID, Client Secret i klucz prywatny (treść .pem, nie odcisk SHA256) w pliku .env, a klucz sesji wygeneruj przez openssl rand -hex 32. W GITALK_ALLOWED_ORIGINS wpisz domenę bloga — nie zależy od proxy, więc krok drugi może ją już uzupełnić.',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: 'Wdróż jednym poleceniem',
-        body: 'CLI najpierw sprawdza wszystkie wartości i wskazuje brakujące, wysyła dane uwierzytelniające jako sekrety, wdraża, wywołuje /health i wypisuje adres, który wpisujesz w proxy.',
+        body: 'CLI najpierw sprawdza wszystkie wartości i wskazuje brakujące, wysyła dane uwierzytelniające jako sekrety, wdraża, wywołuje /health i wypisuje adres, który wpisujesz w proxy. Zapisz ten adres — przyda się w kroku czwartym i piątym.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'Wróć i ustaw callback URL',
+        body: 'Wróć do ustawień App i wpisz w Callback URL adres z kroku trzeciego plus /oauth/callback. Pominięcie tego kończy się błędem redirect_uri_mismatch po kliknięciu „Zaloguj się”; zmiana działa od razu, bez ponownego wdrażania.',
+        code: 'Callback URL: https://<adres twojego proxy>/oauth/callback'
+      },
+      {
         title: 'Podłącz komponent',
-        body: 'Wpisz wypisany adres w proxy i komentarze działają. Styl, tryb ciemny i tłumaczenia dostarcza sam komponent.',
+        body: 'Wpisz adres zapisany w kroku trzecim w proxy i komentarze działają. Styl, tryb ciemny i tłumaczenia dostarcza sam komponent.',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Logowanie musi przechodzić przez proxy: `github.com/login/oauth/access_token` nie zwraca nagłówków CORS, więc przeglądarka sama nie dokończy wymiany tokenu. Wdrożenie to cztery kroki powyżej; CloudBase i własny hosting opisuje README repozytorium.'
+    note: 'Logowanie musi przechodzić przez proxy: `github.com/login/oauth/access_token` nie zwraca nagłówków CORS, więc przeglądarka sama nie dokończy wymiany tokenu. Wdrożenie to pięć kroków powyżej; CloudBase i własny hosting opisuje README repozytorium.'
   },
   footer: {
     note: 'MIT · na bazie GitHub Discussions',

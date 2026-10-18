@@ -111,27 +111,32 @@ const zh = {
   },
   getStarted: {
     eyebrow: '接入',
-    title: '四步接上评论',
-    lede: '三步是你亲自做的（创建 App、填变量、引入组件），一步是一条命令。顺序不能换 —— 第 3 步要等第 2 步的变量齐了才能跑。',
+    title: '五步接上评论',
+    lede: '四步是你亲自做的（创建 App、填变量、补 callback、引入组件），一步是一条命令。顺序不能换 —— 第 3 步要等第 2 步的变量齐了才能跑，第 4 步要等第 3 步打印出地址。',
     steps: [
       {
         title: '创建 GitHub App',
-        body: '在 Settings → Developer settings → GitHub Apps 新建。权限勾 Discussions: Read and write 与 Metadata: Read-only；Callback URL 填 <你的代理地址>/oauth/callback；Webhook 关掉（用不上）。',
+        body: '在 Settings → Developer settings → GitHub Apps 新建。权限勾 Discussions: Read and write 与 Metadata: Read-only；Callback URL 先留空 —— 代理要到第 3 步才部署出来，地址第 4 步再回来补；Webhook 关掉（用不上）。',
         code: ''
       },
       {
         title: '准备环境变量',
-        body: '把 App ID、Client ID、Client Secret 和私钥（.pem 的全文，不是 SHA256 指纹）写进一个 .env；会话密钥用 openssl rand -hex 32 生成。',
+        body: '把 App ID、Client ID、Client Secret 和私钥（.pem 的全文，不是 SHA256 指纹）写进一个 .env；会话密钥用 openssl rand -hex 32 生成。GITALK_ALLOWED_ORIGINS 填你博客的域名 —— 它不依赖代理，第 2 步就能填。',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: '一条命令部署',
-        body: 'CLI 会先校验所有变量（缺哪个会明确告诉你），再把凭据作为 secret 上传，然后部署并自检 /health，最后打印该填进 proxy 的地址。',
+        body: 'CLI 会先校验所有变量（缺哪个会明确告诉你），再把凭据作为 secret 上传，然后部署并自检 /health，最后打印该填进 proxy 的地址 —— 把这个地址记下来，第 4 步和第 5 步都要用。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: '回去补上 callback URL',
+        body: '回到 App 设置页，把 Callback URL 填成第 3 步打印的地址加 /oauth/callback。漏了这一步，读者点「登录」时会报 redirect_uri_mismatch；改完立即生效，不用重新部署。',
+        code: 'Callback URL: https://<你的代理地址>/oauth/callback'
+      },
+      {
         title: '引入组件',
-        body: '把上一步打印的地址填进 proxy，评论就能用了。样式、暗色、多语言都由组件自己带。',
+        body: '把第 3 步记下的地址填进 proxy，评论就能用了。样式、暗色、多语言都由组件自己带。',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -267,7 +272,7 @@ const options = {
 </template>`
       }
     },
-    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的四步，CloudBase 与自托管见仓库 README。'
+    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的五步，CloudBase 与自托管见仓库 README。'
   },
   footer: {
     note: 'MIT · 基于 GitHub Discussions',
@@ -281,13 +286,14 @@ export type Messages = typeof zh
 const en: Messages = {
   getStarted: {
     eyebrow: 'Setup',
-    title: 'Four steps to comments',
-    lede: 'Three are yours to do — create the App, fill the values, drop the component in — and one is a command. The order matters: step three needs the values from step two.',
+    title: 'Five steps to comments',
+    lede: 'Four are yours to do — create the App, fill the values, set the callback, drop the component in — and one is a command. The order matters: step three needs the values from step two, and step four needs the address step three prints.',
     steps: [
-      { title: 'Create a GitHub App', body: 'Settings → Developer settings → GitHub Apps. Grant Discussions: Read and write and Metadata: Read-only; set the callback URL to <your proxy>/oauth/callback; turn Webhooks off — they are unused.', code: '' },
-      { title: 'Fill in the values', body: 'Put the App ID, Client ID, Client Secret and the private key (the .pem contents, not the SHA256 fingerprint) in a .env, and generate a session key.', code: 'GITHUB_APP_ID=…' },
-      { title: 'Deploy with one command', body: 'The CLI checks every value first and names any that are missing, uploads the credentials as secrets, deploys, then calls /health and prints the URL to use as your proxy.', code: 'npx github:gitalk/deploy -c .env -t cloudflare' },
-      { title: 'Include the component', body: 'Pass the printed URL as proxy and the comments work. Styling, dark mode and translations come with the component.', code: "new Gitalk({ clientID, proxy: 'https://…' })" }
+      { title: 'Create a GitHub App', body: 'Settings → Developer settings → GitHub Apps. Grant Discussions: Read and write and Metadata: Read-only; leave the Callback URL empty for now — the proxy does not exist until step three deploys it, so you come back to this in step four; turn Webhooks off — they are unused.', code: '' },
+      { title: 'Fill in the values', body: 'Put the App ID, Client ID, Client Secret and the private key (the .pem contents, not the SHA256 fingerprint) in a .env, and generate a session key. Set GITALK_ALLOWED_ORIGINS to your blog’s origin — it does not depend on the proxy, so step two can fill it in.', code: 'GITHUB_APP_ID=…' },
+      { title: 'Deploy with one command', body: 'The CLI checks every value first and names any that are missing, uploads the credentials as secrets, deploys, then calls /health and prints the URL to use as your proxy. Note that address — steps four and five need it.', code: 'npx github:gitalk/deploy -c .env -t cloudflare' },
+      { title: 'Go back and set the callback URL', body: 'Return to the App settings and set Callback URL to the address from step three plus /oauth/callback. Skipping this shows up as redirect_uri_mismatch when someone clicks Sign in; the change takes effect immediately, with no redeploy.', code: 'Callback URL: https://<your proxy>/oauth/callback' },
+      { title: 'Include the component', body: 'Pass the address you noted in step three as proxy and the comments work. Styling, dark mode and translations come with the component.', code: "new Gitalk({ clientID, proxy: 'https://…' })" }
     ],
     more: 'CloudBase, self-hosting and every variable → the deploy CLI README',
     domainTitle: 'Custom domains',
@@ -470,7 +476,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deploying it is the four steps above; CloudBase and self-hosting are covered in the repository README.'
+    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deploying it is the five steps above; CloudBase and self-hosting are covered in the repository README.'
   },
   footer: {
     note: 'MIT · powered by GitHub Discussions',

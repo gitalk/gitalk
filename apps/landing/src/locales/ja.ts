@@ -46,27 +46,32 @@ export const ja: Messages = {
   },
   getStarted: {
     eyebrow: 'セットアップ',
-    title: '4ステップでコメントを導入',
-    lede: '3つはあなたが行う作業（App の作成、値の入力、コンポーネントの組み込み）で、1つはコマンドです。順序は入れ替えられません。ステップ3は、ステップ2の値が揃ってから実行します。',
+    title: '5ステップでコメントを導入',
+    lede: '4つはあなたが行う作業（App の作成、値の入力、callback の設定、コンポーネントの組み込み）で、1つはコマンドです。順序は入れ替えられません。ステップ3はステップ2の値が、ステップ4はステップ3が出力するアドレスが必要です。',
     steps: [
       {
         title: 'GitHub App を作成',
-        body: 'Settings → Developer settings → GitHub Apps で新規作成します。権限は Discussions: Read and write と Metadata: Read-only を選択。Callback URL には <プロキシのアドレス>/oauth/callback を入力し、Webhook はオフにします（使いません）。',
+        body: 'Settings → Developer settings → GitHub Apps で新規作成します。権限は Discussions: Read and write と Metadata: Read-only を選択。Callback URL は今は空欄のままにします —— プロキシはステップ3でデプロイされるので、アドレスはステップ4で戻ってきて入力します。Webhook はオフにします（使いません）。',
         code: ''
       },
       {
         title: '環境変数を用意',
-        body: 'App ID、Client ID、Client Secret、秘密鍵（.pem の全文。SHA256 の指紋ではありません）を .env に書き、セッションキーは openssl rand -hex 32 で生成します。',
+        body: 'App ID、Client ID、Client Secret、秘密鍵（.pem の全文。SHA256 の指紋ではありません）を .env に書き、セッションキーは openssl rand -hex 32 で生成します。GITALK_ALLOWED_ORIGINS にはブログのドメインを入れます —— これはプロキシに依存しないので、ステップ2の時点で書けます。',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: 'コマンド1つでデプロイ',
-        body: 'CLI はまずすべての値を検証し（足りないものがあれば具体的に示します）、資格情報を secret としてアップロードしてからデプロイし、/health を自己診断したうえで、proxy に入れるアドレスを出力します。',
+        body: 'CLI はまずすべての値を検証し（足りないものがあれば具体的に示します）、資格情報を secret としてアップロードしてからデプロイし、/health を自己診断したうえで、proxy に入れるアドレスを出力します。このアドレスを控えてください —— ステップ4と5で使います。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: '戻って callback URL を設定',
+        body: 'App の設定ページに戻り、Callback URL にステップ3で出力されたアドレス + /oauth/callback を入力します。忘れると、読者が「ログイン」を押したときに redirect_uri_mismatch が出ます。変更はすぐ反映され、再デプロイは不要です。',
+        code: 'Callback URL: https://<プロキシのアドレス>/oauth/callback'
+      },
+      {
         title: 'コンポーネントを組み込む',
-        body: '前のステップで出力されたアドレスを proxy に渡せば、コメントが使えます。スタイル、ダークモード、多言語はコンポーネント側が持ちます。',
+        body: 'ステップ3で控えたアドレスを proxy に渡せば、コメントが使えます。スタイル、ダークモード、多言語はコンポーネント側が持ちます。',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の4ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
+    note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の5ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
   },
   footer: {
     note: 'MIT · GitHub Discussions ベース',

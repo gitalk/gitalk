@@ -1,11 +1,12 @@
 import { useI18n } from '../i18n'
 
 /**
- * The four steps between "I want comments" and "they work".
+ * The five steps between "I want comments" and "they work".
  *
- * Three of them are things only a person can do — creating the GitHub App,
- * pasting the values, dropping the component in — and one is a command. They are
- * numbered because order matters: step three can only run once step two exists.
+ * Four of them are things only a person can do — creating the GitHub App,
+ * pasting the values, setting the callback URL once the deploy has printed an
+ * address, dropping the component in — and one is a command. They are numbered
+ * because order matters: step three can only run once step two exists.
  */
 export function GetStarted() {
   const { t } = useI18n()

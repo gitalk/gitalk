@@ -46,27 +46,32 @@ export const fr: Messages = {
   },
   getStarted: {
     eyebrow: 'Mise en place',
-    title: 'Quatre étapes vers les commentaires',
-    lede: 'Trois sont à votre charge — créer l’App, renseigner les valeurs, intégrer le composant — et une est une commande. L’ordre compte : l’étape trois a besoin des valeurs de l’étape deux.',
+    title: 'Cinq étapes vers les commentaires',
+    lede: 'Quatre sont à votre charge — créer l’App, renseigner les valeurs, configurer le callback, intégrer le composant — et une est une commande. L’ordre compte : l’étape trois a besoin des valeurs de l’étape deux, et l’étape quatre de l’adresse affichée par l’étape trois.',
     steps: [
       {
         title: 'Créer une GitHub App',
-        body: 'Dans Settings → Developer settings → GitHub Apps. Accordez Discussions: Read and write et Metadata: Read-only ; mettez <votre proxy>/oauth/callback comme Callback URL et désactivez les Webhooks (inutiles).',
+        body: 'Dans Settings → Developer settings → GitHub Apps. Accordez Discussions: Read and write et Metadata: Read-only ; laissez le Callback URL vide pour l’instant — le proxy n’existe qu’une fois déployé à l’étape trois, vous y reviendrez donc à l’étape quatre ; désactivez les Webhooks (inutiles).',
         code: ''
       },
       {
         title: 'Préparer les variables',
-        body: 'Placez l’App ID, le Client ID, le Client Secret et la clé privée (le contenu du .pem, pas l’empreinte SHA256) dans un .env, et générez une clé de session avec openssl rand -hex 32.',
+        body: 'Placez l’App ID, le Client ID, le Client Secret et la clé privée (le contenu du .pem, pas l’empreinte SHA256) dans un .env, et générez une clé de session avec openssl rand -hex 32. Indiquez le domaine de votre blog dans GITALK_ALLOWED_ORIGINS : il ne dépend pas du proxy, l’étape deux peut donc le remplir.',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: 'Déployer en une commande',
-        body: 'La CLI vérifie d’abord toutes les valeurs et nomme celles qui manquent, téléverse les identifiants comme secrets, déploie, appelle /health puis affiche l’URL à utiliser comme proxy.',
+        body: 'La CLI vérifie d’abord toutes les valeurs et nomme celles qui manquent, téléverse les identifiants comme secrets, déploie, appelle /health puis affiche l’URL à utiliser comme proxy. Notez cette adresse : les étapes quatre et cinq en ont besoin.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'Revenez régler l’URL de callback',
+        body: 'Retournez aux réglages de l’App et mettez dans Callback URL l’adresse de l’étape trois suivie de /oauth/callback. Si vous l’oubliez, un clic sur « Se connecter » affiche redirect_uri_mismatch ; la modification prend effet immédiatement, sans redéploiement.',
+        code: 'Callback URL: https://<votre proxy>/oauth/callback'
+      },
+      {
         title: 'Intégrer le composant',
-        body: 'Passez l’URL affichée comme proxy et les commentaires fonctionnent. Styles, mode sombre et traductions sont fournis par le composant.',
+        body: 'Passez l’adresse notée à l’étape trois comme proxy et les commentaires fonctionnent. Styles, mode sombre et traductions sont fournis par le composant.',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: 'La connexion passe obligatoirement par un proxy : `github.com/login/oauth/access_token` n’envoie pas d’en-têtes CORS, le navigateur ne peut donc pas terminer l’échange du token seul. Le déploiement correspond aux quatre étapes ci-dessus ; CloudBase et l’auto-hébergement sont couverts par le README du dépôt.'
+    note: 'La connexion passe obligatoirement par un proxy : `github.com/login/oauth/access_token` n’envoie pas d’en-têtes CORS, le navigateur ne peut donc pas terminer l’échange du token seul. Le déploiement correspond aux cinq étapes ci-dessus ; CloudBase et l’auto-hébergement sont couverts par le README du dépôt.'
   },
   footer: {
     note: 'MIT · propulsé par GitHub Discussions',

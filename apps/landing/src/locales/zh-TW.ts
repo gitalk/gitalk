@@ -46,27 +46,32 @@ export const zhTW: Messages = {
   },
   getStarted: {
     eyebrow: '接入',
-    title: '四步接上評論',
-    lede: '三步是你親自做的（建立 App、填寫變數、引入元件），一步是一條指令。順序不能換 —— 第 3 步要等第 2 步的變數齊了才能跑。',
+    title: '五步接上評論',
+    lede: '四步是你親自做的（建立 App、填變數、補 callback、引入元件），一步是一條指令。順序不能換 —— 第 3 步要等第 2 步的變數齊了才能跑，第 4 步要等第 3 步印出位址。',
     steps: [
       {
         title: '建立 GitHub App',
-        body: '在 Settings → Developer settings → GitHub Apps 新建。權限勾選 Discussions: Read and write 與 Metadata: Read-only；Callback URL 填 <你的代理位址>/oauth/callback；Webhook 關掉（用不到）。',
+        body: '在 Settings → Developer settings → GitHub Apps 新建。權限勾選 Discussions: Read and write 與 Metadata: Read-only；Callback URL 先留空 —— 代理要到第 3 步才部署出來，位址第 4 步再回來補；Webhook 關掉（用不到）。',
         code: ''
       },
       {
         title: '準備環境變數',
-        body: '把 App ID、Client ID、Client Secret 和私鑰（.pem 的全文，不是 SHA256 指紋）寫進一個 .env；工作階段金鑰用 openssl rand -hex 32 產生。',
+        body: '把 App ID、Client ID、Client Secret 和私鑰（.pem 的全文，不是 SHA256 指紋）寫進一個 .env；工作階段金鑰用 openssl rand -hex 32 產生。GITALK_ALLOWED_ORIGINS 填你部落格的網域 —— 它不依賴代理，第 2 步就能填。',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: '一條指令部署',
-        body: 'CLI 會先驗證所有變數（缺哪個會明確告訴你），再把憑證作為 secret 上傳，然後部署並自檢 /health，最後印出該填進 proxy 的位址。',
+        body: 'CLI 會先驗證所有變數（缺哪個會明確告訴你），再把憑證作為 secret 上傳，然後部署並自檢 /health，最後印出該填進 proxy 的位址 —— 把這個位址記下來，第 4 步和第 5 步都要用。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: '回去補上 callback URL',
+        body: '回到 App 設定頁，把 Callback URL 填成第 3 步印出的位址加 /oauth/callback。漏了這一步，讀者點「登入」時會報 redirect_uri_mismatch；改完立即生效，不用重新部署。',
+        code: 'Callback URL: https://<你的代理位址>/oauth/callback'
+      },
+      {
         title: '引入元件',
-        body: '把上一步印出的位址填進 proxy，評論就能用了。樣式、暗色、多語言都由元件自己帶。',
+        body: '把第 3 步記下的位址填進 proxy，評論就能用了。樣式、暗色、多語言都由元件自己帶。',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的四步，CloudBase 與自架見儲存庫 README。'
+    note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的五步，CloudBase 與自架見儲存庫 README。'
   },
   footer: {
     note: 'MIT · 以 GitHub Discussions 為基礎',

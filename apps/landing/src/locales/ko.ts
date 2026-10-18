@@ -46,27 +46,32 @@ export const ko: Messages = {
   },
   getStarted: {
     eyebrow: '설정',
-    title: '네 단계로 댓글 연결',
-    lede: '세 단계는 직접 하시는 일(App 생성, 값 입력, 컴포넌트 삽입)이고, 한 단계는 명령 하나입니다. 순서는 바꿀 수 없습니다. 3단계는 2단계의 값이 모두 준비된 뒤에 실행합니다.',
+    title: '다섯 단계로 댓글 연결',
+    lede: '네 단계는 직접 하시는 일(App 생성, 값 입력, callback 설정, 컴포넌트 삽입)이고, 한 단계는 명령 하나입니다. 순서는 바꿀 수 없습니다. 3단계는 2단계의 값이, 4단계는 3단계가 출력하는 주소가 필요합니다.',
     steps: [
       {
         title: 'GitHub App 만들기',
-        body: 'Settings → Developer settings → GitHub Apps에서 새로 만듭니다. 권한은 Discussions: Read and write와 Metadata: Read-only를 선택하고, Callback URL에는 <프록시 주소>/oauth/callback을 넣습니다. Webhook은 끕니다(사용하지 않습니다).',
+        body: 'Settings → Developer settings → GitHub Apps에서 새로 만듭니다. 권한은 Discussions: Read and write와 Metadata: Read-only를 선택하고, Callback URL은 지금은 비워 둡니다 — 프록시는 3단계에서 배포되므로 주소는 4단계에서 돌아와 입력합니다. Webhook은 끕니다(사용하지 않습니다).',
         code: ''
       },
       {
         title: '환경 변수 준비',
-        body: 'App ID, Client ID, Client Secret, 개인 키(.pem 전체 내용. SHA256 지문이 아닙니다)를 .env에 적고, 세션 키는 openssl rand -hex 32로 생성합니다.',
+        body: 'App ID, Client ID, Client Secret, 개인 키(.pem 전체 내용. SHA256 지문이 아닙니다)를 .env에 적고, 세션 키는 openssl rand -hex 32로 생성합니다. GITALK_ALLOWED_ORIGINS에는 블로그 도메인을 넣습니다 — 프록시에 의존하지 않으므로 2단계에서 채울 수 있습니다.',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: '명령 하나로 배포',
-        body: 'CLI가 먼저 모든 값을 검사해 빠진 항목을 정확히 알려 주고, 자격 증명을 secret으로 업로드한 뒤 배포하고 /health를 자체 점검한 다음, proxy에 넣을 주소를 출력합니다.',
+        body: 'CLI가 먼저 모든 값을 검사해 빠진 항목을 정확히 알려 주고, 자격 증명을 secret으로 업로드한 뒤 배포하고 /health를 자체 점검한 다음, proxy에 넣을 주소를 출력합니다. 이 주소를 적어 두세요 — 4단계와 5단계에서 씁니다.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: '돌아가서 callback URL 설정',
+        body: 'App 설정 페이지로 돌아가 Callback URL에 3단계에서 출력된 주소 + /oauth/callback을 넣습니다. 빠뜨리면 독자가 「로그인」을 눌렀을 때 redirect_uri_mismatch가 납니다. 변경은 즉시 적용되며 다시 배포할 필요가 없습니다.',
+        code: 'Callback URL: https://<프록시 주소>/oauth/callback'
+      },
+      {
         title: '컴포넌트 삽입',
-        body: '앞 단계에서 출력된 주소를 proxy에 넣으면 댓글이 동작합니다. 스타일, 다크 모드, 다국어는 컴포넌트가 함께 제공합니다.',
+        body: '3단계에서 적어 둔 주소를 proxy에 넣으면 댓글이 동작합니다. 스타일, 다크 모드, 다국어는 컴포넌트가 함께 제공합니다.',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 네 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
+    note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 다섯 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
   },
   footer: {
     note: 'MIT · GitHub Discussions 기반',

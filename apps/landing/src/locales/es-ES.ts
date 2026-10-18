@@ -46,27 +46,32 @@ export const esES: Messages = {
   },
   getStarted: {
     eyebrow: 'Configuración',
-    title: 'Cuatro pasos para tener comentarios',
-    lede: 'Tres los haces tú —crear la App, rellenar los valores, incluir el componente— y uno es un comando. El orden importa: el paso tres necesita los valores del paso dos.',
+    title: 'Cinco pasos para tener comentarios',
+    lede: 'Cuatro los haces tú —crear la App, rellenar los valores, configurar el callback, incluir el componente— y uno es un comando. El orden importa: el paso tres necesita los valores del paso dos y el paso cuatro la dirección que imprime el paso tres.',
     steps: [
       {
         title: 'Crea una GitHub App',
-        body: 'En Settings → Developer settings → GitHub Apps. Concede Discussions: Read and write y Metadata: Read-only; pon <tu proxy>/oauth/callback como Callback URL y desactiva los Webhooks (no se usan).',
+        body: 'En Settings → Developer settings → GitHub Apps. Concede Discussions: Read and write y Metadata: Read-only; deja Callback URL vacía por ahora — el proxy no existe hasta que el paso tres lo despliega, así que vuelves a esto en el paso cuatro; desactiva los Webhooks (no se usan).',
         code: ''
       },
       {
         title: 'Prepara las variables',
-        body: 'Escribe el App ID, el Client ID, el Client Secret y la clave privada (el contenido del .pem, no la huella SHA256) en un .env, y genera una clave de sesión con openssl rand -hex 32.',
+        body: 'Escribe el App ID, el Client ID, el Client Secret y la clave privada (el contenido del .pem, no la huella SHA256) en un .env, y genera una clave de sesión con openssl rand -hex 32. Pon el dominio de tu blog en GITALK_ALLOWED_ORIGINS: no depende del proxy, así que el paso dos ya puede rellenarlo.',
         code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
       },
       {
         title: 'Despliega con un comando',
-        body: 'La CLI comprueba primero todos los valores y nombra los que falten, sube las credenciales como secretos, despliega, llama a /health y muestra la URL que debes usar como proxy.',
+        body: 'La CLI comprueba primero todos los valores y nombra los que falten, sube las credenciales como secretos, despliega, llama a /health y muestra la URL que debes usar como proxy. Apunta esa dirección: la necesitan los pasos cuatro y cinco.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'Vuelve a configurar la Callback URL',
+        body: 'Vuelve a los ajustes de la App y pon en Callback URL la dirección del paso tres más /oauth/callback. Si lo olvidas, al pulsar «Iniciar sesión» aparece redirect_uri_mismatch; el cambio se aplica al instante, sin volver a desplegar.',
+        code: 'Callback URL: https://<tu proxy>/oauth/callback'
+      },
+      {
         title: 'Incluye el componente',
-        body: 'Pasa la URL mostrada como proxy y los comentarios funcionan. Los estilos, el modo oscuro y los idiomas vienen con el componente.',
+        body: 'Pasa la dirección que apuntaste en el paso tres como proxy y los comentarios funcionan. Los estilos, el modo oscuro y los idiomas vienen con el componente.',
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
@@ -201,7 +206,7 @@ const options = {
 </template>`
       }
     },
-    note: 'El inicio de sesión debe pasar por un proxy: `github.com/login/oauth/access_token` no envía cabeceras CORS, así que el navegador no puede completar el intercambio del token por sí solo. Para desplegarlo, sigue los cuatro pasos de arriba; CloudBase y el autohospedaje están en el README del repositorio.'
+    note: 'El inicio de sesión debe pasar por un proxy: `github.com/login/oauth/access_token` no envía cabeceras CORS, así que el navegador no puede completar el intercambio del token por sí solo. Para desplegarlo, sigue los cinco pasos de arriba; CloudBase y el autohospedaje están en el README del repositorio.'
   },
   footer: {
     note: 'MIT · con GitHub Discussions',
