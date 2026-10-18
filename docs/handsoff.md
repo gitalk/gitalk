@@ -1,104 +1,25 @@
-# 交接文档（Handoff）
+# 交付状态
 
-> 用途：换会话后凭这份文档接着干活。只写「现在在哪、还要做什么、哪里会踩坑」。
-> 设计细节在 [tech.md](./tech.md) / [tech-deploy.md](./tech-deploy.md)，这里不重复。
+这个项目当前的开放事项**为零**。原 `human-helps.md` 里的三条已在 2026-10-18 关闭：
 
----
+1. **代理按 IP 限流** —— 不实施。5,000/hr 的匿名读额度理论上可被第三方消耗，但当前用量远低于上限；等真的出现滥用再做，避免提前引入 KV/D1 这类基础设施。
+2. **本地验收清单** —— 你把落地页跑起来逐一验过，通过。
+3. **域名与证书** —— 不推进。自定义域名的做法（Cloudflare 直接绑、别处加 CNAME、CloudBase 需备案）已写进 `packages/gitalk-deploy/README.md` 与 `README-CN.md`，需要时照着做即可。
 
-## 一、当前状态
+`npm` 上 `0.0.0-stage` / `2.2.0` / `2.3.0` 与主仓的 `NPM_TOKEN` secret 按决定**不再处理**：
+前者已 `deprecate`、`latest` 指向 `2.0.0-beta.1`；后者已不被任何工作流引用。
 
-**两个托管端点 + 容器都已上线并通过端到端验证。**
+## 当前发布状态
 
-| 目标 | 地址 | 验证 |
-| --- | --- | --- |
-| Cloudflare Workers | `https://gitalk-proxy.aispin-abf.workers.dev` | 健康检查、授权参数、匿名读、CORS 预检、错误回跳 302 |
-| 腾讯云 CloudBase | `https://gitalk.xsin.work`（**根路径**，无前缀） | 同上 |
-| 容器 | 本地 `8787` / 自部署 | 与 CF 逐项一致 |
-
-三端匿名读结果一致：`gitalk/gitalk#442` = 顶层 2 + 回复 1。
-
-**发布**：三个包以预发布版发布（`2.0.0-beta.N`），版本号由发布流程自动递增，GitHub Actions 手动触发；走 OIDC Trusted Publishing + provenance，仓库不留长期令牌。
-主分支 `main` 干净，landing 已上中英切换，demo 可在两个端点间切换。
-
-**包结构**
-
-```
-packages/proxy-core/       平台无关 handle(request, env, ctx) → Response
-packages/proxy-worker/     CF Workers 入口
-packages/proxy-node/       Node http ↔ Web Request 适配 + Dockerfile
-packages/proxy-cloudbase/  CloudBase Web 函数（逐字节复用 proxy-node 的 dist/server.js）
-packages/core|react|vue/   widget 与两个框架包装器
-apps/landing/              gitalk.github.io 落地页
-```
-
-**验证基准**
-
-```bash
-# 三端应返回一致：顶层 2 + 回复 1
-curl -s -X POST <端点>/graphql -H 'Content-Type: application/json' \
-  -d '{"query":"{ repository(owner:\"gitalk\",name:\"gitalk\"){ discussion(number:442){ comments(first:20){ totalCount nodes { replies(first:20){ totalCount } } } } } }"}'
-
-pnpm -r --filter "./packages/**" run typecheck
-npx vitest run
-node scripts/check-publishable.mjs
-```
-
-## 二、未决事项
-
-1. **i18n 复数只支持两形态**：`t()` 只取 `forms[0]`/`forms[1]`，而波兰语字典是三形态
-   （`1 |||| 2–4 |||| 5+`），第 5 条以上会退化。影响面很小，但属于已知缺陷。
-2. **`createManually`**：已作为 `@deprecated` 别名保留（仅在 `createIssueManually` 缺省时生效）。
-   将来可以删掉。
-3. **installation token 机制当前无人调用**：`/graphql` 现在要求访客令牌，所以
-   `signAppJwt` → `resolveInstallationId` → `installationToken` 这条链暂时没有调用者。
-   保留是因为设计上考虑过「由端点代发匿名读」，但那会让端点凭 App 写权限代任何人操作，
-   重新启用前必须想清授权边界。
-
-## 三、关键陷阱
-
-**CloudBase**
-
-- `tcb fn deploy` 对已存在的函数**不带 `--force` 是空操作**（报成功、`UpdateTime` 不变、
-  新 `envVariables` 不写入）；CLI **只在当前目录**找 `cloudbaserc.json`，从仓库根目录跑会建出坏函数。
-- 函数内部跑在 `127.0.0.1:9000`，公网 origin **必须用 `PUBLIC_ORIGIN` 显式告知**，否则 OAuth
-  回调指向内网地址，登录永远回不来。
-- 端点必须挂**根路径**，触发路径设 `enablePathTransmission: false`——平台在函数收到请求前就
-  剥掉前缀，`url.origin` 无法还原。
-- `tcb api` 必须显式 `--api-version`；`tcb routes add/delete` 没有 `-y` 会交互确认；
-  `protocolType` 会被 CreateFunction 拒绝。
-- 自定义域名三关：归属 TXT 校验、自带证书（体验版不支持 EdgeOne 托管证书）、ICP 备案。
-  **证书续期后必须重绑**——CloudBase 只存 `CertId` 指针。
-
-**GitHub API**
-
-- 所有请求必须带 `User-Agent`，否则返回 **403 而不是 401**，错误信息极具误导性。Workers 运行时
-  不自带，Node/curl 会自带——本地怎么试都正常。
-- 304 免额的前提是两次请求的 `Accept` 完全一致，否则 ETag 不同、返回 200。（当前实现**没有**
-  接入 ETag 条件请求。）
-
-**平台差异**
-
-| | 部署凭据 | 运行密钥 |
-| --- | --- | --- |
-| Cloudflare | API Token（可按模板限定到 Workers） | `wrangler secret`，**只写、控制台不可回读** |
-| CloudBase | 腾讯云 API 密钥（**默认可操作全账号**，须用子账号 + `QcloudAccessForTCBRole`） | 环境变量，**控制台可读** |
-
-**本机沙箱**（不加这些前缀会以很难懂的方式失败）
-
-| 症状 | 解法 |
+| 产物 | 位置 |
 | --- | --- |
-| CloudBase CLI 报 `EPERM ... ~/.config/.cloudbase` 或 `~/cloudbase-framework/logs` | 前缀 `HOME=/tmp/cbhome XDG_CONFIG_HOME=/tmp/cbhome/.config` |
-| `npm` / `npx` 报 `EPERM ... ~/.npm/_cacache` | `npm_config_cache=/tmp/npmcache` |
-| `gh` 报 `EPERM ... ~/.cache/gh` | `XDG_CACHE_HOME=/tmp/ghcache` |
-| curl 访问 `127.0.0.1:<port>` 拿到别的服务的页面 | 加 `--noproxy '*'`（环境代理会劫持 localhost） |
-| `wrangler` 报 `EPERM ... ~/Library/Preferences/.wrangler/logs` | 非致命；或 `WRANGLER_HOME=/tmp/wrangler-home` |
-| `npx @cloudbase/cli` 失败（bin 名是 `tcb`） | 直接调 `packages/proxy-cloudbase/node_modules/.bin/tcb` |
+| 组件 | npm `@aifire/gitalk@2.0.0-beta.1`（连同 `-react` / `-vue`） |
+| 部署 CLI | `npx github:gitalk/deploy`（产物在 `gitalk/deploy`） |
+| 落地页 | `gitalk.github.io` |
+| 代理 | CF `gitalk-proxy.aispin-abf.workers.dev` / CloudBase `gitalk.xsin.work` |
 
-**其他**
+## 已知但未处理
 
-- `*.workers.dev` 在中国大陆**屏蔽率 100%**：只部署 CF 时国内用户能读、永远登不上。被墙的是
-  「域」不是 Cloudflare。
-- 落地页 demo 依赖 `key={endpoint.proxy}` 触发重新挂载，去掉后切端点看起来没反应。
-- `gitalk/gitalk#475`（2 顶层 + 4 回复）是另一个可用的比对基准。
-- `gitalk/gitalk.github.io` 的 `master` 分支 `index.html` 仍硬编码旧 OAuth App 的 `clientSecret`
-  （公开可读），待轮换或删除该 App。
+- **i18n 懒加载**：组件只有 `en` / `zh-CN` 内联、其余 9 个语言包一并打包（约 28 kB 源码）。懒加载需要代码分割，`dist/gitalk.js` 是 **IIFE 单文件**（`formats: ['iife']`），**做不到**；只有 ESM 消费者可能受益，而 IIFE 用户本来就拿不到这个优化。
+- **落地页只有中/英**：要支持全部 11 种语言，需要翻译 9 份完整页面文案。
+- **jsdom 下的偶发 unhandled error**：`vitest` 偶尔报，复跑即消失，270 个测试始终全过。
