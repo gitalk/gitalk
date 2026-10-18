@@ -84,11 +84,15 @@ export function ReactionPicker({
         trigger.current?.focus()
       }
     }
-    document.addEventListener('mousedown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
+    // Capture the document: Preact can defer this cleanup until after a test
+    // environment has torn down its globals, and re-reading `document` then
+    // would throw a ReferenceError.
+    const doc = document
+    doc.addEventListener('mousedown', onPointerDown)
+    doc.addEventListener('keydown', onKeyDown)
     return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
+      doc.removeEventListener('mousedown', onPointerDown)
+      doc.removeEventListener('keydown', onKeyDown)
     }
   }, [open])
 

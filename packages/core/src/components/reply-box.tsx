@@ -43,6 +43,7 @@ export function ReplyBox({
 // `nearest` leaves it alone when it is already visible.
 const rootRef = useRef<HTMLDivElement>(null)
 useEffect(() => {
+  if (typeof window === 'undefined') return
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   // jsdom and older engines do not implement scrollIntoView; a convenience
     // scroll must never throw and turn into an unhandled rejection.

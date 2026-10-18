@@ -294,8 +294,11 @@ export function MentionTextarea({
     const onPointerDown = (e: MouseEvent) => {
       if (!ref.current?.parentElement?.contains(e.target as Node)) closeMenu()
     }
-    document.addEventListener('mousedown', onPointerDown)
-    return () => document.removeEventListener('mousedown', onPointerDown)
+    // Same reasoning as the reaction picker: capture the document so the
+    // deferred cleanup cannot trip over a torn-down global.
+    const doc = document
+    doc.addEventListener('mousedown', onPointerDown)
+    return () => doc.removeEventListener('mousedown', onPointerDown)
   }, [closeMenu, open])
 
   const pick = (e: TargetedMouseEvent<HTMLLIElement>, candidate: MentionCandidate) => {

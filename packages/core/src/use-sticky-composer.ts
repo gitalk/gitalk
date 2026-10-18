@@ -97,6 +97,18 @@ interface StickyComposerState {
   placeholderHeight: number
 }
 
+/**
+ * The global `window`, or `undefined` when there is no DOM.
+ *
+ * The `typeof` test is load-bearing: `window?.` still throws a
+ * `ReferenceError` when the binding itself is gone (a torn-down jsdom, a
+ * worker), because the identifier is resolved before the optional chain can
+ * short-circuit.
+ */
+function domWindow(): Window | undefined {
+  return typeof window === 'undefined' ? undefined : window
+}
+
 function clearDockStyles(el: HTMLElement | null): void {
   if (!el) return
   el.style.left = ''
@@ -136,6 +148,11 @@ export function useStickyComposer({
     }
     if (!container) return
 
+    const win = domWindow()
+    // A frame queued just before the environment disappeared can still land
+    // here; there is nothing to measure without a window.
+    if (!win) return
+
     const rect = container.getBoundingClientRect()
     // Not laid out yet (jsdom, or a container still `display:none`): nothing
     // sensible to compare, and docking a zero-height box would be wrong.
@@ -148,14 +165,14 @@ export function useStickyComposer({
       return
     }
 
-    const viewport = window.visualViewport
+    const viewport = win.visualViewport
     // A visual viewport with zero height means the page is hidden (or the
     // browser has not measured it yet); fall back to the layout viewport
     // rather than treating the widget as permanently docked.
     const viewportBottom =
-      viewport && viewport.height > 0 ? viewport.offsetTop + viewport.height : window.innerHeight
+      viewport && viewport.height > 0 ? viewport.offsetTop + viewport.height : win.innerHeight
     const viewportWidth =
-      viewport && viewport.width > 0 ? viewport.width : window.innerWidth
+      viewport && viewport.width > 0 ? viewport.width : win.innerWidth
     const next = shouldDock(rect, viewportBottom, dockedRef.current)
 
     if (next) {
@@ -191,7 +208,7 @@ export function useStickyComposer({
       // The on-screen keyboard overlays the layout viewport on mobile, so the
       // CSS `bottom` needs the visual-viewport gap as well as the safe area.
       const keyboard = viewport
-        ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+        ? Math.max(0, win.innerHeight - viewport.height - viewport.offsetTop)
         : 0
       const keyboardCss = `${Math.round(keyboard)}px`
       if (composer.style.getPropertyValue('--gt-kb') !== keyboardCss) {
@@ -203,15 +220,24 @@ export function useStickyComposer({
   }, [composerRef, containerRef, enabled])
 
   useEffect(() => {
+    const win = domWindow()
+    // Effects never run during SSR, but a host can mount into a document that
+    // is already detached, and a test environment can vanish mid-flight.
+    if (!win) return
+
     let frame: number | null = null
 
     const raf =
-      typeof window.requestAnimationFrame === 'function'
-        ? window.requestAnimationFrame.bind(window)
-        : (cb: FrameRequestCallback) => window.setTimeout(() => cb(0), 16)
+      typeof win.requestAnimationFrame === 'function'
+        ? win.requestAnimationFrame.bind(win)
+        : (cb: FrameRequestCallback) => win.setTimeout(() => cb(0), 16)
     const cancel = (id: number) => {
-      if (typeof window.cancelAnimationFrame === 'function') window.cancelAnimationFrame(id)
-      window.clearTimeout(id)
+      // Resolve again at call time: cleanup may run after the environment is
+      // gone, when the global (and its timer methods) no longer exist.
+      const target = domWindow()
+      if (!target) return
+      target.cancelAnimationFrame?.(id)
+      target.clearTimeout?.(id)
     }
     const schedule = () => {
       if (frame != null) return
@@ -222,10 +248,10 @@ export function useStickyComposer({
     }
 
     update()
-    window.addEventListener('scroll', schedule, { passive: true })
-    window.addEventListener('resize', schedule)
-    window.visualViewport?.addEventListener('scroll', schedule)
-    window.visualViewport?.addEventListener('resize', schedule)
+    win.addEventListener('scroll', schedule, { passive: true })
+    win.addEventListener('resize', schedule)
+    win.visualViewport?.addEventListener('scroll', schedule)
+    win.visualViewport?.addEventListener('resize', schedule)
 
     let observer: ResizeObserver | null = null
     if (typeof ResizeObserver !== 'undefined') {
@@ -236,10 +262,17 @@ export function useStickyComposer({
 
     return () => {
       if (frame != null) cancel(frame)
-      window.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', schedule)
-      window.visualViewport?.removeEventListener('scroll', schedule)
-      window.visualViewport?.removeEventListener('resize', schedule)
+      // Preact runs passive cleanups on its after-paint timer, which can fire
+      // after jsdom has deleted its globals. `window?.removeEventListener`
+      // would still throw a ReferenceError: the identifier is resolved before
+      // the optional chain applies. Resolve it with `typeof` instead, and
+      // detach only while the window is still there.
+      const target = domWindow()
+      if (!target) return
+      target.removeEventListener?.('scroll', schedule)
+      target.removeEventListener?.('resize', schedule)
+      target.visualViewport?.removeEventListener?.('scroll', schedule)
+      target.visualViewport?.removeEventListener?.('resize', schedule)
       observer?.disconnect()
     }
   }, [composerRef, containerRef, update])
