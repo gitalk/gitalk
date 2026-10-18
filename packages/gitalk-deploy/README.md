@@ -31,11 +31,12 @@ This is a web form; no script can do it.
    - `Discussions: Read and write` — needed to read and post comments
    - `Metadata: Read-only` — added automatically, cannot be removed
    - Everything else: **No access**
-3. **Callback URL**: `https://<your proxy address>/oauth/callback`
-   - It can be edited later, but **only on this page**: organisation-owned Apps
-     cannot be changed through the API (`PATCH /app` returns 404).
-   - Up to 10 callback URLs are allowed, so a local and a production address can
-     both be listed.
+3. **Leave the Callback URL empty for now.** It has to be
+   `https://<your proxy address>/oauth/callback`, and the proxy does not exist
+   yet — it is deployed in step 4, which is what produces that address. Step 5
+   comes back to fill this in.
+   - Editing it later is possible, but **only on this page**: organisation-owned
+     Apps cannot be changed through the API (`PATCH /app` returns 404).
 4. **Webhook**: untick *Active*. Gitalk does not use webhooks.
 5. Create it, then note down:
    - **App ID** (a number)
@@ -131,7 +132,13 @@ gitalk-deploy -c .env -t cloudflare     # or -t cloudbase
 gitalk-deploy -c .env -t cloudflare -n  # print the steps, run nothing
 ```
 
-On success it prints the URL and calls `/health`. Put that URL in your options:
+On success it prints the URL and calls `/health`. **Note the address** — the next
+step needs it, and the last one puts it in your options:
+
+```bash
+gitalk-deploy -c .env -t cloudflare     # or -t cloudbase
+gitalk-deploy -c .env -t cloudflare -n  # print the steps, run nothing
+```
 
 ```js
 new Gitalk({
@@ -139,6 +146,15 @@ new Gitalk({
   proxy: 'https://gitalk-proxy.<account>.workers.dev'
 })
 ```
+
+## Step 5 — Go back and set the callback URL
+
+The address printed in step 4 is your proxy. Return to the App settings page and
+set **Callback URL** to `https://<that address>/oauth/callback`, for example
+`https://gitalk-proxy.myaccount.workers.dev/oauth/callback`.
+
+> ⚠️ Skipping this shows up as `redirect_uri_mismatch` when someone clicks
+> *Sign in*. It takes effect immediately; no redeploy is needed.
 
 ---
 

@@ -28,9 +28,10 @@ npx github:gitalk/deploy -c .env -t cloudflare
    - `Discussions: Read and write` —— 读写评论必需的
    - `Metadata: Read-only` —— 自动带上，去不掉
    - 其余全部 **No access**
-3. **Callback URL** 填 `https://<你的 proxy 地址>/oauth/callback`
-   - 之后可以改，但**只能在那个页面改**：组织所有的 App 用 API 改会返回 404
-   - 最多支持 10 个 callback URL，本地和生产地址可以都列上
+3. **Callback URL 先留空** —— 现在**还填不了**：它要写成
+   `https://<你的代理地址>/oauth/callback`，而代理要到**第 3 步**才部署出来、才有地址。
+   第 5 步会回来补上。
+   - 之后修改**只能在这个页面做**：组织所有的 App 用 API 改会返回 404
 4. **Webhook**：取消勾选 *Active* —— Gitalk 不用 webhook
 5. 创建完成后记下四项：
    - **App ID**（数字）
@@ -127,6 +128,17 @@ new Gitalk({
   proxy: 'https://gitalk-proxy.<account>.workers.dev'
 })
 ```
+## 第 5 步 — 回来补上 callback URL
+
+第 4 步打印出来的地址就是你的代理地址。回到 App 设置页：
+
+**Callback URL** 填 `https://<第 4 步打印的地址>/oauth/callback`
+
+例如 `https://gitalk-proxy.myaccount.workers.dev/oauth/callback`。
+
+> ⚠️ 漏了这一步的表现是：点「登录」被 GitHub 拒绝，提示
+> `redirect_uri_mismatch`。填好立刻生效，不用重新部署。
+
 
 ---
 
