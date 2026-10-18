@@ -1,12 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { GitalkOptions } from './types'
 import { useGitalk } from './use-gitalk'
+import { isRtlLocale } from './i18n'
 import { useStickyComposer } from './use-sticky-composer'
 import { collectParticipants } from './mentions'
 import { Button } from './components/button'
 import { Comment } from './components/comment'
 import type { CommentLabels } from './components/comment'
 import { Avatar } from './components/avatar'
+import { MarkdownBody } from './components/markdown-body'
 import { Icon } from './components/icon'
 import { ImageUploadButton, ImageUploadError } from './components/image-upload'
 import { MentionTextarea } from './components/mention-textarea'
@@ -85,6 +87,34 @@ export function GitalkWidget({ options, className }: GitalkProps) {
   ]
     .filter(Boolean)
     .join(' ')
+
+  /**
+   * Direction belongs to the widget, not to the document: the host page may be
+   * LTR while an embedded `fa` widget mirrors its own chrome, and writing
+   * `document.documentElement.dir` would turn the whole page around. Computed
+   * on every render, so `mount.update({ language })` flips it in place.
+   *
+   * `dir` is emitted only for RTL: the ten LTR locales keep exactly the DOM
+   * they had before, with no attribute to inherit from.
+   */
+  const direction = isRtlLocale(
+    options.language ?? (typeof navigator === 'undefined' ? undefined : navigator.language)
+  )
+    ? 'rtl'
+    : undefined
+
+  /*
+   * Preact reflects `dir` as a DOM property, so clearing it writes `dir=""`
+   * instead of removing the attribute. Toggling back to an LTR language would
+   * therefore leave an empty `dir` on the root. Remove it explicitly before
+   * paint; the render prop still covers the first RTL paint.
+   */
+  useLayoutEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    if (direction) el.setAttribute('dir', direction)
+    else el.removeAttribute('dir')
+  }, [direction])
 
   // Replies are nested inside their parent, so the top-level array length is
   // not the number of comments on the page — a thread showing three comments
@@ -176,6 +206,7 @@ export function GitalkWidget({ options, className }: GitalkProps) {
     <div
       className={shellClass}
       ref={containerRef}
+      dir={direction}
       data-minimized={minimized ? 'true' : undefined}
     >
       {state.error ? (
@@ -310,7 +341,10 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {loadedCount}
+                  {/* A Latin-digit counter inside RTL chrome: isolate it so
+                      the number's run cannot merge with the surrounding
+                      Persian text. */}
+                  <bdi dir="ltr">{loadedCount}</bdi>
                 </a>
               </span>
             </div>
@@ -560,9 +594,10 @@ export function GitalkWidget({ options, className }: GitalkProps) {
                             {t('preview-chars', { count: String(state.draft.length) })}
                           </span>
                         </div>
-                        <div
+                        <MarkdownBody
                           className="preview-body markdown-body"
-                          dangerouslySetInnerHTML={{ __html: state.previewHtml }}
+                          html={state.previewHtml}
+                          rtl={direction === 'rtl'}
                         />
                       </div>
                     ) : null}
@@ -674,7 +709,9 @@ export function GitalkWidget({ options, className }: GitalkProps) {
               </svg>
             </span>
           <span className="gt-fab-text">{t('comments')}</span>
-          <span className="gt-fab-count">{loadedCount}</span>
+          <bdi dir="ltr" className="gt-fab-count">
+            {loadedCount}
+          </bdi>
         </button>
       ) : null}
       {/* Visible, linked attribution: a hidden credit helps nobody, while a

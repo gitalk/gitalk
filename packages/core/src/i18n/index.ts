@@ -110,6 +110,23 @@ const bundles: Record<LocaleKey, Messages> = {
 }
 
 /**
+ * Locales whose script is written right-to-left.
+ *
+ * Keyed by the resolved dictionary, not by the raw option: `fa-IR` resolves to
+ * `fa` through {@link resolveLocale}, so a host that passes a full BCP 47 tag
+ * still gets the mirrored layout. Only locales the widget actually ships are
+ * listed — an unsupported `ar` falls back to English, and turning the layout
+ * around behind a translator that cannot fill it would be worse than leaving
+ * it alone.
+ */
+const RTL_LOCALES: ReadonlySet<LocaleKey> = new Set(['fa'])
+
+/** Whether a requested locale renders right-to-left. */
+export function isRtlLocale(requested?: string): boolean {
+  return RTL_LOCALES.has(resolveLocale(requested))
+}
+
+/**
  * Gitalk 2.0 keeps the same plain `%{key}` interpolation v1 used, so existing
  * community translations drop in unchanged.
  */

@@ -1,4 +1,5 @@
 import { formatRelativeTime } from '../time'
+import { isRtlLocale } from '../i18n'
 import type { PendingComment } from '../types'
 import { Avatar } from './avatar'
 import { AuthorName } from './author-name'
@@ -44,6 +45,7 @@ export function PendingCommentRow({
   onDiscard
 }: PendingCommentProps) {
   const failed = pending.status === 'failed'
+  const rtl = isRtlLocale(locale)
 
   return (
     <div
@@ -67,11 +69,11 @@ export function PendingCommentRow({
 
         <div className="gt-comment-content c-body">
           <div className="gt-comment-header c-meta">
-            <AuthorName user={pending.user} />
+            <AuthorName user={pending.user} rtl={rtl} />
             <span className="gt-comment-text gt-sr-only">{commentedText}</span>
-            <span className="gt-comment-date c-time">
+            <bdi className="gt-comment-date c-time">
               {formatRelativeTime(pending.createdAt, locale)}
-            </span>
+            </bdi>
             <span className={`gt-pending-status ${failed ? 'is--failed' : 'is--sending'}`}>
               {failed ? failedText : sendingText}
             </span>

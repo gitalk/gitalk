@@ -67,7 +67,11 @@ export function Upvote({
         />
       </svg>
       <span className="gt-upvote-label">{label}</span>
-      {count !== null && count > 0 ? <span className="gt-upvote-count">{count}</span> : null}
+      {count !== null && count > 0 ? (
+        <bdi dir="ltr" className="gt-upvote-count">
+          {count}
+        </bdi>
+      ) : null}
     </button>
   )
 }

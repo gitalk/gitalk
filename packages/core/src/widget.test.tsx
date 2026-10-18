@@ -4,7 +4,7 @@ import { mount } from './mount'
 import { GitalkWidget } from './widget'
 import type { GitalkOptions } from './types'
 import { formatRelativeTime } from './time'
-import { createTranslator } from './i18n'
+import { createTranslator, isRtlLocale } from './i18n'
 
 const OPTIONS: GitalkOptions = {
   clientID: 'client-id',
@@ -158,6 +158,72 @@ describe('GitalkWidget', () => {
     await tick()
     expect(host.querySelector('.gt-container')).toBeNull()
   })
+
+  it('marks the widget root as RTL for Persian and leaves the document alone', async () => {
+    stubFetch((url) => (url.includes('/comments') ? REST_COMMENTS : {}))
+    mount(host, { ...OPTIONS, language: 'fa' })
+    await waitForComment(host)
+
+    const root = host.querySelector<HTMLElement>('.gt-container')!
+    expect(root.getAttribute('dir')).toBe('rtl')
+    // The widget is one part of a host page: direction must not leak upwards.
+    expect(document.documentElement.getAttribute('dir')).toBeNull()
+    expect(document.body.getAttribute('dir')).toBeNull()
+
+    // A login is an ASCII identifier, so it is pinned LTR; the relative time
+    // is isolated in a <bdi>.
+    const name = host.querySelector<HTMLElement>('.gt-comment-username')!
+    expect(name.getAttribute('dir')).toBe('ltr')
+    expect(host.querySelector('.gt-comment-date')?.tagName).toBe('BDI')
+  })
+
+  it('does not put dir on the root for LTR locales', async () => {
+    stubFetch((url) => (url.includes('/comments') ? REST_COMMENTS : {}))
+    mount(host, { ...OPTIONS, language: 'zh-CN' })
+    await waitForComment(host)
+
+    const root = host.querySelector<HTMLElement>('.gt-container')!
+    expect(root.hasAttribute('dir')).toBe(false)
+  })
+
+  it('follows a runtime language change between RTL and LTR', async () => {
+    stubFetch((url) => (url.includes('/comments') ? REST_COMMENTS : {}))
+    const instance = mount(host, { ...OPTIONS, language: 'en' })
+    await waitForComment(host)
+
+    const root = () => host.querySelector<HTMLElement>('.gt-container')!
+    expect(root().hasAttribute('dir')).toBe(false)
+
+    instance.update({ language: 'fa' })
+    expect(root().getAttribute('dir')).toBe('rtl')
+
+    instance.update({ language: 'zh-CN' })
+    expect(root().hasAttribute('dir')).toBe(false)
+  })
+
+  it('pins URL link text LTR in RTL and removes the hint again', async () => {
+    const body = [
+      '<p><a class="mention" href="https://github.com/alice">@alice</a> ',
+      '<a href="https://example.com/x">https://example.com/x</a></p>',
+      '<pre><code>const x = 1</code></pre>'
+    ].join('')
+    const comments = [{ ...REST_COMMENTS[0]!, body_html: body }]
+    stubFetch((url) => (url.includes('/comments') ? comments : {}))
+
+    const instance = mount(host, { ...OPTIONS, language: 'fa' })
+    await waitForComment(host)
+
+    const url = () => host.querySelector<HTMLAnchorElement>('a[href="https://example.com/x"]')!
+    expect(url().getAttribute('dir')).toBe('ltr')
+    // The mention is pinned by CSS; the URL by the renderer, because a
+    // stylesheet cannot read link text.
+    expect(host.querySelector('.mention')).toBeTruthy()
+    expect(host.querySelector('.gt-comment-body pre code')?.textContent).toBe('const x = 1')
+
+    instance.update({ language: 'zh-CN' })
+    expect(url().hasAttribute('dir')).toBe(false)
+  })
+
   it('counts replies in the total and never renders the plural separator', async () => {
     stubFetch((url) => {
       if (url.includes('/comments')) return REST_COMMENTS
@@ -262,6 +328,13 @@ describe('translator', () => {
   it('falls back to English for an unknown or partial locale', () => {
     expect(createTranslator('xx-YY')('comment')).toBe('Comment')
     expect(createTranslator('zh')('comment')).toBe('评论')
+  })
+
+  it('detects RTL from the resolved locale, including a full BCP 47 tag', () => {
+    expect(isRtlLocale('fa')).toBe(true)
+    expect(isRtlLocale('fa-IR')).toBe(true)
+    expect(isRtlLocale('zh-CN')).toBe(false)
+    expect(isRtlLocale(undefined)).toBe(false)
   })
 })
 

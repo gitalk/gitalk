@@ -245,7 +245,7 @@
 }
 
 .gt-container .gt-ico-text {
-  margin-left: 0.3125em;
+  margin-inline-start: 0.3125em;
 }
 
 .gt-container .gt-ico-github {
@@ -272,10 +272,11 @@
   box-sizing: border-box;
   position: absolute;
   top: 50%;
-  left: 50%;
+  inset-inline-start: 50%;
   width: 0.75em;
   height: 0.75em;
-  margin: -0.375em 0 0 -0.375em;
+  margin-block: -0.375em 0;
+  margin-inline: -0.375em 0;
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
   border-top-color: currentColor;
@@ -299,9 +300,9 @@
   position: absolute;
   display: block;
   top: 0;
-  left: 50%;
+  inset-inline-start: 50%;
   margin-top: -0.1875em;
-  margin-left: -0.1875em;
+  margin-inline-start: -0.1875em;
   width: 0.375em;
   height: 0.375em;
   background-color: var(--gt-color-loader);
@@ -396,7 +397,7 @@
 }
 
 .gt-container .gt-btn-login {
-  margin-right: 0;
+  margin-inline-end: 0;
 }
 
 /* Ghost button: Login, matching the reference's quiet secondary control. */
@@ -550,7 +551,7 @@
   width: 16px;
   height: 16px;
   vertical-align: top;
-  margin-right: 0.5em;
+  margin-inline-end: 0.5em;
   border-radius: 50%;
 }
 
@@ -560,7 +561,7 @@
 }
 
 .gt-container .gt-user .gt-ico {
-  margin: 0 0 0 0.3125em;
+  margin-inline-start: 0.3125em;
 }
 
 .gt-container .gt-user .gt-ico svg {
@@ -573,14 +574,14 @@
 
 .gt-container .gt-version {
   color: inherit;
-  margin-left: 0.375em;
+  margin-inline-start: 0.375em;
 }
 
 
 /* popup */
 .gt-container .gt-popup {
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: 2.375em;
   background: var(--gt-color-popbg);
   display: inline-block;
@@ -615,7 +616,7 @@
   border-radius: 50%;
   background: var(--gt-color-accent);
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 50%;
   margin-top: -2px;
 }
@@ -637,7 +638,7 @@
 .gt-container .gt-header-comment {
   flex: 1;
   min-width: 0;
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .gt-container .gt-header-textarea {
@@ -693,7 +694,7 @@
 }
 
 .gt-container .gt-header-controls .gt-btn {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 /* ---- image upload ---------------------------------------------------- */
@@ -742,7 +743,7 @@
 }
 
 .gt-container .gt-image-error-text {
-  margin-right: auto;
+  margin-inline-end: auto;
   word-break: break-word;
 }
 
@@ -771,8 +772,8 @@
   content: '';
   position: fixed;
   bottom: 100%;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   top: 0;
   opacity: 0;
 }
@@ -785,8 +786,8 @@
   content: '';
   position: fixed;
   bottom: 0%;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   top: 0;
   background: #000;
   opacity: 0.6;
@@ -870,7 +871,7 @@
 .gt-container .gt-comment-content {
   flex: 1;
   min-width: 0;
-  margin-left: 0;
+  margin-inline-start: 0;
   padding: 0;
   background-color: var(--gt-color-comment-bg);
   border-radius: 12px;
@@ -888,13 +889,13 @@
 }
 
 .gt-container .gt-comment-block-1 {
-  float: right;
+  float: inline-end;
   height: 1.375em;
   width: 2em;
 }
 
 .gt-container .gt-comment-block-2 {
-  float: right;
+  float: inline-end;
   height: 1.375em;
   width: 4em;
 }
@@ -982,7 +983,7 @@
   padding: 0 15px;
   margin: 15px 0;
   color: var(--gt-color-text-2);
-  border-left: 4px solid var(--gt-color-border);
+  border-inline-start: 4px solid var(--gt-color-border);
 }
 
 .gt-container .gt-comment-body .email-hidden-reply.expanded {
@@ -994,13 +995,13 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  margin: 0 0 0 -8px;
+  margin-inline-start: -8px;
 }
 
 /* .gt-ico-text carries a legacy 0.3125em margin; the reference spaces icon and
    count with a 5px gap. */
 .gt-container .gt-comment-actions .gt-ico-text {
-  margin-left: 5px;
+  margin-inline-start: 5px;
 }
 
 .gt-container .gt-comment-like,
@@ -1406,7 +1407,7 @@
 
 .markdown-body ul,
 .markdown-body ol {
-  padding-left: 0;
+  padding-inline-start: 0;
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -1424,7 +1425,7 @@
 }
 
 .markdown-body dd {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .markdown-body code {
@@ -1443,31 +1444,31 @@
 }
 
 .markdown-body .pl-0 {
-  padding-left: 0 !important;
+  padding-inline-start: 0 !important;
 }
 
 .markdown-body .pl-1 {
-  padding-left: 4px !important;
+  padding-inline-start: 4px !important;
 }
 
 .markdown-body .pl-2 {
-  padding-left: 8px !important;
+  padding-inline-start: 8px !important;
 }
 
 .markdown-body .pl-3 {
-  padding-left: 16px !important;
+  padding-inline-start: 16px !important;
 }
 
 .markdown-body .pl-4 {
-  padding-left: 24px !important;
+  padding-inline-start: 24px !important;
 }
 
 .markdown-body .pl-5 {
-  padding-left: 32px !important;
+  padding-inline-start: 32px !important;
 }
 
 .markdown-body .pl-6 {
-  padding-left: 40px !important;
+  padding-inline-start: 40px !important;
 }
 
 .markdown-body::before {
@@ -1495,9 +1496,9 @@
 }
 
 .markdown-body .anchor {
-  float: left;
-  padding-right: 4px;
-  margin-left: -20px;
+  float: inline-start;
+  padding-inline-end: 4px;
+  margin-inline-start: -20px;
   line-height: 1;
 }
 
@@ -1527,7 +1528,7 @@
 .markdown-body blockquote {
   padding: 0 1em;
   color: #6a737d;
-  border-left: 0.25em solid #dfe2e5;
+  border-inline-start: 0.25em solid #dfe2e5;
 }
 
 .markdown-body blockquote>:first-child {
@@ -1625,7 +1626,7 @@
 
 .markdown-body ul,
 .markdown-body ol {
-  padding-left: 2em;
+  padding-inline-start: 2em;
 }
 
 .markdown-body ul ul,
@@ -1811,7 +1812,8 @@
 }
 
 .markdown-body .task-list-item input {
-  margin: 0 0.2em 0.25em -1.6em;
+  margin-block: 0 0.25em;
+  margin-inline: -1.6em 0.2em;
   vertical-align: middle;
 }
 
@@ -1833,9 +1835,9 @@
  */
 .gt-container .gt-comment-replies {
   margin-top: 2px;
-  margin-left: 4px;
-  padding-left: 16px;
-  border-left: 2px solid var(--gt-color-reply-line);
+  margin-inline-start: 4px;
+  padding-inline-start: 16px;
+  border-inline-start: 2px solid var(--gt-color-reply-line);
 }
 
 /*
@@ -1878,8 +1880,8 @@
   }
 
   .gt-container .gt-comment-replies {
-    margin-left: 0;
-    padding-left: 12px;
+    margin-inline-start: 0;
+    padding-inline-start: 12px;
   }
 
   .gt-container .gt-comment-admin > .gt-comment-content {
@@ -1919,7 +1921,7 @@
 
 :is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body blockquote {
   color: var(--gt-color-text-2);
-  border-left-color: var(--gt-color-border);
+  border-inline-start-color: var(--gt-color-border);
 }
 
 :is([data-theme='dark'] .gt-container, .gt-container[data-theme='dark']) .markdown-body code {
@@ -2052,7 +2054,7 @@
   position: absolute;
   z-index: 30;
   top: calc(100% + 4px);
-  left: 0;
+  inset-inline-start: 0;
   min-width: 14em;
   max-height: 13em;
   overflow-y: auto;
@@ -2217,7 +2219,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .gt-container .gt-upvote {
@@ -2274,7 +2276,7 @@
 }
 
 .gt-container .gt-notice-text {
-  margin-right: auto;
+  margin-inline-end: auto;
 }
 
 .gt-container .gt-notice .gt-btn {
@@ -2361,7 +2363,7 @@
 }
 
 .gt-container .gt-pending-status {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-size: 0.6875em;
 }
 
@@ -2398,7 +2400,7 @@
 }
 
 .gt-container .gt-pending-error {
-  margin-right: auto;
+  margin-inline-end: auto;
   word-break: break-word;
 }
 
@@ -2471,7 +2473,8 @@
   align-items: center;
   gap: 8px;
   height: 48px;
-  padding: 0 14px 0 9px;
+  padding-block: 0;
+  padding-inline: 9px 14px;
   border: 1px solid var(--gt-color-border);
   border-radius: 999px;
   background-color: var(--gt-color-surface);
@@ -2525,23 +2528,26 @@
   text-align: center;
 }
 
+/* The `fabPosition` option names are API-stable and stay physical; the
+   offsets are on the inline axis, so in RTL `bottom-right` renders at the
+   bottom-left, i.e. the logical end corner. */
 .gt-container .gt-fab--bottom-right {
-  right: 24px;
+  inset-inline-end: 24px;
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .gt-container .gt-fab--bottom-left {
-  left: 24px;
+  inset-inline-start: 24px;
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 .gt-container .gt-fab--top-right {
-  right: 24px;
+  inset-inline-end: 24px;
   top: calc(24px + env(safe-area-inset-top, 0px));
 }
 
 .gt-container .gt-fab--top-left {
-  left: 24px;
+  inset-inline-start: 24px;
   top: calc(24px + env(safe-area-inset-top, 0px));
 }
 
@@ -2559,8 +2565,8 @@
 /* ---- floating Markdown preview (reference `.composer-preview`) ------ */
 .gt-container .composer-preview {
   position: absolute;
-  left: 12px;
-  right: 12px;
+  inset-inline-start: 12px;
+  inset-inline-end: 12px;
   bottom: calc(100% + 12px);
   z-index: 20;
   display: flex;
@@ -2588,6 +2594,10 @@
 .gt-container .composer-preview::after {
   content: '';
   position: absolute;
+  /* Physical, deliberately: this square is centred with `left` and turned
+     45deg, so its bottom-right borders are what draw the downward tail.
+     Logical borders would pick the left edge under RTL and the tail would
+     point sideways. */
   left: 50%;
   bottom: -6px;
   width: 12px;
@@ -2624,7 +2634,7 @@
 }
 
 .gt-container .preview-count {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.65625em;
   color: var(--gt-color-text-3);
@@ -2694,27 +2704,28 @@
 @media (max-width: 479px) {
   .gt-container .gt-fab {
     height: 46px;
-    padding: 0 13px 0 8px;
+    padding-block: 0;
+    padding-inline: 8px 13px;
     font-size: 0.78125em;
   }
 
   .gt-container .gt-fab--bottom-right {
-    right: 16px;
+    inset-inline-end: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .gt-container .gt-fab--bottom-left {
-    left: 16px;
+    inset-inline-start: 16px;
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .gt-container .gt-fab--top-right {
-    right: 16px;
+    inset-inline-end: 16px;
     top: calc(16px + env(safe-area-inset-top, 0px));
   }
 
   .gt-container .gt-fab--top-left {
-    left: 16px;
+    inset-inline-start: 16px;
     top: calc(16px + env(safe-area-inset-top, 0px));
   }
 
@@ -2785,7 +2796,7 @@
 
 .gt-container .gt-counts .gt-link-counts {
   display: inline-block;
-  margin-right: 1px;
+  margin-inline-end: 1px;
   padding: 2px 7px;
   border-radius: 6px;
   background: linear-gradient(
@@ -2929,7 +2940,7 @@
 .gt-container .gt-comment-body ol,
 .gt-container .preview-body ul,
 .gt-container .preview-body ol {
-  padding-left: 18px;
+  padding-inline-start: 18px;
 }
 
 .gt-container .gt-comment-body li,
@@ -3027,9 +3038,9 @@
   flex-direction: column;
   gap: 9px;
   margin-top: 9px;
-  margin-left: 0;
-  padding-left: 12px;
-  border-left: 1px solid var(--gt-color-border);
+  margin-inline-start: 0;
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--gt-color-border);
 }
 
 .gt-container .gt-comment-replies .gt-comment-reply-item {
@@ -3208,7 +3219,7 @@
 
 .gt-container .gt-image-progress {
   position: absolute;
-  right: -3px;
+  inset-inline-end: -3px;
   bottom: -3px;
   min-width: 16px;
   padding: 1px 3px;
@@ -3297,8 +3308,9 @@
 .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-loading {
   position: absolute;
   top: 50%;
-  left: 50%;
-  margin: -0.5em 0 0 -0.46em;
+  inset-inline-start: 50%;
+  margin-block: -0.5em 0;
+  margin-inline: -0.46em 0;
   color: #fff;
 }
 
@@ -3403,7 +3415,7 @@
   }
 
   .gt-container .gt-comment-replies {
-    padding-left: 10px;
+    padding-inline-start: 10px;
   }
 
   .gt-container .gt-header-controls .gt-btn-login {
@@ -3555,7 +3567,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .gt-container .gt-sort {
@@ -3910,7 +3922,7 @@
 }
 
 .gt-container .gt-comment-reply .gt-ico-text {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 
 .gt-container .gt-comment-reactions {
@@ -3939,8 +3951,8 @@
   flex-direction: column;
   gap: 9px;
   margin: 9px 0 0;
-  padding: 0 0 0 12px;
-  border-left: 1px solid var(--gt-color-panel-line-strong);
+  padding-inline-start: 12px;
+  border-inline-start: 1px solid var(--gt-color-panel-line-strong);
 }
 
 .gt-container .gt-comment-replies .gt-comment {
@@ -4043,7 +4055,8 @@
   padding: 0 12px;
   border: 0;
   border-top: 1px solid var(--gt-color-panel-line);
-  border-radius: 0 0 var(--gt-panel-radius) var(--gt-panel-radius);
+  border-end-start-radius: var(--gt-panel-radius);
+  border-end-end-radius: var(--gt-panel-radius);
   background-color: var(--gt-color-composer);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--gt-color-text) 5%, transparent);
   transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
@@ -4270,8 +4283,9 @@
 .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send) .gt-btn-loading {
   position: absolute;
   top: 50%;
-  left: 50%;
-  margin: -0.5em 0 0 -0.46em;
+  inset-inline-start: 50%;
+  margin-block: -0.5em 0;
+  margin-inline: -0.46em 0;
   color: #fff;
 }
 
@@ -4284,8 +4298,8 @@
 
 /* ---- floating preview: same panel material ------------------------- */
 .gt-container .composer-preview {
-  left: 12px;
-  right: 12px;
+  inset-inline-start: 12px;
+  inset-inline-end: 12px;
   bottom: calc(100% + 12px);
   border-radius: 14px;
   background-color: var(--gt-color-panel-solid);
@@ -4319,7 +4333,8 @@
 /* ---- floating restore button --------------------------------------- */
 .gt-container .gt-fab {
   height: 52px;
-  padding: 0 18px 0 12px;
+  padding-block: 0;
+  padding-inline: 12px 18px;
   border: 1px solid var(--gt-color-panel-line-strong);
   border-radius: 999px;
   background-color: var(--gt-color-panel);
@@ -4451,7 +4466,7 @@
   }
 
   .gt-container .gt-comment-replies {
-    padding-left: 10px;
+    padding-inline-start: 10px;
   }
 
   .gt-container .gt-header-controls :is(.gt-btn-public, .gt-btn-send),
@@ -4873,5 +4888,96 @@
 .gt-container.gt-mode-inline .gt-meta {
   border-top: 1px solid var(--gt-color-inline-line);
   border-bottom-color: transparent;
+}
+
+/* =====================================================================
+ * Right-to-left
+ * =====================================================================
+ * The layout above is written in logical properties, so the mirrored
+ * geometry comes from `dir="rtl"` on `.gt-container` alone: no
+ * `[dir='rtl']` rule has to undo a physical margin, inset or border. What
+ * is left below is not layout but *content* that is directional whatever
+ * the UI language is, plus the two drawn glyphs that must flip.
+ */
+
+/*
+ * Code is read left-to-right in every language, and a code run inside a
+ * Persian paragraph must not be reordered or re-aligned. `isolate` keeps
+ * the run from dragging the prose around it; `text-align: left` matches the
+ * LTR direction of the block (it is not a mirrorable side). Scoped to the
+ * RTL widget so the ten LTR locales keep exactly the text layout they had
+ * before, even if a comment in them happens to contain RTL prose.
+ */
+.gt-container[dir='rtl'] .markdown-body pre,
+.gt-container[dir='rtl'] .markdown-body code {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+/*
+ * Logins and @-mentions are ASCII identifiers, not natural language. The
+ * components already carry `dir="ltr"` (or `dir="auto"` for a natural-language
+ * display name) in an RTL widget; this is belt-and-braces isolation for hosts
+ * that render the classes themselves. Scoped to RTL so the LTR locales keep
+ * exactly the text layout they had before.
+ */
+.gt-container[dir='rtl'] .gt-comment-username,
+.gt-container[dir='rtl'] .gt-mention-login,
+.gt-container[dir='rtl'] .gt-comment-date {
+  unicode-bidi: isolate;
+}
+
+/*
+ * A URL in RTL prose is still read left-to-right, while a natural-language
+ * link label has to keep the paragraph direction. `plaintext` gives every
+ * link its own first-strong-character direction: `https://…` resolves LTR, a
+ * Persian label resolves RTL, without hard-coding either. A linkified
+ * @mention is an identifier, so it gets pinned instead.
+ */
+.gt-container[dir='rtl'] .markdown-body a {
+  unicode-bidi: plaintext;
+}
+
+/*
+ * GitHub renders a mention as `<a class="user-mention">`; Gitalk 1.x and the
+ * preview endpoint used `<a class="mention">`. Both are identifiers, so both
+ * are pinned. Plain profile links are left alone: their label is prose.
+ */
+.gt-container[dir='rtl'] .markdown-body .mention,
+.gt-container[dir='rtl'] .markdown-body .user-mention {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/*
+ * Directional glyphs mirror; non-directional ones do not. The send plane
+ * points where it sends, and the sort glyphs hang their bars off the start
+ * edge — both mirror. Avatars, emoji reactions, the GitHub mark, the upvote
+ * arrow and the brand/FAB speech bubble must not be flipped.
+ */
+.gt-container[dir='rtl'] .gt-ico-send svg,
+.gt-container[dir='rtl'] .gt-sort button svg {
+  transform: scaleX(-1);
+}
+
+/* Keep the LTR hover nudge mirrored with the glyph (the rule above has a
+   lower specificity than the hover rule it has to beat). */
+.gt-container[dir='rtl']
+  .gt-header-controls
+  :is(.gt-btn-public, .gt-btn-send):hover
+  .gt-ico-send
+  svg {
+  transform: scaleX(-1) translate(1px, -1px) rotate(-4deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gt-container[dir='rtl']
+    .gt-header-controls
+    :is(.gt-btn-public, .gt-btn-send):hover
+    .gt-ico-send
+    svg {
+    transform: scaleX(-1);
+  }
 }
 

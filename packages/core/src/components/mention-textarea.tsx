@@ -345,7 +345,13 @@ export function MentionTextarea({
               onClick={(e) => pick(e, candidate)}
             >
               <Avatar className="gt-mention-avatar" src={candidate.avatarUrl} alt={candidate.login} />
-              <span className="gt-mention-login">{candidate.login}</span>
+              {/* A GitHub login is a bidi-sensitive ASCII identifier: without
+                  an isolated LTR run an RTL paragraph renders it as
+                  `someuser@`, which also breaks the visual link with the `@`
+                  the user is about to type. */}
+              <bdi dir="ltr" className="gt-mention-login">
+                {candidate.login}
+              </bdi>
             </li>
           ))}
         </ul>

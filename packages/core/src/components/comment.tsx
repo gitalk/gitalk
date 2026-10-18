@@ -1,9 +1,11 @@
 import type { TargetedPointerEvent } from 'preact'
 import { formatRelativeTime } from '../time'
+import { isRtlLocale } from '../i18n'
 import type { GitalkComment, GitalkReply, PendingComment, Reaction } from '../types'
 import type { MentionCandidate } from '../mentions'
 import { Avatar } from './avatar'
 import { AuthorName } from './author-name'
+import { MarkdownBody } from './markdown-body'
 import { PendingCommentRow } from './pending-comment'
 import { ReactionPicker } from './reaction-picker'
 import { ReplyBox } from './reply-box'
@@ -117,6 +119,7 @@ export function Comment({
   onDiscardPending
 }: CommentProps) {
   const replies = comment.replies ?? []
+  const rtl = isRtlLocale(locale)
   // The reply control is offered to anonymous readers too: the click then
   // answers with "sign in", which is more useful than a control that is simply
   // missing.
@@ -139,17 +142,21 @@ export function Comment({
 
         <div className="gt-comment-content c-body">
           <div className="gt-comment-header c-meta">
-            <AuthorName user={comment.user} href={comment.user.htmlUrl} />
+            <AuthorName user={comment.user} href={comment.user.htmlUrl} rtl={rtl} />
             {isAdmin ? <span className="gt-comment-badge badge">{labels.author}</span> : null}
             <span className="gt-comment-text gt-sr-only">{labels.commented}</span>
-            <span className="gt-comment-date c-time">
+            {/* `<bdi>` isolates the localised relative time (Persian digits
+                included) so the number and its suffix cannot be reordered
+                against the author name or the badge. */}
+            <bdi className="gt-comment-date c-time">
               {formatRelativeTime(comment.createdAt, locale)}
-            </span>
+            </bdi>
           </div>
 
-          <div
+          <MarkdownBody
             className="gt-comment-body c-text markdown-body"
-            dangerouslySetInnerHTML={{ __html: comment.bodyHtml }}
+            html={comment.bodyHtml}
+            rtl={rtl}
           />
 
           {/*
@@ -219,15 +226,16 @@ export function Comment({
                     />
                     <div className="gt-comment-content c-body r-body">
                       <div className="gt-comment-header c-meta">
-                        <AuthorName user={reply.user} href={reply.user.htmlUrl} />
+                        <AuthorName user={reply.user} href={reply.user.htmlUrl} rtl={rtl} />
                         <span className="gt-comment-text gt-sr-only">{labels.commented}</span>
-                        <span className="gt-comment-date c-time">
+                        <bdi className="gt-comment-date c-time">
                           {formatRelativeTime(reply.createdAt, locale)}
-                        </span>
+                        </bdi>
                       </div>
-                      <div
+                      <MarkdownBody
                         className="gt-comment-body c-text markdown-body"
-                        dangerouslySetInnerHTML={{ __html: reply.bodyHtml }}
+                        html={reply.bodyHtml}
+                        rtl={rtl}
                       />
 
                       {showActions ? (

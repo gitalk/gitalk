@@ -118,7 +118,9 @@ export function ReactionPicker({
       >
         <ThumbsUpGlyph />
         {reactions.totalCount ? (
-          <span className="gt-reaction-count">{reactions.totalCount}</span>
+          <bdi dir="ltr" className="gt-reaction-count">
+            {reactions.totalCount}
+          </bdi>
         ) : null}
       </button>
     )
@@ -139,7 +141,9 @@ export function ReactionPicker({
           <span className="gt-reaction-glyph" aria-hidden="true">
             {REACTION_EMOJI[chip.content]}
           </span>
-          <span className="gt-reaction-count">{chip.count}</span>
+          <bdi dir="ltr" className="gt-reaction-count">
+            {chip.count}
+          </bdi>
         </button>
       ))}
 
@@ -177,7 +181,9 @@ export function ReactionPicker({
         >
           <ThumbsUpGlyph />
           {!chips.length && reactions.totalCount ? (
-            <span className="gt-reaction-count">{reactions.totalCount}</span>
+            <bdi dir="ltr" className="gt-reaction-count">
+              {reactions.totalCount}
+            </bdi>
           ) : null}
         </button>
 
