@@ -1450,3 +1450,18 @@ a {
     gap: 10px;
   }
 }
+
+.step-more {
+  margin: 14px 0 0;
+  font-size: 13px;
+}
+
+.step-more a {
+  color: var(--brand, #1e4fff);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand, #1e4fff) 35%, transparent);
+}
+
+.step-more a:hover {
+  border-bottom-color: var(--brand, #1e4fff);
+}

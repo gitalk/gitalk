@@ -130,15 +130,15 @@ device flow 同样被 CORS 挡住，所以**纯静态页面无法自己完成 OA
 https://gitalk-proxy.aispin-abf.workers.dev
 ```
 
-如果你不想依赖它，可以自己部署一份，代码在
-[`packages/proxy-worker`](packages/proxy-worker)。一条命令、免费额度、约一分钟
-—— 见 [docs/guide.md](docs/guide.md) 第 3 步：
+如果你不想依赖它，可以自己部署一份 —— 一条命令，免费额度，约一分钟：
 
 ```sh
-cp packages/proxy-worker/.env.example packages/proxy-worker/.env
-# 填入 Cloudflare API token 与你的 GitHub App 凭据
-pnpm --filter @gitalk/proxy-worker deploy
+npx github:gitalk/deploy -c .env -t cloudflare
 ```
+
+也支持 **CloudBase**（`-t cloudbase`，需要 CloudBase 环境与腾讯云密钥），以及自托管 Node。
+变量清单、自定义域名与两种平台的差异见
+[deploy CLI 的 README](packages/gitalk-deploy/README.md)。
 
 然后把地址传进来：
 

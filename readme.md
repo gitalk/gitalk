@@ -137,14 +137,17 @@ https://gitalk-proxy.aispin-abf.workers.dev
 ```
 
 If you would rather not depend on it, deploy your own from
-[`packages/proxy-worker`](packages/proxy-worker). One command, free tier, about
-a minute — see [docs/guide.md §第 3 步](docs/guide.md):
+[`packages/gitalk-deploy`](packages/gitalk-deploy). One command, free tier, about
+a minute:
 
 ```sh
-cp packages/proxy-worker/.env.example packages/proxy-worker/.env
-# fill in the Cloudflare API token and your GitHub App credentials
-pnpm --filter @gitalk/proxy-worker deploy
+npx github:gitalk/deploy -c .env -t cloudflare
 ```
+
+**CloudBase** is supported too (`-t cloudbase`, needs a CloudBase environment and
+Tencent Cloud keys), as is self-hosting on Node. The variable list, custom
+domains and the differences between platforms are in the
+[deploy CLI's README](packages/gitalk-deploy/README.md).
 
 Then pass its URL:
 

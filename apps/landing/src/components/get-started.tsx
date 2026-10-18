@@ -38,6 +38,16 @@ export function GetStarted() {
         <h3>{t.getStarted.domainTitle}</h3>
         <p>{t.getStarted.domainBody}</p>
       </aside>
+
+      <p className="step-more">
+        <a
+          href="https://github.com/gitalk/gitalk/blob/main/packages/gitalk-deploy/README.md"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {t.getStarted.more}
+        </a>
+      </p>
     </section>
   )
 }

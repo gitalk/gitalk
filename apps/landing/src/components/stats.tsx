@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n'
 
 export interface StatItem {
-  id: 'backend' | 'lines' | 'comments' | 'size' | 'deps' | 'stars'
+  id: 'lines' | 'comments' | 'size' | 'deps' | 'stars'
   value: string
   unit?: string
   label: string
@@ -28,7 +28,6 @@ export function useStats(): StatItem[] {
   const stars = __GITALK_STARS__ || '7.2k'
 
   return [
-    { id: 'backend', ...stats.backend },
     { id: 'lines', ...stats.lines },
     { id: 'comments', ...stats.comments },
     { id: 'size', ...stats.size, value: gzip || '—', unit: gzip ? 'kB' : undefined },

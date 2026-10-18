@@ -64,10 +64,9 @@ const zh = {
     lede: '把 GitHub Discussions 或 Issues 变成你的评论区。一条命令部署轻量代理，无需数据库，评论实时同步。',
     statsTitle: '关键指标',
     stats: {
-      backend: { value: '1', label: '键无痛部署', note: '一条命令拉起代理，不需要数据库。' },
-      lines: { value: '5', label: '秒快速接入', note: '一个容器，加一行初始化即可。' },
+      lines: { value: '4', label: '步快速接入', note: '创建 App、填变量、部署、引入，四步完成。' },
       comments: { value: '∞', label: '评论容量', note: '由 GitHub Discussions 承载。' },
-      size: { label: '体积', note: 'gzip 压缩后的实际传输体积。' },
+      size: { label: '不是最小但最强', note: 'gzip 压缩后的实际传输体积。' },
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
       stars: { label: 'Stars', note: 'GitHub 上的社区关注度。' }
     },
@@ -99,6 +98,7 @@ const zh = {
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
+    more: 'CloudBase、自托管与全部变量说明 → 部署 CLI 的 README',
     domainTitle: '自定义域名',
     domainBody: '域名在 Cloudflare 时可以直接绑；在别处需要在域名商加一条 CNAME。CloudBase 的自定义域名还需要 ICP 备案 —— 这两件得人工做。GitHub App 的 callback URL 也只能在网页改（org 所有的 App 不能用 API 改）。'
   },
@@ -230,7 +230,7 @@ const options = {
 </template>`
       }
     },
-    note: '登录需要在 `proxy` 里指向你自己部署的 edge function——因为 `github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。源码在 `packages/proxy-worker`，支持 Cloudflare Workers / Vercel / Netlify 一键部署。'
+    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的四步，CloudBase 与自托管见仓库 README。'
   },
   footer: {
     note: 'MIT · 基于 GitHub Discussions',
@@ -252,6 +252,7 @@ const en: Messages = {
       { title: 'Deploy with one command', body: 'The CLI checks every value first and names any that are missing, uploads the credentials as secrets, deploys, then calls /health and prints the URL to use as your proxy.', code: 'npx github:gitalk/deploy -c .env -t cloudflare' },
       { title: 'Include the component', body: 'Pass the printed URL as proxy and the comments work. Styling, dark mode and translations come with the component.', code: "new Gitalk({ clientID, proxy: 'https://…' })" }
     ],
+    more: 'CloudBase, self-hosting and every variable → the deploy CLI README',
     domainTitle: 'Custom domains',
     domainBody: 'A domain on Cloudflare can be bound directly; anywhere else needs a CNAME record added by hand. CloudBase additionally requires an ICP filing. The App callback URL always has to be edited in the web UI — organisation-owned Apps cannot be changed through the API.'
   },
@@ -289,18 +290,13 @@ const en: Messages = {
     lede: 'Turn GitHub Discussions or Issues into your comment section. Deploy a lightweight proxy with one command. No database, and comments sync in real time.',
     statsTitle: 'Key numbers',
     stats: {
-      backend: {
-        value: '1',
-        label: 'command',
-        note: 'No server to run, no database to keep.'
-      },
-      lines: { value: '5', label: 'seconds', note: 'One container and one init line.' },
+      lines: { value: '4', label: 'steps', note: 'Create the App, fill the values, deploy, include.' },
       comments: {
         value: '∞',
         label: 'Comments',
         note: 'Carried by GitHub Discussions.'
       },
-      size: { label: 'Size', note: 'Actual transfer size after gzip.' },
+      size: { label: 'not the smallest', note: 'Actual transfer size after gzip.' },
       deps: {
         value: '0',
         label: 'Runtime deps',
@@ -437,7 +433,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Signing in needs `proxy` pointed at an edge function you deploy yourself — `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange on its own. The source is in `packages/proxy-worker`, with one-command deploys for Cloudflare Workers / Vercel / Netlify.'
+    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deploying it is the four steps above; CloudBase and self-hosting are covered in the repository README.'
   },
   footer: {
     note: 'MIT · powered by GitHub Discussions',
