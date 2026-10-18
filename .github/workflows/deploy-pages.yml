@@ -73,6 +73,21 @@ jobs:
           echo "GITALK_STARS=$value" >> "$GITHUB_ENV"
           echo "stars: $stars -> $value"
 
+      # package.json holds the *baseline* (2.0.0-beta.0); the publish flow
+      # computes the real number and never writes it back. So ask npm what was
+      # actually published rather than reading a version that is always stale.
+      - name: Read the published version
+        run: |
+          set -euo pipefail
+          version=$(curl -fsSL --max-time 20 \
+            "https://registry.npmjs.org/@aifire%2fgitalk" | jq -r '.["dist-tags"].latest // empty')
+          if [ -z "$version" ] || [ "$version" = "null" ]; then
+            echo "::warning::could not read the published version; the page will use package.json"
+            exit 0
+          fi
+          echo "GITALK_VERSION=$version" >> "$GITHUB_ENV"
+          echo "version: $version"
+
       - name: Build landing
         run: pnpm build:landing
 

@@ -44,7 +44,9 @@ const coreVersion = JSON.parse(
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   define: {
-    __GITALK_VERSION__: JSON.stringify(coreVersion),
+    // The published version when the workflow provides it (package.json only
+    // ever holds the baseline), falling back to the package for local builds.
+    __GITALK_VERSION__: JSON.stringify(process.env.GITALK_VERSION ?? coreVersion),
     // Injected by the deploy workflow (see .github/workflows/deploy-pages.yml);
     // empty locally, where the page falls back to a placeholder.
     __GITALK_STARS__: JSON.stringify(process.env.GITALK_STARS ?? ''),
