@@ -260,6 +260,10 @@
 
 .gt-container .gt-ico-github svg {
   fill: inherit;
+  /* An inline svg sits on the text baseline, which leaves descender space
+     below it — enough to push the mark visibly above centre inside the
+     round avatar. Block removes that gap. */
+  display: block;
 }
 
 /* loader */
