@@ -43,8 +43,13 @@ export function HeroStats({ items }: { items: StatItem[] }) {
       {items.map((item) => (
         <div key={item.id}>
           <b>
-            {item.value}
-            {item.unit ? <small>{item.unit}</small> : null}
+            {/* Numbers and units are a single left-to-right run even when the
+                surrounding paragraph is RTL; `bdi` isolates it while leaving
+                the alignment to the enclosing column. */}
+            <bdi dir="ltr">
+              {item.value}
+              {item.unit ? <small>{item.unit}</small> : null}
+            </bdi>
           </b>
           <span>{item.label}</span>
         </div>
@@ -66,8 +71,10 @@ export function StatCards({ items }: { items: StatItem[] }) {
         {items.map((item) => (
           <article className="stat-card" key={item.id}>
             <b className="stat-card-value">
-              {item.value}
-              {item.unit ? <small>{item.unit}</small> : null}
+              <bdi dir="ltr">
+                {item.value}
+                {item.unit ? <small>{item.unit}</small> : null}
+              </bdi>
             </b>
             <span className="stat-card-label">{item.label}</span>
             <p className="stat-card-note">{item.note}</p>

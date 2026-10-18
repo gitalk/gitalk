@@ -70,7 +70,7 @@ export const fa: Messages = {
         code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
       }
     ],
-    more: 'CloudBase، میزبانی شخصی و توضیح همه متغیرها → README ابزار استقرار',
+    more: 'CloudBase، میزبانی شخصی و توضیح همه متغیرها ← README ابزار استقرار',
     domainTitle: 'دامنه اختصاصی',
     domainBody: 'دامنه‌ای که در Cloudflare است مستقیم متصل می‌شود؛ در جای دیگر باید یک رکورد CNAME را دستی اضافه کنید. دامنه اختصاصی CloudBase به ثبت ICP هم نیاز دارد — هر دو کار دستی است. نشانی callback اپ هم فقط از رابط وب تغییر می‌کند (اپ‌های متعلق به سازمان را نمی‌توان با API تغییر داد).'
   },

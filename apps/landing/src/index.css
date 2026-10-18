@@ -155,6 +155,7 @@ body {
     -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', sans-serif;
   line-height: normal;
+  text-align: start;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
@@ -236,8 +237,7 @@ a {
 .nav {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   z-index: 30;
   display: flex;
   justify-content: space-between;
@@ -425,7 +425,7 @@ a {
 
 .lang-picker svg {
   position: absolute;
-  right: 5px;
+  inset-inline-end: 5px;
   color: var(--dim);
   pointer-events: none;
 }
@@ -436,7 +436,8 @@ a {
   width: auto;
   max-width: 86px;
   height: 100%;
-  padding: 0 19px 0 7px;
+  padding-block: 0;
+  padding-inline: 7px 19px;
   border: 0;
   border-radius: inherit;
   background: transparent;
@@ -539,7 +540,7 @@ a {
 }
 
 .hero-stats b small {
-  margin-left: 3px;
+  margin-inline-start: 3px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0;
@@ -642,7 +643,7 @@ a {
 }
 
 .stat-card-value small {
-  margin-left: 3px;
+  margin-inline-start: 3px;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0;
@@ -874,7 +875,7 @@ a {
 
 .flow-col li {
   position: relative;
-  padding-left: 16px;
+  padding-inline-start: 16px;
   color: var(--dim);
   font-size: 13.5px;
   line-height: 1.65;
@@ -884,7 +885,7 @@ a {
   content: '';
   position: absolute;
   top: 0.68em;
-  left: 0;
+  inset-inline-start: 0;
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -906,8 +907,11 @@ a {
   max-width: 1120px;
   margin: 22px 0 0;
   padding: 14px 18px;
-  border-left: 3px solid var(--brand);
-  border-radius: 0 10px 10px 0;
+  border-inline-start: 3px solid var(--brand);
+  border-start-start-radius: 0;
+  border-start-end-radius: 10px;
+  border-end-start-radius: 0;
+  border-end-end-radius: 10px;
   background: var(--note-bg);
   color: var(--dim);
   font-size: 13px;
@@ -1015,6 +1019,10 @@ a {
   padding: 20px;
   overflow-x: auto;
   color: var(--code-fg);
+  /* Code is never mirrored, even when the surrounding page is RTL: the block
+     still sits in its mirrored container, but its contents read left to right. */
+  direction: ltr;
+  text-align: left;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12.5px;
   line-height: 1.75;
@@ -1093,8 +1101,7 @@ a {
   }
 
   .hero-lede {
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
   }
 
   .hero-chips {
@@ -1446,6 +1453,10 @@ a {
   border-radius: 10px;
   background: color-mix(in srgb, var(--brand, #1e4fff) 6%, transparent);
   overflow-x: auto;
+  /* Same rule as the large snippet: the box participates in the RTL flow, the
+     command inside it does not. */
+  direction: ltr;
+  text-align: left;
 }
 
 .step-code code {
@@ -1458,8 +1469,11 @@ a {
 .step-note {
   margin-top: 16px;
   padding: 16px 20px;
-  border-left: 2px solid var(--brand, #1e4fff);
-  border-radius: 0 12px 12px 0;
+  border-inline-start: 2px solid var(--brand, #1e4fff);
+  border-start-start-radius: 0;
+  border-start-end-radius: 12px;
+  border-end-start-radius: 0;
+  border-end-end-radius: 12px;
   background: color-mix(in srgb, var(--brand, #1e4fff) 5%, transparent);
 }
 
@@ -1496,4 +1510,46 @@ a {
 
 .step-more a:hover {
   border-bottom-color: var(--brand, #1e4fff);
+}
+
+/* =========================================================
+   Right-to-left
+   =========================================================
+   The layout above is written in logical properties, so [dir='rtl'] only has
+   to cover the handful of things that are not a side but a direction: bidi
+   runs around Latin tokens, the flow arrow, and the live widget. The widget
+   itself is core's layout, not this page's (core's RTL support is a separate
+   change), so it stays pinned to LTR while its box moves with the grid. */
+[dir='rtl'] .eyebrow,
+[dir='rtl'] .tab-hint {
+  /* A Latin micro-label in an RTL paragraph: let its own first strong
+     character decide the run direction, while `text-align: start` keeps it on
+     the right edge. */
+  unicode-bidi: plaintext;
+}
+
+[dir='rtl'] .note code {
+  /* `POST`, `0` and similar tokens in the prose must not be reordered. */
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+[dir='rtl'] .version-pill {
+  direction: ltr;
+}
+
+[dir='rtl'] .flow-arrow svg {
+  transform: scaleX(-1);
+}
+
+[dir='rtl'] .demo-inner {
+  direction: ltr;
+}
+
+@media (max-width: 900px) {
+  /* The arrow is stacked under the first column and rotated down; flipping it
+     as well would point it back up. */
+  [dir='rtl'] .flow-arrow svg {
+    transform: none;
+  }
 }

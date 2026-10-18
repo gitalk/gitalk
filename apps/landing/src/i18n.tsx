@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode
@@ -503,8 +503,10 @@ const I18nContext = createContext<I18n | null>(null)
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(detectLang)
 
-  // Keeps <html lang>, <title> and the meta description in step with the UI.
-  useEffect(() => {
+  // Keeps <html lang>, dir, <title> and the meta description in step with the
+  // UI. A layout effect rather than an effect: with a stored RTL locale the
+  // first paint must already be mirrored, not flash LTR for a frame.
+  useLayoutEffect(() => {
     applyDocumentLanguage(lang)
   }, [lang])
 
