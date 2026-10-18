@@ -13,6 +13,7 @@ export const ko: Messages = {
     usage: '사용법',
     demo: '데모',
     faq: 'FAQ',
+    v1Title: 'Gitalk 1.x 이전 사이트',
     theme: '테마 전환',
     language: '언어 전환',
     github: 'GitHub 저장소'

@@ -13,6 +13,7 @@ export const ja: Messages = {
     usage: '使い方',
     demo: 'デモ',
     faq: 'FAQ',
+    v1Title: 'Gitalk 1.x の旧サイト',
     theme: 'テーマを切り替え',
     language: '言語を切り替え',
     github: 'GitHub リポジトリ'

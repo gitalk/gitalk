@@ -13,6 +13,7 @@ export const zhTW: Messages = {
     usage: '用法',
     demo: '示範',
     faq: 'FAQ',
+    v1Title: 'Gitalk 1.x 的舊版頁面',
     theme: '切換主題',
     language: '切換語言',
     github: 'GitHub 儲存庫'

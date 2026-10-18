@@ -13,6 +13,7 @@ export const fa: Messages = {
     usage: 'نحوه استفاده',
     demo: 'نمایش',
     faq: 'FAQ',
+    v1Title: 'سایت Gitalk 1.x',
     theme: 'تغییر پوسته',
     language: 'تغییر زبان',
     github: 'مخزن GitHub'

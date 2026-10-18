@@ -78,6 +78,7 @@ const zh = {
     usage: '用法',
     demo: '演示',
     faq: 'FAQ',
+    v1Title: 'Gitalk 1.x 的旧版落地页',
     theme: '切换主题',
     language: '切换语言',
     github: 'GitHub 仓库'
@@ -352,6 +353,7 @@ const en: Messages = {
     usage: 'Usage',
     demo: 'Demo',
     faq: 'FAQ',
+    v1Title: 'The Gitalk 1.x site',
     theme: 'Toggle theme',
     language: 'Switch language',
     github: 'GitHub repository'

@@ -13,6 +13,7 @@ export const fr: Messages = {
     usage: 'Utilisation',
     demo: 'Démo',
     faq: 'FAQ',
+    v1Title: 'L’ancien site Gitalk 1.x',
     theme: 'Changer de thème',
     language: 'Changer de langue',
     github: 'Dépôt GitHub'

@@ -59,6 +59,19 @@ export function App() {
             {t.nav.faq}
           </a>
 
+            {/* The v1 site still has users; label it "v1" rather than
+                translating a phrase into eleven languages for a link whose
+                meaning is the version number. */}
+            <a
+              className="nav-link"
+              href="https://gitalk.github.io/gitalk"
+              title={t.nav.v1Title}
+              aria-label={t.nav.v1Title}
+              rel="noopener"
+            >
+              v1
+            </a>
+
           <span className="nav-divider" aria-hidden="true" />
 
           <a
