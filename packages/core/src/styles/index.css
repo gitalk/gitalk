@@ -241,7 +241,11 @@
 }
 
 .gt-container .gt-ico {
-  display: inline-block;
+  /* A flex container centres whatever svg it holds, on both axes, instead of
+     leaving the glyph to sit on the text baseline. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .gt-container .gt-ico-text {
