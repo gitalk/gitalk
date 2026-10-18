@@ -766,9 +766,18 @@
   margin: 16px 0 0;
   background-color: var(--gt-color-surface);
   border: 1px solid var(--gt-color-border);
-  border-radius: var(--gt-radius-card);
+  /* Squared on top by default: the composer sits against the meta bar
+     above it. Rounded top corners belong to the states where it detaches —
+     docked sticky and inline — added just below. */
+  border-radius: 0 0 var(--gt-radius-card) var(--gt-radius-card);
   box-shadow: var(--gt-shadow-card);
   transition: background-color 0.25s, border-color 0.25s;
+}
+
+/* Detached states get the top corners back. */
+.gt-container .gt-header.is--docked,
+.gt-container.gt-mode-inline .gt-header {
+  border-radius: var(--gt-radius-card);
 }
 
 .gt-container .gt-header-comment {
@@ -4883,6 +4892,11 @@
 .gt-container .gt-composer-login-field:focus-visible {
   outline: none;
   border-color: var(--gt-color-main-border);
+}
+
+.gt-container .gt-composer-login-btn:hover,
+.gt-container .gt-composer-login-btn:focus-visible {
+  border-color: var(--gt-color-accent);
 }
 
 .gt-container .gt-composer-login-btn {
