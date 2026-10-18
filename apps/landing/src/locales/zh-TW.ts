@@ -36,7 +36,7 @@ export const zhTW: Messages = {
     lede: '把 GitHub Discussions 或 Issues 變成你的評論區。一行指令部署輕量代理，無需資料庫，評論即時同步。',
     statsTitle: '關鍵指標',
     stats: {
-      lines: { value: '4', label: '步快速接入', note: '建立 App、填寫變數、部署、引入，四步完成。' },
+      lines: { value: '5', label: '步快速接入', note: '建立 App、填寫變數、部署、設定 callback、引入，五步完成。' },
       comments: { value: '∞', label: '評論容量', note: '由 GitHub Discussions 承載。' },
       size: { label: '不是最小但最強', note: 'gzip 壓縮後的實際傳輸大小。' },
       deps: { value: '0', label: '執行時依賴', note: '渲染層已打包進產物。' },

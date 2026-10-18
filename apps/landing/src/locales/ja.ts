@@ -36,7 +36,7 @@ export const ja: Messages = {
     lede: 'GitHub Discussions または Issues をコメント欄に。コマンド1つで軽量プロキシをデプロイ。データベース不要で、コメントはリアルタイムに同期します。',
     statsTitle: '主な数値',
     stats: {
-      lines: { value: '4', label: 'ステップで導入', note: 'App の作成、値の入力、デプロイ、組み込み。この4ステップです。' },
+      lines: { value: '5', label: 'ステップで導入', note: 'App の作成、値の入力、デプロイ、callback の設定、組み込み。この5ステップです。' },
       comments: { value: '∞', label: 'コメント数', note: 'GitHub Discussions が担います。' },
       size: { label: '最小ではない', note: 'gzip 後の実際の転送サイズ。' },
       deps: { value: '0', label: '実行時依存', note: '描画層はビルドに含まれます。' },

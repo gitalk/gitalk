@@ -36,7 +36,7 @@ export const ko: Messages = {
     lede: 'GitHub Discussions 또는 Issues를 댓글창으로. 명령 하나로 가벼운 프록시를 배포하고, 데이터베이스 없이 댓글이 실시간으로 동기화됩니다.',
     statsTitle: '주요 지표',
     stats: {
-      lines: { value: '4', label: '단계로 도입', note: 'App 생성, 값 입력, 배포, 삽입까지 네 단계입니다.' },
+      lines: { value: '5', label: '단계로 도입', note: 'App 생성, 값 입력, 배포, callback 설정, 삽입까지 다섯 단계입니다.' },
       comments: { value: '∞', label: '댓글 용량', note: 'GitHub Discussions가 담당합니다.' },
       size: { label: '가장 작지는 않지만 가장 강력', note: 'gzip 압축 후 실제 전송 크기입니다.' },
       deps: { value: '0', label: '런타임 의존성', note: '렌더링 계층은 빌드에 포함됩니다.' },

@@ -36,7 +36,7 @@ export const de: Messages = {
     lede: 'Machen Sie GitHub Discussions oder Issues zu Ihrer Kommentarsektion. Ein Befehl deployt einen schlanken Proxy. Keine Datenbank, Kommentare synchronisieren in Echtzeit.',
     statsTitle: 'Kennzahlen',
     stats: {
-      lines: { value: '4', label: 'Schritte', note: 'App anlegen, Werte eintragen, deployen, einbinden.' },
+      lines: { value: '5', label: 'Schritte', note: 'App anlegen, Werte eintragen, deployen, Callback setzen, einbinden.' },
       comments: { value: '∞', label: 'Kommentare', note: 'Getragen von GitHub Discussions.' },
       size: { label: 'nicht die kleinste', note: 'Tatsächliche Übertragungsgröße nach gzip.' },
       deps: { value: '0', label: 'Laufzeitabhängigkeiten', note: 'Die Rendering-Schicht steckt im Bundle.' },

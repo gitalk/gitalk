@@ -36,7 +36,7 @@ export const fr: Messages = {
     lede: 'Transformez GitHub Discussions ou Issues en section de commentaires. Déployez un proxy léger avec une seule commande. Pas de base de données, et les commentaires se synchronisent en direct.',
     statsTitle: 'Chiffres clés',
     stats: {
-      lines: { value: '4', label: 'étapes', note: 'Créer l’App, renseigner les valeurs, déployer, intégrer.' },
+      lines: { value: '5', label: 'étapes', note: 'Créer l’App, renseigner les valeurs, déployer, définir le callback, intégrer.' },
       comments: { value: '∞', label: 'Commentaires', note: 'Portés par GitHub Discussions.' },
       size: { label: 'pas le plus petit', note: 'Taille réelle transférée après gzip.' },
       deps: { value: '0', label: 'Dépendances', note: 'La couche de rendu est incluse dans le bundle.' },

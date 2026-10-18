@@ -36,7 +36,7 @@ export const pl: Messages = {
     lede: 'Zamień GitHub Discussions lub Issues w sekcję komentarzy. Wdróż lekki proxy jednym poleceniem. Bez bazy danych, komentarze synchronizują się na bieżąco.',
     statsTitle: 'Najważniejsze liczby',
     stats: {
-      lines: { value: '4', label: 'kroki', note: 'Utwórz App, wpisz wartości, wdróż, podłącz.' },
+      lines: { value: '5', label: 'kroków', note: 'Utwórz App, wpisz wartości, wdróż, ustaw callback, podłącz.' },
       comments: { value: '∞', label: 'Komentarze', note: 'Przechowuje je GitHub Discussions.' },
       size: { label: 'nie najmniejszy', note: 'Rzeczywisty rozmiar transferu po gzip.' },
       deps: { value: '0', label: 'Zależności', note: 'Warstwa renderowania jest w pakiecie.' },

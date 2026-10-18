@@ -36,7 +36,7 @@ export const fa: Messages = {
     lede: 'GitHub Discussions یا Issues را به بخش دیدگاه‌های خود تبدیل کنید. با یک فرمان یک پروکسی سبک راه‌اندازی کنید. بدون پایگاه داده، و دیدگاه‌ها بی‌درنگ همگام می‌شوند.',
     statsTitle: 'اعداد کلیدی',
     stats: {
-      lines: { value: '4', label: 'گام تا راه‌اندازی', note: 'ساخت App، پر کردن متغیرها، استقرار، افزودن.' },
+      lines: { value: '5', label: 'گام تا راه‌اندازی', note: 'ساخت App، پر کردن متغیرها، استقرار، تنظیم callback، افزودن.' },
       comments: { value: '∞', label: 'ظرفیت دیدگاه', note: 'بر دوش GitHub Discussions.' },
       size: { label: 'کوچک‌ترین نیست', note: 'حجم واقعی انتقال پس از gzip.' },
       deps: { value: '0', label: 'وابستگی زمان اجرا', note: 'لایه رندر داخل بسته است.' },

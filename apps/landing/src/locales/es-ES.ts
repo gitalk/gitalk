@@ -36,7 +36,7 @@ export const esES: Messages = {
     lede: 'Convierte GitHub Discussions o Issues en tu sección de comentarios. Despliega un proxy ligero con un solo comando. Sin base de datos y con comentarios sincronizados al instante.',
     statsTitle: 'Cifras clave',
     stats: {
-      lines: { value: '4', label: 'pasos', note: 'Crear la App, rellenar los valores, desplegar e incluir.' },
+      lines: { value: '5', label: 'pasos', note: 'Crear la App, rellenar los valores, desplegar, fijar el callback e incluir.' },
       comments: { value: '∞', label: 'Comentarios', note: 'Los aloja GitHub Discussions.' },
       size: { label: 'no es el más pequeño', note: 'Tamaño real transferido tras gzip.' },
       deps: { value: '0', label: 'Dependencias', note: 'La capa de renderizado va en el bundle.' },
