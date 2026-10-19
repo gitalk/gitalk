@@ -1,7 +1,10 @@
-name: Deploy landing page
+name: Deploy landing page and framework demos
 
-# Publishes apps/landing to the `gh-pages` branch of gitalk/gitalk.github.io,
-# which GitHub Pages serves at https://gitalk.github.io/ (the bare org domain).
+# Publishes three static sites to the `gh-pages` branch of
+# gitalk/gitalk.github.io, which GitHub Pages serves as:
+#   /       -> https://gitalk.github.io/       (apps/landing)
+#   /react  -> https://gitalk.github.io/react/ (apps/demo-react)
+#   /vue    -> https://gitalk.github.io/vue/   (apps/demo-vue)
 #
 # Why a separate repo: only a repo literally named `<org>.github.io` can serve
 # the bare domain. A `gh-pages` branch inside gitalk/gitalk would be served at
@@ -21,6 +24,8 @@ on:
     branches: [main]
     paths:
       - 'apps/landing/**'
+      - 'apps/demo-react/**'
+      - 'apps/demo-vue/**'
       - 'packages/core/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
@@ -36,7 +41,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build landing page
+    name: Build site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -91,13 +96,37 @@ jobs:
       - name: Build landing
         run: pnpm build:landing
 
+      # The demos consume the *published* @aifire/gitalk-react / -vue packages
+      # from npm, not the workspace copies (whose package.json still holds the
+      # pre-publish baseline). No dependency on the core build above.
+      - name: Build React demo
+        run: pnpm --filter @gitalk/demo-react run build
+
+      - name: Build Vue demo
+        run: pnpm --filter @gitalk/demo-vue run build
+
+      # One artifact for all three sites: landing at the root, each demo under
+      # the subpath its vite.config.ts already declares as `base`.
+      - name: Assemble site
+        run: |
+          set -euo pipefail
+          rm -rf deploy
+          mkdir -p deploy/react deploy/vue
+          cp -R apps/landing/dist/. deploy/
+          cp -R apps/demo-react/dist/. deploy/react/
+          cp -R apps/demo-vue/dist/. deploy/vue/
+          # Without this, GitHub Pages runs the files through Jekyll, which
+          # skips files and directories whose names begin with `_` — exactly
+          # what Vite emits (`_plugin-vue_export-helper-*.js` and friends).
+          touch deploy/.nojekyll
+
       - name: Publish to gitalk.github.io
         uses: peaceiris/actions-gh-pages@v4
         with:
           deploy_key: ${{ secrets.GH_PAGES_DEPLOY_KEY }}
           external_repository: gitalk/gitalk.github.io
           publish_branch: gh-pages
-          publish_dir: ./apps/landing/dist
+          publish_dir: ./deploy
           force_orphan: true
           user_name: gitalk-bot
           user_email: bot@gitalk.github.io

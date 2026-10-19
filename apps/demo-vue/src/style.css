@@ -1,0 +1,252 @@
+/*
+ * Minimal host page for the widget. The widget ships its own panel, so this
+ * file only provides the page around it: type, spacing, code block, footer.
+ * Both themes are selected through `data-theme` on <html>, which the widget's
+ * stylesheet also reads. Kept in sync with apps/demo-react/src/style.css.
+ */
+
+:root {
+  color-scheme: light;
+
+  --bg: #f4f6fb;
+  --text: #0b1220;
+  --muted: #5b6579;
+  --line: rgba(15, 23, 42, 0.09);
+  --brand: #1e4fff;
+  --brand-soft: rgba(30, 79, 255, 0.08);
+  --code-bg: #0d1220;
+  --code-fg: #dbe3f4;
+  --shadow: 0 30px 70px -40px rgba(15, 23, 42, 0.35);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #07080d;
+  --text: #e9edf7;
+  --muted: #9aa5ba;
+  --line: rgba(255, 255, 255, 0.09);
+  --brand: #7d97ff;
+  --brand-soft: rgba(125, 151, 255, 0.1);
+  --code-bg: #0b0f18;
+  --code-fg: #dbe3f4;
+  --shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.9);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(900px 480px at 50% -12%, var(--brand-soft), transparent 65%),
+    var(--bg);
+  color: var(--text);
+  font-family:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+.shell {
+  width: min(860px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brand-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 16px var(--brand);
+}
+
+.badge {
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent);
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.back {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.back:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.intro {
+  padding: 24px 0 20px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--brand);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 44px);
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.lede {
+  max-width: 660px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.lede code,
+.more code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 0.92em;
+  /* The install command is one long token sequence; let it break instead of
+     pushing the page wider than a 390px viewport. */
+  overflow-wrap: anywhere;
+}
+
+.demo {
+  margin: 10px 0 44px;
+}
+
+.usage-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.usage h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.code {
+  max-width: 100%;
+  margin: 0;
+  padding: 18px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--code-bg);
+  box-shadow: var(--shadow);
+  color: var(--code-fg);
+  font-size: 13px;
+  line-height: 1.7;
+  tab-size: 2;
+}
+
+.more {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin-top: 44px;
+  padding: 20px 0 40px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.footer a {
+  color: var(--muted);
+}
+
+.footer a:hover {
+  color: var(--brand);
+}
+
+@media (max-width: 520px) {
+  .shell {
+    width: calc(100% - 24px);
+  }
+
+  .topbar {
+    padding: 16px 0;
+  }
+
+  .intro {
+    padding-top: 18px;
+  }
+
+  .code {
+    padding: 14px;
+    font-size: 12px;
+  }
+}

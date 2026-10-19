@@ -1030,6 +1030,57 @@ a {
   scrollbar-width: thin;
 }
 
+/* Links from the "three ways" block to the runnable demos under /react and
+   /vue. Kept as plain anchors so they work without client-side routing. */
+.demo-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.demo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  background: var(--panel-soft);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.demo-link:hover {
+  border-color: var(--brand);
+  background: var(--panel-strong);
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.demo-link-meta {
+  color: var(--dim-2);
+  font-weight: 500;
+}
+
+.demo-link:hover .demo-link-meta {
+  color: var(--brand);
+}
+
+.demo-link-arrow {
+  color: var(--dim-2);
+  font-weight: 500;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.demo-link:hover .demo-link-arrow {
+  color: var(--brand);
+  transform: translateX(2px);
+}
+
 /* ---------- FAQ ---------- */
 /*
  * A definition list rendered as stacked cards. `minmax(0, 1fr)` is load-bearing:
@@ -1640,6 +1691,11 @@ a {
 }
 
 [dir='rtl'] .flow-arrow svg {
+  transform: scaleX(-1);
+}
+
+[dir='rtl'] .demo-link-arrow,
+[dir='rtl'] .demo-link:hover .demo-link-arrow {
   transform: scaleX(-1);
 }
 

@@ -1,0 +1,22 @@
+{
+  "name": "@gitalk/demo-vue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Runnable Vue example for @aifire/gitalk-vue, served at /vue.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aifire/gitalk": "2.0.0-beta.2",
+    "@aifire/gitalk-vue": "2.0.0-beta.2",
+    "vue": "3.5.44"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.10",
+    "typescript": "7.0.2",
+    "vite": "8.3.4"
+  }
+}

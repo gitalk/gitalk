@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gitalk · Vue 绑定演示</title>
+    <meta
+      name="description"
+      content="可直接运行的 @aifire/gitalk-vue 示例：登录 GitHub 后即可发表评论。"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Paint the right theme before the first frame. The widget reads the same
+      // `data-theme` attribute, so page and comments switch together.
+      document.documentElement.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+        ? 'dark'
+        : 'light'
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

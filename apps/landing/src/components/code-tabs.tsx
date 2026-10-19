@@ -48,6 +48,25 @@ export function CodeTabs() {
         </pre>
       </div>
 
+      {/* Runnable examples, one per binding. `nav.demo` is already translated
+          in all eleven locales, so no new message key is needed. */}
+      <div className="demo-links">
+        <a className="demo-link" href="/react">
+          <span>{t.tabs.items.react.label}</span>
+          <span className="demo-link-meta">{t.nav.demo}</span>
+          <span className="demo-link-arrow" aria-hidden="true">
+            →
+          </span>
+        </a>
+        <a className="demo-link" href="/vue">
+          <span>{t.tabs.items.vue.label}</span>
+          <span className="demo-link-meta">{t.nav.demo}</span>
+          <span className="demo-link-arrow" aria-hidden="true">
+            →
+          </span>
+        </a>
+      </div>
+
       <p className="note">
         <RichText text={t.tabs.note} />
       </p>
