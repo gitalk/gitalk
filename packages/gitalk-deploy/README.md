@@ -81,7 +81,7 @@ npx github:gitalk/deploy -c .env -t cloudflare
 | Where the App should live | Create page |
 | --- | --- |
 | your personal account | <https://github.com/settings/apps> → **New GitHub App** |
-| an organisation | <https://github.com/organizations/<Org Name>/settings/apps> → **New GitHub App** |
+| an organisation | <https://github.com/organizations/Your-Org-Name/settings/apps> → **New GitHub App** |
 
 **Where the App lives decides where it can be installed.** An App created under
 a personal account can only be installed on that person's repositories; one

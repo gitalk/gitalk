@@ -69,7 +69,7 @@ npx github:gitalk/deploy -c .env -t cloudflare
 | App 建在哪 | 创建页 |
 | --- | --- |
 | 你的个人账号 | <https://github.com/settings/apps> → **New GitHub App** |
-| 某个组织 | <https://github.com/organizations/<Org Name>/settings/apps> → **New GitHub App** |
+| 某个组织 | <https://github.com/organizations/Your-Org-Name/settings/apps> → **New GitHub App** |
 
 **App 建在哪，决定它能装到哪。** 建在个人账号下 → 只能装到这个人的仓库；建在组织下 →
 只能装到该组织的仓库。层级选错，就是「安装页里找不到那个仓库」的常见原因。

@@ -73,7 +73,7 @@ const COMMAND_DOCS = ['readme.md', 'readme-cn.md', 'docs/guide.md', 'docs/handso
 /** Facts both truth sources must state. Missing one means an incomplete step. */
 const REQUIRED_FACTS = [
   ['personal App entry', 'https://github.com/settings/apps'],
-  ['organisation App entry', 'organizations/<Org Name>/settings/apps'],
+  ['organisation App entry', 'organizations/Your-Org-Name/settings/apps'],
   ['install page URL', 'installations/new'],
   ['Discussions permission', 'Discussions: Read and write'],
   ['Metadata permission', 'Metadata: Read-only'],
@@ -223,7 +223,7 @@ function checkTruthSource(kind, file) {
   if (blocks[1]) {
     for (const [label, needle] of [
       ['the personal-account entry', 'https://github.com/settings/apps'],
-      ['the organisation entry', 'organizations/<Org Name>/settings/apps']
+      ['the organisation entry', 'organizations/Your-Org-Name/settings/apps']
     ]) {
       if (!blocks[1].section.includes(needle)) {
         fail(`${file}: step 1 does not show ${label} (\`${needle}\`)`)
@@ -606,6 +606,20 @@ async function main() {
   }
 
   await checkLanding(truthSteps, commands)
+
+  // An autolink such as <https://…/<Placeholder>/…> renders as a bare tag:
+  // markdown reads the inner angle brackets as HTML and drops them, so the URL
+  // silently loses a segment. Nothing about the source text looks wrong.
+  for (const file of [TRUTH_EN, TRUTH_CN, 'readme.md', 'readme-cn.md', 'docs/guide.md']) {
+    const bad = read(file).match(/<https?:\/\/[^\n>]*<[^\n>]+>[^\n>]*>/)
+    if (bad) {
+      errors.push(
+        `${file}: an autolink embeds angle brackets, which markdown strips — ${bad[0]}`
+      )
+    } else {
+      passes.push(`${file}: no placeholders hidden inside autolinks`)
+    }
+  }
 
   if (errors.length) {
     console.error('\n✗ docs are out of sync:\n')

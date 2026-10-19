@@ -43,7 +43,7 @@ GitHub App 属于**账号或组织**，所以创建入口在账号设置里，**
 | App 建在哪 | 创建页 |
 | --- | --- |
 | 你的个人账号 | <https://github.com/settings/apps> → **New GitHub App** |
-| 某个组织 | <https://github.com/organizations/<你的组织>/settings/apps> → **New GitHub App** |
+| 某个组织 | <https://github.com/organizations/Your-Org-Name/settings/apps> → **New GitHub App** |
 
 **App 建在哪，决定它能装到哪**：建在个人账号下，只能装到这个人的仓库；建在组织下，只能装到该组织的仓库。层级选错，第 4 步的安装页里就找不到要装的仓库。
 
