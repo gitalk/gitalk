@@ -39,7 +39,7 @@ export const ru: Messages = {
     lede: 'Превратите GitHub Discussions или Issues в раздел комментариев. Разверните лёгкий прокси одной командой. Без базы данных, комментарии синхронизируются в реальном времени.',
     statsTitle: 'Ключевые цифры',
     stats: {
-      lines: { value: '5', label: 'шагов до подключения', note: 'Подготовить репозиторий, создать App, развернуть, установить, вставить.' },
+      lines: { value: '5', label: 'шагов до подключения', note: 'Создать App, развернуть, подготовить репозиторий, установить, вставить.' },
       comments: { value: '∞', label: 'Комментарии', note: 'Их хранит GitHub Discussions.' },
       size: { label: 'не самый маленький', note: 'Реальный объём передачи после gzip.' },
       deps: { value: '0', label: 'Зависимости', note: 'Слой отрисовки уже в сборке.' },
@@ -50,22 +50,22 @@ export const ru: Messages = {
   getStarted: {
     eyebrow: 'Подключение',
     title: 'Пять шагов до комментариев',
-    lede: 'Порядок важен: подготовьте репозиторий, создайте App, разверните proxy и задайте callback URL, установите App в репозиторий, затем вставьте компонент. У каждого шага одно полное описание.',
+    lede: 'Порядок следует зависимостям: App — объект уровня аккаунта, поэтому создаётся первой и не требует репозитория; развёртывание — самый тяжёлый шаг; а репозиторий должен существовать до установки App.',
     steps: [
       {
-        title: 'Подготовьте репозиторий',
-        body: 'Он должен быть public, с включёнными Discussions (Settings → General → Features → Discussions) и хотя бы одной категорией.',
-        code: ''
-      },
-      {
         title: 'Создайте GitHub App',
-        body: 'Нужны только Discussions: Read and write и Metadata: Read-only.',
+        body: 'Создайте её в настройках аккаунта или организации — не в настройках репозитория. Нужны только Discussions: Read and write и Metadata: Read-only.',
         code: ''
       },
       {
         title: 'Разверните proxy и задайте callback URL',
         body: 'Одна команда разворачивает его. Дождитесь выведенного адреса и укажите в Callback URL <адрес>/oauth/callback.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Подготовьте репозиторий',
+        body: 'Он должен быть public, с включёнными Discussions (Settings → General → Features → Discussions) и хотя бы одной категорией.',
+        code: ''
       },
       {
         title: 'Установите App в репозиторий',

@@ -23,11 +23,21 @@ to 5,000/hour.
 
 | # | Step | Where |
 | --- | --- | --- |
-| 1 | Prepare the repository: **public**, Discussions on, one category | GitHub |
-| 2 | Create the GitHub App | GitHub |
-| 3 | Write `.env`, deploy, then set the callback URL | your machine + GitHub |
+| 1 | Create the GitHub App | your account or organisation settings |
+| 2 | Write `.env`, deploy, then set the callback URL | your machine + GitHub |
+| 3 | Prepare the repository: **public**, Discussions on, one category | GitHub |
 | 4 | **Install the App on the repository** | GitHub |
 | 5 | Embed the component | your site |
+
+**Why this order:**
+
+- The App is an **account- or organisation-level object**. Creating it has
+  nothing to do with a repository — at that point you do not need to know which
+  repository will use Gitalk.
+- The repository has to **exist** before the App can be **installed** on it, so
+  preparation (step 3) comes before installation (step 4).
+- Deployment is independent of the repository. It is step 2 because it is the
+  heaviest job — get it out of the way early.
 
 Step 4 is the one people skip: **creating the App is not installing it**, and
 without the installation the proxy cannot mint a token for your repository.
@@ -39,11 +49,12 @@ your own names as you go; the shape stays the same.
 
 | | Example value | Where it comes from |
 | --- | --- | --- |
-| App name | **My Niubi Gitalk** | the name you type in step 2 |
+| App name | **My Niubi Gitalk** | the name you type in step 1 |
 | App slug | `my-niubi-gitalk` | GitHub derives it: spaces become hyphens, letters lowercase |
+| App owner | `octocat` (a personal account) | the account or organisation the App is created under |
 | Repository | `octocat/demo-repo` | the repository that stores comments |
 | Site origin | `https://octocat.github.io` | the blog or docs site that embeds the widget |
-| Proxy | `https://my-niubi-gitalk.octocat.workers.dev` | printed by step 3 |
+| Proxy | `https://my-niubi-gitalk.octocat.workers.dev` | printed by step 2 |
 | Callback URL | `https://my-niubi-gitalk.octocat.workers.dev/oauth/callback` | proxy + `/oauth/callback` |
 
 `octocat` is a stand-in for your own account or organisation, and `demo-repo`
@@ -62,39 +73,39 @@ npx github:gitalk/deploy -c .env -t cloudflare
 
 ---
 
-## Step 1 — Prepare the repository
+## Step 1 — Create the GitHub App
 
-The example repository is `octocat/demo-repo`. Two things, both under its
-**Settings**:
+**This is not in the repository's settings.** A GitHub App belongs to an
+**account or an organisation**, so it is created at one of these two pages:
 
-1. **It must be public.** The proxy's anonymous read path only serves public
-   repositories — the visibility check fails closed, so a private repository
-   gets `403` and every reader without their own access falls back to a REST
-   read that fails too.
-2. **Turn Discussions on:** *Settings → General → Features → Discussions*. Then
-   open the **Discussions** tab and create at least one category (the default
-   `General` is fine). New threads go into the first category GitHub returns
-   unless you pin one with the `category` option.
+| Where the App should live | Create page |
+| --- | --- |
+| your personal account | <https://github.com/settings/apps> → **New GitHub App** |
+| an organisation | <https://github.com/organizations/<Org Name>/settings/apps> → **New GitHub App** |
 
----
+**Where the App lives decides where it can be installed.** An App created under
+a personal account can only be installed on that person's repositories; one
+created under an organisation can only be installed on that organisation's
+repositories. Picking the wrong level is the usual cause of "the repository does
+not appear on the install page". The repository's
+**Settings → General → Features** is where Discussions is switched on — that is
+step 3, a different page from this one.
 
-## Step 2 — Create the GitHub App
+This guide creates **My Niubi Gitalk** under `octocat` (a personal account), so
+step 4 installs it on `octocat` and ticks `demo-repo`.
 
-This guide creates an App called **My Niubi Gitalk**. This is a web form; no
-script can do it.
+Fill the form in:
 
-1. Open <https://github.com/settings/apps/new> — for an organisation,
-   *Settings → Developer settings → GitHub Apps → New*.
-2. **Permissions → Repository permissions**
+1. **Permissions → Repository permissions**
    - `Discussions: Read and write` — reading and posting comments
    - `Metadata: Read-only` — added automatically, cannot be removed
    - everything else: **No access**
-3. **Callback URL: leave it empty.** It has to be
+2. **Callback URL: leave it empty.** It has to be
    `https://<the proxy address>/oauth/callback`, and the proxy does not exist
-   until step 3 creates it. Step 3 comes back to this field. Guessing the
+   until step 2 creates it. Step 2 comes back to this field. Guessing the
    address now is how people end up with `redirect_uri_mismatch`.
-4. **Webhook**: untick *Active*. Gitalk does not use webhooks.
-5. Note that this page is also the **only** place the callback URL can be
+3. **Webhook**: untick *Active*. Gitalk does not use webhooks.
+4. Note that this page is also the **only** place the callback URL can be
    changed later: organisation-owned Apps reject `PATCH /app` with a 404.
 
 **The slug.** GitHub turns the App's name into a URL slug: spaces become
@@ -120,18 +131,18 @@ Write down the four values from that page:
 
 ---
 
-## Step 3 — Write `.env`, deploy, then set the callback URL
+## Step 2 — Write `.env`, deploy, then set the callback URL
 
-### 3a. What goes in `.env`
+### 2a. What goes in `.env`
 
 Every entry below is required. The CLI validates them before touching the
 network and names the ones that are missing.
 
 | Variable | Where it comes from |
 | --- | --- |
-| `GITHUB_APP_ID` | the App page (step 2) |
-| `GITHUB_CLIENT_ID` | the App page (step 2) |
-| `GITHUB_CLIENT_SECRET` | *Generate a new client secret* (step 2) |
+| `GITHUB_APP_ID` | the App page (step 1) |
+| `GITHUB_CLIENT_ID` | the App page (step 1) |
+| `GITHUB_CLIENT_SECRET` | *Generate a new client secret* (step 1) |
 | `GITHUB_APP_PRIVATE_KEY` | the `.pem` contents — **not** the `SHA256:` fingerprint |
 | `SESSION_ENCRYPTION_KEY` | `openssl rand -hex 32` (32 random bytes, hex) |
 | `GITALK_ALLOWED_ORIGINS` | the **site origins** allowed to call the proxy, comma-separated |
@@ -214,7 +225,7 @@ your App page shows. The private key keeps its newlines because it is quoted;
 `Zone` → **Workers Routes** → **Edit** to the same token. On another registrar,
 add a `CNAME` there by hand and list the address in `GITALK_ALLOWED_ORIGINS`.
 
-### 3b. Deploy
+### 2b. Deploy
 
 ```bash
 npx github:gitalk/deploy -c .env -t cloudflare
@@ -225,13 +236,13 @@ npx github:gitalk/deploy -c .env -t cloudflare -n   # print the plan, change not
 On success it prints the proxy URL and asks the deployed service for its health
 (`/`, which answers `{"ok":true,"service":"gitalk-proxy"}`). With the worker
 named `my-niubi-gitalk` on `octocat`'s account that is
-`https://my-niubi-gitalk.octocat.workers.dev`. **Note that address** — 3c needs
+`https://my-niubi-gitalk.octocat.workers.dev`. **Note that address** — 2c needs
 it, and so does the component's `proxy`.
 
-### 3c. Set the callback URL — only after the deploy
+### 2c. Set the callback URL — only after the deploy
 
 > **Wait for the address.** The callback URL is
-> `https://<the address 3b printed>/oauth/callback`. Before the deploy the proxy
+> `https://<the address 2b printed>/oauth/callback`. Before the deploy the proxy
 > does not exist, so there is nothing correct to type here yet.
 
 Return to the App settings page and set **Callback URL** to
@@ -243,6 +254,25 @@ trailing slash.
 
 ---
 
+## Step 3 — Prepare the repository
+
+The example repository is `octocat/demo-repo`. Create it if it does not exist
+yet, then check two things under its **Settings**:
+
+1. **It must be public.** The proxy's anonymous read path only serves public
+   repositories — the visibility check fails closed, so a private repository
+   gets `403` and every reader without their own access falls back to a REST
+   read that fails too.
+2. **Turn Discussions on:** *Settings → General → Features → Discussions*. Then
+   open the **Discussions** tab and create at least one category (the default
+   `General` is fine). New threads go into the first category GitHub returns
+   unless you pin one with the `category` option.
+
+The repository has to exist before step 4, because an App can only be installed
+on a repository that is already there.
+
+---
+
 ## Step 4 — Install the App on the repository
 
 > **Creating the App is not enough.**
@@ -251,9 +281,10 @@ trailing slash.
 > `octocat`, choose **Only select repositories**, tick `demo-repo`, then click
 > **Install**.
 
-For a different App or repository the URL is always
+`demo-repo` only appears if the App belongs to the same account or organisation
+that owns it — see step 1. For a different App or repository the URL is always
 `https://github.com/apps/<slug>/installations/new` — the slug is the one from
-step 2.
+step 1.
 
 Why installation is required:
 
@@ -273,8 +304,8 @@ Verify: <https://github.com/settings/installations> (for an organisation:
 `demo-repo`.
 
 Installation is independent of the deploy: you may install before or after step
-3. It sits here because this is the point where you have decided which
-repository uses Gitalk.
+2. It sits here because this is the point where the repository exists and you
+have decided it uses Gitalk.
 
 ---
 
@@ -287,7 +318,7 @@ const gitalk = new Gitalk({
   repo: 'demo-repo',            // repository NAME only — never `octocat/demo-repo`
   admin: ['octocat'],           // who may create the thread for a page
   number: 42,                   // the Discussion number for this page
-  proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // origin from 3b, no path
+  proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // origin from 2b, no path
 })
 
 gitalk.render('gitalk-container')
@@ -363,10 +394,11 @@ own instead: one command, about five minutes, free tier.
 | --- | --- |
 | `no installation found for this app` in the proxy logs; comments fall back to 60/hour | The App was created but never installed — do step 4 |
 | `403` from the proxy for anonymous reads | The repository is private, or the App is not installed on it |
+| The repository is missing on the install page | The App lives under a different account or organisation — see step 1 |
 | `GITHUB_APP_PRIVATE_KEY — the .pem contents, not the fingerprint` | The `SHA256:…` string was pasted |
 | `wrangler` cannot determine the account | The token sees several accounts — set `CLOUDFLARE_ACCOUNT_ID` |
 | `403` from CloudBase | The sub-account lacks `QcloudTCBFullAccess` |
 | Health check fails after a deploy | Check the function logs; usually a missing value |
-| `redirect_uri_mismatch` when signing in | The App callback must be `<proxy>/oauth/callback`, set after 3b |
+| `redirect_uri_mismatch` when signing in | The App callback must be `<proxy>/oauth/callback`, set after 2b |
 | Sign-in returns to the proxy instead of the article | The article's origin is missing from `GITALK_ALLOWED_ORIGINS` |
-| `Discussions are disabled for octocat/demo-repo` | Turn Discussions on (step 1) and create a category |
+| `Discussions are disabled for octocat/demo-repo` | Turn Discussions on (step 3) and create a category |

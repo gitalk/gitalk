@@ -39,7 +39,7 @@ export const de: Messages = {
     lede: 'Machen Sie GitHub Discussions oder Issues zu Ihrer Kommentarsektion. Ein Befehl deployt einen schlanken Proxy. Keine Datenbank, Kommentare synchronisieren in Echtzeit.',
     statsTitle: 'Kennzahlen',
     stats: {
-      lines: { value: '5', label: 'Schritte', note: 'Repository vorbereiten, App anlegen, deployen, installieren, einbinden.' },
+      lines: { value: '5', label: 'Schritte', note: 'App anlegen, deployen, Repository vorbereiten, installieren, einbinden.' },
       comments: { value: '∞', label: 'Kommentare', note: 'Getragen von GitHub Discussions.' },
       size: { label: 'nicht die kleinste', note: 'Tatsächliche Übertragungsgröße nach gzip.' },
       deps: { value: '0', label: 'Laufzeitabhängigkeiten', note: 'Die Rendering-Schicht steckt im Bundle.' },
@@ -50,22 +50,22 @@ export const de: Messages = {
   getStarted: {
     eyebrow: 'Einrichtung',
     title: 'Fünf Schritte zu Kommentaren',
-    lede: 'Die Reihenfolge zählt: Repository vorbereiten, App anlegen, Proxy deployen und Callback-URL setzen, App im Repository installieren, Komponente einbinden. Für jeden Schritt gibt es genau eine vollständige Anleitung.',
+    lede: 'Die Reihenfolge folgt den Abhängigkeiten: Die App ist ein Konto-Objekt und kommt zuerst, ohne Repository; das Deployment ist der schwerste Schritt; und das Repository muss existieren, bevor die App darin installiert werden kann.',
     steps: [
       {
-        title: 'Repository vorbereiten',
-        body: 'Es muss public sein, Discussions aktiviert haben (Settings → General → Features → Discussions) und mindestens eine Kategorie besitzen.',
-        code: ''
-      },
-      {
         title: 'GitHub App anlegen',
-        body: 'Nötig sind nur Discussions: Read and write und Metadata: Read-only.',
+        body: 'Im Konto- oder Organisations-Settings anlegen — nicht in den Settings des Repositories. Nötig sind nur Discussions: Read and write und Metadata: Read-only.',
         code: ''
       },
       {
         title: 'Proxy deployen, dann Callback-URL setzen',
         body: 'Ein Befehl deployt ihn. Warten Sie auf die ausgegebene Adresse und tragen Sie dann als Callback URL <Adresse>/oauth/callback ein.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Repository vorbereiten',
+        body: 'Es muss public sein, Discussions aktiviert haben (Settings → General → Features → Discussions) und mindestens eine Kategorie besitzen.',
+        code: ''
       },
       {
         title: 'App im Repository installieren',

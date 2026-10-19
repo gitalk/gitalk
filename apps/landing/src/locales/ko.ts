@@ -39,7 +39,7 @@ export const ko: Messages = {
     lede: 'GitHub Discussions 또는 Issues를 댓글창으로. 명령 하나로 가벼운 프록시를 배포하고, 데이터베이스 없이 댓글이 실시간으로 동기화됩니다.',
     statsTitle: '주요 지표',
     stats: {
-      lines: { value: '5', label: '단계로 도입', note: '저장소 준비, App 생성, 배포, 설치, 삽입.' },
+      lines: { value: '5', label: '단계로 도입', note: 'App 생성, 배포, 저장소 준비, 설치, 삽입.' },
       comments: { value: '∞', label: '댓글 용량', note: 'GitHub Discussions가 담당합니다.' },
       size: { label: '가장 작지는 않지만 가장 강력', note: 'gzip 압축 후 실제 전송 크기입니다.' },
       deps: { value: '0', label: '런타임 의존성', note: '렌더링 계층은 빌드에 포함됩니다.' },
@@ -50,22 +50,22 @@ export const ko: Messages = {
   getStarted: {
     eyebrow: '설정',
     title: '다섯 단계로 댓글 연결',
-    lede: '순서를 바꿀 수 없습니다. 저장소를 준비하고, App을 만들고, proxy를 배포해 callback URL을 설정하고, App을 저장소에 설치한 뒤 컴포넌트를 넣습니다. 전체 안내는 한 곳에만 있습니다.',
+    lede: '순서는 의존 관계를 따릅니다. App은 계정 수준 객체라 저장소 없이 먼저 만들고, 배포는 가장 무거운 작업이며, 저장소는 App을 설치하기 전에 존재해야 합니다.',
     steps: [
       {
-        title: '저장소 준비',
-        body: 'public이어야 하고, Discussions를 켜야 하며(Settings → General → Features → Discussions), 카테고리가 하나 이상 있어야 합니다.',
-        code: ''
-      },
-      {
         title: 'GitHub App 생성',
-        body: '권한은 Discussions: Read and write와 Metadata: Read-only면 충분합니다.',
+        body: '계정 또는 조직 설정에서 만듭니다 — 저장소 Settings가 아닙니다. 권한은 Discussions: Read and write와 Metadata: Read-only면 충분합니다.',
         code: ''
       },
       {
         title: 'proxy 배포 후 callback URL 설정',
         body: '명령 하나로 배포됩니다. 출력된 주소를 기다렸다가 Callback URL에 <주소>/oauth/callback을 넣으세요.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: '저장소 준비',
+        body: 'public이어야 하고, Discussions를 켜야 하며(Settings → General → Features → Discussions), 카테고리가 하나 이상 있어야 합니다.',
+        code: ''
       },
       {
         title: 'App을 저장소에 설치',

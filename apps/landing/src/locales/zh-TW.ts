@@ -39,7 +39,7 @@ export const zhTW: Messages = {
     lede: '把 GitHub Discussions 或 Issues 變成你的評論區。一行指令部署輕量代理，無需資料庫，評論即時同步。',
     statsTitle: '關鍵指標',
     stats: {
-      lines: { value: '5', label: '步快速接入', note: '準備儲存庫、建立 App、部署、安裝、引入。' },
+      lines: { value: '5', label: '步快速接入', note: '建立 App、部署、準備儲存庫、安裝、引入。' },
       comments: { value: '∞', label: '評論容量', note: '由 GitHub Discussions 承載。' },
       size: { label: '不是最小但最強', note: 'gzip 壓縮後的實際傳輸大小。' },
       deps: { value: '0', label: '執行時依賴', note: '渲染層已打包進產物。' },
@@ -50,22 +50,22 @@ export const zhTW: Messages = {
   getStarted: {
     eyebrow: '接入',
     title: '五步接上評論',
-    lede: '順序不能換：先準備儲存庫，再建立 App、部署 proxy、把 App 安裝到儲存庫，最後引入元件。每一步只有一份完整說明。',
+    lede: '順序照實際依賴排：先建立 App（帳號層級的物件，不需要先有儲存庫），再部署最重的服務；儲存庫要先存在，才能把 App 裝上去。',
     steps: [
       {
-        title: '準備儲存庫',
-        body: '必須是 public，並在 Settings → General → Features → Discussions 開啟 Discussions，再建立一個分類。',
-        code: ''
-      },
-      {
         title: '建立 GitHub App',
-        body: '權限只要 Discussions: Read and write 和 Metadata: Read-only。',
+        body: '在帳號或組織設定裡建立 —— 不在儲存庫的 Settings 裡。權限只要 Discussions: Read and write 和 Metadata: Read-only。',
         code: ''
       },
       {
         title: '部署 proxy，再補 callback URL',
         body: '一條指令部署；等它印出位址，再回 App 把 Callback URL 填成 <位址>/oauth/callback。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: '準備儲存庫',
+        body: '必須是 public，並在 Settings → General → Features → Discussions 開啟 Discussions，再建立一個分類。',
+        code: ''
       },
       {
         title: '把 App 安裝到儲存庫',

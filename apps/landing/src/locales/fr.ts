@@ -39,7 +39,7 @@ export const fr: Messages = {
     lede: 'Transformez GitHub Discussions ou Issues en section de commentaires. Déployez un proxy léger avec une seule commande. Pas de base de données, et les commentaires se synchronisent en direct.',
     statsTitle: 'Chiffres clés',
     stats: {
-      lines: { value: '5', label: 'étapes', note: 'Préparer le dépôt, créer l’App, déployer, installer, intégrer.' },
+      lines: { value: '5', label: 'étapes', note: 'Créer l’App, déployer, préparer le dépôt, installer, intégrer.' },
       comments: { value: '∞', label: 'Commentaires', note: 'Portés par GitHub Discussions.' },
       size: { label: 'pas le plus petit', note: 'Taille réelle transférée après gzip.' },
       deps: { value: '0', label: 'Dépendances', note: 'La couche de rendu est incluse dans le bundle.' },
@@ -50,22 +50,22 @@ export const fr: Messages = {
   getStarted: {
     eyebrow: 'Mise en place',
     title: 'Cinq étapes pour vos commentaires',
-    lede: 'L’ordre compte : préparez le dépôt, créez l’App, déployez le proxy et réglez l’URL de callback, installez l’App sur le dépôt, puis intégrez le composant. Chaque étape n’a qu’un seul guide complet.',
+    lede: 'L’ordre suit les dépendances : l’App est un objet de compte, elle vient donc en premier et n’a pas besoin de dépôt ; le déploiement est l’étape la plus lourde ; et le dépôt doit exister avant d’y installer l’App.',
     steps: [
       {
-        title: 'Préparer le dépôt',
-        body: 'Il doit être public, avec Discussions activé (Settings → General → Features → Discussions) et au moins une catégorie.',
-        code: ''
-      },
-      {
         title: 'Créer la GitHub App',
-        body: 'Seuls Discussions: Read and write et Metadata: Read-only sont nécessaires.',
+        body: 'Créez-la dans les réglages de votre compte ou organisation, pas dans ceux du dépôt. Seuls Discussions: Read and write et Metadata: Read-only sont nécessaires.',
         code: ''
       },
       {
         title: 'Déployer le proxy, puis régler l’URL de callback',
         body: 'Une commande le déploie. Attendez l’adresse affichée, puis mettez Callback URL sur <adresse>/oauth/callback.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Préparer le dépôt',
+        body: 'Il doit être public, avec Discussions activé (Settings → General → Features → Discussions) et au moins une catégorie.',
+        code: ''
       },
       {
         title: 'Installer l’App sur le dépôt',

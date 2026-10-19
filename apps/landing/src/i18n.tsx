@@ -104,7 +104,7 @@ const zh = {
     lede: '把 GitHub Discussions 或 Issues 变成你的评论区。一条命令部署轻量代理，无需数据库，评论实时同步。',
     statsTitle: '关键指标',
     stats: {
-      lines: { value: '5', label: '步快速接入', note: '准备仓库、创建 App、部署、安装、引入组件。' },
+      lines: { value: '5', label: '步快速接入', note: '创建 App、部署、准备仓库、安装、引入组件。' },
       comments: { value: '∞', label: '评论容量', note: '由 GitHub Discussions 承载。' },
       size: { label: '不是最小但最强', note: 'gzip 压缩后的实际传输体积。' },
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
@@ -115,22 +115,22 @@ const zh = {
   getStarted: {
     eyebrow: '接入',
     title: '五步接上评论',
-    lede: '顺序不能换：先准备仓库，再创建 App、部署 proxy、把 App 安装到仓库，最后引入组件。每一步只有一份完整说明。',
+    lede: '顺序按实际依赖排：先建 App（账号级对象，不需要先有仓库），再部署最重的服务；仓库要先存在，才能把 App 装上去。',
     steps: [
       {
-        title: '准备仓库',
-        body: '仓库必须是 public，并在 Settings → General → Features → Discussions 打开 Discussions，再建一个分类。',
-        code: ''
-      },
-      {
         title: '创建 GitHub App',
-        body: '权限只要 Discussions: Read and write 和 Metadata: Read-only。',
+        body: '在账号或组织设置里创建 —— 不在仓库的 Settings 里。权限只要 Discussions: Read and write 和 Metadata: Read-only。',
         code: ''
       },
       {
         title: '部署 proxy，再补 callback URL',
         body: '一条命令部署；等它打印出地址，再回 App 把 Callback URL 填成 <地址>/oauth/callback。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: '准备仓库',
+        body: '仓库必须是 public，并在 Settings → General → Features → Discussions 打开 Discussions，再建一个分类。',
+        code: ''
       },
       {
         title: '把 App 安装到仓库',
@@ -331,22 +331,22 @@ const en: Messages = {
   getStarted: {
     eyebrow: 'Setup',
     title: 'Five steps to comments',
-    lede: 'The order matters: prepare the repository, create the App, deploy the proxy and set the callback URL, install the App on the repository, then embed the component. Each step has exactly one complete write-up.',
+    lede: 'The order follows the dependencies: the App is an account-level object, so it comes first and needs no repository; deployment is the heaviest job; and the repository must exist before the App can be installed on it.',
     steps: [
       {
-        title: 'Prepare the repository',
-        body: 'It must be public, with Discussions enabled under Settings → General → Features → Discussions, and at least one category.',
-        code: ''
-      },
-      {
         title: 'Create the GitHub App',
-        body: 'Only Discussions: Read and write and Metadata: Read-only are needed.',
+        body: 'Create it in your account or organisation settings — not in the repository Settings. Only Discussions: Read and write and Metadata: Read-only are needed.',
         code: ''
       },
       {
         title: 'Deploy the proxy, then set the callback URL',
         body: 'One command deploys it. Wait for the address it prints, then set the App Callback URL to <address>/oauth/callback.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Prepare the repository',
+        body: 'It must be public, with Discussions enabled under Settings → General → Features → Discussions, and at least one category.',
+        code: ''
       },
       {
         title: 'Install the App on the repository',
@@ -399,7 +399,7 @@ const en: Messages = {
     lede: 'Turn GitHub Discussions or Issues into your comment section. Deploy a lightweight proxy with one command. No database, and comments sync in real time.',
     statsTitle: 'Key numbers',
     stats: {
-      lines: { value: '5', label: 'steps', note: 'Prepare the repo, create the App, deploy, install, embed.' },
+      lines: { value: '5', label: 'steps', note: 'Create the App, deploy, prepare the repo, install, embed.' },
       comments: {
         value: '∞',
         label: 'Comments',

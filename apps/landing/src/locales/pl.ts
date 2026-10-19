@@ -39,7 +39,7 @@ export const pl: Messages = {
     lede: 'Zamień GitHub Discussions lub Issues w sekcję komentarzy. Wdróż lekki proxy jednym poleceniem. Bez bazy danych, komentarze synchronizują się na bieżąco.',
     statsTitle: 'Najważniejsze liczby',
     stats: {
-      lines: { value: '5', label: 'kroków', note: 'Przygotuj repozytorium, utwórz App, wdróż, zainstaluj, wstaw.' },
+      lines: { value: '5', label: 'kroków', note: 'Utwórz App, wdróż, przygotuj repozytorium, zainstaluj, wstaw.' },
       comments: { value: '∞', label: 'Komentarze', note: 'Przechowuje je GitHub Discussions.' },
       size: { label: 'nie najmniejszy', note: 'Rzeczywisty rozmiar transferu po gzip.' },
       deps: { value: '0', label: 'Zależności', note: 'Warstwa renderowania jest w pakiecie.' },
@@ -50,22 +50,22 @@ export const pl: Messages = {
   getStarted: {
     eyebrow: 'Konfiguracja',
     title: 'Pięć kroków do komentarzy',
-    lede: 'Kolejność ma znaczenie: przygotuj repozytorium, utwórz App, wdróż proxy i ustaw callback URL, zainstaluj App w repozytorium, a na końcu wstaw komponent. Każdy krok ma jedno pełne opracowanie.',
+    lede: 'Kolejność wynika z zależności: App jest obiektem konta, więc powstaje najpierw i nie potrzebuje repozytorium; wdrożenie to najcięższy krok; a repozytorium musi istnieć, zanim zainstalujesz w nim App.',
     steps: [
       {
-        title: 'Przygotuj repozytorium',
-        body: 'Musi być publiczne, mieć włączone Discussions (Settings → General → Features → Discussions) i co najmniej jedną kategorię.',
-        code: ''
-      },
-      {
         title: 'Utwórz GitHub App',
-        body: 'Potrzebne są tylko Discussions: Read and write i Metadata: Read-only.',
+        body: 'Utwórz ją w ustawieniach konta lub organizacji — nie w ustawieniach repozytorium. Potrzebne są tylko Discussions: Read and write i Metadata: Read-only.',
         code: ''
       },
       {
         title: 'Wdróż proxy, potem ustaw callback URL',
         body: 'Jedno polecenie je wdraża. Poczekaj na wypisany adres i ustaw Callback URL na <adres>/oauth/callback.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Przygotuj repozytorium',
+        body: 'Musi być publiczne, mieć włączone Discussions (Settings → General → Features → Discussions) i co najmniej jedną kategorię.',
+        code: ''
       },
       {
         title: 'Zainstaluj App w repozytorium',

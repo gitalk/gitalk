@@ -39,7 +39,7 @@ export const ja: Messages = {
     lede: 'GitHub Discussions または Issues をコメント欄に。コマンド1つで軽量プロキシをデプロイ。データベース不要で、コメントはリアルタイムに同期します。',
     statsTitle: '主な数値',
     stats: {
-      lines: { value: '5', label: 'ステップで導入', note: 'リポジトリの準備、App の作成、デプロイ、インストール、組み込み。' },
+      lines: { value: '5', label: 'ステップで導入', note: 'App の作成、デプロイ、リポジトリの準備、インストール、組み込み。' },
       comments: { value: '∞', label: 'コメント数', note: 'GitHub Discussions が担います。' },
       size: { label: '最小ではない', note: 'gzip 後の実際の転送サイズ。' },
       deps: { value: '0', label: '実行時依存', note: '描画層はビルドに含まれます。' },
@@ -50,22 +50,22 @@ export const ja: Messages = {
   getStarted: {
     eyebrow: 'セットアップ',
     title: '5ステップでコメントを導入',
-    lede: '順序は入れ替えられません。リポジトリを準備し、App を作成し、proxy をデプロイして callback URL を設定し、App をリポジトリにインストールしてから、コンポーネントを組み込みます。完全な手順は一か所だけにあります。',
+    lede: '順序は依存関係で決まります。App はアカウント単位のオブジェクトなので最初に作り、リポジトリは不要です。デプロイが最も重い作業で、リポジトリは App をインストールする前に存在している必要があります。',
     steps: [
       {
-        title: 'リポジトリを準備',
-        body: 'public であること、Discussions を有効にすること（Settings → General → Features → Discussions）、カテゴリを1つ以上作ることが条件です。',
-        code: ''
-      },
-      {
         title: 'GitHub App を作成',
-        body: '必要な権限は Discussions: Read and write と Metadata: Read-only だけです。',
+        body: 'アカウントまたは組織の設定で作成します —— リポジトリの Settings ではありません。必要な権限は Discussions: Read and write と Metadata: Read-only だけです。',
         code: ''
       },
       {
         title: 'proxy をデプロイし、callback URL を設定',
         body: 'コマンド1つでデプロイできます。出力されたアドレスを待ち、Callback URL に <アドレス>/oauth/callback を設定します。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'リポジトリを準備',
+        body: 'public であること、Discussions を有効にすること（Settings → General → Features → Discussions）、カテゴリを1つ以上作ることが条件です。',
+        code: ''
       },
       {
         title: 'App をリポジトリにインストール',

@@ -19,11 +19,17 @@ GitHub 的每 IP 60 次/小时提到 5000 次/小时。
 
 | # | 步骤 | 在哪做 |
 | --- | --- | --- |
-| 1 | 准备仓库：**public**、开启 Discussions、建一个分类 | GitHub |
-| 2 | 创建 GitHub App | GitHub |
-| 3 | 写 `.env`、部署，然后补 callback URL | 你的机器 + GitHub |
+| 1 | 创建 GitHub App | 你的账号或组织设置 |
+| 2 | 写 `.env`、部署，然后补 callback URL | 你的机器 + GitHub |
+| 3 | 准备仓库：**public**、开启 Discussions、建一个分类 | GitHub |
 | 4 | **把 App 安装到你的仓库** | GitHub |
 | 5 | 引入组件 | 你的网站 |
+
+**为什么是这个顺序：**
+
+- App 是**账号或组织级的对象**。创建它和仓库无关 —— 这时候你还不需要知道哪个仓库要用 Gitalk。
+- 仓库得**先存在**，App 才能**安装**到它上面，所以「准备仓库」（第 3 步）排在「安装」（第 4 步）之前。
+- 部署与仓库无关。它排第 2 步，是因为它是最重的一步 —— 早点做完。
 
 第 4 步就是大家会漏的那一步：**创建 App 不等于安装 App**。少了安装，proxy 就没法为你的仓库换 token。
 
@@ -33,11 +39,12 @@ GitHub 的每 IP 60 次/小时提到 5000 次/小时。
 
 | | 示例值 | 从哪来 |
 | --- | --- | --- |
-| App 名 | **My Niubi Gitalk** | 第 2 步你在表单里填的名字 |
+| App 名 | **My Niubi Gitalk** | 第 1 步你在表单里填的名字 |
 | App 的 slug | `my-niubi-gitalk` | GitHub 自动生成：空格变连字符、字母转小写 |
+| App 属于 | `octocat`（个人账号） | 创建 App 时用的账号或组织 |
 | 仓库 | `octocat/demo-repo` | 存放评论的仓库 |
 | 站点来源 | `https://octocat.github.io` | 嵌入组件的博客或文档站 |
-| 代理地址 | `https://my-niubi-gitalk.octocat.workers.dev` | 第 3 步部署后打印出来 |
+| 代理地址 | `https://my-niubi-gitalk.octocat.workers.dev` | 第 2 步部署后打印出来 |
 | Callback URL | `https://my-niubi-gitalk.octocat.workers.dev/oauth/callback` | 代理地址 + `/oauth/callback` |
 
 `octocat` 代表你自己的账号或组织，`demo-repo` 代表你自己的仓库。`123456` 与
@@ -55,33 +62,33 @@ npx github:gitalk/deploy -c .env -t cloudflare
 
 ---
 
-## 第 1 步 — 准备仓库
+## 第 1 步 — 创建 GitHub App
 
-例子里的仓库是 `octocat/demo-repo`。两件事，都在它的 **Settings** 里：
+**这一步不在仓库的 Settings 里。** GitHub App 属于**账号或组织**，所以要在下面两个入口之一创建：
 
-1. **仓库必须是 public。** 代理的匿名读只服务公开仓库 —— 可见性检查失败即拒绝，
-   私有仓库会拿到 `403`，没有仓库权限的读者退回到 REST 读也一样读不到。
-2. **开启 Discussions：** *Settings → General → Features → Discussions*。然后打开
-   **Discussions** 标签，至少建一个分类（默认的 `General` 就行）。新建的 thread 会落到
-   GitHub 返回的第一个分类，除非你用 `category` 指定。
+| App 建在哪 | 创建页 |
+| --- | --- |
+| 你的个人账号 | <https://github.com/settings/apps> → **New GitHub App** |
+| 某个组织 | <https://github.com/organizations/<Org Name>/settings/apps> → **New GitHub App** |
 
----
+**App 建在哪，决定它能装到哪。** 建在个人账号下 → 只能装到这个人的仓库；建在组织下 →
+只能装到该组织的仓库。层级选错，就是「安装页里找不到那个仓库」的常见原因。
+仓库的 **Settings → General → Features** 是开 Discussions 的地方 —— 那是第 3 步，和这个页面不是一回事。
 
-## 第 2 步 — 创建 GitHub App
+本文把 **My Niubi Gitalk** 建在 `octocat`（个人账号）下，所以第 4 步安装时选 `octocat`、
+勾 `demo-repo`。
 
-本文创建一个叫 **My Niubi Gitalk** 的 App。这一步只能在网页上做，脚本替不了。
+表单这样填：
 
-1. 打开 <https://github.com/settings/apps/new> —— 组织则在
-   *Settings → Developer settings → GitHub Apps → New*。
-2. **Permissions → Repository permissions**
+1. **Permissions → Repository permissions**
    - `Discussions: Read and write` —— 读写评论必需的
    - `Metadata: Read-only` —— 自动带上，去不掉
    - 其余全部 **No access**
-3. **Callback URL：先留空。** 它要写成 `https://<代理地址>/oauth/callback`，而代理要到
-   第 3 步才部署出来。第 3 步会回来填这一栏。现在就猜一个地址，正是
+2. **Callback URL：先留空。** 它要写成 `https://<代理地址>/oauth/callback`，而代理要到
+   第 2 步才部署出来。第 2 步会回来填这一栏。现在就猜一个地址，正是
    `redirect_uri_mismatch` 的来源。
-4. **Webhook**：取消勾选 *Active* —— Gitalk 不用 webhook。
-5. 记住：之后想改这个地址，**只能**在 App 设置页改 —— 组织所有的 App 用 API 改会返回 404。
+3. **Webhook**：取消勾选 *Active* —— Gitalk 不用 webhook。
+4. 记住：之后想改这个地址，**只能**在 App 设置页改 —— 组织所有的 App 用 API 改会返回 404。
 
 **slug 是怎么来的。** GitHub 会把 App 名转成一个网址后缀：空格变连字符、字母转小写。
 所以 `My Niubi Gitalk` 就是 `my-niubi-gitalk` —— 它既是 App 公开网址
@@ -104,17 +111,17 @@ npx github:gitalk/deploy -c .env -t cloudflare
 
 ---
 
-## 第 3 步 — 写 `.env`、部署，然后补 callback URL
+## 第 2 步 — 写 `.env`、部署，然后补 callback URL
 
-### 3a. `.env` 里有什么
+### 2a. `.env` 里有什么
 
 下面每一项都是必需的。CLI 会在联网之前校验，缺哪个、该从哪来都会说清楚。
 
 | 变量 | 值从哪来 |
 | --- | --- |
-| `GITHUB_APP_ID` | App 页面（第 2 步） |
-| `GITHUB_CLIENT_ID` | App 页面（第 2 步） |
-| `GITHUB_CLIENT_SECRET` | 点 *Generate a new client secret*（第 2 步） |
+| `GITHUB_APP_ID` | App 页面（第 1 步） |
+| `GITHUB_CLIENT_ID` | App 页面（第 1 步） |
+| `GITHUB_CLIENT_SECRET` | 点 *Generate a new client secret*（第 1 步） |
 | `GITHUB_APP_PRIVATE_KEY` | `.pem` 的全文 —— **不是** `SHA256:` 指纹 |
 | `SESSION_ENCRYPTION_KEY` | `openssl rand -hex 32`（32 字节随机数的十六进制） |
 | `GITALK_ALLOWED_ORIGINS` | 允许调用 proxy 的**站点来源**，逗号分隔 |
@@ -190,7 +197,7 @@ CLOUDBASE_SECRET_KEY=…
 `Zone` → **Workers Routes** → **Edit**。域名在别的注册商，就要去那边手工加一条 `CNAME`，
 并把这个地址写进 `GITALK_ALLOWED_ORIGINS`。
 
-### 3b. 部署
+### 2b. 部署
 
 ```bash
 npx github:gitalk/deploy -c .env -t cloudflare
@@ -201,11 +208,11 @@ npx github:gitalk/deploy -c .env -t cloudflare -n   # 只打印计划，什么�
 成功后它会打印代理地址，并问部署好的服务要一次健康检查（`/`，返回
 `{"ok":true,"service":"gitalk-proxy"}`）。如果 worker 在 `octocat` 账号下叫
 `my-niubi-gitalk`，这个地址就是 `https://my-niubi-gitalk.octocat.workers.dev`。
-**把它记下来** —— 3c 要用，组件的 `proxy` 也要用。
+**把它记下来** —— 2c 要用，组件的 `proxy` 也要用。
 
-### 3c. 补 callback URL —— 必须等部署之后
+### 2c. 补 callback URL —— 必须等部署之后
 
-> **等地址出来。** callback URL 是 `https://<3b 打印的地址>/oauth/callback`。
+> **等地址出来。** callback URL 是 `https://<2b 打印的地址>/oauth/callback`。
 > 部署之前代理还不存在，这时候填什么都是错的。
 
 回到 App 设置页，把 **Callback URL** 填成
@@ -216,6 +223,20 @@ npx github:gitalk/deploy -c .env -t cloudflare -n   # 只打印计划，什么�
 
 ---
 
+## 第 3 步 — 准备仓库
+
+例子里的仓库是 `octocat/demo-repo`。没有就先建一个，然后在它的 **Settings** 里确认两件事：
+
+1. **仓库必须是 public。** 代理的匿名读只服务公开仓库 —— 可见性检查失败即拒绝，
+   私有仓库会拿到 `403`，没有仓库权限的读者退回到 REST 读也一样读不到。
+2. **开启 Discussions：** *Settings → General → Features → Discussions*。然后打开
+   **Discussions** 标签，至少建一个分类（默认的 `General` 就行）。新建的 thread 会落到
+   GitHub 返回的第一个分类，除非你用 `category` 指定。
+
+仓库必须先存在，第 4 步才装得上 —— App 只能安装到已经存在的仓库。
+
+---
+
 ## 第 4 步 — 把 App 安装到你的仓库
 
 > **只创建 App 是不够的。**
@@ -223,8 +244,9 @@ npx github:gitalk/deploy -c .env -t cloudflare -n   # 只打印计划，什么�
 > 打开 <https://github.com/apps/my-niubi-gitalk/installations/new>，选 `octocat`，
 > Repository access 选 **Only select repositories**，勾上 `demo-repo`，然后点 **Install**。
 
+只有 App 与仓库属于同一个账号或组织时，`demo-repo` 才会出现在这个列表里 —— 见第 1 步。
 换一个 App 或仓库时，URL 永远是
-`https://github.com/apps/<slug>/installations/new` —— slug 就是第 2 步拿到的那个。
+`https://github.com/apps/<slug>/installations/new` —— slug 就是第 1 步拿到的那个。
 
 为什么必须安装：
 
@@ -240,8 +262,8 @@ npx github:gitalk/deploy -c .env -t cloudflare -n   # 只打印计划，什么�
 核对：打开 <https://github.com/settings/installations>（装在组织上则在组织的
 *Settings → GitHub Apps*），能看到这个 App，且仓库列表里有 `demo-repo`，就说明装上了。
 
-安装和部署是两件独立的事：第 3 步之前或之后装都可以。把它放在这里，是因为到这一步
-你才真正决定了「哪个仓库要用 Gitalk」。
+安装和部署是两件独立的事：第 2 步之前或之后装都可以。把它放在这里，是因为到这一步
+仓库已经存在、你也决定了「这个仓库要用 Gitalk」。
 
 ---
 
@@ -254,7 +276,7 @@ const gitalk = new Gitalk({
   repo: 'demo-repo',            // 只写仓库名 —— 千万别写 `octocat/demo-repo`
   admin: ['octocat'],           // 谁可以为这一页创建 thread
   number: 42,                   // 这一页对应的 Discussion 编号
-  proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 3b 的地址，只写到域名
+  proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 2b 的地址，只写到域名
 })
 
 gitalk.render('gitalk-container')
@@ -318,10 +340,11 @@ origin 的 CORS 头，浏览器在请求到达 GitHub 之前就把它拦掉了 �
 | --- | --- |
 | 代理日志里 `no installation found for this app`，评论退回 60 次/小时 | App 建了但没安装 —— 做第 4 步 |
 | 匿名读返回 `403` | 仓库是私有的，或者 App 没装到它上面 |
+| 安装页里找不到要装的仓库 | App 建在了另一个账号或组织下 —— 见第 1 步 |
 | `GITHUB_APP_PRIVATE_KEY — the .pem contents, not the fingerprint` | 填了 `SHA256:…` 那串 |
 | `wrangler` 说无法确定账号 | token 能看到多个账号 —— 设 `CLOUDFLARE_ACCOUNT_ID` |
 | CloudBase 返回 `403` | 子账号没关联 `QcloudTCBFullAccess` |
 | 部署完健康检查不通 | 看云函数日志，通常是少了一个变量 |
-| 登录时报 `redirect_uri_mismatch` | App 的 callback 必须是 `<proxy>/oauth/callback`，且要在 3b 之后填 |
+| 登录时报 `redirect_uri_mismatch` | App 的 callback 必须是 `<proxy>/oauth/callback`，且要在 2b 之后填 |
 | 登录后回到代理而不是文章页 | 文章页的 origin 不在 `GITALK_ALLOWED_ORIGINS` 里 |
-| `Discussions are disabled for octocat/demo-repo` | 打开 Discussions（第 1 步）并建一个分类 |
+| `Discussions are disabled for octocat/demo-repo` | 打开 Discussions（第 3 步）并建一个分类 |

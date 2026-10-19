@@ -39,7 +39,7 @@ export const fa: Messages = {
     lede: 'GitHub Discussions یا Issues را به بخش دیدگاه‌های خود تبدیل کنید. با یک فرمان یک پروکسی سبک راه‌اندازی کنید. بدون پایگاه داده، و دیدگاه‌ها بی‌درنگ همگام می‌شوند.',
     statsTitle: 'اعداد کلیدی',
     stats: {
-      lines: { value: '5', label: 'گام تا راه‌اندازی', note: 'آماده کردن مخزن، ساخت اپ، استقرار، نصب، افزودن.' },
+      lines: { value: '5', label: 'گام تا راه‌اندازی', note: 'ساخت اپ، استقرار، آماده کردن مخزن، نصب، افزودن.' },
       comments: { value: '∞', label: 'ظرفیت دیدگاه', note: 'بر دوش GitHub Discussions.' },
       size: { label: 'کوچک‌ترین نیست', note: 'حجم واقعی انتقال پس از gzip.' },
       deps: { value: '0', label: 'وابستگی زمان اجرا', note: 'لایه رندر داخل بسته است.' },
@@ -50,22 +50,22 @@ export const fa: Messages = {
   getStarted: {
     eyebrow: 'راه‌اندازی',
     title: 'پنج گام تا دیدگاه‌ها',
-    lede: 'ترتیب مهم است: مخزن را آماده کنید، اپ را بسازید، پروکسی را مستقر کنید و نشانی callback را تنظیم کنید، اپ را روی مخزن نصب کنید و در پایان کامپوننت را اضافه کنید. هر گام یک راهنمای کامل و یکتا دارد.',
+    lede: 'ترتیب از وابستگی‌ها می‌آید: اپ یک شیء در سطح حساب است، پس اول می‌آید و به مخزن نیاز ندارد؛ استقرار سنگین‌ترین گام است؛ و مخزن باید وجود داشته باشد تا اپ روی آن نصب شود.',
     steps: [
       {
-        title: 'آماده کردن مخزن',
-        body: 'مخزن باید عمومی باشد، Discussions روشن باشد (Settings → General → Features → Discussions) و دست‌کم یک دسته داشته باشد.',
-        code: ''
-      },
-      {
         title: 'ساخت GitHub App',
-        body: 'فقط Discussions: Read and write و Metadata: Read-only لازم است.',
+        body: 'آن را در تنظیمات حساب یا سازمان بسازید — نه در تنظیمات مخزن. فقط Discussions: Read and write و Metadata: Read-only لازم است.',
         code: ''
       },
       {
         title: 'استقرار پروکسی و سپس تنظیم callback URL',
         body: 'یک فرمان آن را مستقر می‌کند. منتظر نشانی چاپ‌شده بمانید و سپس Callback URL را برابر <نشانی>/oauth/callback بگذارید.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'آماده کردن مخزن',
+        body: 'مخزن باید عمومی باشد، Discussions روشن باشد (Settings → General → Features → Discussions) و دست‌کم یک دسته داشته باشد.',
+        code: ''
       },
       {
         title: 'نصب اپ روی مخزن',

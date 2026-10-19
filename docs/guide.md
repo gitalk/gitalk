@@ -19,36 +19,35 @@ Gitalk 是一个评论组件：**评论存在你 GitHub 仓库的 Discussions �
 
 | 步骤 | 做什么 | 在哪做 | 大概耗时 |
 | --- | --- | --- | --- |
-| **1** | 准备仓库：public + 开启 Discussions + 建分类 | github.com | 1 分钟 |
-| **2** | 创建一个 GitHub App | github.com | 5 分钟 |
-| **3** | 部署「令牌服务」 | 你选一个平台 | 5 分钟（选 C 还要额外准备域名和证书） |
+| **1** | 创建一个 GitHub App | 你的账号或组织设置 | 5 分钟 |
+| **2** | 部署「令牌服务」 | 你选一个平台 | 5 分钟（选 C 还要额外准备域名和证书） |
+| **3** | 准备仓库：public + 开启 Discussions + 建分类 | github.com | 1 分钟 |
 | **4** | 把它安装到你的评论仓库 | github.com | 1 分钟 |
 | **5** | 把 Gitalk 代码贴进你的网站 | 你的项目 | 3 分钟 |
 
-顺序不要颠倒：第 2 步拿到的 Client ID 要给第 3、第 5 步用，第 3 步拿到的地址要给第 5 步用。
-第 4 步的安装可以放在第 3 步之前或之后，但**一定要做**。
+为什么是这个顺序：App 是**账号或组织级对象**，创建它时还不需要仓库；仓库要**先存在**，App 才能安装上去；部署与仓库无关，排第 2 步是因为它是最重的一步。
 
-> **「令牌服务」是什么？** GitHub 不允许网页直接完成登录换取令牌，所以必须有一个中间服务帮你做这件事。它是必需的，但第 3 步会给你几种省事的选择。
+第 1 步拿到的 Client ID 要给第 2、第 5 步用，第 2 步拿到的地址要给第 5 步用。
+第 4 步的安装可以放在第 2 步之前或之后，但**一定要做**。
 
----
-
-# 第 1 步 · 准备仓库
-
-例子里的仓库是 `octocat/demo-repo`。两件事，都在它的 **Settings** 里：
-
-1. **仓库必须是 public** —— 代理的匿名读只服务公开仓库。
-2. **开启 Discussions**：Settings → General → Features → Discussions，然后在 **Discussions**
-   标签里建一个分类（默认的 `General` 就行）。
+> **「令牌服务」是什么？** GitHub 不允许网页直接完成登录换取令牌，所以必须有一个中间服务帮你做这件事。它是必需的，但第 2 步会给你几种省事的选择。
 
 ---
 
-# 第 2 步 · 创建 GitHub App
+# 第 1 步 · 创建 GitHub App
 
-打开创建页（把 `<你的组织>` 换成你的 GitHub 组织名；个人账号用 `https://github.com/settings/apps/new`）：
+## 入口：账号设置，不是仓库设置
 
-```
-https://github.com/organizations/<你的组织>/settings/apps/new
-```
+GitHub App 属于**账号或组织**，所以创建入口在账号设置里，**不在仓库的 Settings 里**：
+
+| App 建在哪 | 创建页 |
+| --- | --- |
+| 你的个人账号 | <https://github.com/settings/apps> → **New GitHub App** |
+| 某个组织 | <https://github.com/organizations/<你的组织>/settings/apps> → **New GitHub App** |
+
+**App 建在哪，决定它能装到哪**：建在个人账号下，只能装到这个人的仓库；建在组织下，只能装到该组织的仓库。层级选错，第 4 步的安装页里就找不到要装的仓库。
+
+本文把 App 建在 `octocat`（个人账号）下，所以第 4 步安装时选 `octocat`、勾 `demo-repo`。
 
 ## 先看这三个坑
 
@@ -71,7 +70,7 @@ GitHub App 的名字会被转成一个网址后缀（叫 slug），而 `gitalk` 
 
 「回调地址」（Redirect URI）是登录完成后 GitHub 把用户送回来的地方。它必须精确地以 `/oauth/callback` 结尾。
 
-**先留空。** 它的值是 `<令牌服务地址>/oauth/callback`，而令牌服务要到第 3 步部署完才有地址 ——
+**先留空。** 它的值是 `<令牌服务地址>/oauth/callback`，而令牌服务要到第 2 步部署完才有地址 ——
 现在填什么都是猜的。部署完、拿到地址之后回来补上，例如：
 
 ```
@@ -159,9 +158,9 @@ A backend-free comment widget powered by GitHub Discussions. Each comment thread
 | Client ID | 形如 `Iv23li…` |
 | Client secret | 「Client secrets」→ Generate（**只显示一次**，记得存好） |
 | Private key | 「Private keys」→ Generate，会下载一个 `.pem` 文件 |
-| `SESSION_ENCRYPTION_KEY` | 自己生成，见第 3 步 |
+| `SESSION_ENCRYPTION_KEY` | 自己生成，见第 2 步 |
 
-> ⚠️ **别把「密钥指纹」当成密钥。** Private keys 那一列显示的 `SHA256:…` 是**指纹**，不是密钥。你要的是下载下来的那个 `.pem` 文件。第 3 步的脚本会替你识破这个错误。
+> ⚠️ **别把「密钥指纹」当成密钥。** Private keys 那一列显示的 `SHA256:…` 是**指纹**，不是密钥。你要的是下载下来的那个 `.pem` 文件。第 2 步的脚本会替你识破这个错误。
 
 ### 二、上传 logo
 
@@ -173,7 +172,7 @@ App 设置页 → 左侧 **Display information** → **Logo**。
 
 ---
 
-# 第 3 步 · 部署「令牌服务」
+# 第 2 步 · 部署「令牌服务」
 
 ## 先选一条路
 
@@ -211,9 +210,9 @@ cp packages/proxy-worker/.env.example packages/proxy-worker/.env
 
 | 键 | 值从哪来 |
 | --- | --- |
-| `GITHUB_APP_ID` | 第 2 步记下的 |
-| `GITHUB_CLIENT_ID` | 第 2 步记下的 |
-| `GITHUB_CLIENT_SECRET` | 第 2 步记下的 |
+| `GITHUB_APP_ID` | 第 1 步记下的 |
+| `GITHUB_CLIENT_ID` | 第 1 步记下的 |
+| `GITHUB_CLIENT_SECRET` | 第 1 步记下的 |
 | `SESSION_ENCRYPTION_KEY` | 执行 `openssl rand -hex 32` 生成 |
 | `GITALK_ALLOWED_ORIGINS` | 你的网站地址，如 `https://your.blog`（多个用逗号分隔） |
 | `GITHUB_APP_PRIVATE_KEY` | **留空**——见下 |
@@ -310,6 +309,18 @@ docker run -d --name gitalk-proxy -p 8787:8787 \
 
 ---
 
+# 第 3 步 · 准备仓库
+
+例子里的仓库是 `octocat/demo-repo`。两件事，都在它的 **Settings** 里：
+
+1. **仓库必须是 public** —— 代理的匿名读只服务公开仓库。
+2. **开启 Discussions**：Settings → General → Features → Discussions，然后在 **Discussions**
+   标签里建一个分类（默认的 `General` 就行）。
+
+仓库必须先存在，第 4 步才装得上 —— App 只能安装到已经存在的仓库。
+
+---
+
 # 第 4 步 · 安装 App 到仓库
 
 ⚠️ **只创建 App 是不够的。** 这一步只能用浏览器手动完成。
@@ -360,12 +371,12 @@ pnpm add @aifire/gitalk-vue      # Vue
 <div id="gitalk-container"></div>
 <script>
   const gitalk = new Gitalk({
-    clientID: 'Iv1.xxxxxxxxxxxx', // 第 2 步的 Client ID（示例值）
+    clientID: 'Iv1.xxxxxxxxxxxx', // 第 1 步的 Client ID（示例值）
     owner: 'octocat',             // 存放评论的仓库所有者
     repo: 'demo-repo',            // 只写仓库名，不要写 octocat/demo-repo
     admin: ['octocat'],           // 谁可以创建讨论，见「关于 admin」
     number: 42,                   // 这一页对应的讨论编号
-    proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 第 3 步的地址，只写到域名
+    proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 第 2 步的地址，只写到域名
   })
   gitalk.render('gitalk-container')
 </script>

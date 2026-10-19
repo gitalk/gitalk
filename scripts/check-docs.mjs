@@ -15,9 +15,9 @@
  *   2. every `npx github:gitalk/deploy …` command in any document is byte-for-byte
  *      one of the commands the truth source publishes;
  *   3. every locale's `getStarted` has exactly one bullet per truth-source step
- *      (five), each short, with at most one code block (the deploy command),
- *      install as bullet 4 and the component as bullet 5, and no claim that
- *      contradicts the callback-URL order;
+ *      (five), each short, with at most one code block (the deploy command), and
+ *      the same order as the README: App, deploy, repository, install, embed —
+ *      plus no claim that contradicts the callback-URL order;
  *   4. every relative markdown link resolves, and every document that should
  *      link to the truth source actually does;
  *   5. the landing page's "more" link points at the truth source.
@@ -72,6 +72,8 @@ const COMMAND_DOCS = ['readme.md', 'readme-cn.md', 'docs/guide.md', 'docs/handso
 
 /** Facts both truth sources must state. Missing one means an incomplete step. */
 const REQUIRED_FACTS = [
+  ['personal App entry', 'https://github.com/settings/apps'],
+  ['organisation App entry', 'organizations/<Org Name>/settings/apps'],
   ['install page URL', 'installations/new'],
   ['Discussions permission', 'Discussions: Read and write'],
   ['Metadata permission', 'Metadata: Read-only'],
@@ -113,6 +115,9 @@ const CALLBACK_NOW = [
 
 /** A step body longer than this is a manual, not an overview. */
 const MAX_OVERVIEW_BODY = 280
+
+/** Bullet 3 is the repository step in every language. */
+const REPO_WORDS = /public|públic|عمومی/i
 
 /** Bullet 4 is the install step in every language. */
 const INSTALL_WORDS = /install|安装|安裝|インストール|설치|instal|установ|zainstal|نصب/i
@@ -159,6 +164,28 @@ function assertContiguous(file, steps) {
   return true
 }
 
+/**
+ * One numbered step: its heading, where it starts, and the text up to the next
+ * step heading (or the next `## ` section, whichever comes first).
+ */
+function stepBlock(text, kind, n) {
+  const pattern = kind === 'en' ? /^## Step (\d+) — (.+)$/gm : /^## 第 (\d+) 步 — (.+)$/gm
+  const headings = [...text.matchAll(pattern)].map((m) => ({
+    number: Number(m[1]),
+    title: m[2].trim(),
+    start: m.index
+  }))
+  const hit = headings.find((heading) => heading.number === n)
+  if (!hit) return null
+  const nextStep = headings.find((heading) => heading.start > hit.start)
+  const nextSection = text.indexOf('\n## ', hit.start + 1)
+  const ends = [nextStep?.start, nextSection === -1 ? text.length : nextSection + 1].filter(
+    (value) => typeof value === 'number'
+  )
+  const blockEnd = Math.min(...ends)
+  return { ...hit, end: blockEnd, section: text.slice(hit.start, blockEnd) }
+}
+
 function checkTruthSource(kind, file) {
   let text
   try {
@@ -169,8 +196,8 @@ function checkTruthSource(kind, file) {
   }
 
   const steps = stepHeadings(text, kind)
-  // Report a numbering problem but keep checking: the install-order assertions
-  // below are exactly what catches a step that was moved past the embed step.
+  // Report a numbering problem but keep checking: the order assertions below
+  // are exactly what catches a step that was moved or swapped.
   assertContiguous(file, steps)
   if (steps.length !== EXPECTED_STEPS) {
     fail(`${file}: ${steps.length} steps, expected ${EXPECTED_STEPS}`)
@@ -185,71 +212,153 @@ function checkTruthSource(kind, file) {
     }
   }
 
-  // Installation is its own step, after the deploy and before the component.
-  const installHeading =
-    kind === 'en'
-      ? /^## Step 4 — Install the App on the repository$/m
-      : /^## 第 4 步 — 把 App 安装到你的仓库$/m
-  if (!installHeading.test(text)) {
-    fail(`${file}: step 4 is not the "install the App" step`)
+  const blocks = {}
+  for (let n = 1; n <= EXPECTED_STEPS; n += 1) blocks[n] = stepBlock(text, kind, n)
+  for (let n = 1; n <= EXPECTED_STEPS; n += 1) {
+    if (!blocks[n]) fail(`${file}: step ${n} is missing`)
   }
-  const stepFiveHeading = kind === 'en' ? '## Step 5 —' : '## 第 5 步 —'
-  const stepThreeHeading = kind === 'en' ? '## Step 3 —' : '## 第 3 步 —'
-  const installStart = text.search(installHeading)
-  const stepFiveStart = text.indexOf(stepFiveHeading)
-  if (installStart !== -1) {
-    const installSection =
-      stepFiveStart !== -1 ? text.slice(installStart, stepFiveStart) : text.slice(installStart)
+
+  // Step 1 creates the App, at the account/organisation level — never in the
+  // repository's settings.
+  if (blocks[1]) {
+    for (const [label, needle] of [
+      ['the personal-account entry', 'https://github.com/settings/apps'],
+      ['the organisation entry', 'organizations/<Org Name>/settings/apps']
+    ]) {
+      if (!blocks[1].section.includes(needle)) {
+        fail(`${file}: step 1 does not show ${label} (\`${needle}\`)`)
+      }
+    }
+    const notRepoPage =
+      kind === 'en' ? "not in the repository's settings" : '不在仓库的 Settings 里'
+    if (!blocks[1].section.toLowerCase().includes(notRepoPage.toLowerCase())) {
+      fail(`${file}: step 1 does not say that the App is not created in the repository's settings`)
+    }
+    const repoLevelPath =
+      kind === 'en'
+        ? /repository'?s? settings[\s\S]{0,40}developer settings/i
+        : /仓库[^\n]{0,20}Settings[^\n]{0,20}Developer settings/
+    if (repoLevelPath.test(blocks[1].section)) {
+      fail(`${file}: step 1 sends the reader to the repository's Settings → Developer settings`)
+    }
+    const ownership = kind === 'en' ? /organisation/i : /组织/
+    if (!ownership.test(blocks[1].section)) {
+      fail(`${file}: step 1 does not explain where the App can be installed`)
+    }
+    const appTitle = kind === 'en' ? /create the github app/i : /创建 GitHub App/
+    if (!appTitle.test(blocks[1].title)) {
+      fail(`${file}: step 1 is not "create the GitHub App" (found "${blocks[1].title}")`)
+    }
+  }
+
+  // Step 2 deploys.
+  if (blocks[2]) {
+    for (const [label, needle] of [
+      ['the deploy command', 'npx github:gitalk/deploy'],
+      ['the callback failure', 'redirect_uri_mismatch'],
+      ['the origin allowlist', 'GITALK_ALLOWED_ORIGINS'],
+      ['the callback subsection', '### 2c.']
+    ]) {
+      if (!blocks[2].section.includes(needle)) {
+        fail(`${file}: step 2 (deploy) does not mention ${label} (\`${needle}\`)`)
+      }
+    }
+    const deployTitle = kind === 'en' ? /deploy/i : /部署/
+    if (!deployTitle.test(blocks[2].title)) {
+      fail(`${file}: step 2 is not the deploy step (found "${blocks[2].title}")`)
+    }
+  }
+
+  // Step 3 prepares the repository.
+  if (blocks[3]) {
+    for (const [label, needle] of [
+      ['Discussions', 'Features → Discussions'],
+      ['the public requirement', 'public'],
+      ['a category', 'category']
+    ]) {
+      if (!blocks[3].section.includes(needle)) {
+        fail(`${file}: step 3 (prepare the repository) does not mention ${label} (\`${needle}\`)`)
+      }
+    }
+    const prepTitle = kind === 'en' ? /prepare the repository/i : /准备仓库/
+    if (!prepTitle.test(blocks[3].title)) {
+      fail(`${file}: step 3 is not "prepare the repository" (found "${blocks[3].title}")`)
+    }
+  }
+
+  // Step 4 installs.
+  if (blocks[4]) {
     for (const [label, needle] of [
       ['install page URL', 'installations/new'],
       ['installation token', 'installation token'],
       ['the skipping warning', kind === 'en' ? 'Creating the App is not enough' : '只创建 App 是不够的'],
       ['the proxy log line', 'no installation found for this app']
     ]) {
-      if (!installSection.includes(needle)) {
+      if (!blocks[4].section.includes(needle)) {
         fail(`${file}: step 4 (install) does not mention ${label} (\`${needle}\`)`)
       }
     }
-    const deployAt = text.indexOf('npx github:gitalk/deploy', text.indexOf(stepThreeHeading))
-    if (deployAt !== -1 && installStart < deployAt) {
-      fail(`${file}: the install step appears before the deploy command`)
-    }
-    if (stepFiveStart !== -1 && installStart > stepFiveStart) {
-      fail(`${file}: the install step appears after the "embed the component" step`)
+    const installTitle = kind === 'en' ? /install the app/i : /安装/
+    if (!installTitle.test(blocks[4].title)) {
+      fail(`${file}: step 4 is not the install step (found "${blocks[4].title}")`)
     }
   }
+
+  // Step 5 embeds the component.
+  if (blocks[5]) {
+    for (const [label, needle] of [
+      ['clientID', 'clientID'],
+      ...(kind === 'en'
+        ? [['the bare repo name rule', '`repo` is the repository name alone']]
+        : [['the bare repo name rule', '`repo` 只写仓库名']])
+    ]) {
+      if (!blocks[5].section.includes(needle)) {
+        fail(`${file}: step 5 (embed) does not mention ${label} (\`${needle}\`)`)
+      }
+    }
+    const embedTitle = kind === 'en' ? /embed the component/i : /引入组件/
+    if (!embedTitle.test(blocks[5].title)) {
+      fail(`${file}: step 5 is not "embed the component" (found "${blocks[5].title}")`)
+    }
+  }
+
+  // The order the whole document promises: app -> deploy -> repo -> install -> embed.
+  if (blocks[1] && blocks[2] && blocks[1].start > blocks[2].start) {
+    fail(`${file}: the App step must come before the deploy step`)
+  }
+  if (blocks[2] && blocks[3] && blocks[2].start > blocks[3].start) {
+    fail(`${file}: the deploy step must come before the repository step`)
+  }
+  if (blocks[3] && blocks[4] && blocks[3].start > blocks[4].start) {
+    fail(`${file}: the repository step must come before the install step`)
+  }
+  if (blocks[4] && blocks[5] && blocks[4].start > blocks[5].start) {
+    fail(`${file}: the install step appears after the "embed the component" step`)
+  }
   const firstInstallUrl = text.indexOf('installations/new')
-  if (firstInstallUrl !== -1 && installStart !== -1 && firstInstallUrl < installStart) {
+  if (firstInstallUrl !== -1 && blocks[4] && firstInstallUrl < blocks[4].start) {
     fail(`${file}: \`installations/new\` appears before the install step`)
   }
 
-  // The callback URL gets its own section after the deploy, and step 2 leaves
-  // the field empty rather than guessing an address.
-  const stepThree = text.indexOf(kind === 'en' ? '## Step 3' : '## 第 3 步')
-  const callbackAt = text.indexOf('### 3c.')
+  // Nothing may send the reader to the repository settings to create the App.
+  const repoCreatePath =
+    kind === 'en'
+      ? /(repository settings|settings of the repository)[\s\S]{0,40}github apps/i
+      : /仓库的?\s*Settings[^\n]{0,20}GitHub Apps/
+  if (repoCreatePath.test(text)) {
+    fail(`${file}: suggests creating the App from the repository settings`)
+  }
+
+  // Callback URL: its own subsection, after the deploy.
+  const callbackAt = text.indexOf('### 2c.')
   if (callbackAt === -1) {
-    fail(`${file}: no "### 3c." callback-URL section`)
-  } else {
-    if (stepThree !== -1 && callbackAt < stepThree) {
-      fail(`${file}: the callback-URL section appears before step 3`)
-    }
-    const section = text.slice(callbackAt, text.indexOf('\n## ', callbackAt) + 1)
-    if (!section.includes('redirect_uri_mismatch')) {
-      fail(`${file}: the callback-URL section does not mention redirect_uri_mismatch`)
-    }
+    fail(`${file}: no "### 2c." callback-URL section`)
+  } else if (blocks[2] && callbackAt < blocks[2].start) {
+    fail(`${file}: the callback-URL section appears before step 2`)
   }
   const emptyHint = kind === 'en' ? 'leave it empty' : '先留空'
   if (!text.includes(emptyHint)) {
-    fail(`${file}: step 2 does not tell the reader to leave the callback URL empty`)
-  }
-  const bareRepoNames =
-    kind === 'en'
-      ? ['`repo` is the repository name alone', 'never `octocat/demo-repo`']
-      : ['`repo` 只写仓库名', '千万别写 `octocat/demo-repo`']
-  for (const needle of bareRepoNames) {
-    if (!text.includes(needle)) {
-      fail(`${file}: the embed step does not explain that \`repo\` takes the bare name (missing \`${needle}\`)`)
-    }
+    fail(`${file}: step 1 does not tell the reader to leave the callback URL empty`)
   }
 
   return { steps, text, commands: [...new Set(commandsIn(text))] }
@@ -341,13 +450,23 @@ function checkLanding(truthSteps, commands) {
             fail(`${where}: code is not the canonical deploy command (\`${commands.deploy}\`)`)
           }
         }
-        if (/callback/i.test(`${step.title} ${step.body}`) && index !== 2) {
+        if (/callback/i.test(`${step.title} ${step.body}`) && index !== 1) {
           fail(`${where}: mentions the callback URL outside the deploy bullet`)
         }
       }
       if (coded !== 1) fail(`landing[${lang}]: expected exactly one code block, found ${coded}`)
 
-      // Bullet order must mirror the truth source: index 3 installs, index 4 embeds.
+      // Bullet order must mirror the truth source:
+      // app -> deploy -> repository -> install -> embed.
+      if (!/GitHub App/.test(`${gs.steps[0].title} ${gs.steps[0].body}`)) {
+        fail(`landing[${lang}] step 1: does not describe creating the GitHub App`)
+      }
+      if (canonicalCommand(gs.steps[1].code ?? '') !== commands.deploy) {
+        fail(`landing[${lang}] step 2: is not the deploy bullet (missing the command)`)
+      }
+      if (!REPO_WORDS.test(`${gs.steps[2].title} ${gs.steps[2].body}`)) {
+        fail(`landing[${lang}] step 3: does not describe preparing the repository`)
+      }
       if (!INSTALL_WORDS.test(`${gs.steps[3].title} ${gs.steps[3].body}`)) {
         fail(`landing[${lang}] step 4: does not describe installing the App`)
       }
