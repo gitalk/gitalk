@@ -7,30 +7,42 @@ Gitalk 是一个评论组件：**评论存在你 GitHub 仓库的 Discussions �
 **你需要的**：一个 GitHub 账号、一个用来存评论的仓库、一个能放网页的地方（GitHub Pages、Vercel、自己的服务器都行）。
 
 > **接入步骤的唯一真源是 [`packages/gitalk-deploy/README-CN.md`](../packages/gitalk-deploy/README-CN.md)（英文版 [`README.md`](../packages/gitalk-deploy/README.md)）。**
-> 本文保留手动部署（B / C / D）与填表细节；步骤的先后顺序、`.env` 的必需变量和
+> 本文保留手动部署（B / C / D）与逐个表单字段的说明；步骤顺序、`.env` 的必需变量和
 > callback URL 的时机，以真源为准。本文与它冲突时，按真源做。
 >
-> 开始之前，仓库要满足两个条件：**public**，并且 **Discussions 已开启**
-> （仓库 Settings → General → Features → Discussions），里面至少有一个分类。
+> 例子贯穿全文：App 叫 **My Niubi Gitalk**（slug `my-niubi-gitalk`），仓库是
+> `octocat/demo-repo`，代理地址是 `https://my-niubi-gitalk.octocat.workers.dev`。
 
 ---
 
-## 总共四步
+## 总共五步
 
 | 步骤 | 做什么 | 在哪做 | 大概耗时 |
 | --- | --- | --- | --- |
-| **1** | 创建一个 GitHub App | github.com | 5 分钟 |
-| **2** | 把它安装到你的评论仓库 | github.com | 1 分钟 |
+| **1** | 准备仓库：public + 开启 Discussions + 建分类 | github.com | 1 分钟 |
+| **2** | 创建一个 GitHub App | github.com | 5 分钟 |
 | **3** | 部署「令牌服务」 | 你选一个平台 | 5 分钟（选 C 还要额外准备域名和证书） |
-| **4** | 把 Gitalk 代码贴进你的网站 | 你的项目 | 3 分钟 |
+| **4** | 把它安装到你的评论仓库 | github.com | 1 分钟 |
+| **5** | 把 Gitalk 代码贴进你的网站 | 你的项目 | 3 分钟 |
 
-顺序不要颠倒：第 1 步拿到的 Client ID 要给第 3、第 4 步用，第 3 步拿到的地址要给第 4 步用。
+顺序不要颠倒：第 2 步拿到的 Client ID 要给第 3、第 5 步用，第 3 步拿到的地址要给第 5 步用。
+第 4 步的安装可以放在第 3 步之前或之后，但**一定要做**。
 
 > **「令牌服务」是什么？** GitHub 不允许网页直接完成登录换取令牌，所以必须有一个中间服务帮你做这件事。它是必需的，但第 3 步会给你几种省事的选择。
 
 ---
 
-# 第 1 步 · 创建 GitHub App
+# 第 1 步 · 准备仓库
+
+例子里的仓库是 `octocat/demo-repo`。两件事，都在它的 **Settings** 里：
+
+1. **仓库必须是 public** —— 代理的匿名读只服务公开仓库。
+2. **开启 Discussions**：Settings → General → Features → Discussions，然后在 **Discussions**
+   标签里建一个分类（默认的 `General` 就行）。
+
+---
+
+# 第 2 步 · 创建 GitHub App
 
 打开创建页（把 `<你的组织>` 换成你的 GitHub 组织名；个人账号用 `https://github.com/settings/apps/new`）：
 
@@ -161,27 +173,6 @@ App 设置页 → 左侧 **Display information** → **Logo**。
 
 ---
 
-# 第 2 步 · 安装 App
-
-⚠️ **不安装，评论就加载不出来。** 这一步只能用浏览器手动完成。
-
-打开安装页：
-
-```
-https://github.com/apps/<你的后缀>/installations/new
-```
-
-例如 <https://github.com/apps/gitalk-x/installations/new>
-
-1. 选要装到哪个账号或组织
-2. Repository access 选中存放评论的仓库
-3. 确认那个仓库**已经开启 Discussions**（仓库 Settings → Features → Discussions）
-4. 在里面建一个分类（category），默认用 `General` 就行
-
-装好后想核对一下：打开 GitHub 的 Applications 设置页（个人账号是 <https://github.com/settings/installations>；装在组织上就在该组织的 Settings → GitHub Apps 里看）。能看到这个 App、并且列出的正是你存评论的那个仓库，就说明装上了。
-
----
-
 # 第 3 步 · 部署「令牌服务」
 
 ## 先选一条路
@@ -220,9 +211,9 @@ cp packages/proxy-worker/.env.example packages/proxy-worker/.env
 
 | 键 | 值从哪来 |
 | --- | --- |
-| `GITHUB_APP_ID` | 第 1 步记下的 |
-| `GITHUB_CLIENT_ID` | 第 1 步记下的 |
-| `GITHUB_CLIENT_SECRET` | 第 1 步记下的 |
+| `GITHUB_APP_ID` | 第 2 步记下的 |
+| `GITHUB_CLIENT_ID` | 第 2 步记下的 |
+| `GITHUB_CLIENT_SECRET` | 第 2 步记下的 |
 | `SESSION_ENCRYPTION_KEY` | 执行 `openssl rand -hex 32` 生成 |
 | `GITALK_ALLOWED_ORIGINS` | 你的网站地址，如 `https://your.blog`（多个用逗号分隔） |
 | `GITHUB_APP_PRIVATE_KEY` | **留空**——见下 |
@@ -288,7 +279,7 @@ pnpm --filter @gitalk/proxy-cloudbase deploy
 
 做完之后，浏览器打开 `https://你的域名`，能看到 `{"ok":true,"service":"gitalk-proxy"}` 就说明通了。比如现在跑通的那个就是 `https://gitalk.xsin.work`。
 
-> ⚠️ **第 4 步填 `proxy` 时只写到域名，不要带路径。** 例如 `https://你的域名` ✅、`https://你的域名/gitalk` ❌（会 404）。回调地址同理，是 `https://你的域名/oauth/callback`。
+> ⚠️ **第 5 步填 `proxy` 时只写到域名，不要带路径。** 例如 `https://my-niubi-gitalk.octocat.workers.dev` ✅、同一个地址再加 `/gitalk` ❌（会 404）。回调地址同理，是 `https://my-niubi-gitalk.octocat.workers.dev/oauth/callback`。
 
 ## D · 用容器部署
 
@@ -319,7 +310,32 @@ docker run -d --name gitalk-proxy -p 8787:8787 \
 
 ---
 
-# 第 4 步 · 接入你的网站
+# 第 4 步 · 安装 App 到仓库
+
+⚠️ **只创建 App 是不够的。** 这一步只能用浏览器手动完成。
+
+App 名 `My Niubi Gitalk` 对应的 slug 是 `my-niubi-gitalk`（空格变连字符、字母转小写），
+安装页就是：
+
+```
+https://github.com/apps/my-niubi-gitalk/installations/new
+```
+
+1. 选要装到哪个账号或组织（例子里是 `octocat`）
+2. Repository access 选 **Only select repositories**，勾上 `demo-repo`
+3. 点 **Install**
+
+装好之后，proxy 才能用 App 的私钥换到 **installation token**；没装的话换不到 token，
+匿名读会退回每 IP 60 次/小时，私有仓库直接读不到，proxy 日志里是
+`no installation found for this app`。
+
+核对：GitHub 的 Applications 设置页（个人账号 <https://github.com/settings/installations>；
+装在组织上就在该组织的 Settings → GitHub Apps 里看）能看到这个 App，且列出的正是
+`demo-repo`。
+
+---
+
+# 第 5 步 · 接入你的网站
 
 ## 安装
 
@@ -344,12 +360,12 @@ pnpm add @aifire/gitalk-vue      # Vue
 <div id="gitalk-container"></div>
 <script>
   const gitalk = new Gitalk({
-    clientID: 'Iv23li…',        // 第 1 步的 Client ID
-    owner: '你的用户名',         // 存放评论的仓库
-    repo: 'blog-comments',
-    admin: ['你的用户名'],       // 谁可以创建讨论，见「关于 admin」
-    number: 42,                 // 这一页对应的讨论编号
-    proxy: 'https://…'          // 第 3 步拿到的地址，只写到域名，不要带路径
+    clientID: 'Iv1.xxxxxxxxxxxx', // 第 2 步的 Client ID（示例值）
+    owner: 'octocat',             // 存放评论的仓库所有者
+    repo: 'demo-repo',            // 只写仓库名，不要写 octocat/demo-repo
+    admin: ['octocat'],           // 谁可以创建讨论，见「关于 admin」
+    number: 42,                   // 这一页对应的讨论编号
+    proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 第 3 步的地址，只写到域名
   })
   gitalk.render('gitalk-container')
 </script>
@@ -365,12 +381,12 @@ export function Comments() {
   return (
     <Gitalk
       options={{
-        clientID: 'Iv23li…',
-        owner: '你的用户名',
-        repo: 'blog-comments',
-        admin: ['你的用户名'],
+        clientID: 'Iv1.xxxxxxxxxxxx',
+        owner: 'octocat',
+        repo: 'demo-repo',
+        admin: ['octocat'],
         number: 42,
-        proxy: 'https://…'   // 只写到域名，不要带路径
+        proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 只写到域名，不要带路径
       }}
     />
   )
@@ -385,12 +401,12 @@ import { Gitalk } from '@aifire/gitalk-vue'
 import '@aifire/gitalk/style.css'
 
 const options = {
-  clientID: 'Iv23li…',
-  owner: '你的用户名',
-  repo: 'blog-comments',
-  admin: ['你的用户名'],
+  clientID: 'Iv1.xxxxxxxxxxxx',
+  owner: 'octocat',
+  repo: 'demo-repo',
+  admin: ['octocat'],
   number: 42,
-  proxy: 'https://…'   // 只写到域名，不要带路径
+  proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 只写到域名，不要带路径
 }
 </script>
 
@@ -471,13 +487,13 @@ https://github.com/你的用户名/blog-comments/discussions/42
 
 ## 评论区一直转圈、不显示内容
 
-多半是 App 没安装，或者评论仓库没开 Discussions。回到[第 2 步](#第-2-步--安装-app)检查。
+多半是 App 没安装，或者评论仓库没开 Discussions。回到[第 4 步](#第-4-步--安装-app-到仓库)检查。
 
 ## 报错提到 `503` 或「No usable GitHub credential」
 
 令牌服务没拿到凭据。常见原因有两个：
 
-- **App 没安装**——回到第 2 步
+- **App 没安装**——回到第 4 步
 - **私钥填错了**——最容易犯的是把 GitHub 显示的 `SHA256:…` **指纹**当成密钥填了进去。正确做法是把下载的 `.pem` 文件放进 `packages/proxy-worker/` 目录
 
 ## 点登录后卡在一个 JSON 页面

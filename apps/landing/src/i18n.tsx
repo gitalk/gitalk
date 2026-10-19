@@ -104,7 +104,7 @@ const zh = {
     lede: '把 GitHub Discussions 或 Issues 变成你的评论区。一条命令部署轻量代理，无需数据库，评论实时同步。',
     statsTitle: '关键指标',
     stats: {
-      lines: { value: '4', label: '步快速接入', note: '准备仓库、创建并安装 App、部署、引入组件。' },
+      lines: { value: '5', label: '步快速接入', note: '准备仓库、创建 App、部署、安装、引入组件。' },
       comments: { value: '∞', label: '评论容量', note: '由 GitHub Discussions 承载。' },
       size: { label: '不是最小但最强', note: 'gzip 压缩后的实际传输体积。' },
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
@@ -114,8 +114,8 @@ const zh = {
   },
   getStarted: {
     eyebrow: '接入',
-    title: '四步接上评论',
-    lede: '顺序不能换：先准备仓库，再创建并安装 App，接着部署 proxy 拿到地址，最后引入组件。每一步只有一份完整说明。',
+    title: '五步接上评论',
+    lede: '顺序不能换：先准备仓库，再创建 App、部署 proxy、把 App 安装到仓库，最后引入组件。每一步只有一份完整说明。',
     steps: [
       {
         title: '准备仓库',
@@ -123,8 +123,8 @@ const zh = {
         code: ''
       },
       {
-        title: '创建 GitHub App，并安装到仓库',
-        body: '权限只要 Discussions: Read and write 和 Metadata: Read-only。⚠️ 只创建不够 —— 不安装，proxy 就拿不到 installation token，匿名读会退回每小时 60 次。',
+        title: '创建 GitHub App',
+        body: '权限只要 Discussions: Read and write 和 Metadata: Read-only。',
         code: ''
       },
       {
@@ -133,8 +133,13 @@ const zh = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: '把 App 安装到仓库',
+        body: '创建完还不够：打开 App 的安装页（github.com/apps/my-niubi-gitalk/installations/new），只勾存放评论的仓库，比如 demo-repo。不装的话拿不到 installation token，匿名读退回 60 次/小时。',
+        code: ''
+      },
+      {
         title: '引入组件',
-        body: '把 clientID、owner、repo、admin、number 和部署得到的 proxy 填进去就好。',
+        body: '把 clientID、owner、repo、admin、number 和部署得到的 proxy 填进去（示例：owner octocat、repo demo-repo）。',
         code: ''
       }
     ],
@@ -270,7 +275,7 @@ const options = {
 </template>`
       }
     },
-    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的四步，CloudBase 与自托管见仓库 README。'
+    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的五步，CloudBase 与自托管见仓库 README。'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -325,8 +330,8 @@ export type Messages = typeof zh
 const en: Messages = {
   getStarted: {
     eyebrow: 'Setup',
-    title: 'Four steps to comments',
-    lede: 'The order matters: prepare the repository, create the App and install it on that repository, deploy the proxy and set the callback URL, then embed the component. Each step has exactly one complete write-up.',
+    title: 'Five steps to comments',
+    lede: 'The order matters: prepare the repository, create the App, deploy the proxy and set the callback URL, install the App on the repository, then embed the component. Each step has exactly one complete write-up.',
     steps: [
       {
         title: 'Prepare the repository',
@@ -334,8 +339,8 @@ const en: Messages = {
         code: ''
       },
       {
-        title: 'Create the GitHub App and install it on the repository',
-        body: 'Only Discussions: Read and write and Metadata: Read-only are needed. ⚠️ Creating it is not enough — without the installation the proxy gets no installation token and anonymous reads fall back to 60 requests/hour.',
+        title: 'Create the GitHub App',
+        body: 'Only Discussions: Read and write and Metadata: Read-only are needed.',
         code: ''
       },
       {
@@ -344,8 +349,13 @@ const en: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'Install the App on the repository',
+        body: 'Creating it is not enough: open github.com/apps/my-niubi-gitalk/installations/new and tick the repository that stores comments, demo-repo. Without the install the proxy gets no installation token and anonymous reads drop to 60/hour.',
+        code: ''
+      },
+      {
         title: 'Embed the component',
-        body: 'Pass clientID, owner, repo, admin, number and the proxy the deploy printed.',
+        body: 'Pass clientID, owner, repo, admin, number and the proxy the deploy printed (example: owner octocat, repo demo-repo).',
         code: ''
       }
     ],
@@ -389,7 +399,7 @@ const en: Messages = {
     lede: 'Turn GitHub Discussions or Issues into your comment section. Deploy a lightweight proxy with one command. No database, and comments sync in real time.',
     statsTitle: 'Key numbers',
     stats: {
-      lines: { value: '4', label: 'steps', note: 'Prepare the repo, create and install the App, deploy, embed.' },
+      lines: { value: '5', label: 'steps', note: 'Prepare the repo, create the App, deploy, install, embed.' },
       comments: {
         value: '∞',
         label: 'Comments',
@@ -532,7 +542,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deployment is the four steps above; CloudBase and self-hosting are covered in the repository README.'
+    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deployment is the five steps above; CloudBase and self-hosting are covered in the repository README.'
   },
   faq: {
     eyebrow: '// FAQ',

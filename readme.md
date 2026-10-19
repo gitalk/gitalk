@@ -51,12 +51,12 @@ Or skip the build step entirely:
 <div id="gitalk-container"></div>
 <script>
   const gitalk = new Gitalk({
-    clientID: 'Iv23li…',     // your GitHub App client id
-    owner: 'you',            // repository that stores the comments
-    repo: 'blog-comments',
-    admin: ['you'],          // who may create the thread on first visit
-    number: 42,              // the discussion number for this page
-    proxy: 'https://…'       // the origin your deploy printed, no path
+    clientID: 'Iv1.xxxxxxxxxxxx',   // example value: your App's Client ID
+    owner: 'octocat',               // repository that stores the comments
+    repo: 'demo-repo',              // name only, never `octocat/demo-repo`
+    admin: ['octocat'],             // who may create the thread on first visit
+    number: 42,                     // the discussion number for this page
+    proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // the origin the deploy printed
   })
   gitalk.render('gitalk-container')
 </script>
@@ -72,12 +72,12 @@ export function Comments() {
   return (
     <Gitalk
       options={{
-        clientID: 'Iv23li…',
-        owner: 'you',
-        repo: 'blog-comments',
-        admin: ['you'],
+        clientID: 'Iv1.xxxxxxxxxxxx',
+        owner: 'octocat',
+        repo: 'demo-repo',
+        admin: ['octocat'],
         number: 42,
-        proxy: 'https://…'
+        proxy: 'https://my-niubi-gitalk.octocat.workers.dev'
       }}
     />
   )
@@ -92,12 +92,12 @@ import { Gitalk } from '@aifire/gitalk-vue'
 import '@aifire/gitalk/style.css'
 
 const options = {
-  clientID: 'Iv23li…',
-  owner: 'you',
-  repo: 'blog-comments',
-  admin: ['you'],
+  clientID: 'Iv1.xxxxxxxxxxxx',
+  owner: 'octocat',
+  repo: 'demo-repo',
+  admin: ['octocat'],
   number: 42,
-  proxy: 'https://…'
+  proxy: 'https://my-niubi-gitalk.octocat.workers.dev'
 }
 </script>
 
@@ -147,7 +147,7 @@ the steps; this README does not repeat them.
 Then pass the origin it printed:
 
 ```js
-{ proxy: 'https://your-worker.your-subdomain.workers.dev' }
+{ proxy: 'https://my-niubi-gitalk.octocat.workers.dev' }
 ```
 
 The endpoint only ever sees an OAuth code or an encrypted session — never your

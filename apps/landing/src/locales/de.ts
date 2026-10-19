@@ -39,7 +39,7 @@ export const de: Messages = {
     lede: 'Machen Sie GitHub Discussions oder Issues zu Ihrer Kommentarsektion. Ein Befehl deployt einen schlanken Proxy. Keine Datenbank, Kommentare synchronisieren in Echtzeit.',
     statsTitle: 'Kennzahlen',
     stats: {
-      lines: { value: '4', label: 'Schritte', note: 'Repository vorbereiten, App anlegen und installieren, deployen, einbinden.' },
+      lines: { value: '5', label: 'Schritte', note: 'Repository vorbereiten, App anlegen, deployen, installieren, einbinden.' },
       comments: { value: '∞', label: 'Kommentare', note: 'Getragen von GitHub Discussions.' },
       size: { label: 'nicht die kleinste', note: 'Tatsächliche Übertragungsgröße nach gzip.' },
       deps: { value: '0', label: 'Laufzeitabhängigkeiten', note: 'Die Rendering-Schicht steckt im Bundle.' },
@@ -49,8 +49,8 @@ export const de: Messages = {
   },
   getStarted: {
     eyebrow: 'Einrichtung',
-    title: 'Vier Schritte zu Kommentaren',
-    lede: 'Die Reihenfolge zählt: Repository vorbereiten, App anlegen und auf dem Repository installieren, Proxy deployen und die Callback-URL setzen, Komponente einbinden. Für jeden Schritt gibt es genau eine vollständige Anleitung.',
+    title: 'Fünf Schritte zu Kommentaren',
+    lede: 'Die Reihenfolge zählt: Repository vorbereiten, App anlegen, Proxy deployen und Callback-URL setzen, App im Repository installieren, Komponente einbinden. Für jeden Schritt gibt es genau eine vollständige Anleitung.',
     steps: [
       {
         title: 'Repository vorbereiten',
@@ -58,8 +58,8 @@ export const de: Messages = {
         code: ''
       },
       {
-        title: 'GitHub App anlegen und im Repository installieren',
-        body: 'Nötig sind nur Discussions: Read and write und Metadata: Read-only. ⚠️ Anlegen genügt nicht — ohne Installation erhält der Proxy kein Installation-Token, und anonyme Lesezugriffe fallen auf 60 Anfragen pro Stunde zurück.',
+        title: 'GitHub App anlegen',
+        body: 'Nötig sind nur Discussions: Read and write und Metadata: Read-only.',
         code: ''
       },
       {
@@ -68,8 +68,13 @@ export const de: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'App im Repository installieren',
+        body: 'Anlegen genügt nicht: Öffnen Sie github.com/apps/my-niubi-gitalk/installations/new und wählen Sie das Repository mit den Kommentaren, demo-repo. Ohne Installation erhält der Proxy kein Installation-Token, und anonyme Lesezugriffe fallen auf 60 pro Stunde zurück.',
+        code: ''
+      },
+      {
         title: 'Komponente einbinden',
-        body: 'clientID, owner, repo, admin, number und den ausgegebenen proxy übergeben — mehr braucht es nicht.',
+        body: 'clientID, owner, repo, admin, number und den ausgegebenen proxy übergeben (Beispiel: owner octocat, repo demo-repo).',
         code: ''
       }
     ],
@@ -204,7 +209,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die vier Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
+    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die fünf Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
   },
   faq: {
     eyebrow: '// FAQ',

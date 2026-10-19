@@ -39,7 +39,7 @@ export const zhTW: Messages = {
     lede: '把 GitHub Discussions 或 Issues 變成你的評論區。一行指令部署輕量代理，無需資料庫，評論即時同步。',
     statsTitle: '關鍵指標',
     stats: {
-      lines: { value: '4', label: '步快速接入', note: '準備儲存庫、建立並安裝 App、部署、引入。' },
+      lines: { value: '5', label: '步快速接入', note: '準備儲存庫、建立 App、部署、安裝、引入。' },
       comments: { value: '∞', label: '評論容量', note: '由 GitHub Discussions 承載。' },
       size: { label: '不是最小但最強', note: 'gzip 壓縮後的實際傳輸大小。' },
       deps: { value: '0', label: '執行時依賴', note: '渲染層已打包進產物。' },
@@ -49,8 +49,8 @@ export const zhTW: Messages = {
   },
   getStarted: {
     eyebrow: '接入',
-    title: '四步接上評論',
-    lede: '順序不能換：先準備儲存庫，再建立並安裝 App，接著部署 proxy 拿到位址，最後引入元件。每一步只有一份完整說明。',
+    title: '五步接上評論',
+    lede: '順序不能換：先準備儲存庫，再建立 App、部署 proxy、把 App 安裝到儲存庫，最後引入元件。每一步只有一份完整說明。',
     steps: [
       {
         title: '準備儲存庫',
@@ -58,8 +58,8 @@ export const zhTW: Messages = {
         code: ''
       },
       {
-        title: '建立 GitHub App，並安裝到儲存庫',
-        body: '權限只要 Discussions: Read and write 和 Metadata: Read-only。⚠️ 只建立不夠 —— 沒安裝，proxy 就拿不到 installation token，匿名讀會退回每小時 60 次。',
+        title: '建立 GitHub App',
+        body: '權限只要 Discussions: Read and write 和 Metadata: Read-only。',
         code: ''
       },
       {
@@ -68,8 +68,13 @@ export const zhTW: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: '把 App 安裝到儲存庫',
+        body: '建立完還不夠：打開 App 的安裝頁（github.com/apps/my-niubi-gitalk/installations/new），只勾存放評論的儲存庫，例如 demo-repo。沒安裝就拿不到 installation token，匿名讀會退回每小時 60 次。',
+        code: ''
+      },
+      {
         title: '引入元件',
-        body: '把 clientID、owner、repo、admin、number 和部署得到的 proxy 填進去就好。',
+        body: '把 clientID、owner、repo、admin、number 和部署得到的 proxy 填進去（範例：owner octocat、repo demo-repo）。',
         code: ''
       }
     ],
@@ -204,7 +209,7 @@ const options = {
 </template>`
       }
     },
-    note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的四步，CloudBase 與自架見儲存庫 README。'
+    note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的五步，CloudBase 與自架見儲存庫 README。'
   },
   faq: {
     eyebrow: '// FAQ',

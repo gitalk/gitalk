@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n'
 
 /**
- * The four steps between "I want comments" and "they work", kept deliberately
+ * The five steps between "I want comments" and "they work", kept deliberately
  * short: this is an overview, not the manual.
  *
  * The manual lives in exactly one place — `packages/gitalk-deploy/README.md`

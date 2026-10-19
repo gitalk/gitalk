@@ -39,7 +39,7 @@ export const ru: Messages = {
     lede: 'Превратите GitHub Discussions или Issues в раздел комментариев. Разверните лёгкий прокси одной командой. Без базы данных, комментарии синхронизируются в реальном времени.',
     statsTitle: 'Ключевые цифры',
     stats: {
-      lines: { value: '4', label: 'шагов до подключения', note: 'Подготовить репозиторий, создать и установить App, развернуть, вставить.' },
+      lines: { value: '5', label: 'шагов до подключения', note: 'Подготовить репозиторий, создать App, развернуть, установить, вставить.' },
       comments: { value: '∞', label: 'Комментарии', note: 'Их хранит GitHub Discussions.' },
       size: { label: 'не самый маленький', note: 'Реальный объём передачи после gzip.' },
       deps: { value: '0', label: 'Зависимости', note: 'Слой отрисовки уже в сборке.' },
@@ -49,8 +49,8 @@ export const ru: Messages = {
   },
   getStarted: {
     eyebrow: 'Подключение',
-    title: 'Четыре шага до комментариев',
-    lede: 'Порядок важен: подготовьте репозиторий, создайте App и установите её в этот репозиторий, разверните proxy и задайте callback URL, затем вставьте компонент. У каждого шага одно полное описание.',
+    title: 'Пять шагов до комментариев',
+    lede: 'Порядок важен: подготовьте репозиторий, создайте App, разверните proxy и задайте callback URL, установите App в репозиторий, затем вставьте компонент. У каждого шага одно полное описание.',
     steps: [
       {
         title: 'Подготовьте репозиторий',
@@ -58,8 +58,8 @@ export const ru: Messages = {
         code: ''
       },
       {
-        title: 'Создайте GitHub App и установите её в репозиторий',
-        body: 'Нужны только Discussions: Read and write и Metadata: Read-only. ⚠️ Создать недостаточно: без установки proxy не получит installation token, и анонимные чтения упадут до 60 запросов в час.',
+        title: 'Создайте GitHub App',
+        body: 'Нужны только Discussions: Read and write и Metadata: Read-only.',
         code: ''
       },
       {
@@ -68,8 +68,13 @@ export const ru: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'Установите App в репозиторий',
+        body: 'Создать недостаточно: откройте github.com/apps/my-niubi-gitalk/installations/new и выберите репозиторий для комментариев, demo-repo. Без установки proxy не получит installation token, и анонимные чтения упадут до 60 в час.',
+        code: ''
+      },
+      {
         title: 'Вставьте компонент',
-        body: 'Передайте clientID, owner, repo, admin, number и выведенный proxy.',
+        body: 'Передайте clientID, owner, repo, admin, number и выведенный proxy (пример: owner octocat, repo demo-repo).',
         code: ''
       }
     ],
@@ -204,7 +209,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Вход обязательно идёт через proxy: `github.com/login/oauth/access_token` не возвращает заголовки CORS, поэтому браузер не может сам завершить обмен token. Развёртывание — четыре шага выше; CloudBase и самостоятельный хостинг описаны в README репозитория.'
+    note: 'Вход обязательно идёт через proxy: `github.com/login/oauth/access_token` не возвращает заголовки CORS, поэтому браузер не может сам завершить обмен token. Развёртывание — пять шагов выше; CloudBase и самостоятельный хостинг описаны в README репозитория.'
   },
   faq: {
     eyebrow: '// FAQ',

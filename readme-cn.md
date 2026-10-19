@@ -47,12 +47,12 @@ pnpm add @aifire/gitalk-vue      # Vue
 <div id="gitalk-container"></div>
 <script>
   const gitalk = new Gitalk({
-    clientID: 'Iv23li…',     // 你的 GitHub App client id
-    owner: 'you',            // 存放评论的仓库
-    repo: 'blog-comments',
-    admin: ['you'],          // 谁可以在首次访问时创建 thread
-    number: 42,              // 本页对应的 discussion number
-    proxy: 'https://…'       // 部署打印出来的 origin，不要带路径
+    clientID: 'Iv1.xxxxxxxxxxxx',   // 示例值：换成你 App 的 Client ID
+    owner: 'octocat',               // 存放评论的仓库所有者
+    repo: 'demo-repo',              // 只写仓库名，不要写 `octocat/demo-repo`
+    admin: ['octocat'],             // 谁可以在首次访问时创建 thread
+    number: 42,                     // 本页对应的 discussion number
+    proxy: 'https://my-niubi-gitalk.octocat.workers.dev' // 部署打印出来的 origin，不要带路径
   })
   gitalk.render('gitalk-container')
 </script>
@@ -68,12 +68,12 @@ export function Comments() {
   return (
     <Gitalk
       options={{
-        clientID: 'Iv23li…',
-        owner: 'you',
-        repo: 'blog-comments',
-        admin: ['you'],
+        clientID: 'Iv1.xxxxxxxxxxxx',
+        owner: 'octocat',
+        repo: 'demo-repo',
+        admin: ['octocat'],
         number: 42,
-        proxy: 'https://…'
+        proxy: 'https://my-niubi-gitalk.octocat.workers.dev'
       }}
     />
   )
@@ -88,12 +88,12 @@ import { Gitalk } from '@aifire/gitalk-vue'
 import '@aifire/gitalk/style.css'
 
 const options = {
-  clientID: 'Iv23li…',
-  owner: 'you',
-  repo: 'blog-comments',
-  admin: ['you'],
+  clientID: 'Iv1.xxxxxxxxxxxx',
+  owner: 'octocat',
+  repo: 'demo-repo',
+  admin: ['octocat'],
   number: 42,
-  proxy: 'https://…'
+  proxy: 'https://my-niubi-gitalk.octocat.workers.dev'
 }
 </script>
 
@@ -139,7 +139,7 @@ npx github:gitalk/deploy -c .env -t cloudflare
 把它打印出来的 origin 传进来：
 
 ```js
-{ proxy: 'https://your-worker.your-subdomain.workers.dev' }
+{ proxy: 'https://my-niubi-gitalk.octocat.workers.dev' }
 ```
 
 端点只会看到 OAuth code 或加密后的会话——浏览器里从不出现 client secret，

@@ -39,7 +39,7 @@ export const ja: Messages = {
     lede: 'GitHub Discussions または Issues をコメント欄に。コマンド1つで軽量プロキシをデプロイ。データベース不要で、コメントはリアルタイムに同期します。',
     statsTitle: '主な数値',
     stats: {
-      lines: { value: '4', label: 'ステップで導入', note: 'リポジトリの準備、App の作成とインストール、デプロイ、組み込み。' },
+      lines: { value: '5', label: 'ステップで導入', note: 'リポジトリの準備、App の作成、デプロイ、インストール、組み込み。' },
       comments: { value: '∞', label: 'コメント数', note: 'GitHub Discussions が担います。' },
       size: { label: '最小ではない', note: 'gzip 後の実際の転送サイズ。' },
       deps: { value: '0', label: '実行時依存', note: '描画層はビルドに含まれます。' },
@@ -49,8 +49,8 @@ export const ja: Messages = {
   },
   getStarted: {
     eyebrow: 'セットアップ',
-    title: '4ステップでコメントを導入',
-    lede: '順序は入れ替えられません。リポジトリを準備し、App を作成してそのリポジトリにインストールし、proxy をデプロイして callback URL を設定し、最後にコンポーネントを組み込みます。完全な手順は一か所だけにあります。',
+    title: '5ステップでコメントを導入',
+    lede: '順序は入れ替えられません。リポジトリを準備し、App を作成し、proxy をデプロイして callback URL を設定し、App をリポジトリにインストールしてから、コンポーネントを組み込みます。完全な手順は一か所だけにあります。',
     steps: [
       {
         title: 'リポジトリを準備',
@@ -58,8 +58,8 @@ export const ja: Messages = {
         code: ''
       },
       {
-        title: 'GitHub App を作成し、リポジトリにインストール',
-        body: '必要な権限は Discussions: Read and write と Metadata: Read-only だけです。⚠️ 作成だけでは足りません。インストールしないと proxy は installation token を取得できず、匿名の読み込みは毎時60回に落ちます。',
+        title: 'GitHub App を作成',
+        body: '必要な権限は Discussions: Read and write と Metadata: Read-only だけです。',
         code: ''
       },
       {
@@ -68,8 +68,13 @@ export const ja: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'App をリポジトリにインストール',
+        body: '作成だけでは足りません。github.com/apps/my-niubi-gitalk/installations/new を開き、コメント用のリポジトリ demo-repo を選びます。未インストールだと proxy は installation token を取得できず、匿名の読み込みは毎時60回に落ちます。',
+        code: ''
+      },
+      {
         title: 'コンポーネントを組み込む',
-        body: 'clientID、owner、repo、admin、number と、デプロイで出力された proxy を渡すだけです。',
+        body: 'clientID、owner、repo、admin、number と、デプロイで出力された proxy を渡します（例: owner octocat、repo demo-repo）。',
         code: ''
       }
     ],
@@ -204,7 +209,7 @@ const options = {
 </template>`
       }
     },
-    note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の4ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
+    note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の5ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
   },
   faq: {
     eyebrow: '// FAQ',

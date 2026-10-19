@@ -39,7 +39,7 @@ export const fa: Messages = {
     lede: 'GitHub Discussions یا Issues را به بخش دیدگاه‌های خود تبدیل کنید. با یک فرمان یک پروکسی سبک راه‌اندازی کنید. بدون پایگاه داده، و دیدگاه‌ها بی‌درنگ همگام می‌شوند.',
     statsTitle: 'اعداد کلیدی',
     stats: {
-      lines: { value: '4', label: 'گام تا راه‌اندازی', note: 'آماده کردن مخزن، ساخت و نصب اپ، استقرار، افزودن.' },
+      lines: { value: '5', label: 'گام تا راه‌اندازی', note: 'آماده کردن مخزن، ساخت اپ، استقرار، نصب، افزودن.' },
       comments: { value: '∞', label: 'ظرفیت دیدگاه', note: 'بر دوش GitHub Discussions.' },
       size: { label: 'کوچک‌ترین نیست', note: 'حجم واقعی انتقال پس از gzip.' },
       deps: { value: '0', label: 'وابستگی زمان اجرا', note: 'لایه رندر داخل بسته است.' },
@@ -49,8 +49,8 @@ export const fa: Messages = {
   },
   getStarted: {
     eyebrow: 'راه‌اندازی',
-    title: 'چهار گام تا دیدگاه‌ها',
-    lede: 'ترتیب مهم است: مخزن را آماده کنید، اپ را بسازید و روی همان مخزن نصب کنید، پروکسی را مستقر کنید و نشانی callback را تنظیم کنید، سپس کامپوننت را اضافه کنید. هر گام یک راهنمای کامل و یکتا دارد.',
+    title: 'پنج گام تا دیدگاه‌ها',
+    lede: 'ترتیب مهم است: مخزن را آماده کنید، اپ را بسازید، پروکسی را مستقر کنید و نشانی callback را تنظیم کنید، اپ را روی مخزن نصب کنید و در پایان کامپوننت را اضافه کنید. هر گام یک راهنمای کامل و یکتا دارد.',
     steps: [
       {
         title: 'آماده کردن مخزن',
@@ -58,8 +58,8 @@ export const fa: Messages = {
         code: ''
       },
       {
-        title: 'ساخت GitHub App و نصب آن روی مخزن',
-        body: 'فقط Discussions: Read and write و Metadata: Read-only لازم است. ⚠️ ساختن کافی نیست — بدون نصب، پروکسی توکن نصب نمی‌گیرد و خواندن ناشناس به 60 درخواست در ساعت برمی‌گردد.',
+        title: 'ساخت GitHub App',
+        body: 'فقط Discussions: Read and write و Metadata: Read-only لازم است.',
         code: ''
       },
       {
@@ -68,8 +68,13 @@ export const fa: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'نصب اپ روی مخزن',
+        body: 'ساختن کافی نیست: github.com/apps/my-niubi-gitalk/installations/new را باز کنید و مخزن دیدگاه‌ها، demo-repo، را انتخاب کنید. بدون نصب، پروکسی توکن نصب نمی‌گیرد و خواندن ناشناس به 60 درخواست در ساعت برمی‌گردد.',
+        code: ''
+      },
+      {
         title: 'افزودن کامپوننت',
-        body: 'clientID و owner و repo و admin و number و proxy چاپ‌شده را بدهید.',
+        body: 'clientID، owner، repo، admin، number و proxy چاپ‌شده را بدهید (نمونه: owner octocat، repo demo-repo).',
         code: ''
       }
     ],
@@ -204,7 +209,7 @@ const options = {
 </template>`
       }
     },
-    note: 'ورود باید از proxy بگذرد: `github.com/login/oauth/access_token` هدرهای CORS برنمی‌گرداند، پس مرورگر نمی‌تواند تبادل توکن را تنها انجام دهد. استقرار همان چهار گام بالاست؛ CloudBase و میزبانی شخصی در README مخزن آمده است.'
+    note: 'ورود باید از proxy بگذرد: `github.com/login/oauth/access_token` هدرهای CORS برنمی‌گرداند، پس مرورگر نمی‌تواند تبادل توکن را تنها انجام دهد. استقرار همان پنج گام بالاست؛ CloudBase و میزبانی شخصی در README مخزن آمده است.'
   },
   faq: {
     eyebrow: '// FAQ',

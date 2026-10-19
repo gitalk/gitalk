@@ -39,7 +39,7 @@ export const ko: Messages = {
     lede: 'GitHub Discussions 또는 Issues를 댓글창으로. 명령 하나로 가벼운 프록시를 배포하고, 데이터베이스 없이 댓글이 실시간으로 동기화됩니다.',
     statsTitle: '주요 지표',
     stats: {
-      lines: { value: '4', label: '단계로 도입', note: '저장소 준비, App 생성과 설치, 배포, 삽입.' },
+      lines: { value: '5', label: '단계로 도입', note: '저장소 준비, App 생성, 배포, 설치, 삽입.' },
       comments: { value: '∞', label: '댓글 용량', note: 'GitHub Discussions가 담당합니다.' },
       size: { label: '가장 작지는 않지만 가장 강력', note: 'gzip 압축 후 실제 전송 크기입니다.' },
       deps: { value: '0', label: '런타임 의존성', note: '렌더링 계층은 빌드에 포함됩니다.' },
@@ -49,8 +49,8 @@ export const ko: Messages = {
   },
   getStarted: {
     eyebrow: '설정',
-    title: '4단계로 댓글 연결',
-    lede: '순서를 바꿀 수 없습니다. 저장소를 준비하고, App을 만들어 그 저장소에 설치하고, proxy를 배포해 callback URL을 설정한 뒤 컴포넌트를 넣습니다. 전체 안내는 한 곳에만 있습니다.',
+    title: '다섯 단계로 댓글 연결',
+    lede: '순서를 바꿀 수 없습니다. 저장소를 준비하고, App을 만들고, proxy를 배포해 callback URL을 설정하고, App을 저장소에 설치한 뒤 컴포넌트를 넣습니다. 전체 안내는 한 곳에만 있습니다.',
     steps: [
       {
         title: '저장소 준비',
@@ -58,8 +58,8 @@ export const ko: Messages = {
         code: ''
       },
       {
-        title: 'GitHub App 생성 후 저장소에 설치',
-        body: '권한은 Discussions: Read and write와 Metadata: Read-only면 충분합니다. ⚠️ 생성만으로는 부족합니다. 설치가 없으면 proxy가 installation token을 받지 못해 익명 읽기가 시간당 60회로 떨어집니다.',
+        title: 'GitHub App 생성',
+        body: '권한은 Discussions: Read and write와 Metadata: Read-only면 충분합니다.',
         code: ''
       },
       {
@@ -68,8 +68,13 @@ export const ko: Messages = {
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
+        title: 'App을 저장소에 설치',
+        body: '생성만으로는 부족합니다. github.com/apps/my-niubi-gitalk/installations/new를 열고 댓글용 저장소 demo-repo를 선택하세요. 설치가 없으면 proxy가 installation token을 받지 못해 익명 읽기가 시간당 60회로 떨어집니다.',
+        code: ''
+      },
+      {
         title: '컴포넌트 넣기',
-        body: 'clientID, owner, repo, admin, number와 배포에서 나온 proxy를 넘기면 됩니다.',
+        body: 'clientID, owner, repo, admin, number와 배포에서 나온 proxy를 넘깁니다(예: owner octocat, repo demo-repo).',
         code: ''
       }
     ],
@@ -204,7 +209,7 @@ const options = {
 </template>`
       }
     },
-    note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 네 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
+    note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 다섯 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
   },
   faq: {
     eyebrow: '// FAQ',

@@ -14,9 +14,10 @@
  *      env vars, callback timing);
  *   2. every `npx github:gitalk/deploy …` command in any document is byte-for-byte
  *      one of the commands the truth source publishes;
- *   3. every locale's `getStarted` has exactly one bullet per truth-source step,
- *      each short, with at most one code block (the deploy command), and no
- *      claim that contradicts the callback-URL order;
+ *   3. every locale's `getStarted` has exactly one bullet per truth-source step
+ *      (five), each short, with at most one code block (the deploy command),
+ *      install as bullet 4 and the component as bullet 5, and no claim that
+ *      contradicts the callback-URL order;
  *   4. every relative markdown link resolves, and every document that should
  *      link to the truth source actually does;
  *   5. the landing page's "more" link points at the truth source.
@@ -38,6 +39,23 @@ process.stdout.on('error', (error) => {
 })
 
 const TRUTH_EN = 'packages/gitalk-deploy/README.md'
+
+/**
+ * The truth source has exactly this many steps. Pinned here on purpose: if
+ * someone shrinks both the README and the landing page together, the "same
+ * count" comparison below would still pass, so the absolute number is asserted
+ * as well.
+ */
+const EXPECTED_STEPS = 5
+
+/** The one concrete example both READMEs must keep using, end to end. */
+const EXAMPLE_ANCHORS = [
+  'My Niubi Gitalk',
+  'my-niubi-gitalk',
+  'octocat',
+  'demo-repo',
+  'my-niubi-gitalk.octocat.workers.dev'
+]
 const TRUTH_CN = 'packages/gitalk-deploy/README-CN.md'
 const TRUTH_FILES = [TRUTH_EN, TRUTH_CN]
 
@@ -64,30 +82,28 @@ const REQUIRED_FACTS = [
   ['fingerprint warning', 'SHA256'],
   ['callback failure', 'redirect_uri_mismatch'],
   ['CloudBase command', 'npx github:gitalk/deploy -c .env -t cloudbase'],
-  ['repo is a bare name', 'owner/name'],
   ['Discussions feature path', 'Features → Discussions'],
   ['hosted proxy is closed', 'gitalk-proxy.aispin-abf.workers.dev'],
   ['hosted proxy reason', 'CORS']
 ]
 
 /**
- * Claims that used to live on the landing page and now contradict the truth
- * source: a callback URL can only be filled in after the first deploy, and the
- * overview is four steps, not five.
+ * Claims that contradict the truth source: a callback URL can only be filled in
+ * after the first deploy, and the overview is five steps, not four.
  */
 const BANNED_STEP_CLAIMS = [
-  /five steps?/i,
-  /fünf schritt/i,
-  /cinco pasos?/i,
-  /cinq étapes?/i,
-  /[5５]ステップ/,
-  /다섯 단계|[5５]단계/,
-  /pięć krok/i,
-  /пять шаг/i,
-  /پنج گام/,
-  /五步/,
-  /五個步驟/,
-  /五步驟/
+  /four steps?/i,
+  /vier schritt/i,
+  /cuatro pasos?/i,
+  /quatre étapes?/i,
+  /[4４]ステップ/,
+  /네 단계|[4４]단계/,
+  /cztery krok/i,
+  /четыре шаг/i,
+  /چهار گام/,
+  /四步/,
+  /四個步驟/,
+  /四步驟/
 ]
 
 const CALLBACK_NOW = [
@@ -97,6 +113,9 @@ const CALLBACK_NOW = [
 
 /** A step body longer than this is a manual, not an overview. */
 const MAX_OVERVIEW_BODY = 280
+
+/** Bullet 4 is the install step in every language. */
+const INSTALL_WORDS = /install|安装|安裝|インストール|설치|instal|установ|zainstal|نصب/i
 
 const errors = []
 const passes = []
@@ -150,33 +169,63 @@ function checkTruthSource(kind, file) {
   }
 
   const steps = stepHeadings(text, kind)
-  if (!assertContiguous(file, steps)) return null
+  // Report a numbering problem but keep checking: the install-order assertions
+  // below are exactly what catches a step that was moved past the embed step.
+  assertContiguous(file, steps)
+  if (steps.length !== EXPECTED_STEPS) {
+    fail(`${file}: ${steps.length} steps, expected ${EXPECTED_STEPS}`)
+  }
 
   for (const [label, needle] of REQUIRED_FACTS) {
     if (!text.includes(needle)) fail(`${file}: does not mention ${label} (\`${needle}\`)`)
   }
-
-  // The install step must sit between "create the App" and "deploy".
-  // The command is looked up after the step-3 heading: the intro also shows it.
-  const installAt = text.indexOf('### 2b.')
-  const stepThree = text.indexOf(kind === 'en' ? '## Step 3' : '## 第 3 步')
-  const deployAt = stepThree === -1 ? -1 : text.indexOf('npx github:gitalk/deploy', stepThree)
-  if (installAt === -1) fail(`${file}: no "### 2b." install section`)
-  else {
-    if (deployAt !== -1 && installAt > deployAt) {
-      fail(`${file}: the install section appears after the deploy command`)
-    }
-    if (stepThree !== -1 && installAt > stepThree) {
-      fail(`${file}: the install section appears after step 3`)
+  for (const anchor of EXAMPLE_ANCHORS) {
+    if (!text.includes(anchor)) {
+      fail(`${file}: the worked example is missing \`${anchor}\` — keep one concrete example throughout`)
     }
   }
 
+  // Installation is its own step, after the deploy and before the component.
   const installHeading =
-    kind === 'en' ? /^### 2b\. Install it on the repository/m : /^### 2b\. 安装到仓库/m
-  if (!installHeading.test(text)) fail(`${file}: no install sub-heading under step 2`)
+    kind === 'en'
+      ? /^## Step 4 — Install the App on the repository$/m
+      : /^## 第 4 步 — 把 App 安装到你的仓库$/m
+  if (!installHeading.test(text)) {
+    fail(`${file}: step 4 is not the "install the App" step`)
+  }
+  const stepFiveHeading = kind === 'en' ? '## Step 5 —' : '## 第 5 步 —'
+  const stepThreeHeading = kind === 'en' ? '## Step 3 —' : '## 第 3 步 —'
+  const installStart = text.search(installHeading)
+  const stepFiveStart = text.indexOf(stepFiveHeading)
+  if (installStart !== -1) {
+    const installSection =
+      stepFiveStart !== -1 ? text.slice(installStart, stepFiveStart) : text.slice(installStart)
+    for (const [label, needle] of [
+      ['install page URL', 'installations/new'],
+      ['installation token', 'installation token'],
+      ['the skipping warning', kind === 'en' ? 'Creating the App is not enough' : '只创建 App 是不够的'],
+      ['the proxy log line', 'no installation found for this app']
+    ]) {
+      if (!installSection.includes(needle)) {
+        fail(`${file}: step 4 (install) does not mention ${label} (\`${needle}\`)`)
+      }
+    }
+    const deployAt = text.indexOf('npx github:gitalk/deploy', text.indexOf(stepThreeHeading))
+    if (deployAt !== -1 && installStart < deployAt) {
+      fail(`${file}: the install step appears before the deploy command`)
+    }
+    if (stepFiveStart !== -1 && installStart > stepFiveStart) {
+      fail(`${file}: the install step appears after the "embed the component" step`)
+    }
+  }
+  const firstInstallUrl = text.indexOf('installations/new')
+  if (firstInstallUrl !== -1 && installStart !== -1 && firstInstallUrl < installStart) {
+    fail(`${file}: \`installations/new\` appears before the install step`)
+  }
 
   // The callback URL gets its own section after the deploy, and step 2 leaves
   // the field empty rather than guessing an address.
+  const stepThree = text.indexOf(kind === 'en' ? '## Step 3' : '## 第 3 步')
   const callbackAt = text.indexOf('### 3c.')
   if (callbackAt === -1) {
     fail(`${file}: no "### 3c." callback-URL section`)
@@ -191,7 +240,16 @@ function checkTruthSource(kind, file) {
   }
   const emptyHint = kind === 'en' ? 'leave it empty' : '先留空'
   if (!text.includes(emptyHint)) {
-    fail(`${file}: step 2a does not tell the reader to leave the callback URL empty`)
+    fail(`${file}: step 2 does not tell the reader to leave the callback URL empty`)
+  }
+  const bareRepoNames =
+    kind === 'en'
+      ? ['`repo` is the repository name alone', 'never `octocat/demo-repo`']
+      : ['`repo` 只写仓库名', '千万别写 `octocat/demo-repo`']
+  for (const needle of bareRepoNames) {
+    if (!text.includes(needle)) {
+      fail(`${file}: the embed step does not explain that \`repo\` takes the bare name (missing \`${needle}\`)`)
+    }
   }
 
   return { steps, text, commands: [...new Set(commandsIn(text))] }
@@ -288,6 +346,18 @@ function checkLanding(truthSteps, commands) {
         }
       }
       if (coded !== 1) fail(`landing[${lang}]: expected exactly one code block, found ${coded}`)
+
+      // Bullet order must mirror the truth source: index 3 installs, index 4 embeds.
+      if (!INSTALL_WORDS.test(`${gs.steps[3].title} ${gs.steps[3].body}`)) {
+        fail(`landing[${lang}] step 4: does not describe installing the App`)
+      }
+      if (!/clientID/.test(`${gs.steps[4].title} ${gs.steps[4].body}`)) {
+        fail(`landing[${lang}] step 5: does not mention clientID (the embed step)`)
+      }
+      const stat = dict.hero?.stats?.lines
+      if (String(stat?.value) !== String(EXPECTED_STEPS)) {
+        fail(`landing[${lang}]: the stats card says ${stat?.value} steps, expected ${EXPECTED_STEPS}`)
+      }
 
       const overview = JSON.stringify({
         getStarted: gs,
