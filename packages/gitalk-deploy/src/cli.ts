@@ -80,8 +80,10 @@ function main(argv: string[]): void {
   const required = existsSync(join(templates, 'worker', 'index.js'))
 
   if (target === 'cloudbase') {
-    if (!existsSync(join(templates, 'cloudbase'))) {
-      fail(`no CloudBase bundle at ${join(templates, 'cloudbase')} — rebuild with scripts/bundle.mjs`)
+    if (!existsSync(join(templates, 'functions/gitalk-proxy'))) {
+      fail(
+        `no CloudBase bundle at ${join(templates, 'functions/gitalk-proxy')} — rebuild with scripts/bundle.mjs`
+      )
     }
     deployCloudbase({
       templateDir: templates,

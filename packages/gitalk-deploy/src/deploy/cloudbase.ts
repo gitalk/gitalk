@@ -22,7 +22,9 @@ const log = (message: string) => console.log(`  ${message}`)
  */
 function tcb(args: string[], cwd: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn('npx', ['--yes', '@cloudbase/cli@latest', ...args], {
+    // The package's binary is named `tcb`, not after the package, so npx cannot
+    // infer what to run from the specifier alone.
+    const child = spawn('npx', ['--yes', '--package', '@cloudbase/cli@latest', 'tcb', ...args], {
       cwd,
       env: process.env
     })
@@ -49,7 +51,10 @@ function tcb(args: string[], cwd: string): Promise<string> {
 export async function deployCloudbase(plan: CloudbasePlan): Promise<string> {
   const { templateDir, runtime, env, dryRun } = plan
   const envId = env.CLOUDBASE_ENV_ID
-  const base = `https://${envId}.service.tcloudbase.com`
+  // The default domain only answers when the environment has HTTP access bound
+  // to it; most deploys reach the function through a custom domain instead, so
+  // prefer the one the caller configured.
+  const base = (env.PUBLIC_ORIGIN ?? `https://${envId}.service.tcloudbase.com`).replace(/\/$/, '')
   const functionName = 'gitalk-proxy'
 
   log(`function: ${functionName} in ${envId}`)
@@ -59,7 +64,7 @@ export async function deployCloudbase(plan: CloudbasePlan): Promise<string> {
     log(`  would log in with CLOUDBASE_SECRET_ID / CLOUDBASE_SECRET_KEY`)
     log(`  would write .env beside cloudbaserc.json`)
     log(`  would run: tcb fn deploy ${functionName} --force --envId ${envId}`)
-    log(`  would check ${base}/health`)
+    log(`  would check ${base}/`)
     return ''
   }
 

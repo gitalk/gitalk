@@ -75,13 +75,16 @@ log('  templates/worker ✓')
 // ----------------------------------------------------------------- cloudbase
 log('building the CloudBase function…')
 run('node', ['scripts/build.mjs'], join(REPO, 'packages/proxy-cloudbase'))
+// cloudbaserc.json declares `functionRoot: "functions"` and names the function,
+// so the template has to mirror that layout — the config is the contract, not
+// this script.
 cpSync(
   join(REPO, 'packages/proxy-cloudbase/functions/gitalk-proxy'),
-  join(TEMPLATES, 'cloudbase'),
+  join(TEMPLATES, 'functions/gitalk-proxy'),
   { recursive: true }
 )
 cpSync(join(REPO, 'packages/proxy-cloudbase/cloudbaserc.json'), join(TEMPLATES, 'cloudbaserc.json'))
-log('  templates/cloudbase ✓')
+log('  templates/functions/gitalk-proxy ✓')
 
 const size = (path) => `${(readFileSync(path).byteLength / 1000).toFixed(1)} kB`
 log(`worker bundle: ${size(join(TEMPLATES, 'worker/index.js'))}`)
