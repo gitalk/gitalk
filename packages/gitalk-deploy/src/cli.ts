@@ -106,7 +106,7 @@ function main(argv: string[]): void {
         if (await checkHealth(url)) {
           console.log(`\n✓ healthy: ${url}`)
         } else {
-          console.log('\n⚠ deployed, but /health did not answer ok — check the function logs')
+          console.log('\n⚠ deployed, but the root URL did not answer ok — check the function logs')
         }
       })
       .catch((error: unknown) => fail(error instanceof Error ? error.message : String(error)))
@@ -136,7 +136,7 @@ function main(argv: string[]): void {
         console.log(`\n✓ healthy: ${url}`)
         console.log(`  set proxy: '${url}' in your Gitalk options`)
       } else {
-        console.log('\n⚠ deployed, but /health did not answer ok — check the worker logs')
+        console.log('\n⚠ deployed, but the root URL did not answer ok — check the worker logs')
       }
     })
     .catch((error: unknown) => fail(error instanceof Error ? error.message : String(error)))

@@ -104,7 +104,7 @@ const zh = {
     lede: '把 GitHub Discussions 或 Issues 变成你的评论区。一条命令部署轻量代理，无需数据库，评论实时同步。',
     statsTitle: '关键指标',
     stats: {
-      lines: { value: '5', label: '步快速接入', note: '创建 App、填变量、部署、补 callback、引入组件。' },
+      lines: { value: '4', label: '步快速接入', note: '准备仓库、创建并安装 App、部署、引入组件。' },
       comments: { value: '∞', label: '评论容量', note: '由 GitHub Discussions 承载。' },
       size: { label: '不是最小但最强', note: 'gzip 压缩后的实际传输体积。' },
       deps: { value: '0', label: '运行时依赖', note: '渲染层已打包进产物。' },
@@ -114,36 +114,31 @@ const zh = {
   },
   getStarted: {
     eyebrow: '接入',
-    title: '五步接上评论',
-    lede: '四步是你亲自做的（创建 App、填变量、补 callback、引入组件），一步是一条命令。顺序不能换 —— 第 3 步要等第 2 步的变量齐了才能跑，第 4 步要等第 3 步打印出地址。',
+    title: '四步接上评论',
+    lede: '顺序不能换：先准备仓库，再创建并安装 App，接着部署 proxy 拿到地址，最后引入组件。每一步只有一份完整说明。',
     steps: [
       {
-        title: '创建 GitHub App',
-        body: '在 Settings → Developer settings → GitHub Apps 新建。权限勾 Discussions: Read and write 与 Metadata: Read-only；Callback URL 先留空 —— 代理要到第 3 步才部署出来，地址第 4 步再回来补；Webhook 关掉（用不上）。',
+        title: '准备仓库',
+        body: '仓库必须是 public，并在 Settings → General → Features → Discussions 打开 Discussions，再建一个分类。',
         code: ''
       },
       {
-        title: '准备环境变量',
-        body: '把 App ID、Client ID、Client Secret 和私钥（.pem 的全文，不是 SHA256 指纹）写进一个 .env；会话密钥用 openssl rand -hex 32 生成。GITALK_ALLOWED_ORIGINS 填你博客的域名 —— 它不依赖代理，第 2 步就能填。',
-        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+        title: '创建 GitHub App，并安装到仓库',
+        body: '权限只要 Discussions: Read and write 和 Metadata: Read-only。⚠️ 只创建不够 —— 不安装，proxy 就拿不到 installation token，匿名读会退回每小时 60 次。',
+        code: ''
       },
       {
-        title: '一条命令部署',
-        body: 'CLI 会先校验所有变量（缺哪个会明确告诉你），再把凭据作为 secret 上传，然后部署并自检 /health，最后打印该填进 proxy 的地址 —— 把这个地址记下来，第 4 步和第 5 步都要用。',
+        title: '部署 proxy，再补 callback URL',
+        body: '一条命令部署；等它打印出地址，再回 App 把 Callback URL 填成 <地址>/oauth/callback。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
-        title: '回去补上 callback URL',
-        body: '回到 App 设置页，把 Callback URL 填成第 3 步打印的地址加 /oauth/callback。漏了这一步，读者点「登录」时会报 redirect_uri_mismatch；改完立即生效，不用重新部署。',
-        code: 'Callback URL: https://<你的代理地址>/oauth/callback'
-      },
-      {
         title: '引入组件',
-        body: '把第 3 步记下的地址填进 proxy，评论就能用了。样式、暗色、多语言都由组件自己带。',
-        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+        body: '把 clientID、owner、repo、admin、number 和部署得到的 proxy 填进去就好。',
+        code: ''
       }
     ],
-    more: 'CloudBase、自托管与全部变量说明 → 部署 CLI 的 README',
+    more: '完整步骤见 deploy CLI 的 README —— 凭据、.env、CloudBase、全部变量',
     domainTitle: '自定义域名',
     domainBody: '域名在 Cloudflare 时可以直接绑；在别处需要在域名商加一条 CNAME。CloudBase 的自定义域名还需要 ICP 备案 —— 这两件得人工做。GitHub App 的 callback URL 也只能在网页改（org 所有的 App 不能用 API 改）。'
   },
@@ -275,7 +270,7 @@ const options = {
 </template>`
       }
     },
-    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的五步，CloudBase 与自托管见仓库 README。'
+    note: '登录必须经过 proxy：`github.com/login/oauth/access_token` 不返回 CORS 头，浏览器无法自行完成 token 交换。部署方式见上面的四步，CloudBase 与自托管见仓库 README。'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -283,7 +278,7 @@ const options = {
     items: [
       {
         q: '能直接用 CDN 引入吗？',
-        a: '组件本身可以。但登录和发评论不能共用官方 proxy —— 它只信任 `gitalk.github.io`，而且跑在 Gitalk 自己的 App 上。自己的站点要部署一份自己的（一条命令，约五分钟）。',
+        a: '组件本身可以。但登录和发评论不能共用官方 proxy —— 它只放行 Gitalk 项目自己的站点，而且跑在项目自己的 App 上。自己的站点要部署一份自己的（一条命令，约五分钟）。',
         code: CDN_SCRIPT
       },
       {
@@ -330,16 +325,31 @@ export type Messages = typeof zh
 const en: Messages = {
   getStarted: {
     eyebrow: 'Setup',
-    title: 'Five steps to comments',
-    lede: 'Four are yours to do — create the App, fill the values, set the callback, drop the component in — and one is a command. The order matters: step three needs the values from step two, and step four needs the address step three prints.',
+    title: 'Four steps to comments',
+    lede: 'The order matters: prepare the repository, create the App and install it on that repository, deploy the proxy and set the callback URL, then embed the component. Each step has exactly one complete write-up.',
     steps: [
-      { title: 'Create a GitHub App', body: 'Settings → Developer settings → GitHub Apps. Grant Discussions: Read and write and Metadata: Read-only; leave the Callback URL empty for now — the proxy does not exist until step three deploys it, so you come back to this in step four; turn Webhooks off — they are unused.', code: '' },
-      { title: 'Fill in the values', body: 'Put the App ID, Client ID, Client Secret and the private key (the .pem contents, not the SHA256 fingerprint) in a .env, and generate a session key. Set GITALK_ALLOWED_ORIGINS to your blog’s origin — it does not depend on the proxy, so step two can fill it in.', code: 'GITHUB_APP_ID=…' },
-      { title: 'Deploy with one command', body: 'The CLI checks every value first and names any that are missing, uploads the credentials as secrets, deploys, then calls /health and prints the URL to use as your proxy. Note that address — steps four and five need it.', code: 'npx github:gitalk/deploy -c .env -t cloudflare' },
-      { title: 'Go back and set the callback URL', body: 'Return to the App settings and set Callback URL to the address from step three plus /oauth/callback. Skipping this shows up as redirect_uri_mismatch when someone clicks Sign in; the change takes effect immediately, with no redeploy.', code: 'Callback URL: https://<your proxy>/oauth/callback' },
-      { title: 'Include the component', body: 'Pass the address you noted in step three as proxy and the comments work. Styling, dark mode and translations come with the component.', code: "new Gitalk({ clientID, proxy: 'https://…' })" }
+      {
+        title: 'Prepare the repository',
+        body: 'It must be public, with Discussions enabled under Settings → General → Features → Discussions, and at least one category.',
+        code: ''
+      },
+      {
+        title: 'Create the GitHub App and install it on the repository',
+        body: 'Only Discussions: Read and write and Metadata: Read-only are needed. ⚠️ Creating it is not enough — without the installation the proxy gets no installation token and anonymous reads fall back to 60 requests/hour.',
+        code: ''
+      },
+      {
+        title: 'Deploy the proxy, then set the callback URL',
+        body: 'One command deploys it. Wait for the address it prints, then set the App Callback URL to <address>/oauth/callback.',
+        code: 'npx github:gitalk/deploy -c .env -t cloudflare'
+      },
+      {
+        title: 'Embed the component',
+        body: 'Pass clientID, owner, repo, admin, number and the proxy the deploy printed.',
+        code: ''
+      }
     ],
-    more: 'CloudBase, self-hosting and every variable → the deploy CLI README',
+    more: 'Complete steps: the deploy CLI README — credentials, .env, CloudBase, every variable',
     domainTitle: 'Custom domains',
     domainBody: 'A domain on Cloudflare can be bound directly; anywhere else needs a CNAME record added by hand. CloudBase additionally requires an ICP filing. The App callback URL always has to be edited in the web UI — organisation-owned Apps cannot be changed through the API.'
   },
@@ -379,7 +389,7 @@ const en: Messages = {
     lede: 'Turn GitHub Discussions or Issues into your comment section. Deploy a lightweight proxy with one command. No database, and comments sync in real time.',
     statsTitle: 'Key numbers',
     stats: {
-      lines: { value: '5', label: 'steps', note: 'Create the App, fill the values, deploy, set the callback, include.' },
+      lines: { value: '4', label: 'steps', note: 'Prepare the repo, create and install the App, deploy, embed.' },
       comments: {
         value: '∞',
         label: 'Comments',
@@ -522,7 +532,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deploying it is the five steps above; CloudBase and self-hosting are covered in the repository README.'
+    note: 'Signing in must go through a proxy: `github.com/login/oauth/access_token` sends no CORS headers, so the browser cannot complete the token exchange alone. Deployment is the four steps above; CloudBase and self-hosting are covered in the repository README.'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -530,7 +540,7 @@ const options = {
     items: [
       {
         q: 'Can I load it straight from a CDN?',
-        a: "The component itself, yes. But sign-in and posting comments cannot share the official proxy — it only trusts `gitalk.github.io` and runs on Gitalk's own App. Your site needs its own deployment (one command, about five minutes).",
+        a: "The component itself, yes. But sign-in and posting comments cannot share the official proxy — it only allows this project's own sites and runs on the project's own App. Your site needs its own deployment (one command, about five minutes).",
         code: CDN_SCRIPT
       },
       {
@@ -584,6 +594,15 @@ const MESSAGES: Record<Lang, Messages> = {
   pl,
   fa
 }
+
+/**
+ * Every dictionary, keyed by locale id.
+ *
+ * Exported so `scripts/check-docs.mjs` can assert that all eleven stay in step
+ * with the deploy README (step count, banned claims, lengths) by importing the
+ * dictionaries instead of parsing TSX.
+ */
+export const DICTS: Readonly<Record<Lang, Messages>> = MESSAGES
 
 export interface I18n {
   lang: Lang

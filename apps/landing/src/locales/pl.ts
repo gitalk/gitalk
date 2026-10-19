@@ -39,7 +39,7 @@ export const pl: Messages = {
     lede: 'Zamień GitHub Discussions lub Issues w sekcję komentarzy. Wdróż lekki proxy jednym poleceniem. Bez bazy danych, komentarze synchronizują się na bieżąco.',
     statsTitle: 'Najważniejsze liczby',
     stats: {
-      lines: { value: '5', label: 'kroków', note: 'Utwórz App, wpisz wartości, wdróż, ustaw callback, podłącz.' },
+      lines: { value: '4', label: 'kroków', note: 'Przygotuj repozytorium, utwórz i zainstaluj App, wdróż, wstaw.' },
       comments: { value: '∞', label: 'Komentarze', note: 'Przechowuje je GitHub Discussions.' },
       size: { label: 'nie najmniejszy', note: 'Rzeczywisty rozmiar transferu po gzip.' },
       deps: { value: '0', label: 'Zależności', note: 'Warstwa renderowania jest w pakiecie.' },
@@ -49,36 +49,31 @@ export const pl: Messages = {
   },
   getStarted: {
     eyebrow: 'Konfiguracja',
-    title: 'Pięć kroków do komentarzy',
-    lede: 'Cztery kroki są po Twojej stronie — utworzenie App, wpisanie wartości, ustawienie callbacku, podłączenie komponentu — a jeden to polecenie. Kolejność ma znaczenie: krok trzeci potrzebuje wartości z drugiego, a czwarty adresu wypisanego przez trzeci.',
+    title: 'Cztery kroki do komentarzy',
+    lede: 'Kolejność ma znaczenie: przygotuj repozytorium, utwórz App i zainstaluj ją w tym repozytorium, wdróż proxy i ustaw callback URL, a na końcu wstaw komponent. Każdy krok ma jedno pełne opracowanie.',
     steps: [
       {
-        title: 'Utwórz GitHub App',
-        body: 'W Settings → Developer settings → GitHub Apps. Przyznaj Discussions: Read and write i Metadata: Read-only; pole Callback URL na razie zostaw puste — proxy powstaje dopiero w kroku trzecim, więc wrócisz do tego w kroku czwartym; Webhooks wyłącz (nie są używane).',
+        title: 'Przygotuj repozytorium',
+        body: 'Musi być publiczne, mieć włączone Discussions (Settings → General → Features → Discussions) i co najmniej jedną kategorię.',
         code: ''
       },
       {
-        title: 'Przygotuj zmienne',
-        body: 'Zapisz App ID, Client ID, Client Secret i klucz prywatny (treść .pem, nie odcisk SHA256) w pliku .env, a klucz sesji wygeneruj przez openssl rand -hex 32. W GITALK_ALLOWED_ORIGINS wpisz domenę bloga — nie zależy od proxy, więc krok drugi może ją już uzupełnić.',
-        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+        title: 'Utwórz GitHub App i zainstaluj ją w repozytorium',
+        body: 'Potrzebne są tylko Discussions: Read and write i Metadata: Read-only. ⚠️ Samo utworzenie nie wystarczy — bez instalacji proxy nie dostanie tokenu instalacji, a anonimowe odczyty spadną do 60 żądań na godzinę.',
+        code: ''
       },
       {
-        title: 'Wdróż jednym poleceniem',
-        body: 'CLI najpierw sprawdza wszystkie wartości i wskazuje brakujące, wysyła dane uwierzytelniające jako sekrety, wdraża, wywołuje /health i wypisuje adres, który wpisujesz w proxy. Zapisz ten adres — przyda się w kroku czwartym i piątym.',
+        title: 'Wdróż proxy, potem ustaw callback URL',
+        body: 'Jedno polecenie je wdraża. Poczekaj na wypisany adres i ustaw Callback URL na <adres>/oauth/callback.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
-        title: 'Wróć i ustaw callback URL',
-        body: 'Wróć do ustawień App i wpisz w Callback URL adres z kroku trzeciego plus /oauth/callback. Pominięcie tego kończy się błędem redirect_uri_mismatch po kliknięciu „Zaloguj się”; zmiana działa od razu, bez ponownego wdrażania.',
-        code: 'Callback URL: https://<adres twojego proxy>/oauth/callback'
-      },
-      {
-        title: 'Podłącz komponent',
-        body: 'Wpisz adres zapisany w kroku trzecim w proxy i komentarze działają. Styl, tryb ciemny i tłumaczenia dostarcza sam komponent.',
-        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+        title: 'Wstaw komponent',
+        body: 'Podaj clientID, owner, repo, admin, number oraz wypisany proxy.',
+        code: ''
       }
     ],
-    more: 'CloudBase, własny hosting i wszystkie zmienne → README CLI wdrożeniowego',
+    more: 'Pełne kroki — dane uwierzytelniające, .env, CloudBase, wszystkie zmienne → README CLI wdrożeniowego',
     domainTitle: 'Własne domeny',
     domainBody: 'Domenę w Cloudflare można podpiąć bezpośrednio; gdzie indziej trzeba ręcznie dodać rekord CNAME. Własna domena w CloudBase wymaga dodatkowo rejestracji ICP — jedno i drugie robi się ręcznie. Callback URL aplikacji też zmienia się tylko w interfejsie webowym (aplikacji należących do organizacji nie da się zmienić przez API).'
   },
@@ -209,7 +204,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Logowanie musi przechodzić przez proxy: `github.com/login/oauth/access_token` nie zwraca nagłówków CORS, więc przeglądarka sama nie dokończy wymiany tokenu. Wdrożenie to pięć kroków powyżej; CloudBase i własny hosting opisuje README repozytorium.'
+    note: 'Logowanie musi przechodzić przez proxy: `github.com/login/oauth/access_token` nie zwraca nagłówków CORS, więc przeglądarka sama nie dokończy wymiany tokenu. Wdrożenie to cztery kroki powyżej; CloudBase i własny hosting opisuje README repozytorium.'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -217,7 +212,7 @@ const options = {
     items: [
       {
         q: 'Czy można wczytać go wprost z CDN?',
-        a: 'Sam komponent — tak. Logowanie i publikowanie komentarzy nie mogą jednak korzystać ze wspólnego oficjalnego proxy — ufa ono tylko `gitalk.github.io` i działa na własnej App Gitalka. Twoja strona potrzebuje własnego wdrożenia (jedna komenda, około pięciu minut).',
+        a: 'Sam komponent — tak. Logowanie i publikowanie komentarzy nie mogą jednak korzystać ze wspólnego oficjalnego proxy — przepuszcza tylko strony samego projektu i działa na własnej App projektu. Twoja strona potrzebuje własnego wdrożenia (jedna komenda, około pięciu minut).',
         code: CDN_SCRIPT
       },
       {

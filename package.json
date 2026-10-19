@@ -13,6 +13,7 @@
     "dev:landing": "pnpm --filter @gitalk/landing run dev",
     "test": "vitest run",
     "test:watch": "vitest",
+    "check:docs": "node scripts/check-docs.mjs",
     "typecheck": "tsc -b"
   },
   "devDependencies": {

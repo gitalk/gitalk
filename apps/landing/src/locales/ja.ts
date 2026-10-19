@@ -39,7 +39,7 @@ export const ja: Messages = {
     lede: 'GitHub Discussions または Issues をコメント欄に。コマンド1つで軽量プロキシをデプロイ。データベース不要で、コメントはリアルタイムに同期します。',
     statsTitle: '主な数値',
     stats: {
-      lines: { value: '5', label: 'ステップで導入', note: 'App の作成、値の入力、デプロイ、callback の設定、組み込み。この5ステップです。' },
+      lines: { value: '4', label: 'ステップで導入', note: 'リポジトリの準備、App の作成とインストール、デプロイ、組み込み。' },
       comments: { value: '∞', label: 'コメント数', note: 'GitHub Discussions が担います。' },
       size: { label: '最小ではない', note: 'gzip 後の実際の転送サイズ。' },
       deps: { value: '0', label: '実行時依存', note: '描画層はビルドに含まれます。' },
@@ -49,36 +49,31 @@ export const ja: Messages = {
   },
   getStarted: {
     eyebrow: 'セットアップ',
-    title: '5ステップでコメントを導入',
-    lede: '4つはあなたが行う作業（App の作成、値の入力、callback の設定、コンポーネントの組み込み）で、1つはコマンドです。順序は入れ替えられません。ステップ3はステップ2の値が、ステップ4はステップ3が出力するアドレスが必要です。',
+    title: '4ステップでコメントを導入',
+    lede: '順序は入れ替えられません。リポジトリを準備し、App を作成してそのリポジトリにインストールし、proxy をデプロイして callback URL を設定し、最後にコンポーネントを組み込みます。完全な手順は一か所だけにあります。',
     steps: [
       {
-        title: 'GitHub App を作成',
-        body: 'Settings → Developer settings → GitHub Apps で新規作成します。権限は Discussions: Read and write と Metadata: Read-only を選択。Callback URL は今は空欄のままにします —— プロキシはステップ3でデプロイされるので、アドレスはステップ4で戻ってきて入力します。Webhook はオフにします（使いません）。',
+        title: 'リポジトリを準備',
+        body: 'public であること、Discussions を有効にすること（Settings → General → Features → Discussions）、カテゴリを1つ以上作ることが条件です。',
         code: ''
       },
       {
-        title: '環境変数を用意',
-        body: 'App ID、Client ID、Client Secret、秘密鍵（.pem の全文。SHA256 の指紋ではありません）を .env に書き、セッションキーは openssl rand -hex 32 で生成します。GITALK_ALLOWED_ORIGINS にはブログのドメインを入れます —— これはプロキシに依存しないので、ステップ2の時点で書けます。',
-        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+        title: 'GitHub App を作成し、リポジトリにインストール',
+        body: '必要な権限は Discussions: Read and write と Metadata: Read-only だけです。⚠️ 作成だけでは足りません。インストールしないと proxy は installation token を取得できず、匿名の読み込みは毎時60回に落ちます。',
+        code: ''
       },
       {
-        title: 'コマンド1つでデプロイ',
-        body: 'CLI はまずすべての値を検証し（足りないものがあれば具体的に示します）、資格情報を secret としてアップロードしてからデプロイし、/health を自己診断したうえで、proxy に入れるアドレスを出力します。このアドレスを控えてください —— ステップ4と5で使います。',
+        title: 'proxy をデプロイし、callback URL を設定',
+        body: 'コマンド1つでデプロイできます。出力されたアドレスを待ち、Callback URL に <アドレス>/oauth/callback を設定します。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
-        title: '戻って callback URL を設定',
-        body: 'App の設定ページに戻り、Callback URL にステップ3で出力されたアドレス + /oauth/callback を入力します。忘れると、読者が「ログイン」を押したときに redirect_uri_mismatch が出ます。変更はすぐ反映され、再デプロイは不要です。',
-        code: 'Callback URL: https://<プロキシのアドレス>/oauth/callback'
-      },
-      {
         title: 'コンポーネントを組み込む',
-        body: 'ステップ3で控えたアドレスを proxy に渡せば、コメントが使えます。スタイル、ダークモード、多言語はコンポーネント側が持ちます。',
-        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+        body: 'clientID、owner、repo、admin、number と、デプロイで出力された proxy を渡すだけです。',
+        code: ''
       }
     ],
-    more: 'CloudBase、セルフホスト、すべての変数の説明 → デプロイ CLI の README',
+    more: '完全な手順 — 認証情報、.env、CloudBase、すべての変数 → デプロイ CLI の README',
     domainTitle: 'カスタムドメイン',
     domainBody: 'Cloudflare 上のドメインはそのまま紐付けられます。それ以外では、ドメイン事業者で CNAME レコードを1件追加する必要があります。CloudBase のカスタムドメインには ICP 登録も必要です。この2つは手作業になります。GitHub App の callback URL も Web UI でしか変更できません（org 所有の App は API から変更できません）。'
   },
@@ -209,7 +204,7 @@ const options = {
 </template>`
       }
     },
-    note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の5ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
+    note: 'ログインは必ず proxy を経由します。`github.com/login/oauth/access_token` は CORS ヘッダーを返さないため、ブラウザだけで token 交換を完了できません。デプロイは上記の4ステップ、CloudBase とセルフホストはリポジトリの README を参照してください。'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -217,7 +212,7 @@ const options = {
     items: [
       {
         q: 'CDN から直接読み込めますか？',
-        a: 'コンポーネント自体は可能です。ただしログインとコメント投稿に公式 proxy は使えません —— 公式 proxy は `gitalk.github.io` しか信頼せず、Gitalk 自身の App で動いているためです。自分のサイト用に別途デプロイしてください（コマンド 1 つ、約 5 分）。',
+        a: 'コンポーネント自体は可能です。ただしログインとコメント投稿に公式 proxy は使えません —— 公式 proxy はこのプロジェクト自身のサイトだけを許可し、プロジェクト自身の App で動いているためです。自分のサイト用に別途デプロイしてください（コマンド 1 つ、約 5 分）。',
         code: CDN_SCRIPT
       },
       {

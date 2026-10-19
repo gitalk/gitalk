@@ -10,23 +10,19 @@ No backend, no database, no third-party proxy.
 Three steps. Step 1 is the only one that needs a browser and a repository you
 administer; the rest is copy-paste.
 
-### 1. Create a GitHub App
+### 1. Put the App on a repository
 
-Gitalk 2.0 uses a **GitHub App**, not the 1.x OAuth App. The App is what lets
-the token endpoint mint an installation token without shipping a secret to the
-browser — and what keeps the client secret server-side for sign-in.
+Gitalk 2.0 uses a **GitHub App**, not the 1.x OAuth App: it lets the token
+endpoint mint an installation token without shipping a secret to the browser.
 
-Follow **[docs/guide.md](docs/guide.md)** — it walks the
-creation form field by field, including the callback URL, permissions and the
-two settings that silently break sign-in if you get them wrong.
+The complete setup — public repository, Discussions, App permissions,
+**installing the App on that repository**, credentials and the callback URL — is
+documented once, in
+**[the deploy CLI's README](packages/gitalk-deploy/README.md)**. Creating the App
+is not enough: without the installation the proxy has no token, and anonymous
+reads fall back to 60 requests/hour.
 
-You will end up with:
-
-- an App **Client ID** (looks like `Iv23li…`) — this goes in your page
-- the App **installed** on the repository that will store your comments
-- **Discussions** enabled on that repository, with a category
-
-> The App's client secret never goes in your page. It lives in a token
+> The App's client secret never goes in your page. It lives in the token
 > endpoint; see [The token endpoint](#the-token-endpoint).
 
 ### 2. Install the packages
@@ -59,7 +55,8 @@ Or skip the build step entirely:
     owner: 'you',            // repository that stores the comments
     repo: 'blog-comments',
     admin: ['you'],          // who may create the thread on first visit
-    number: 42               // the discussion number for this page
+    number: 42,              // the discussion number for this page
+    proxy: 'https://…'       // the origin your deploy printed, no path
   })
   gitalk.render('gitalk-container')
 </script>
@@ -79,7 +76,8 @@ export function Comments() {
         owner: 'you',
         repo: 'blog-comments',
         admin: ['you'],
-        number: 42
+        number: 42,
+        proxy: 'https://…'
       }}
     />
   )
@@ -98,7 +96,8 @@ const options = {
   owner: 'you',
   repo: 'blog-comments',
   admin: ['you'],
-  number: 42
+  number: 42,
+  proxy: 'https://…'
 }
 </script>
 
@@ -119,7 +118,7 @@ const options = {
 | `id` | `location.pathname` | Page identifier used when no `number` is given |
 | `category` | — | Discussions category slug/name used when creating |
 | `perPage` | `10` | Page size |
-| `proxy` | hosted endpoint | Token-exchange endpoint; see below |
+| `proxy` | project's own endpoint | Your proxy's origin. Required in practice: see [The token endpoint](#the-token-endpoint) |
 | `language` | `navigator.language` | 11 locales carried over from 1.x |
 
 ## The token endpoint
@@ -129,27 +128,23 @@ header, and the device flow is CORS-blocked too, so **a static page cannot
 complete the OAuth exchange by itself**. Something server-side has to hold the
 client secret.
 
-By default Gitalk uses an endpoint this project runs, so you can leave `proxy`
-unset:
-
-```
-https://gitalk-proxy.aispin-abf.workers.dev
-```
-
-If you would rather not depend on it, deploy your own from
-[`packages/gitalk-deploy`](packages/gitalk-deploy). One command, free tier, about
-a minute:
+Gitalk's built-in default is the endpoint this project runs, and it only serves
+this project's own sites: its origin allowlist is not open to third parties, so
+another domain is rejected by CORS before GitHub is ever contacted. **Deploy
+your own** — one command, free tier, about a minute:
 
 ```sh
 npx github:gitalk/deploy -c .env -t cloudflare
 ```
 
 **CloudBase** is supported too (`-t cloudbase`, needs a CloudBase environment and
-Tencent Cloud keys), as is self-hosting on Node. The variable list, custom
-domains and the differences between platforms are in the
-[deploy CLI's README](packages/gitalk-deploy/README.md).
+Tencent Cloud keys), as is self-hosting on Node. The complete setup — repository
+preparation, App permissions, **installing the App on your repository**,
+credentials, `.env`, the callback URL — is documented once, in the
+**[deploy CLI's README](packages/gitalk-deploy/README.md)**. Only that file lists
+the steps; this README does not repeat them.
 
-Then pass its URL:
+Then pass the origin it printed:
 
 ```js
 { proxy: 'https://your-worker.your-subdomain.workers.dev' }
@@ -162,15 +157,17 @@ client secret from the browser, and never a visitor's raw token in a URL.
 
 | Visitor | Path | Limit |
 |---|---|---|
-| Logged out | GitHub REST, straight from the browser | **60 requests/hour per IP** |
+| Logged out, `proxy` set and App installed | Canonical GraphQL reads through your proxy, with the installation token | 5,000 per hour |
+| Logged out, no proxy or App not installed | GitHub REST, straight from the browser | **60 requests/hour per IP** |
 | Logged in | GitHub REST / GraphQL, with the visitor's own token | 5,000 per hour |
 
-Comment reads do **not** go through the token endpoint — REST reads are
-CORS-enabled and need no credential, so they go directly to `api.github.com`
-and count against the anonymous per-IP budget. The 1.x ceiling therefore still
-applies until a visitor signs in. Writing must use GraphQL (GitHub exposes no
-REST write API for discussions), which is why posting requires signing in.
-See [docs/tech.md §2.1](docs/tech.md) for the measured matrix.
+When `proxy` is set, anonymous reads take the proxy's canonical GraphQL path and
+spend the installation token's 5,000/hour; if that path cannot answer (proxy
+unreachable, App not installed, private repository), the widget falls back to the
+CORS-enabled REST read straight from the browser, which needs no credential and
+counts against the anonymous per-IP budget. Writing must use GraphQL (GitHub
+exposes no REST write API for discussions), which is why posting requires signing
+in. See [docs/tech.md §2.1](docs/tech.md) for the measured matrix.
 
 Sessions last 30 days and renew silently when the App is configured to expire
 access tokens; see [docs/tech.md §3.7](docs/tech.md).

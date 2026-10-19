@@ -6,6 +6,13 @@ Gitalk 是一个评论组件：**评论存在你 GitHub 仓库的 Discussions �
 
 **你需要的**：一个 GitHub 账号、一个用来存评论的仓库、一个能放网页的地方（GitHub Pages、Vercel、自己的服务器都行）。
 
+> **接入步骤的唯一真源是 [`packages/gitalk-deploy/README-CN.md`](../packages/gitalk-deploy/README-CN.md)（英文版 [`README.md`](../packages/gitalk-deploy/README.md)）。**
+> 本文保留手动部署（B / C / D）与填表细节；步骤的先后顺序、`.env` 的必需变量和
+> callback URL 的时机，以真源为准。本文与它冲突时，按真源做。
+>
+> 开始之前，仓库要满足两个条件：**public**，并且 **Discussions 已开启**
+> （仓库 Settings → General → Features → Discussions），里面至少有一个分类。
+
 ---
 
 ## 总共四步
@@ -52,14 +59,13 @@ GitHub App 的名字会被转成一个网址后缀（叫 slug），而 `gitalk` 
 
 「回调地址」（Redirect URI）是登录完成后 GitHub 把用户送回来的地方。它必须精确地以 `/oauth/callback` 结尾。
 
-因为令牌服务的地址由你自己定，所以**这一步你就能先填好**。比如你的令牌服务最终是 `https://gitalk-proxy.你的子域.workers.dev`，就填：
+**先留空。** 它的值是 `<令牌服务地址>/oauth/callback`，而令牌服务要到第 3 步部署完才有地址 ——
+现在填什么都是猜的。部署完、拿到地址之后回来补上，例如：
 
 ```
 https://gitalk-proxy.你的子域.workers.dev/oauth/callback
 ```
 
-> 拿不准的话也没关系——第 3 步部署完会打印出确切地址，到时候回来补填。
->
 > 选 C（腾讯云 CloudBase）的话同理，只是域名换成你自己的，例如 `https://gitalk.你的域名/oauth/callback`——**同样不要带任何路径前缀**。
 
 ### 坑 3 · 取消勾选「Expire user authorization tokens」
@@ -193,12 +199,13 @@ https://github.com/apps/<你的后缀>/installations/new
 
 | 方案 | 适合谁 | 花费 | 难度 |
 | --- | --- | --- | --- |
-| **A · 用官方提供的** | 只想先试试、本地开发 | 免费 | 不用做任何事 |
 | **B · Cloudflare Workers** | 读者主要在海外 | 免费额度足够 | 一条命令 |
 | **C · 腾讯云 CloudBase** | 读者主要在中国大陆 | 有免费体验版 | 一条命令 + 一个已备案的域名 + 一张自己准备的证书 |
 | **D · 容器** | 有自己的服务器 / 懂 Docker | 取决于你的服务器 | 一条命令 + Docker |
 
-> **为什么不能直接用官方的？** 官方那个是给大家**体验和测试**用的，没有可用性承诺，访问量大时会限速。正式站点请选 B / C / D 之一。
+> **为什么不能直接用官方托管的那个？** 它的来源白名单只包含本项目自己的站点，
+> 其他域名发来的请求会被 CORS 拒绝 —— 登录和匿名读的加速都用不了。所以每个人都要
+> 自己部署一份（B / C / D），这一步没有捷径。
 >
 > **中国大陆的读者要注意**：Cloudflare 的 `*.workers.dev` 域名在中国大陆**访问不了**，所以如果你选 B，请务必绑一个自己的域名（见下）。
 
@@ -231,10 +238,6 @@ cp packages/proxy-worker/.env.example packages/proxy-worker/.env
 **把下载的 `.pem` 文件直接放进 `packages/proxy-worker/` 目录**，脚本会自己找到并使用。`GITHUB_APP_PRIVATE_KEY` 那一行留空即可。
 
 > `.env` 和 `.pem` 都已经被 `.gitignore` 排除，**不会被提交**。部署脚本每次还会再确认一遍。
-
-## A · 用官方的
-
-什么都不用做，第 4 步直接跳过 `proxy` 这一项即可。
 
 ## B · 部署到 Cloudflare
 
@@ -346,7 +349,7 @@ pnpm add @aifire/gitalk-vue      # Vue
     repo: 'blog-comments',
     admin: ['你的用户名'],       // 谁可以创建讨论，见「关于 admin」
     number: 42,                 // 这一页对应的讨论编号
-    proxy: 'https://…'          // 第 3 步拿到的地址，只写到域名；用官方的就删掉这行
+    proxy: 'https://…'          // 第 3 步拿到的地址，只写到域名，不要带路径
   })
   gitalk.render('gitalk-container')
 </script>
@@ -409,7 +412,7 @@ const options = {
 | `category` | — | 创建讨论时用的分类 |
 | `perPage` | `10` | 每页显示多少条（回复也算在内） |
 | `pageSize` | — | 和 `perPage` 是同一个东西的两种写法；两个都写时以 `pageSize` 为准 |
-| `proxy` | 官方地址 | 你的令牌服务地址。**只写到域名，不要带路径** |
+| `proxy` | 本项目自己的端点 | 你自己的令牌服务地址。**只写到域名，不要带路径**；官方托管的那个不接受第三方站点 |
 | `language` | 浏览器语言 | 支持 11 种语言 |
 
 ### 关于 `admin`：为什么页面写着「请联系 @xxx 初始化创建」

@@ -1,5 +1,10 @@
 # 交付状态
 
+> **接入步骤的真源**：[`packages/gitalk-deploy/README.md`](../packages/gitalk-deploy/README.md)
+> 与 [`README-CN.md`](../packages/gitalk-deploy/README-CN.md)（中英一一对应）。
+> 根 README 与落地页只做一句话概述并链过去；`docs/guide.md` 保留手动部署细节，同样指向真源。
+> 改步骤只改那两个文件，然后跑 `node scripts/check-docs.mjs` 确认没有漂移。
+
 这个项目当前的开放事项**为零**。原 `human-helps.md` 里的三条已在 2026-10-18 关闭：
 
 1. **代理按 IP 限流** —— 不实施。5,000/hr 的匿名读额度理论上可被第三方消耗，但当前用量远低于上限；等真的出现滥用再做，避免提前引入 KV/D1 这类基础设施。
@@ -14,7 +19,7 @@
 | 产物 | 位置 |
 | --- | --- |
 | 组件 | npm `@aifire/gitalk@2.0.0-beta.1`（连同 `-react` / `-vue`） |
-| 部署 CLI | `npx github:gitalk/deploy`（产物在 `gitalk/deploy`） |
+| 部署 CLI | `npx github:gitalk/deploy -c .env -t cloudflare`（产物在 `gitalk/deploy`） |
 | 落地页 | `gitalk.github.io` |
 | 代理 | CF `gitalk-proxy.aispin-abf.workers.dev` / CloudBase `gitalk.xsin.work` |
 

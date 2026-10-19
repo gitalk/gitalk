@@ -1,16 +1,20 @@
 import { useI18n } from '../i18n'
 
 /**
- * The five steps between "I want comments" and "they work".
+ * The four steps between "I want comments" and "they work", kept deliberately
+ * short: this is an overview, not the manual.
  *
- * Four of them are things only a person can do — creating the GitHub App,
- * pasting the values, setting the callback URL once the deploy has printed an
- * address, dropping the component in — and one is a command. They are numbered
- * because order matters: step three can only run once step two exists.
+ * The manual lives in exactly one place — `packages/gitalk-deploy/README.md`
+ * (Chinese: `README-CN.md`). Everything here has to agree with it, and
+ * `scripts/check-docs.mjs` fails the build if it stops doing so. The `more`
+ * link at the bottom is the one place that points at the full write-up.
  */
+const README_BASE = 'https://github.com/gitalk/gitalk/blob/main/packages/gitalk-deploy'
+
 export function GetStarted() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   const steps = t.getStarted.steps
+  const chinese = lang === 'zh' || lang === 'zh-TW'
 
   return (
     <section id="get-started" className="section">
@@ -42,7 +46,7 @@ export function GetStarted() {
 
       <p className="step-more">
         <a
-          href="https://github.com/gitalk/gitalk/blob/main/packages/gitalk-deploy/README.md"
+          href={`${README_BASE}/${chinese ? 'README-CN.md' : 'README.md'}`}
           target="_blank"
           rel="noopener noreferrer"
         >

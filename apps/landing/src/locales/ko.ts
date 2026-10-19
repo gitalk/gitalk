@@ -39,7 +39,7 @@ export const ko: Messages = {
     lede: 'GitHub Discussions 또는 Issues를 댓글창으로. 명령 하나로 가벼운 프록시를 배포하고, 데이터베이스 없이 댓글이 실시간으로 동기화됩니다.',
     statsTitle: '주요 지표',
     stats: {
-      lines: { value: '5', label: '단계로 도입', note: 'App 생성, 값 입력, 배포, callback 설정, 삽입까지 다섯 단계입니다.' },
+      lines: { value: '4', label: '단계로 도입', note: '저장소 준비, App 생성과 설치, 배포, 삽입.' },
       comments: { value: '∞', label: '댓글 용량', note: 'GitHub Discussions가 담당합니다.' },
       size: { label: '가장 작지는 않지만 가장 강력', note: 'gzip 압축 후 실제 전송 크기입니다.' },
       deps: { value: '0', label: '런타임 의존성', note: '렌더링 계층은 빌드에 포함됩니다.' },
@@ -49,36 +49,31 @@ export const ko: Messages = {
   },
   getStarted: {
     eyebrow: '설정',
-    title: '다섯 단계로 댓글 연결',
-    lede: '네 단계는 직접 하시는 일(App 생성, 값 입력, callback 설정, 컴포넌트 삽입)이고, 한 단계는 명령 하나입니다. 순서는 바꿀 수 없습니다. 3단계는 2단계의 값이, 4단계는 3단계가 출력하는 주소가 필요합니다.',
+    title: '4단계로 댓글 연결',
+    lede: '순서를 바꿀 수 없습니다. 저장소를 준비하고, App을 만들어 그 저장소에 설치하고, proxy를 배포해 callback URL을 설정한 뒤 컴포넌트를 넣습니다. 전체 안내는 한 곳에만 있습니다.',
     steps: [
       {
-        title: 'GitHub App 만들기',
-        body: 'Settings → Developer settings → GitHub Apps에서 새로 만듭니다. 권한은 Discussions: Read and write와 Metadata: Read-only를 선택하고, Callback URL은 지금은 비워 둡니다 — 프록시는 3단계에서 배포되므로 주소는 4단계에서 돌아와 입력합니다. Webhook은 끕니다(사용하지 않습니다).',
+        title: '저장소 준비',
+        body: 'public이어야 하고, Discussions를 켜야 하며(Settings → General → Features → Discussions), 카테고리가 하나 이상 있어야 합니다.',
         code: ''
       },
       {
-        title: '환경 변수 준비',
-        body: 'App ID, Client ID, Client Secret, 개인 키(.pem 전체 내용. SHA256 지문이 아닙니다)를 .env에 적고, 세션 키는 openssl rand -hex 32로 생성합니다. GITALK_ALLOWED_ORIGINS에는 블로그 도메인을 넣습니다 — 프록시에 의존하지 않으므로 2단계에서 채울 수 있습니다.',
-        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+        title: 'GitHub App 생성 후 저장소에 설치',
+        body: '권한은 Discussions: Read and write와 Metadata: Read-only면 충분합니다. ⚠️ 생성만으로는 부족합니다. 설치가 없으면 proxy가 installation token을 받지 못해 익명 읽기가 시간당 60회로 떨어집니다.',
+        code: ''
       },
       {
-        title: '명령 하나로 배포',
-        body: 'CLI가 먼저 모든 값을 검사해 빠진 항목을 정확히 알려 주고, 자격 증명을 secret으로 업로드한 뒤 배포하고 /health를 자체 점검한 다음, proxy에 넣을 주소를 출력합니다. 이 주소를 적어 두세요 — 4단계와 5단계에서 씁니다.',
+        title: 'proxy 배포 후 callback URL 설정',
+        body: '명령 하나로 배포됩니다. 출력된 주소를 기다렸다가 Callback URL에 <주소>/oauth/callback을 넣으세요.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
-        title: '돌아가서 callback URL 설정',
-        body: 'App 설정 페이지로 돌아가 Callback URL에 3단계에서 출력된 주소 + /oauth/callback을 넣습니다. 빠뜨리면 독자가 「로그인」을 눌렀을 때 redirect_uri_mismatch가 납니다. 변경은 즉시 적용되며 다시 배포할 필요가 없습니다.',
-        code: 'Callback URL: https://<프록시 주소>/oauth/callback'
-      },
-      {
-        title: '컴포넌트 삽입',
-        body: '3단계에서 적어 둔 주소를 proxy에 넣으면 댓글이 동작합니다. 스타일, 다크 모드, 다국어는 컴포넌트가 함께 제공합니다.',
-        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+        title: '컴포넌트 넣기',
+        body: 'clientID, owner, repo, admin, number와 배포에서 나온 proxy를 넘기면 됩니다.',
+        code: ''
       }
     ],
-    more: 'CloudBase, 자체 호스팅과 모든 변수 설명 → 배포 CLI README',
+    more: '전체 단계 — 자격 증명, .env, CloudBase, 모든 변수 → 배포 CLI README',
     domainTitle: '사용자 지정 도메인',
     domainBody: '도메인이 Cloudflare에 있으면 바로 연결할 수 있고, 다른 곳이라면 도메인 업체에서 CNAME 레코드를 하나 추가해야 합니다. CloudBase의 사용자 지정 도메인에는 ICP 등록도 필요합니다. 이 두 가지는 직접 하셔야 합니다. GitHub App의 callback URL도 웹 UI에서만 바꿀 수 있습니다(org 소유 App은 API로 변경할 수 없습니다).'
   },
@@ -209,7 +204,7 @@ const options = {
 </template>`
       }
     },
-    note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 다섯 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
+    note: '로그인은 반드시 proxy를 거칩니다. `github.com/login/oauth/access_token`은 CORS 헤더를 반환하지 않아 브라우저만으로 token 교환을 끝낼 수 없습니다. 배포 방법은 위의 네 단계와 같고, CloudBase와 자체 호스팅은 저장소 README를 보세요.'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -217,7 +212,7 @@ const options = {
     items: [
       {
         q: 'CDN으로 바로 불러올 수 있나요?',
-        a: '컴포넌트 자체는 가능합니다. 다만 로그인과 댓글 작성은 공식 proxy를 함께 쓸 수 없습니다 — 공식 proxy는 `gitalk.github.io`만 신뢰하며 Gitalk 자체 App에서 실행됩니다. 자기 사이트용으로 하나 더 배포하세요(명령 한 줄, 약 5분).',
+        a: '컴포넌트 자체는 가능합니다. 다만 로그인과 댓글 작성은 공식 proxy를 함께 쓸 수 없습니다 — 공식 proxy는 이 프로젝트 자체 사이트만 허용하며 프로젝트 자체 App에서 실행됩니다. 자기 사이트용으로 하나 더 배포하세요(명령 한 줄, 약 5분).',
         code: CDN_SCRIPT
       },
       {

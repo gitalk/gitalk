@@ -9,19 +9,15 @@
 
 三步，只有第 1 步需要浏览器和你自己的仓库管理权限。
 
-### 1. 创建 GitHub App
+### 1. 把 App 装到仓库上
 
-Gitalk 2.0 用的是 **GitHub App**，不是 1.x 的 OAuth App。它让令牌端点能在**不把
+Gitalk 2.0 用的是 **GitHub App**，不是 1.x 的 OAuth App：它让令牌端点能在**不把
 密钥交给浏览器**的前提下签发 installation token，登录所需的 client secret 也留在服务端。
 
-按 **[docs/guide.md](docs/guide.md)** 走：它逐字段说明表单怎么填，
-包括回调地址、权限、以及两个填错就会**静默导致登录失败**的开关。
-
-做完你会得到：
-
-- App 的 **Client ID**（形如 `Iv23li…`）—— 这个才写进页面
-- App 已**安装**到用来存评论的仓库
-- 该仓库已**开启 Discussions**，并有可用的分类
+完整步骤 —— 仓库公开、开启 Discussions、App 权限、**把 App 安装到那个仓库**、凭据与
+callback URL —— 只维护在一处：
+**[deploy CLI 的 README](packages/gitalk-deploy/README-CN.md)**。只创建 App 是不够的：
+没有安装，proxy 就拿不到 token，匿名读会退回 60 次/小时。
 
 > App 的 client secret **不要**放进页面。它只存在令牌端点里，见下方
 > [令牌端点](#令牌端点)。
@@ -55,7 +51,8 @@ pnpm add @aifire/gitalk-vue      # Vue
     owner: 'you',            // 存放评论的仓库
     repo: 'blog-comments',
     admin: ['you'],          // 谁可以在首次访问时创建 thread
-    number: 42               // 本页对应的 discussion number
+    number: 42,              // 本页对应的 discussion number
+    proxy: 'https://…'       // 部署打印出来的 origin，不要带路径
   })
   gitalk.render('gitalk-container')
 </script>
@@ -75,7 +72,8 @@ export function Comments() {
         owner: 'you',
         repo: 'blog-comments',
         admin: ['you'],
-        number: 42
+        number: 42,
+        proxy: 'https://…'
       }}
     />
   )
@@ -94,7 +92,8 @@ const options = {
   owner: 'you',
   repo: 'blog-comments',
   admin: ['you'],
-  number: 42
+  number: 42,
+  proxy: 'https://…'
 }
 </script>
 
@@ -115,7 +114,7 @@ const options = {
 | `id` | `location.pathname` | 未给 `number` 时用于定位页面的标识 |
 | `category` | — | 创建 discussion 时使用的分类 |
 | `perPage` | `10` | 每页条数 |
-| `proxy` | 托管端点 | 令牌交换端点，见下 |
+| `proxy` | 本项目自己的端点 | 你的代理 origin。实际上必须自建：见[令牌端点](#令牌端点) |
 | `language` | `navigator.language` | 沿承 1.x 的 11 种语言 |
 
 ## 令牌端点
@@ -124,23 +123,20 @@ const options = {
 device flow 同样被 CORS 挡住，所以**纯静态页面无法自己完成 OAuth 交换**。
 必须有个服务端持有 client secret。
 
-默认情况下 Gitalk 用本项目托管的端点，`proxy` 不填即可：
-
-```
-https://gitalk-proxy.aispin-abf.workers.dev
-```
-
-如果你不想依赖它，可以自己部署一份 —— 一条命令，免费额度，约一分钟：
+Gitalk 内置的默认值是本项目自己跑的端点，它只服务本项目自己的站点：来源白名单不对外开放，
+其他域名在请求到达 GitHub 之前就被 CORS 拒绝。**请自己部署一份** —— 一条命令，免费额度，
+约一分钟：
 
 ```sh
 npx github:gitalk/deploy -c .env -t cloudflare
 ```
 
 也支持 **CloudBase**（`-t cloudbase`，需要 CloudBase 环境与腾讯云密钥），以及自托管 Node。
-变量清单、自定义域名与两种平台的差异见
-[deploy CLI 的 README](packages/gitalk-deploy/README.md)。
+完整步骤 —— 仓库准备、App 权限、**把 App 安装到你的仓库**、凭据、`.env`、callback URL
+—— 只维护在一处：**[deploy CLI 的 README](packages/gitalk-deploy/README-CN.md)**。
+只有那份文件列步骤，本文不重复。
 
-然后把地址传进来：
+把它打印出来的 origin 传进来：
 
 ```js
 { proxy: 'https://your-worker.your-subdomain.workers.dev' }
@@ -153,13 +149,14 @@ npx github:gitalk/deploy -c .env -t cloudflare
 
 | 访客状态 | 走的接口 | 额度 |
 |---|---|---|
-| 未登录 | 浏览器直连 GitHub REST | **每 IP 60 次/小时** |
+| 未登录，配了 `proxy` 且 App 已安装 | 经你的 proxy 走规范化 GraphQL 读，用 installation token | 5000 次/小时 |
+| 未登录，没配 proxy 或 App 没安装 | 浏览器直连 GitHub REST | **每 IP 60 次/小时** |
 | 已登录 | 用访客自己的 token 走 REST / GraphQL | 5000 次/小时 |
 
-**评论读取不经过令牌端点**——REST 读是 CORS 开放的、不需要任何凭据，所以浏览器直接请求
-`api.github.com`，计入匿名额度。也就是说**登录之前，1.x 的 60 次/小时上限依然存在**。
-写操作必须走 GraphQL（GitHub 没有给 discussions 提供 REST 写接口），所以发评论必须登录。
-实测矩阵见 [docs/tech.md §2.1](docs/tech.md)。
+配了 `proxy` 时，匿名读走 proxy 的规范化 GraphQL，花 installation token 的 5000 次/小时；
+这条路过不去（proxy 不可达、App 没安装、仓库私有）时，组件退回浏览器直连的 REST 读，
+不需要凭据，计入匿名每 IP 额度。写操作必须走 GraphQL（GitHub 没有给 discussions 提供
+REST 写接口），所以发评论必须登录。实测矩阵见 [docs/tech.md §2.1](docs/tech.md)。
 
 会话有效期 30 天；App 若开启了令牌过期，Worker 会自动静默续期，
 见 [docs/tech.md §3.7](docs/tech.md)。

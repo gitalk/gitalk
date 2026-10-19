@@ -39,7 +39,7 @@ export const zhTW: Messages = {
     lede: '把 GitHub Discussions 或 Issues 變成你的評論區。一行指令部署輕量代理，無需資料庫，評論即時同步。',
     statsTitle: '關鍵指標',
     stats: {
-      lines: { value: '5', label: '步快速接入', note: '建立 App、填寫變數、部署、設定 callback、引入，五步完成。' },
+      lines: { value: '4', label: '步快速接入', note: '準備儲存庫、建立並安裝 App、部署、引入。' },
       comments: { value: '∞', label: '評論容量', note: '由 GitHub Discussions 承載。' },
       size: { label: '不是最小但最強', note: 'gzip 壓縮後的實際傳輸大小。' },
       deps: { value: '0', label: '執行時依賴', note: '渲染層已打包進產物。' },
@@ -49,36 +49,31 @@ export const zhTW: Messages = {
   },
   getStarted: {
     eyebrow: '接入',
-    title: '五步接上評論',
-    lede: '四步是你親自做的（建立 App、填變數、補 callback、引入元件），一步是一條指令。順序不能換 —— 第 3 步要等第 2 步的變數齊了才能跑，第 4 步要等第 3 步印出位址。',
+    title: '四步接上評論',
+    lede: '順序不能換：先準備儲存庫，再建立並安裝 App，接著部署 proxy 拿到位址，最後引入元件。每一步只有一份完整說明。',
     steps: [
       {
-        title: '建立 GitHub App',
-        body: '在 Settings → Developer settings → GitHub Apps 新建。權限勾選 Discussions: Read and write 與 Metadata: Read-only；Callback URL 先留空 —— 代理要到第 3 步才部署出來，位址第 4 步再回來補；Webhook 關掉（用不到）。',
+        title: '準備儲存庫',
+        body: '必須是 public，並在 Settings → General → Features → Discussions 開啟 Discussions，再建立一個分類。',
         code: ''
       },
       {
-        title: '準備環境變數',
-        body: '把 App ID、Client ID、Client Secret 和私鑰（.pem 的全文，不是 SHA256 指紋）寫進一個 .env；工作階段金鑰用 openssl rand -hex 32 產生。GITALK_ALLOWED_ORIGINS 填你部落格的網域 —— 它不依賴代理，第 2 步就能填。',
-        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+        title: '建立 GitHub App，並安裝到儲存庫',
+        body: '權限只要 Discussions: Read and write 和 Metadata: Read-only。⚠️ 只建立不夠 —— 沒安裝，proxy 就拿不到 installation token，匿名讀會退回每小時 60 次。',
+        code: ''
       },
       {
-        title: '一條指令部署',
-        body: 'CLI 會先驗證所有變數（缺哪個會明確告訴你），再把憑證作為 secret 上傳，然後部署並自檢 /health，最後印出該填進 proxy 的位址 —— 把這個位址記下來，第 4 步和第 5 步都要用。',
+        title: '部署 proxy，再補 callback URL',
+        body: '一條指令部署；等它印出位址，再回 App 把 Callback URL 填成 <位址>/oauth/callback。',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
-        title: '回去補上 callback URL',
-        body: '回到 App 設定頁，把 Callback URL 填成第 3 步印出的位址加 /oauth/callback。漏了這一步，讀者點「登入」時會報 redirect_uri_mismatch；改完立即生效，不用重新部署。',
-        code: 'Callback URL: https://<你的代理位址>/oauth/callback'
-      },
-      {
         title: '引入元件',
-        body: '把第 3 步記下的位址填進 proxy，評論就能用了。樣式、暗色、多語言都由元件自己帶。',
-        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+        body: '把 clientID、owner、repo、admin、number 和部署得到的 proxy 填進去就好。',
+        code: ''
       }
     ],
-    more: 'CloudBase、自架與全部變數說明 → 部署 CLI 的 README',
+    more: '完整步驟見部署 CLI 的 README —— 憑證、.env、CloudBase、全部變數',
     domainTitle: '自訂網域',
     domainBody: '網域在 Cloudflare 時可以直接綁；在別處需要在網域商加一條 CNAME。CloudBase 的自訂網域還需要 ICP 備案 —— 這兩件得人工做。GitHub App 的 callback URL 也只能在網頁改（org 所有的 App 不能用 API 改）。'
   },
@@ -209,7 +204,7 @@ const options = {
 </template>`
       }
     },
-    note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的五步，CloudBase 與自架見儲存庫 README。'
+    note: '登入必須經過 proxy：`github.com/login/oauth/access_token` 不返回 CORS 標頭，瀏覽器無法自行完成 token 交換。部署方式見上面的四步，CloudBase 與自架見儲存庫 README。'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -217,7 +212,7 @@ const options = {
     items: [
       {
         q: '能直接用 CDN 引入嗎？',
-        a: '元件本身可以。但登入和發留言不能共用官方 proxy —— 它只信任 `gitalk.github.io`，而且跑在 Gitalk 自己的 App 上。自己的站點要部署一份自己的（一條指令，約五分鐘）。',
+        a: '元件本身可以。但登入和發留言不能共用官方 proxy —— 它只放行 Gitalk 專案自己的站點，而且跑在專案自己的 App 上。自己的站點要部署一份自己的（一條指令，約五分鐘）。',
         code: CDN_SCRIPT
       },
       {

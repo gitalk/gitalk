@@ -39,7 +39,7 @@ export const de: Messages = {
     lede: 'Machen Sie GitHub Discussions oder Issues zu Ihrer Kommentarsektion. Ein Befehl deployt einen schlanken Proxy. Keine Datenbank, Kommentare synchronisieren in Echtzeit.',
     statsTitle: 'Kennzahlen',
     stats: {
-      lines: { value: '5', label: 'Schritte', note: 'App anlegen, Werte eintragen, deployen, Callback setzen, einbinden.' },
+      lines: { value: '4', label: 'Schritte', note: 'Repository vorbereiten, App anlegen und installieren, deployen, einbinden.' },
       comments: { value: '∞', label: 'Kommentare', note: 'Getragen von GitHub Discussions.' },
       size: { label: 'nicht die kleinste', note: 'Tatsächliche Übertragungsgröße nach gzip.' },
       deps: { value: '0', label: 'Laufzeitabhängigkeiten', note: 'Die Rendering-Schicht steckt im Bundle.' },
@@ -49,36 +49,31 @@ export const de: Messages = {
   },
   getStarted: {
     eyebrow: 'Einrichtung',
-    title: 'Fünf Schritte zu Kommentaren',
-    lede: 'Vier davon machen Sie selbst — App anlegen, Werte eintragen, Callback setzen, Komponente einbinden — und einer ist ein Befehl. Die Reihenfolge zählt: Schritt drei braucht die Werte aus Schritt zwei, Schritt vier die Adresse, die Schritt drei ausgibt.',
+    title: 'Vier Schritte zu Kommentaren',
+    lede: 'Die Reihenfolge zählt: Repository vorbereiten, App anlegen und auf dem Repository installieren, Proxy deployen und die Callback-URL setzen, Komponente einbinden. Für jeden Schritt gibt es genau eine vollständige Anleitung.',
     steps: [
       {
-        title: 'GitHub App anlegen',
-        body: 'Unter Settings → Developer settings → GitHub Apps. Erteilen Sie Discussions: Read and write und Metadata: Read-only; lassen Sie die Callback URL vorerst leer — den Proxy gibt es erst, wenn Schritt drei ihn deployt, deshalb tragen Sie sie in Schritt vier nach; Webhooks abschalten (werden nicht gebraucht).',
+        title: 'Repository vorbereiten',
+        body: 'Es muss public sein, Discussions aktiviert haben (Settings → General → Features → Discussions) und mindestens eine Kategorie besitzen.',
         code: ''
       },
       {
-        title: 'Variablen vorbereiten',
-        body: 'App ID, Client ID, Client Secret und den privaten Schlüssel (der Inhalt der .pem, nicht der SHA256-Fingerabdruck) in eine .env schreiben; den Sitzungsschlüssel mit openssl rand -hex 32 erzeugen. In GITALK_ALLOWED_ORIGINS gehört die Domain Ihres Blogs — sie hängt nicht vom Proxy ab, Schritt zwei kann sie also schon eintragen.',
-        code: 'GITHUB_APP_ID=…\nGITHUB_APP_PRIVATE_KEY="-----BEGIN…"\nSESSION_ENCRYPTION_KEY=$(openssl rand -hex 32)'
+        title: 'GitHub App anlegen und im Repository installieren',
+        body: 'Nötig sind nur Discussions: Read and write und Metadata: Read-only. ⚠️ Anlegen genügt nicht — ohne Installation erhält der Proxy kein Installation-Token, und anonyme Lesezugriffe fallen auf 60 Anfragen pro Stunde zurück.',
+        code: ''
       },
       {
-        title: 'Mit einem Befehl deployen',
-        body: 'Die CLI prüft zuerst alle Werte und benennt fehlende, lädt die Zugangsdaten als Secrets hoch, deployt, ruft /health auf und gibt die URL aus, die als proxy eingetragen wird. Notieren Sie diese Adresse — Schritt vier und fünf brauchen sie.',
+        title: 'Proxy deployen, dann Callback-URL setzen',
+        body: 'Ein Befehl deployt ihn. Warten Sie auf die ausgegebene Adresse und tragen Sie dann als Callback URL <Adresse>/oauth/callback ein.',
         code: 'npx github:gitalk/deploy -c .env -t cloudflare'
       },
       {
-        title: 'Zurück und die Callback-URL setzen',
-        body: 'Kehren Sie zu den App-Einstellungen zurück und tragen Sie als Callback URL die Adresse aus Schritt drei plus /oauth/callback ein. Wer das überspringt, sieht beim Klick auf „Anmelden“ redirect_uri_mismatch; die Änderung wirkt sofort, ohne erneutes Deployment.',
-        code: 'Callback URL: https://<Ihr Proxy>/oauth/callback'
-      },
-      {
         title: 'Komponente einbinden',
-        body: 'Die in Schritt drei notierte Adresse als proxy eintragen, dann funktionieren die Kommentare. Styling, Dark Mode und Übersetzungen bringt die Komponente mit.',
-        code: "new Gitalk({\n  clientID: 'Iv23li…',\n  proxy: 'https://gitalk-proxy.<account>.workers.dev'\n})"
+        body: 'clientID, owner, repo, admin, number und den ausgegebenen proxy übergeben — mehr braucht es nicht.',
+        code: ''
       }
     ],
-    more: 'CloudBase, Selbsthosting und alle Variablen → README der Deploy-CLI',
+    more: 'Vollständige Schritte — Zugangsdaten, .env, CloudBase, alle Variablen → README der Deploy-CLI',
     domainTitle: 'Eigene Domains',
     domainBody: 'Eine Domain bei Cloudflare lässt sich direkt verbinden; anderswo muss ein CNAME-Eintrag von Hand angelegt werden. Bei CloudBase kommt zusätzlich eine ICP-Registrierung hinzu — beides ist Handarbeit. Die Callback-URL der App lässt sich nur in der Weboberfläche ändern (Apps einer Organisation nicht per API).'
   },
@@ -209,7 +204,7 @@ const options = {
 </template>`
       }
     },
-    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die fünf Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
+    note: 'Die Anmeldung muss über einen Proxy laufen: `github.com/login/oauth/access_token` sendet keine CORS-Header, der Browser kann den Token-Tausch nicht allein abschließen. Das Deployment sind die vier Schritte oben; CloudBase und Selbsthosting stehen im README des Repositories.'
   },
   faq: {
     eyebrow: '// FAQ',
@@ -217,7 +212,7 @@ const options = {
     items: [
       {
         q: 'Lässt es sich direkt per CDN einbinden?',
-        a: 'Die Komponente selbst schon. Anmeldung und Kommentare können sich aber nicht den offiziellen Proxy teilen: Er vertraut nur `gitalk.github.io` und läuft auf Gitalks eigener App. Deine Seite braucht ein eigenes Deployment (ein Befehl, etwa fünf Minuten).',
+        a: 'Die Komponente selbst schon. Anmeldung und Kommentare können sich aber nicht den offiziellen Proxy teilen: Er lässt nur die eigenen Seiten dieses Projekts zu und läuft auf der App des Projekts. Deine Seite braucht ein eigenes Deployment (ein Befehl, etwa fünf Minuten).',
         code: CDN_SCRIPT
       },
       {
